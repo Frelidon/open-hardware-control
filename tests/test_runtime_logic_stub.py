@@ -26,16 +26,16 @@ class SignalDummy(Dummy):
     pass
 
 qtcore=types.ModuleType('PySide6.QtCore')
-for n in ['QEvent','QObject','QProcess','QSettings','QSize','QTimer','QPointF','QRectF','QUrl','QStandardPaths']:
+for n in ['QEvent','QMimeData','QObject','QProcess','QProcessEnvironment','QSettings','QSize','QTimer','QPoint','QPointF','QRectF','QUrl','QStandardPaths']:
     setattr(qtcore,n,Dummy)
 qtcore.Signal=SignalDummy
 qtcore.qVersion=lambda: 'test'
 qtcore.Qt=Dummy()
 qtgui=types.ModuleType('PySide6.QtGui')
-for n in ['QAction','QBrush','QColor','QCloseEvent','QFont','QIcon','QImage','QImageReader','QPixmap','QMovie','QPainter','QPainterPath','QPen','QPalette','QMouseEvent','QKeyEvent','QDesktopServices','QKeySequence','QLinearGradient','QRadialGradient']:
+for n in ['QAction','QBrush','QColor','QCloseEvent','QDrag','QFont','QIcon','QImage','QImageReader','QPixmap','QMovie','QPainter','QPainterPath','QPen','QPalette','QMouseEvent','QKeyEvent','QDesktopServices','QKeySequence','QLinearGradient','QRadialGradient']:
     setattr(qtgui,n,Dummy)
 qtwidgets=types.ModuleType('PySide6.QtWidgets')
-for n in ['QApplication','QAbstractButton','QAbstractItemView','QCheckBox','QColorDialog','QComboBox','QDialog','QFileDialog','QFormLayout','QFrame','QGridLayout','QGroupBox','QHBoxLayout','QInputDialog','QLabel','QLineEdit','QMainWindow','QMenu','QMessageBox','QPushButton','QScrollArea','QSlider','QSpinBox','QStackedLayout','QStackedWidget','QSystemTrayIcon','QTabBar','QTabWidget','QTableWidget','QTableWidgetItem','QTreeWidget','QTreeWidgetItem','QVBoxLayout','QWidget','QPlainTextEdit','QWizard','QWizardPage']:
+for n in ['QApplication','QAbstractButton','QAbstractItemView','QCheckBox','QColorDialog','QComboBox','QDialog','QDialogButtonBox','QFileDialog','QFormLayout','QFrame','QGridLayout','QGroupBox','QHBoxLayout','QInputDialog','QLabel','QLineEdit','QMainWindow','QMenu','QMessageBox','QPushButton','QScrollArea','QSlider','QSpinBox','QStackedLayout','QStackedWidget','QSystemTrayIcon','QTabBar','QTabWidget','QTableWidget','QTableWidgetItem','QTreeWidget','QTreeWidgetItem','QVBoxLayout','QWidget','QPlainTextEdit','QTextBrowser','QWizard','QWizardPage']:
     setattr(qtwidgets,n,Dummy)
 pyside=types.ModuleType('PySide6')
 pyside.__version__='test'
@@ -47,7 +47,8 @@ spec=importlib.util.spec_from_file_location('kraken_v29',str(ROOT / 'kraken_cont
 mod=importlib.util.module_from_spec(spec)
 sys.modules[spec.name]=mod
 spec.loader.exec_module(mod)
-assert mod.APP_VERSION=='3.0.9'
+assert mod.APP_VERSION=='3.4.26'
+assert mod.BUILD_CHANNEL=='INTERN'
 assert mod.APP_NAME=='Open Hardware Control'
 assert len(mod.AM5_CPU_PROFILES)>=20
 assert len(mod.AnimatedBackgroundWidget.THEMES) >= 10
@@ -66,6 +67,11 @@ assert mod.KrakenControl.interpolate_curve([(30, 40), (50, 60), (90, 100)], 30) 
 assert mod.KrakenControl.interpolate_curve([(30, 40), (50, 60), (90, 100)], 40) == 50
 assert mod.KrakenControl.interpolate_curve([(30, 40), (50, 60), (90, 100)], 95) == 100
 assert mod.KrakenControl.quantize_curve_duty(53) == 52
+assert mod.KrakenControl.nzxt_speed_for_percent(10) == 'slowest'
+assert mod.KrakenControl.nzxt_speed_for_percent(75) == 'slower'
+assert mod.KrakenControl.nzxt_speed_for_percent(100) == 'normal'
+assert mod.KrakenControl.nzxt_speed_for_percent(150) == 'faster'
+assert mod.KrakenControl.nzxt_speed_for_percent(200) == 'fastest'
 assert mod.KrakenControl.should_update_curve_duty(None, 40, 0.0)
 assert not mod.KrakenControl.should_update_curve_duty(40, 42, 30.0)
 assert not mod.KrakenControl.should_update_curve_duty(40, 44, 2.9)
@@ -118,10 +124,98 @@ lcd_mode.gif_start_pending = True
 assert mod.KrakenControl.current_lcd_profile_mode(lcd_mode) == 'gif'
 lcd_mode.gif_generated_hardware_mode = True
 assert mod.KrakenControl.current_lcd_profile_mode(lcd_mode) == 'hardware_animation'
-red=mod.redact_private_text('/home/florian/a serial number: abc\nmachine-id: deadbeef')
-assert 'florian' not in red and 'deadbeef' not in red
+private_ip = '192.168.' + '50.12'
+private_mac = 'aa:bb:cc:' + 'dd:ee:ff'
+red=mod.redact_private_text(f'/home/exampleuser/a serial number: abc\nmachine-id: deadbeef\naddress={private_ip}\nmac={private_mac}')
+assert 'exampleuser' not in red and 'deadbeef' not in red and private_ip not in red and private_mac not in red
+version_four = '3.4.' + '23.2'
+assert version_four in mod.redact_private_text('Open Hardware Control ' + version_four + ' INTERN')
+private_peer = '10.' + '23.45.67'
+assert '[IP]' in mod.redact_private_text('peer=' + private_peer)
+with tempfile.TemporaryDirectory() as state_temp:
+    with patch.dict(mod.os.environ, {'XDG_STATE_HOME': state_temp}):
+        startup_path = mod.append_startup_event('START TEST /home/exampleuser/private')
+        assert startup_path is not None and startup_path.is_file()
+        assert 'exampleuser' not in startup_path.read_text(encoding='utf-8')
+        try:
+            raise RuntimeError('preview startup test')
+        except RuntimeError as error:
+            crash_path = mod.write_application_crash_log(type(error), error, error.__traceback__)
+        assert crash_path is not None and crash_path.is_file()
+        crash_text = crash_path.read_text(encoding='utf-8')
+        assert 'RuntimeError: preview startup test' in crash_text
+        assert crash_path.stat().st_mode & 0o777 == 0o600
 assert mod.KrakenControl.classify_aspect_ratio(16/9) == '16:9'
 assert mod.KrakenControl.classify_aspect_ratio(32/9) == '32:9'
+
+class ProcessStateFake:
+    NotRunning = 0
+
+class QProcessTypeFake:
+    ProcessState = ProcessStateFake
+
+class OwnedProcessFake:
+    def __init__(self, state, pid):
+        self._state = state
+        self._pid = pid
+    def state(self): return self._state
+    def processId(self): return self._pid
+
+original_qprocess = mod.QProcess
+mod.QProcess = QProcessTypeFake
+try:
+    owned_backend = types.SimpleNamespace(
+        _process=OwnedProcessFake(1, 19402),
+        _current=types.SimpleNamespace(args=['/usr/bin/openrgb', '--device', '2']),
+    )
+    assert mod.Backend.active_process_id_for(owned_backend, 'openrgb') == 19402
+    assert mod.Backend.active_process_id_for(owned_backend, 'liquidctl') == 0
+    owned_backend._process = OwnedProcessFake(ProcessStateFake.NotRunning, 19402)
+    assert mod.Backend.active_process_id_for(owned_backend, 'openrgb') == 0
+finally:
+    mod.QProcess = original_qprocess
+
+class RGBTestClientFake:
+    def color_command(self, device_id, colors, direct=False):
+        return ['openrgb', '--device', str(device_id), '--color', ','.join(colors)]
+    def sdk_color_command(self, device_id, colors, led_count, direct=True, zone_sizes=None):
+        return ['python3', 'openrgb_sdk.py', '--device', str(device_id), '--colors', ','.join(colors)]
+
+class RGBTestStateFake:
+    rgb_test_color = 'ffffff'
+    openrgb_external_server_detected = False
+    openrgb_server_reachable = True
+    openrgb_client = RGBTestClientFake()
+    def rgb_logical_devices(self):
+        return [
+            {'id': 'openrgb:target', 'title': 'GPU', 'backend': 'openrgb', 'writable': True,
+             'device': mod.OpenRGBDevice(7, 'GPU', modes=('Direct',))},
+            {'id': 'openrgb:other', 'title': 'RAM', 'backend': 'openrgb', 'writable': True,
+             'device': mod.OpenRGBDevice(3, 'RAM', modes=('Direct',))},
+            {'id': 'nzxt:led1', 'title': 'Radiator 1', 'backend': 'nzxt', 'writable': True},
+            {'id': 'blocked', 'title': 'Corsair', 'backend': 'openrgb', 'writable': False,
+             'device': mod.OpenRGBDevice(11, 'Corsair')},
+        ]
+
+rgb_test_commands, rgb_test_blocked = mod.KrakenControl.build_rgb_device_test_commands(
+    RGBTestStateFake(), 'openrgb:target'
+)
+assert rgb_test_commands[-1][-3:] == ['7', '--colors', 'ffffff']
+assert rgb_test_commands[0][-3:] == ['3', '--colors', '000000']
+assert any(command[-1] == 'off' for command in rgb_test_commands[:-1])
+assert all(command.count('--device') <= 1 for command in rgb_test_commands)
+assert rgb_test_blocked == ['Corsair']
+
+_, layout_slots = mod.flori_rgb_layout_profile()
+radiator_slot = next(slot for slot in layout_slots if slot.slot_id == 'radiator-top')
+assert mod.KrakenControl.kraken_radiator_order_text(radiator_slot) == (
+    'hinten: Kanal 2 · Mitte: Kanal 3 · vorne: Kanal 1'
+)
+layout_fake = types.SimpleNamespace(rgb_layout_slots=layout_slots)
+assert mod.KrakenControl.rgb_layout_device_position_label(layout_fake, 'nzxt:led1') == 'vorne'
+assert mod.KrakenControl.rgb_layout_device_position_label(layout_fake, 'nzxt:led2') == 'hinten'
+assert mod.KrakenControl.rgb_layout_device_position_label(layout_fake, 'nzxt:led3') == 'Mitte'
+
 profiles=mod.KrakenControl.builtin_profiles()
 assert any(p['name']=='Leise' for p in profiles)
 assert any(p['category']=='Design' for p in profiles)

@@ -19,7 +19,7 @@ class OpenLinkHubIntegrationTests(unittest.TestCase):
         self.assertEqual(olh.validate_local_api_url("http://localhost:27003"), "http://localhost:27003")
         self.assertEqual(olh.validate_local_api_url("http://[::1]:27003"), "http://[::1]:27003")
         for unsafe in (
-            "https://localhost:27003", "http://192.168.1.2:27003", "http://localhost:27003/api/",
+            "https://localhost:27003", "http://192.0.2.2:27003", "http://localhost:27003/api/",
             "http://user:pass@localhost:27003", "http://localhost",
         ):
             with self.subTest(unsafe=unsafe), self.assertRaises(ValueError):

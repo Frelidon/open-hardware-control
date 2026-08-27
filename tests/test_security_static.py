@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Dependency-free static release checks for public version 3.0.9."""
+"""Dependency-free static release checks for internal version 3.4.23."""
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -7,13 +7,131 @@ code = (ROOT / "kraken_control.py").read_text(encoding="utf-8")
 rule = (ROOT / "71-nzxt-kraken-2023.rules").read_text(encoding="utf-8")
 installer = (ROOT / "install.sh").read_text(encoding="utf-8")
 helper = (ROOT / "install-udev-rule.sh").read_text(encoding="utf-8")
+diagnostics = (ROOT / "collect-diagnostics.sh").read_text(encoding="utf-8")
 
-assert 'APP_VERSION = "3.0.9"' in code
+assert 'APP_VERSION = "3.4.26"' in code
+assert 'BUILD_CHANNEL = "INTERN"' in code
 assert 'APP_NAME = "Open Hardware Control"' in code
 assert "make_navigation_sidebar" in code
 assert "update_navigation_visibility" in code
 assert "Nicht erkannte Geräte/Module anzeigen" in code
 assert "make_openlinkhub_tab" in code
+assert "make_desktop_designs_tab" in code
+assert '"experimental/desktop_designs_enabled", False' in code
+assert "Experimentelle Desktop-Designs im Menü anzeigen" in code
+assert "if not self.experimental_desktop_designs_enabled" in code
+assert "make_rgb_tab" in code and "RGB-Studio" in code
+assert '"Frelidon PC · Thermaltake / 360-mm-Aufbau / Kraken 360"' in code
+assert '"Floris PC · Thermaltake / 360-mm-Aufbau / Kraken 360"' not in code
+assert "fan_order_changed" in code and "reorder_rgb_layout_slot_devices" in code
+assert "Kraken-Kanäle räumlich neu geordnet" in code
+assert "refresh_rgb_studio" in code
+assert "start_openrgb_effect" in code and "stop_openrgb_effect" in code
+assert "RGB-Steuerung neu übernehmen" in code
+assert 'self.backend.active_process_id_for("openrgb")' in code
+assert "RGB-Fehler und Warnungen" in code
+assert 'self.record_rgb_issue("FEHLER", description, details)' in code
+assert '"RGB-Aktion teilweise fehlgeschlagen"' not in code
+assert "Gewähltes Lichtmuster automatisch wieder anwenden" in code
+assert "def monitor_rgb_ownership" in code and "def reinitialize_rgb_control" in code
+assert "def request_rgb_direct_apply" in code and "def apply_pending_rgb_design" in code
+assert "self.rgb_direct_apply_timer.setInterval(140)" in code
+assert "def background_scan_rgb_inventory" in code
+assert "self.rgb_inventory_timer.setInterval(60_000)" in code
+assert "is_suspicious_inventory_drop" in code
+assert "laufende Hardwareübertragung wird zuerst abgeschlossen" in code
+assert "fremder lokaler SDK-Server antwortet weiterhin · keine Übernahme" in code
+assert "Ein noch laufendes separates OpenRGB wird niemals beendet" in code
+assert "rgbDesignStatusPanel" in code and "AKTUELL AUSGEWÄHLT" in code
+assert "AKTIV BESTÄTIGT" in code and "set_active_index" in code
+assert "Bisher besteht keine offizielle Unterstützung, Kooperation, Freigabe oder Verbindung" in code
+assert "show_rgb_setup_wizard" in code and "RGB-EINRICHTUNGSASSISTENT STARTEN" in code
+assert "Nur diese Zone" in code and "prepare_gpu_external_control" in code
+assert "self.openrgb_effect_timer.setInterval(40)" in code
+assert "openrgb_worker_frame_inflight" in code and "openrgb_worker_frame_pending" in code
+assert "openrgb_worker_coalesced_frames" in code and "update_openrgb_performance_status" in code
+assert '"--worker"' in code and "dauerhafter lokaler SDK-Worker" in code
+assert "ensure_managed_rgb_engine" in code and "stop_managed_rgb_engine" in code
+assert 'environment.insert("QT_QPA_PLATFORM", "offscreen")' in code
+assert "openrgb_external_server_detected" in code
+assert "RGBSessionLock" in code
+assert "ApplicationInstanceLock" in code and "application-instance.lock" in code
+assert "Der zweite Start wurde vor jedem Hardwarezugriff beendet" in code
+run_application = code.index("def run_application")
+instance_acquire = code.index("instance_lock.acquire()", run_application)
+hardware_window = code.index("window = KrakenControl()", run_application)
+assert instance_acquire < hardware_window
+assert "class RGBDeviceTile" in code and "class RGBDropGroup" in code
+assert "class PCLayoutDiagram" in code and "load_builtin_rgb_layout_profile" in code
+assert "move_rgb_layout_slot" in code and "assign_rgb_device_to_layout_slot" in code
+assert "select_rgb_layout_slot" in code and "rename_rgb_device" in code
+assert "Thermaltake / 360-mm-Aufbau" in code
+assert "rgb_reset_in_progress" in code and "rgb_engine_restart_pending" in code
+assert "openrgb_discovery_generation" in code and "openrgb_write_enable_pending" in code
+assert "if self.rgb_reset_in_progress or self.rgb_engine_disabled_by_reset" in code
+assert "veraltetes Erkennungsergebnis" in code
+assert "OpenRGB-Engine nicht erreichbar" in code
+assert "Geräte-Testmodus" in code and "run_rgb_device_test" in code
+assert "build_rgb_device_test_commands" in code and "rename_selected_rgb_test_device" in code
+kraken_class = code.index("class KrakenControl")
+kraken_init = code.index("    def __init__", kraken_class)
+first_build_ui = code.index("        self.build_ui()", kraken_init)
+preview_clock = code.index("        self.rgb_preview_started = time.monotonic()", kraken_init)
+assert preview_clock < first_build_ui
+assert 'if not hasattr(self, "rgb_preview_started")' in code
+assert "install_application_exception_logging" in code
+assert 'directory / "startup.log"' in code and 'directory / "last-crash.log"' in code
+assert 'STATE_ROOT="${XDG_STATE_HOME:-$HOME/.local/state}/open-hardware-control"' in diagnostics
+assert 'tail -n 120 "$STATE_ROOT/startup.log"' in diagnostics
+assert 'cat "$STATE_ROOT/last-crash.log"' in diagnostics
+assert "move_rgb_device_to_group" in code and "select_rgb_group" in code
+assert "reset_all_rgb" in code and "RGB KOMPLETT ZURÜCKSETZEN" in code
+assert "prepare_openrgb_devices" in code
+assert 'OPENRGB_LOCAL_ADDRESS = "127.0.0.1"' in code
+assert (ROOT / "openrgb_integration.py").exists()
+assert (ROOT / "openrgb_sdk.py").exists()
+sdk_code = (ROOT / "openrgb_sdk.py").read_text(encoding="utf-8")
+assert "class OpenRGBPersistentSession" in sdk_code
+assert "MAX_WORKER_REQUEST_SIZE = 2 * 1024 * 1024" in sdk_code
+assert "MAX_WORKER_DEVICES = 64" in sdk_code
+assert "def process_worker_frame" in sdk_code and "def run_worker" in sdk_code
+assert "validate_loopback(address)" in sdk_code
+assert (ROOT / "rgb_effects.py").exists()
+assert (ROOT / "rgb_devices.py").exists()
+assert (ROOT / "nzxt_rgb.py").exists()
+assert (ROOT / "ui_layout.py").exists()
+assert "class ReorderableSectionArea" in code
+assert "Standardreihenfolge wiederherstellen" in code
+assert '("engine", openrgb_box)' in code
+assert 'editor_form.addRow("OHC-Modi", self.rgb_studio_mode_list)' in code
+assert 'editor_form.addRow("Modusfarben", colors)' in code
+assert "dashboard_fields_hidden" in code and "reset_dashboard_card_visibility" in code
+sdk_code = (ROOT / "openrgb_sdk.py").read_text(encoding="utf-8")
+assert "SDK_MIN_PROTOCOL_VERSION = 4" in sdk_code
+assert "SDK_PROTOCOL_VERSION = 5" in sdk_code
+assert "PACKET_UPDATE_ZONE_LEDS = 1051" in sdk_code
+assert "PACKET_RESIZE_ZONE = 1000" in sdk_code
+assert "KONFIGURATION_ERFORDERLICH" in sdk_code
+assert "request_controller_data" in sdk_code and "hat die gesendeten Farben nicht bestätigt" in sdk_code
+nzxt_code = (ROOT / "nzxt_rgb.py").read_text(encoding="utf-8")
+assert '"comet": "pulse"' in nzxt_code and '"spinner": "rainbow-flow"' in nzxt_code
+assert 'NZXTEffect("Marquee", "marquee-4"' not in nzxt_code
+assert "coalesce_selected_channels" in nzxt_code
+openrgb_code = (ROOT / "openrgb_integration.py").read_text(encoding="utf-8")
+assert "color_commands" in openrgb_code and "best_native_mode_for_effect" in openrgb_code
+assert "is_openrgb_apply_options_crash" in openrgb_code
+assert "running_openrgb_process_ids" in openrgb_code
+assert "OpenRGB-Mehrgerätebefehle sind deaktiviert" in openrgb_code
+assert ".multi_color_command(" not in code
+assert ".sdk_color_command(" in code
+assert "LED-Zonen und Lüfter einrichten" in code
+assert "normalize_zone_configurations" in code
+assert "openrgb_quarantined_devices" in code and "quarantine_openrgb_device" in code
+assert "openrgb_effect_failures_by_device" in code
+assert "openrgb_process_check_at" in code and "separates OpenRGB gestartet" in code
+assert "Befehlsfolge wird ohne" in code and "nächstes Gerät bleibt erreichbar" in code
+assert "apply_desktop_design" in code
+assert "restore_desktop_design" in code
 assert "refresh_openlinkhub_status" in code
 assert "class MacroRecorderDialog" in code
 assert "edit_selected_openlinkhub_mouse_button" in code
@@ -106,10 +224,28 @@ assert "kraken_cam_streamer.py" in installer
 assert "kraken_lcd_designs.py" in installer
 assert "kraken_sensors.py" in installer
 assert "openlinkhub_integration.py" in installer
+assert "openrgb_integration.py" in installer
+assert "openrgb_sdk.py" in installer
+assert "rgb_effects.py" in installer
+assert "rgb_devices.py" in installer
+assert "nzxt_rgb.py" in installer
+assert "ui_layout.py" in installer
+assert "desktop_designs.py" in installer
+assert "desktop_assets.py" in installer
+assert "desktop_shell.py" in installer
+assert "DESKTOP_DESIGNS.md" in installer
 assert "Open_Hardware_Control_Projekt.md" in installer
 assert "OPENLINKHUB_INTEGRATION.md" in installer
 assert (ROOT / "kraken_lcd_designs.py").exists()
 assert (ROOT / "kraken_sensors.py").exists()
+assert (ROOT / "desktop_designs.py").exists()
+assert (ROOT / "desktop_assets.py").exists()
+assert (ROOT / "desktop_shell.py").exists()
+assert (ROOT / "assets" / "desktop-designs" / "windows11-wallpaper.svg").exists()
+assert (ROOT / "assets" / "desktop-designs" / "macos-wallpaper.svg").exists()
+assert (ROOT / "assets" / "desktop-designs" / "windows8-wallpaper.svg").exists()
+assert (ROOT / "assets" / "desktop-designs" / "windows81-wallpaper.svg").exists()
+assert (ROOT / "assets" / "desktop-designs" / "kwin" / "ohc-charms" / "contents" / "code" / "main.js").exists()
 assert (ROOT / "CPU_PROFILES.md").exists()
 assert (ROOT / "COMPONENT_VERSIONS.md").exists()
 assert (ROOT / "ANIMATED_BACKGROUNDS.md").exists()
@@ -132,17 +268,68 @@ dep_helper = (ROOT / "install-dependencies.sh").read_text(encoding="utf-8")
 assert "python3-pyside6" in dep_helper
 assert "python3-pillow" in dep_helper
 assert "qt6-qtsvg" in dep_helper
+assert "dnf:qdbus6" in dep_helper and 'echo "qt6-qttools"' in dep_helper
+assert "dnf:kconfig6" in dep_helper and 'echo "kf6-kconfig"' in dep_helper
+assert "apt:qdbus6" in dep_helper and 'echo "qdbus-qt6"' in dep_helper
+assert "pacman:qdbus6" in dep_helper and 'echo "qt6-tools"' in dep_helper
+assert "zypper:qdbus6" in dep_helper and 'echo "qt6-tools-qdbus"' in dep_helper
+assert "--check-desktop" in dep_helper and "--install-desktop" in dep_helper
+assert "--check-openrgb" in dep_helper and "--install-openrgb" in dep_helper
+assert "dnf:openrgb_udev" in dep_helper and 'echo "openrgb-udev-rules"' in dep_helper
 assert "liquidctl" in dep_helper
 assert "pkexec" in dep_helper
 assert "install-dependencies.sh" in installer
+assert 'hardware_request_coordinator.py' in installer
+assert 'mainboard_fan_control.py' in installer
+assert 'nzxt_esc_profiles.py' in installer
+build_release_code = (ROOT / "scripts/build_release.py").read_text(encoding="utf-8")
+rpm_fallback_code = (ROOT / "scripts/build_rpm_fallback.py").read_text(encoding="utf-8")
+assert 'usr/libexec/open-hardware-control-fan-helper' in rpm_fallback_code
+assert 'usr/share/polkit-1/actions/io.github.Frelidon.OpenHardwareControl.fan.policy' in rpm_fallback_code
+assert '"hardware_request_coordinator.py"' in build_release_code
+assert '"mainboard_fan_control.py"' in build_release_code
+assert '"ohc_fan_helper.py"' in build_release_code
+assert '"io.github.Frelidon.OpenHardwareControl.fan.policy"' in build_release_code
+assert '"nzxt_esc_profiles.py"' in build_release_code
 assert "--check-gui-and-install" in installer
 assert "install_missing_dependencies" in code
+assert "install_desktop_design_dependencies" in code
+assert "maybe_offer_desktop_design_dependencies" in code
 assert "Fehlende Pakete &installieren" in code
 
 readme = (ROOT / "README.md").read_text(encoding="utf-8")
-assert "# Open Hardware Control by Frelidon 3.0.9 – NZXT Kraken & Corsair unter Linux" in readme
+assert "# Open Hardware Control by Frelidon 3.4.26 INTERN" in readme
+assert "Inoffizielles unabhängiges Community-Projekt" in readme
 assert "Corsair · OpenLinkHub" in readme
 assert "| NZXT 2023 RGB Controller | `1e71:2012`" in readme
+
+
+# 3.4.23: motherboard fan control must stay calibration-gated and use hwmon only.
+mainboard_code = (ROOT / "mainboard_fan_control.py").read_text(encoding="utf-8")
+assert "discover_hwmon_controllers" in mainboard_code
+assert "set_channel_percent" in mainboard_code
+assert "restore_firmware_control" in mainboard_code
+assert "decide_curve_output" in mainboard_code
+assert "msi_fan_brute_force=1" in mainboard_code
+assert "fan_control_watchdog" in mainboard_code
+assert "set_fan_control_watchdog" in mainboard_code
+assert "channel_can_control" in mainboard_code
+assert "DEFAULT_FAN_HELPER" in mainboard_code
+assert "/dev/port" not in mainboard_code
+assert "i2c_smbus" not in mainboard_code
+assert "Kanal sicher testen · 70 % / 10 s" in code
+assert "automatische Regelung bleibt gesperrt" in code
+assert "ENE-RAM erneut initialisieren" in code
+assert "manual_reinitialize_ene_dram" in code
+fan_helper = (ROOT / "ohc_fan_helper.py").read_text(encoding="utf-8")
+fan_policy = (ROOT / "io.github.Frelidon.OpenHardwareControl.fan.policy").read_text(encoding="utf-8")
+assert 'HWMON_ROOT = Path("/sys/class/hwmon")' in fan_helper
+assert 'MAX_CHANNEL = 8' in fan_helper
+assert 'subprocess' not in fan_helper
+assert 'os.system' not in fan_helper
+assert 'shell=True' not in fan_helper
+assert 'org.freedesktop.policykit.exec.path' in fan_policy
+assert '/usr/libexec/open-hardware-control-fan-helper' in fan_policy
 
 print("Static release checks passed.")
 
@@ -182,7 +369,7 @@ assert 'LCD_FAILURE_LIMIT = 3' in code
 assert 'set", "lcd", "screen", "liquid"' in code
 assert 'Unsauber beendete experimentelle LCD-Sitzung erkannt' in code
 assert 'LCD-Bild-Fallback' in code
-assert 'self.setWindowTitle(f"{DISPLAY_NAME} {APP_VERSION} — Linux")' in code
+assert 'self.setWindowTitle(f"{DISPLAY_NAME} {APP_DISPLAY_VERSION} — Linux")' in code
 assert 'experimental_autostart_blocked' in code
 
 
@@ -191,7 +378,11 @@ assert 'GIF_HELPER_NAME = "kraken_cam_streamer.py"' in code
 assert 'def start_gif_stream' in code
 assert 'def stop_gif_stream' in code
 assert 'gif/experimental_warning_ack' in code
-assert 'mark_experimental_lcd_active("hardware_animation" if self.gif_generated_hardware_mode else "gif")' in code
+assert '"layers" if self.lcd_layer_active else "hardware_animation" if self.gif_generated_hardware_mode else "imported_profile" if self.gif_imported_profile_mode else "gif"' in code
+assert 'def render_lcd_layer_file' in code
+assert 'def start_lcd_layers' in code
+assert 'class RGBDesignGallery' in code
+assert 'studio_autostart_enabled' in code
 assert 'gif/fps' in code
 assert 'Beim Systemstart minimiert/im Tray starten' in code
 assert '"--autostart" in sys.argv' in code
@@ -303,7 +494,7 @@ assert 'Schrift- und Zahlen-Größe' in code
 assert 'Animierte Hardwaredaten · Ringe und Orbits' in code
 assert 'def start_hardware_animation' in code
 assert 'generated_hardware=True' in code
-assert 'mark_experimental_lcd_active("hardware_animation" if self.gif_generated_hardware_mode else "gif")' in code
+assert '"layers" if self.lcd_layer_active else "hardware_animation" if self.gif_generated_hardware_mode else "imported_profile" if self.gif_imported_profile_mode else "gif"' in code
 assert 'hardware_animation/experimental_warning_ack' in code
 
 # 2.9.23: CPU/GPU values refresh out-of-process while liquid stays the last safe Kraken value.
@@ -349,7 +540,9 @@ assert 'self.apply_curve(channel, curve_table)' in code
 
 # 3.0.3: stable active-mode colour without transient Qt check-state flicker.
 assert 'button.setProperty("coolingState", "inactive")' in code
-assert 'button.setCheckable(True)' not in code
+cooling_button_start = code.index('button.setObjectName("coolingModeButton")')
+cooling_button_end = code.index("switch_hint = QLabel", cooling_button_start)
+assert 'button.setCheckable(True)' not in code[cooling_button_start:cooling_button_end]
 assert 'QPushButton#coolingModeButton[coolingState="active"]' in code
 assert 'button.style().unpolish(button)' in code
 assert 'button.style().polish(button)' in code
@@ -374,7 +567,11 @@ assert 'log_command=False' in code
 
 # 3.0.9: orderly LCD reset and original interactive mouse schematics.
 assert 'def restore_original_lcd_sync_on_quit' in code
-assert code.count('self.restore_original_lcd_sync_on_quit()') == 2
+assert code.count('self.restore_original_lcd_sync_on_quit()') == 1
+assert 'self.perform_orderly_hardware_exit("Fenster/Programmende")' in code
+assert 'self.perform_orderly_hardware_exit("manuelles Programmende")' in code
+assert 'self.perform_orderly_hardware_exit("System-Shutdown/Logout")' in code
+assert 'app.aboutToQuit.connect(lambda: window.perform_orderly_hardware_exit("Qt aboutToQuit"))' in code
 assert 'Backend.kraken_args() + ["set", "lcd", "screen", "liquid"]' in code
 assert code.index('self.shutdown_gif_stream_sync()') < code.index('self.restore_original_lcd_sync_on_quit()')
 assert 'class MouseSchematicWidget' in code
@@ -400,3 +597,23 @@ assert 'display/temperature_unit' in code
 assert 'def celsius_to_display' in code and 'def display_to_celsius' in code
 assert 'hardware_lcd/label_color' in code and 'hardware_lcd/value_color' in code
 assert 'hardware_lcd/label_scale' in code and 'hardware_lcd/value_scale' in code
+
+# 3.4.23: consolidated LCD/help/setup plus one-shot ENE-DRAM priming.
+openrgb_sdk_code = (ROOT / "openrgb_sdk.py").read_text(encoding="utf-8")
+assert 'if set_custom_mode or not controller.direct_active:' in openrgb_sdk_code
+assert 'custom_changed = False' in openrgb_sdk_code
+assert '"LCD-Einstellungen",' in code
+assert 'def write_hardware_animation_spec' in code
+assert 'def write_lcd_layer_spec' in code
+assert 'source_missing = (not self.gif_generated_hardware_mode and not self.gif_imported_profile_mode)' in code
+assert code.count('source_path=None') >= 2
+assert 'self.lcd_tile_area = ReorderableTileArea(' in code
+assert '("preview", preview_box, 1)' in code
+assert '("display", display_box, 1)' in code
+assert '("clock", clock_box, 1)' in code
+assert '("content", image_box, 3)' in code
+assert 'lcd/tile_order' in code
+assert 'Uhr zusätzlich einblenden' in code
+assert 'def open_help_center' in code
+assert 'Sprache / Language / Idioma / Langue' in code
+assert (ROOT / "io.github.Frelidon.OpenHardwareControl.metainfo.xml").exists()

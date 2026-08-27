@@ -4,6 +4,6 @@ title: "Open Hardware Control by Frelidon"
 type: software
 authors:
   - name: Frelidon
-version: 3.0.9
-date-released: 2026-08-14
+version: 3.4.17-internal
+date-released: 2026-08-23
 license: GPL-3.0-or-later

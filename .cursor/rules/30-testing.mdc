@@ -1,0 +1,7 @@
+---
+description: Testing and regression discipline
+globs: "**/*.py,tests/**,scripts/**"
+alwaysApply: false
+---
+
+For behavior changes, add or update the narrowest regression test. Run relevant tests while iterating. Before a version is considered ready, run `./scripts/check_release.sh`. Never weaken a safety/security test merely to get green output; fix the implementation or update the test only when the intended behavior truly changed.

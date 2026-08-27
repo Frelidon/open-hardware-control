@@ -1,0 +1,11 @@
+---
+description: UI and navigation invariants for Open Hardware Control
+globs: kraken_control.py,ui_layout.py,desktop_*.py,assets/**
+alwaysApply: false
+---
+
+- Preserve the compact modern PySide6 visual language unless a redesign is explicitly requested.
+- Overview, Navigation customization and Help are permanent navigation anchors: never hide, delete or make them toggleable.
+- Navigation reorder/visibility state must remain persistent and resettable to defaults.
+- Preserve keyboard/accessibility behavior and avoid modal flows when an embedded workflow already exists.
+- Keep UI code from inventing hardware capabilities; ask backend/capability layers instead.

@@ -1,0 +1,9 @@
+---
+description: Hardware backend ownership, protocol and write-safety rules
+globs: "*backend*.py,kraken_*.py,nzxt_*.py,openlinkhub_*.py,openrgb_*.py,rgb_*.py,mainboard_fan_control.py,ohc_fan_helper.py,cooling_ownership.py,hardware_request_coordinator.py"
+alwaysApply: false
+---
+
+Read @DEVICE_SUPPORT.md and @SUPPORTED_DEVICES.md before changing hardware behavior.
+
+Do not guess USB commands, firmware protocols, PWM mappings, device IDs, LED counts or sysfs write paths. Preserve session authorization, bounds checks, process/device ownership and safe fallback behavior. Keep OpenLinkHub/OpenRGB network paths loopback-only. Real hardware validation is required before changing a device from detected/provisional to tested/supported.

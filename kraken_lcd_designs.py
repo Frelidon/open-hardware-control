@@ -9,10 +9,12 @@ connected hardware.
 
 from __future__ import annotations
 
+from datetime import datetime
+
 import math
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageSequence
 
 
 LCD_SIZE = 240
@@ -36,6 +38,9 @@ DESIGNS: tuple[tuple[str, str], ...] = (
     ("gpu_arc", "GPU · Arc"),
     ("cpu_gpu_dual", "CPU + GPU · Dual"),
     ("system_trio", "Wasser + CPU + GPU · Trio"),
+    ("neon_grid", "System · Neonraster"),
+    ("radar_sweep", "System · Radar"),
+    ("liquid_wave", "Wasser · Wellenkern"),
 )
 
 LABELS: dict[str, dict[str, str]] = {
@@ -254,6 +259,146 @@ def _draw_trio(
     canvas.draw.rounded_rectangle(canvas.box(49 + travel, 168, 89 + travel, 175), radius=4 * canvas.scale, fill=canvas.accent)
 
 
+def _draw_neon_grid(
+    canvas: _Canvas,
+    cpu: float | None,
+    gpu: float | None,
+    labels: dict[str, str],
+) -> None:
+    horizon = 142
+    for row in range(6):
+        y = horizon + row * row * 2.4
+        canvas.draw.line(
+            (28 * canvas.scale, y * canvas.scale, 212 * canvas.scale, y * canvas.scale),
+            fill=_mix(canvas.accent, canvas.background, 0.62),
+            width=canvas.scale,
+        )
+    travel = (canvas.phase * 34.0) % 17.0
+    for column in range(-6, 7):
+        bottom_x = 120 + column * 24 + travel
+        canvas.draw.line((120 * canvas.scale, horizon * canvas.scale, bottom_x * canvas.scale, 224 * canvas.scale), fill=_mix(canvas.accent, canvas.background, 0.68), width=canvas.scale)
+    canvas.text(labels["system"], 27, 11, canvas.label_color, bold=True, scale_kind="label")
+    canvas.rounded_panel(38, 57, 202, 132, 18)
+    canvas.label(labels["cpu"], 65, center_x=79)
+    canvas.label(labels["gpu"], 65, center_x=161)
+    canvas.value(cpu, 86, size=26, center_x=79)
+    canvas.value(gpu, 86, size=26, center_x=161)
+    scan_y = 146 + (canvas.phase * 70.0)
+    canvas.draw.line((42 * canvas.scale, scan_y * canvas.scale, 198 * canvas.scale, scan_y * canvas.scale), fill=canvas.accent, width=2 * canvas.scale)
+
+
+def _draw_radar(
+    canvas: _Canvas,
+    cpu: float | None,
+    gpu: float | None,
+    labels: dict[str, str],
+) -> None:
+    center = (120, 112)
+    for radius in (30, 56, 82):
+        canvas.draw.ellipse(canvas.box(120 - radius, 112 - radius, 120 + radius, 112 + radius), outline=_mix(canvas.accent, canvas.background, 0.72), width=canvas.scale)
+    for angle in (0, math.pi / 2, math.pi, math.pi * 1.5):
+        canvas.draw.line((120 * canvas.scale, 112 * canvas.scale, (120 + math.cos(angle) * 82) * canvas.scale, (112 + math.sin(angle) * 82) * canvas.scale), fill=_mix(canvas.accent, canvas.background, 0.78), width=canvas.scale)
+    angle = canvas.phase * math.tau - math.pi / 2
+    tip = (120 + math.cos(angle) * 82, 112 + math.sin(angle) * 82)
+    canvas.draw.line((center[0] * canvas.scale, center[1] * canvas.scale, tip[0] * canvas.scale, tip[1] * canvas.scale), fill=canvas.accent, width=4 * canvas.scale)
+    canvas.draw.ellipse(canvas.box(tip[0] - 4, tip[1] - 4, tip[0] + 4, tip[1] + 4), fill=canvas.white)
+    canvas.text(labels["cpu"] + " " + _temperature(cpu, canvas.temperature_unit), 198, 10, canvas.value_color, bold=True, center_x=70, max_width=90, scale_kind="value")
+    canvas.text(labels["gpu"] + " " + _temperature(gpu, canvas.temperature_unit), 198, 10, canvas.value_color, bold=True, center_x=170, max_width=90, scale_kind="value")
+
+
+def _draw_liquid_wave(
+    canvas: _Canvas,
+    liquid: float | None,
+    labels: dict[str, str],
+) -> None:
+    canvas.label(labels["water"], 49)
+    canvas.value(liquid, 72, size=52)
+    for band in range(5):
+        points: list[tuple[int, int]] = []
+        for x in range(22, 219, 4):
+            y = 160 + band * 10 + math.sin((x / 36.0) + canvas.phase * math.tau + band * 0.7) * (8 - band)
+            points.append((x * canvas.scale, round(y * canvas.scale)))
+        color = _mix(canvas.accent, canvas.background, min(0.72, 0.18 + band * 0.13))
+        canvas.draw.line(points, fill=color, width=max(canvas.scale, (5 - band) * canvas.scale))
+
+
+def compose_hardware_layer(
+    background: Image.Image,
+    overlay: Image.Image,
+    *,
+    opacity_percent: int = 82,
+    scale_percent: int = 88,
+    x_percent: int = 50,
+    y_percent: int = 50,
+) -> Image.Image:
+    """Place a hardware dashboard over a 240×240 background image."""
+    base = background.convert("RGBA").resize((LCD_SIZE, LCD_SIZE), Image.Resampling.LANCZOS)
+    scale = max(40, min(125, int(scale_percent))) / 100.0
+    size = max(48, round(LCD_SIZE * scale))
+    layer = overlay.convert("RGBA").resize((size, size), Image.Resampling.LANCZOS)
+    opacity = max(10, min(100, int(opacity_percent))) / 100.0
+    alpha = layer.getchannel("A").point(lambda value: round(value * opacity))
+    layer.putalpha(alpha)
+    center_x = round(max(0, min(100, int(x_percent))) / 100.0 * LCD_SIZE)
+    center_y = round(max(0, min(100, int(y_percent))) / 100.0 * LCD_SIZE)
+    base.alpha_composite(layer, (center_x - size // 2, center_y - size // 2))
+    return base.convert("RGB")
+
+
+def overlay_clock_on_frame(
+    image: Image.Image,
+    *,
+    enabled: bool = False,
+    use_24h: bool = True,
+    show_date: bool = True,
+    font_size: int = 64,
+    text_color_hex: str = "#ffffff",
+    background_color_hex: str = "#10141c",
+    now: datetime | None = None,
+) -> Image.Image:
+    """Add a compact clock layer to an already composed animated LCD frame."""
+    if not enabled:
+        return image.convert("RGB")
+    now = now or datetime.now()
+    base = image.convert("RGBA")
+    draw = ImageDraw.Draw(base, "RGBA")
+    text_color = normalize_hex_color(text_color_hex) or "#ffffff"
+    bg_color = normalize_hex_color(background_color_hex) or "#10141c"
+    tc = tuple(int(text_color[i:i+2], 16) for i in (1, 3, 5))
+    bc = tuple(int(bg_color[i:i+2], 16) for i in (1, 3, 5))
+    main_size = max(24, min(58, int(round(font_size * 0.62))))
+    date_size = max(12, int(round(main_size * 0.38)))
+    try:
+        main_font = ImageFont.truetype("DejaVuSans-Bold.ttf", main_size)
+        date_font = ImageFont.truetype("DejaVuSans.ttf", date_size)
+    except OSError:
+        main_font = ImageFont.load_default()
+        date_font = ImageFont.load_default()
+    if use_24h:
+        clock_text = now.strftime("%H:%M")
+    else:
+        clock_text = now.strftime("%I:%M %p").lstrip("0")
+    date_text = now.strftime("%d.%m.%Y")
+    cb = draw.textbbox((0, 0), clock_text, font=main_font)
+    cw, ch = cb[2] - cb[0], cb[3] - cb[1]
+    db = draw.textbbox((0, 0), date_text, font=date_font)
+    dw, dh = db[2] - db[0], db[3] - db[1]
+    total_h = ch + (dh + 3 if show_date else 0)
+    box_w = min(LCD_SIZE - 16, max(cw, dw if show_date else 0) + 22)
+    box_h = total_h + 14
+    left = (LCD_SIZE - box_w) // 2
+    top = 8
+    draw.rounded_rectangle((left, top, left + box_w, top + box_h), radius=10, fill=(*bc, 150), outline=(*tc, 65), width=1)
+    tx = LCD_SIZE / 2 - cw / 2 - cb[0]
+    ty = top + 6 - cb[1]
+    draw.text((tx, ty), clock_text, font=main_font, fill=(*tc, 255))
+    if show_date:
+        dx = LCD_SIZE / 2 - dw / 2 - db[0]
+        dy = top + 7 + ch + 2 - db[1]
+        draw.text((dx, dy), date_text, font=date_font, fill=(*tc, 220))
+    return base.convert("RGB")
+
+
 def render_hardware_frame(
     design_id: str,
     accent_hex: str,
@@ -300,8 +445,14 @@ def render_hardware_frame(
         _draw_focus(canvas, labels["gpu"], gpu, style="arc", status=labels["live"] if live_sensor_status else None, status_live=live_sensor_status)
     elif design_id == "cpu_gpu_dual":
         _draw_dual(canvas, cpu, gpu, labels, show_sensor_status=live_sensor_status)
-    else:
+    elif design_id == "system_trio":
         _draw_trio(canvas, liquid, cpu, gpu, labels, show_sensor_status=live_sensor_status)
+    elif design_id == "neon_grid":
+        _draw_neon_grid(canvas, cpu, gpu, labels)
+    elif design_id == "radar_sweep":
+        _draw_radar(canvas, cpu, gpu, labels)
+    else:
+        _draw_liquid_wave(canvas, liquid, labels)
     return canvas.finish()
 
 
@@ -380,6 +531,110 @@ def render_hardware_animation(
         )
         for index in range(frame_count)
     ]
+    destination = Path(output_path)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    frames[0].save(
+        destination,
+        format="GIF",
+        save_all=True,
+        append_images=frames[1:],
+        duration=round(1000 / fps),
+        loop=0,
+        disposal=2,
+        optimize=False,
+    )
+    return destination
+
+
+def render_layered_hardware_animation(
+    background_path: str | Path,
+    design_id: str,
+    accent_hex: str,
+    liquid: float | None,
+    cpu: float | None,
+    gpu: float | None,
+    output_path: str | Path,
+    *,
+    language: str = "de",
+    label_color_hex: str = DEFAULT_LABEL_COLOR,
+    value_color_hex: str = DEFAULT_VALUE_COLOR,
+    label_scale_percent: int = 125,
+    value_scale_percent: int = 125,
+    temperature_unit: str = "c",
+    fps: int = 25,
+    overlay_animated: bool = True,
+    opacity_percent: int = 82,
+    scale_percent: int = 88,
+    x_percent: int = 50,
+    y_percent: int = 50,
+    clock_enabled: bool = False,
+    clock_use_24h: bool = True,
+    clock_show_date: bool = True,
+    clock_font_size: int = 64,
+    clock_text_color_hex: str = "#ffffff",
+    clock_background_color_hex: str = "#10141c",
+) -> Path:
+    """Generate a short preview of an image/GIF plus hardware-data layer."""
+    fps = max(10, min(25, int(fps)))
+    source_frames: list[tuple[Image.Image, int]] = []
+    with Image.open(background_path) as source:
+        if source.width * source.height > 50_000_000:
+            raise ValueError("Das Ebenen-Hintergrundbild ist zu groß (maximal 50 Megapixel).")
+        default_duration = max(20, int(source.info.get("duration", 100) or 100))
+        for index, frame in enumerate(ImageSequence.Iterator(source)):
+            if index >= 250:
+                break
+            rgba = frame.convert("RGBA")
+            side = min(rgba.size)
+            left = (rgba.width - side) // 2
+            top = (rgba.height - side) // 2
+            prepared = rgba.crop((left, top, left + side, top + side)).resize(
+                (LCD_SIZE, LCD_SIZE), Image.Resampling.LANCZOS
+            )
+            source_frames.append((prepared, max(20, int(frame.info.get("duration", default_duration) or default_duration))))
+    if not source_frames:
+        raise ValueError("Der Ebenen-Hintergrund enthält kein lesbares Bild.")
+    total_ms = max(1000, min(4000, sum(duration for _frame, duration in source_frames)))
+    frame_count = max(12, round(total_ms / 1000.0 * fps))
+    starts: list[int] = []
+    cursor = 0
+    for _frame, duration in source_frames:
+        starts.append(cursor)
+        cursor += duration
+    source_total = max(1, cursor)
+    frames: list[Image.Image] = []
+    for index in range(frame_count):
+        time_ms = round(index / fps * 1000) % source_total
+        source_index = max(0, min(len(starts) - 1, sum(1 for start in starts if start <= time_ms) - 1))
+        overlay = render_hardware_frame(
+            design_id,
+            accent_hex,
+            liquid,
+            cpu,
+            gpu,
+            language=language,
+            label_color_hex=label_color_hex,
+            value_color_hex=value_color_hex,
+            label_scale_percent=label_scale_percent,
+            value_scale_percent=value_scale_percent,
+            temperature_unit=temperature_unit,
+            phase=(index / fps) % 1.0 if overlay_animated else 0.0,
+            live_sensor_status=True,
+        )
+        composed = compose_hardware_layer(
+            source_frames[source_index][0],
+            overlay,
+            opacity_percent=opacity_percent,
+            scale_percent=scale_percent,
+            x_percent=x_percent,
+            y_percent=y_percent,
+        )
+        composed = overlay_clock_on_frame(
+            composed, enabled=clock_enabled, use_24h=clock_use_24h, show_date=clock_show_date,
+            font_size=clock_font_size, text_color_hex=clock_text_color_hex,
+            background_color_hex=clock_background_color_hex,
+        )
+        frames.append(composed)
     destination = Path(output_path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     frames[0].save(

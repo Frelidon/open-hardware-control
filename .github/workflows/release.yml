@@ -22,14 +22,17 @@ jobs:
         uses: actions/setup-python@v7
         with:
           python-version: "3.14"
-      - name: Install Python build dependencies
-        run: python -m pip install --disable-pip-version-check pillow
       - name: Resolve and validate release version
         id: release
         shell: bash
         run: |
           VERSION="$(tr -d '\r\n' < VERSION)"
+          CHANNEL="$(tr -d '\r\n' < BUILD_CHANNEL)"
           TAG="v${VERSION}"
+          if [[ "$CHANNEL" != "STABLE" ]]; then
+            echo "Refusing public release because BUILD_CHANNEL is $CHANNEL" >&2
+            exit 1
+          fi
           if [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_REF_NAME" != "$TAG" ]]; then
             echo "Tag $GITHUB_REF_NAME does not match VERSION $VERSION" >&2
             exit 1

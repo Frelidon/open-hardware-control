@@ -1,0 +1,16 @@
+{
+  "KPlugin": {
+    "Id": "ohc-charms",
+    "Name": "Open Hardware Control Charms edges",
+    "Description": "Opens the local OHC Charms bar at the right screen corners",
+    "Version": "1.0",
+    "License": "GPL-3.0-or-later",
+    "Authors": [
+      {
+        "Name": "Frelidon contributors"
+      }
+    ]
+  },
+  "X-Plasma-API": "javascript",
+  "X-Plasma-MainScript": "code/main.js"
+}

@@ -4,7 +4,13 @@ set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO_NAME="${1:-kraken-control-linux}"
 VERSION="$(tr -d '\r\n' < "$ROOT/VERSION")"
+CHANNEL="$(tr -d '\r\n' < "$ROOT/BUILD_CHANNEL")"
 cd "$ROOT"
+
+if [[ "$CHANNEL" != "STABLE" ]]; then
+  echo "Refusing repository publication: BUILD_CHANNEL is $CHANNEL, not STABLE." >&2
+  exit 1
+fi
 
 for cmd in git gh python3; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
@@ -50,11 +56,19 @@ if [[ ! -d .git ]]; then
 fi
 
 git add .
-if git diff --cached --quiet; then
-  echo "Nothing to commit." >&2
+if ! git diff --cached --quiet; then
+  git commit -m "Initial public release v$VERSION"
+elif ! git rev-parse --verify HEAD >/dev/null 2>&1; then
+  echo "Nothing to commit and no existing commit to publish." >&2
   exit 1
 fi
-git commit -m "Initial public release v$VERSION"
+
+if ! ./scripts/check_drive_backup.sh; then
+  echo >&2
+  echo "GitHub publication is blocked until the exact current HEAD is backed up to Google Drive." >&2
+  echo "Run ./scripts/prepare_drive_backup.sh, upload the generated ZIP, confirm it, then rerun this script." >&2
+  exit 1
+fi
 
 gh repo create "$REPO_NAME" \
   --public \

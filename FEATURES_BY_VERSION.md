@@ -1,7 +1,37 @@
+| 3.4.25 INTERN | Neues PySide6-Dashboarddesign, kompakte Navigation ohne Community-Edition-Branding, neue Übersicht, modernisierte Kühlungszentrale, direkte System-Fan-Karten, separater Kurvendialog und vierstufiger Lüfter-Zuordnungsassistent. |
 # Funktionsübersicht nach Version
 
 | Version | Erstmals hinzugekommene Hauptfunktionen |
 |---|---|
+| 3.4.23.2 INTERN | Kompaktes Cooling-Dashboard, CoolerControl-Ownership-Sperre, einzelne System-Fan-Karten mit Kurvenvorschau sowie grafischer PWM/RGB-Gehäuse-Assistent mit sicherem 30/80-%-Kontrasttest und persistenter Einbauplatz-Zuordnung. |
+| 3.4.23.1 INTERN | Polkit-geschützter NCT6687-Fan-Helper für root-geschützte hwmon-PWM-Schreibzugriffe, 10-s-Kalibrierung mit RPM-Verlauf, MSI-EC-verträgliche Zielbestätigung und treibereigene Firmwarekurven-Rückgabe über pwmN_enable=2. |
+| 3.4.23 INTERN | Sichere Mainboard-Lüftersteuerung über Linux-hwmon/NCT6687 mit bestätigungspflichtiger 70-%-Kalibrierung, individuellen Sensorquellen/Kurven je PWM-Kanal, Leise/Ausbalanciert/Leistung-Vorlagen mit sicherer Empfehlung, Sensor-Fallback, optionalem nct6687d-10-s-Watchdog, Firmware-Rückgabe, Secure-Boot-/Treiberdiagnose sowie ENE-DRAM-Reinitialisierung im RGB-Studio. |
+| 3.4.22 INTERN | RGB-/ENE-Stabilitäts-Hotfix mit wirklich langlebigem SDK-Worker, Direct+Native-Bestätigungsbarriere, gezieltem RAM-Reclaim im Einzeltest, repariertem LCD-GIF-Skalierungsaufruf und direkt aktivierten AM5-CPU-Kurven. |
+| 3.4.21 INTERN | Zentraler Kraken-USB-/RGB-Request-Koordinator, stabiler RGB-Profilstart nach vollständiger Geräteerkennung, Shutdown-LCD-Fallback, reparierte Schnellprofile-Einbettung, ESC-Live-Renderer, dynamische LCD-Zielauflösung sowie skalierbare und animierte LCD-Vorschauen. |
+| 3.4.20 INTERN | Einmaliges ENE-DRAM-Priming, popupfreier Tray-Autostart, Sprache zuerst im Setup, integrierte Hilfe, konsolidierter LCD-Arbeitsbereich, acht eingebaute OHC-GIFs, Uhr als Animationsebene und Import des aktuellen verschachtelten NZXT-ESC-v3-Formats. |
+| 3.4.19 INTERN | LCD-Kachel-Dashboard, flüssigere externe GIF/Hardware-Rendererstarts, PAUSE/RESUME für LCD-Displayeinstellungen, stabileres ENE-DRAM-Direct und vollständige Discover/AppStream-Metadaten. |
+| 3.4.18 INTERN | Unabhängiger NZXT-ESC-Schema-v3-Importer mit Pflicht-Vorschau/Kompatibilitätsbericht, lokale LCD-Profilbibliothek, einfacher Drag-and-drop-Editor, Sensor-Remapping, Originalzustand sowie vollständiges Backup/Restore ohne gebündelten Fremdcode oder Designs. |
+| 3.4.16 INTERN | Serialisierte Latest-value-wins-Übernahme für RGB-Geschwindigkeit und andere Effektparameter, exakte SDK-Framebestätigung sowie ressourcenschonende automatische Geräteprüfung mit Schutz vor vorübergehenden 7→2-Inventarabfällen. |
+| 3.4.15 INTERN | Modusabhängige Hex-/Standardfarben, benutzersortierbare RGB-/LCD-/Kühlungsbereiche sowie erweiterte und kartenweise ein-/ausblendbare CPU-/GPU-Übersicht. |
+| 3.4.14 INTERN | NZXT-Alternating-Fallback ohne `KeyError`, sichere Unterscheidung eigener OpenRGB-Clients, begrenzte interne RGB-Fehlerliste ohne modale Teilfehlerdialoge sowie sichtbare Vorlage „Frelidon PC“. |
+| 3.4.13 INTERN | Direkt anwendbare RGB-Kacheln einschließlich „Feste Farbe“, dauerhafte Ausgewählt-/Aktiv-Anzeige sowie sichere manuelle oder optionale automatische RGB-Wiederübernahme nach separatem OpenRGB. |
+| 3.4.12 INTERN | Sortierbare Kraken-Kanäle, animierte RGB-Galerie, sicherer Profilstart, stabiler RGB-Scrollpunkt und LCD-Ebenenmodus mit drei neuen Originaldesigns. |
+| 3.4.11 INTERN | Dauerhafter Loopback-SDK-Worker, gemeinsame 25-Hz-Mehrgeräteframes mit Latest-frame-wins, gemessene Übertragungsrate, RGB-Einrichtungsassistent, Einzelzonen-Sichttest und automatische Sapphire-External-Control-Vorbereitung. |
+| 3.4.10 INTERN | Vollständige OpenRGB-Geräteframes mit einmaligem Zonen-Fallback, 24-LED-Profile für Interstellar V2 Normal/Reverse, Plausibilitätswarnungen, ehrlicher Status zwischen Serverbestätigung und physischer Ausgabe, ckb-next-Konflikterkennung sowie robusterer Auswahl-/Scrollschutz. |
+| 3.4.9 INTERN | Sichere OpenRGB-ARGB-Zoneneinrichtung mit `Lüfter/Geräte × LEDs`, Thermaltake-Portvorschlägen, validiertem SDK-`RESIZEZONE`, profilgespeicherten Größen, konfigurationsbedingten Fehlern ohne Quarantäne und priorisierten NZXT-Aufträgen. |
+| 3.4.8 INTERN | Bestätigte OpenRGB-Direct-Ausgabe über aktuelle Controllerdaten und vollständige Zonenwrites, Modus-/Farbrücklesung, Sperre separat laufender OpenRGB-Prozesse sowie NZXT-`sync` bei gemeinsamer Dreikanalauswahl. |
+| 3.4.7 INTERN | OpenRGB-SDK-Protokoll 4/5 mit kompatibler Aushandlung für ENE-RAM, bereinigte NZXT-2023-Effektzuordnung ohne `marquee-4` sowie harte Einzelinstanz-Sperre vor sämtlichen Hardwarezugriffen. |
+| 3.4.6 INTERN | Klarere Liste ausgewählter RGB-Geräte mit Steuerweg und Ergebnisstatus, automatische Sitzungsprotokolle, fehlertolerante Mehrgeräteaktionen, einmalige Direct-Mode-Vorbereitung pro Gerät, getrennte GPU-/Hardwaremodus-Auswahl, Scrollpositionsschutz sowie Ausblendung des doppelt dargestellten NZXT-Controllers. |
+| 3.4.5 INTERN | Begrenzter Loopback-SDK-Schreibpfad für Direct-Geräte ohne OpenRGB-CLI-`ApplyOptions`, Scrollpositionsschutz, geordnetes 12-Lüfter-Thermaltake-Profil und Hinzufügen/Bearbeiten/Entfernen/Auto-Anordnen eigener PC-Blöcke. |
+| 3.4.4 INTERN | Atomare Reset-/Engine-Neustartfolge, vorgemerkte Schreibfreigabe bis zur frischen Erkennung, Zusammenführung vollständig gespiegelter OpenRGB-Inventare, Zonenprotokollierung und verschiebbare Thermaltake-PC-Ansicht mit aktuellem 120-mm-Lüfterlayout. |
+| 3.4.3 INTERN | Sitzungsspezifische Isolation einzelner OpenRGB-`ApplyOptions`-Absturzgeräte, fortgesetzte Test-/Befehlsfolgen, echte Fehlerzählung pro Direct-Gerät und eindeutige OpenRGB-Indexdiagnose. |
+| 3.4.2 INTERN | Start-Hotfix für die zu früh gelesene RGB-Vorschauuhr, defensiver Initialisierungsfallback sowie automatische private Start-/Absturzprotokolle im XDG-Zustandsverzeichnis. |
+| 3.4.1 INTERN | Serielle OpenRGB-Einzelgerätebefehle gegen den rc2-Mehrgeräteabsturz, persistente Auswahl/Gruppen, native Fallbacks für Geräte ohne Direct Mode, eindeutige Gerätenamen, Einzelgeräte-Testmodus sowie PC-Skizze mit Frelidons A1-/A2-/B6-/B7-/SYS-FAN6-/Kraken-Profil. |
+| 3.4.0 INTERN | Automatisch verwaltete fensterlose RGB-Engine, Fremdinstanz- und Mehrfachprozess-Sperre, Gerätekacheln, Drag-&-Drop-Gruppen mit unabhängigen Effekten, ENE-DRAM-Deduplizierung, topology-sichere NZXT-Effekte und bestätigter Komplett-Reset. |
+| 3.3.0 INTERN | Eigenes RGB-Studio über lokalen OpenRGB-SDK-Client, statische Einzelgerätefarben, native Modi, zehn OHC-Effekte, sieben Vorlagen, Profilintegration, sitzungsweise Schreib-/Besitzsperren und standardmäßig verborgene experimentelle Desktop-Designs. |
+| 3.2.0 INTERN | Windows-8/8.1-Kachelübersicht und Charms-Leiste, freie auswählbare OHC-Symbole/Mauszeiger, selektierbare Backups mit Aufbewahrung und sicherem Export/Import sowie Breeze-Light-Notfallrücksetzung. |
+| 3.1.1 INTERN | Distributionsübergreifende Qt-6-D-Bus-Erkennung, Fedora-`qdbus-qt6`-Korrektur sowie bestätigte automatische Installation optionaler KDE-Desktop-Werkzeuge über DNF, APT, Pacman und Zypper. |
+| 3.1.0 INTERN | Reversible KDE-Plasma-Desktop-Designs im Windows-11- und macOS-Stil mit Vorschau, Bestätigung, Backup, automatischem Rollback und interner Paketkennzeichnung. |
 | 3.0.9 | Öffentliche Multi-Hardware-Version: direkte OpenLinkHub-Maustastenbelegung, begrenzte fensterlokale Tastaturmakros, saubere LCD-Temperaturbilder, Celsius/Fahrenheit sowie RPM-/DEB-/ZIP-Pakete. |
 | 3.0.7 INTERN | Originale Kraken-Wassertemperaturanzeige beim echten Beenden sowie eigene interaktive OpenLinkHub-Maus-SVGs mit Modellfamilien, Hotspots und auslesbaren Tastenfunktionen. |
 | 3.0.6 INTERN | Vollständige LCD-/GIF-Moduswiederherstellung aus Startprofilen, fünf Sekunden verzögerter LCD-Autostart, zuverlässiger Tray-Zustand und geordnete Sitzungssignale. |
@@ -51,6 +81,10 @@
 - Direct Access für Kurven – 2.7.1
 - Expertenmodus und aktive Modusanzeige – 2.8
 - kategorisierte Kühl- und Gesamtprofile – 2.9
+- Mainboard-PWM-Erkennung über Linux-hwmon/NCT6687 ohne feste Kanalzuordnung – 3.4.23
+- sichere 70-%-/10-s-Kalibrierung mit RPM-Beobachtung und automatischer Wiederherstellung – 3.4.23.1
+- individuelle Mainboard-Lüfterkurven mit CPU/GPU/Kühlmittel/Maximum/gewichteter Sensorquelle – 3.4.23
+- Sensorfehler-Fallback, 90-°C-Notanforderung und Firmware-Rückgabe – 3.4.23
 
 ### LCD
 
@@ -70,6 +104,21 @@
 - Design- und Gesamtprofile – 2.9
 - sicherer CPU-Offscreen-Hintergrundrenderer – 2.9.1
 - scrollbare Einstellungen und vergrößertes Hauptfenster – 2.9.2
+- experimentelle Desktop-Designs standardmäßig aus und verborgen – 3.3.0
+
+### RGB-Studio
+
+- statische Farbe pro OpenRGB-Gerät und gemeldete native Hardwaremodi – 3.3.0
+- zehn eigene OHC-Softwareeffekte und sieben Designvorlagen – 3.3.0
+- Loopback-only SDK-Client, Sitzungsfreigabe und Gerätebesitzsperren – 3.3.0
+- Speicherung in exportierbaren Gesamt-/RGB-Profilen – 3.3.0
+- verwaltete RGB-Engine ohne manuellen Serverstart – 3.4.0
+- Gerätekacheln, Mehrfachauswahl und Drag-&-Drop-Gruppen – 3.4.0
+- unabhängige Gruppeneffekte und gemeinsame NZXT-/OpenRGB-Auswahl – 3.4.0
+- ENE-DRAM-Aliasfilter und vollständige LED-Listenübernahme – 3.4.0
+- topology-sichere NZXT-Effekte und kompletter Geräte-Reset – 3.4.0
+- serielle Einzelgeräteausgabe, native Fallbacks und persistente Gruppenzuordnung – 3.4.1
+- PC-Skizze, freie Gerätenamen und Frelidons vorbereitetes Hub-/Lüfterprofil – 3.4.1
 
 ### Installation und Dokumentation
 

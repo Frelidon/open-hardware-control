@@ -1,0 +1,7 @@
+---
+description: Open Hardware Control core product, memory and safety rules
+globs:
+alwaysApply: true
+---
+
+Treat @AGENTS.md as mandatory project instructions. Before substantive edits, recover current state from @PROJECT_STATUS.md, @DECISIONS.md and @ARCHITECTURE.md rather than relying on chat memory. Preserve existing functionality, migrations and hardware ownership guards. Never claim untested hardware as confirmed compatible.

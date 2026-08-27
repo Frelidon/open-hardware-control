@@ -1,10 +1,10 @@
 [Desktop Entry]
 Type=Application
-Name=Open Hardware Control by Frelidon
-Comment=NZXT-Kraken-LCD, Pumpe, Lüfter und Corsair/OpenLinkHub unter Linux steuern
+Name=Open Hardware Control
+Comment=NZXT Kraken, Corsair/OpenLinkHub, RGB, LCD und Kühlung unter Linux steuern
 Exec=@EXEC@
 Icon=@ICON@
 Terminal=false
 Categories=System;Settings;HardwareSettings;
 StartupNotify=true
-Keywords=Hardware;NZXT;Kraken;Corsair;OpenLinkHub;AIO;Cooling;RGB;LCD;liquidctl;Frelidon;
+Keywords=Hardware;NZXT;Kraken;Corsair;OpenLinkHub;OpenRGB;RGB Studio;AIO;Cooling;RGB;LCD;liquidctl;Frelidon;

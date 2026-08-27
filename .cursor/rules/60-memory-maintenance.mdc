@@ -1,0 +1,7 @@
+---
+description: Keep repository-native long-term project memory accurate
+globs:
+alwaysApply: true
+---
+
+After meaningful changes, update @PROJECT_STATUS.md so a new chat can recover what is actually implemented. Update @DECISIONS.md for durable product/architecture choices, @DEVICE_SUPPORT.md / @SUPPORTED_DEVICES.md for compatibility changes, and `CHANGELOG.md` for user-visible changes. Do not write speculative plans as completed facts.

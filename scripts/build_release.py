@@ -12,13 +12,20 @@ import tempfile
 import zipfile
 from pathlib import Path
 
+from build_rpm_fallback import build_noarch_rpm
+
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
+CHANNEL = (ROOT / "BUILD_CHANNEL").read_text(encoding="utf-8").strip().upper()
+INTERNAL = CHANNEL == "INTERN"
+if CHANNEL not in {"INTERN", "STABLE"}:
+    raise SystemExit("BUILD_CHANNEL must be INTERN or STABLE")
 requested = sys.argv[1] if len(sys.argv) > 1 else VERSION
 if requested != VERSION:
     raise SystemExit(f"Requested version {requested!r} does not match VERSION {VERSION!r}")
-if len(VERSION.split(".")) != 3 or not all(part.isdigit() for part in VERSION.split(".")):
-    raise SystemExit("VERSION must be x.y.z")
+parts = VERSION.split(".")
+if len(parts) not in {3, 4} or not all(part.isdigit() for part in parts):
+    raise SystemExit("VERSION must be x.y.z or x.y.z.hotfix")
 
 DIST = ROOT / "dist"
 if DIST.exists():
@@ -33,20 +40,40 @@ EXCLUDED_FILES = {"MANIFEST.sha256", "SHA256SUMS"}
 EXCLUDED_SUFFIXES = {".pyc", ".pyo"}
 
 RUNTIME_FILES = {
+    "BUILD_CHANNEL",
     "71-nzxt-kraken-2023.rules",
     "collect-diagnostics.sh",
+    "desktop_designs.py",
+    "desktop_assets.py",
+    "desktop_shell.py",
     "install-dependencies.sh",
     "install-udev-rule.sh",
     "install.sh",
     "kraken-control.desktop.in",
     "kraken-control.svg",
+    "io.github.Frelidon.OpenHardwareControl.metainfo.xml",
     "kraken_cam_streamer.py",
+    "hardware_request_coordinator.py",
+    "mainboard_fan_control.py",
+    "cooling_ownership.py",
+    "ohc_fan_helper.py",
+    "io.github.Frelidon.OpenHardwareControl.fan.policy",
+    "install-fan-helper.sh",
     "kraken_control.py",
     "kraken_lcd_designs.py",
     "kraken_sensors.py",
+    "nzxt_backend.py",
     "LICENSE",
     "openlinkhub_integration.py",
     "openlinkhub_mouse_visuals.py",
+    "openrgb_integration.py",
+    "openrgb_sdk.py",
+    "rgb_devices.py",
+    "rgb_effects.py",
+    "ui_layout.py",
+    "nzxt_rgb.py",
+    "nzxt_esc_profiles.py",
+    "SECURITY_SCAN_REPORT.json",
     "uninstall.sh",
     "VERSION",
 }
@@ -131,6 +158,12 @@ def install_runtime_tree(package_root: Path) -> None:
         encoding="utf-8",
     )
     diagnostics.chmod(0o755)
+    desktop_shell = bin_dir / "open-hardware-control-desktop-shell"
+    desktop_shell.write_text(
+        "#!/usr/bin/env bash\nexec python3 /usr/share/open-hardware-control/desktop_shell.py \"$@\"\n",
+        encoding="utf-8",
+    )
+    desktop_shell.chmod(0o755)
 
     desktop_dir = package_root / "usr/share/applications"
     desktop_dir.mkdir(parents=True)
@@ -143,9 +176,28 @@ def install_runtime_tree(package_root: Path) -> None:
     icon_dir.mkdir(parents=True)
     shutil.copy2(ROOT / "kraken-control.svg", icon_dir / "open-hardware-control.svg")
 
+    metainfo_dir = package_root / "usr/share/metainfo"
+    metainfo_dir.mkdir(parents=True)
+    metainfo = (ROOT / "io.github.Frelidon.OpenHardwareControl.metainfo.xml").read_text(encoding="utf-8")
+    metainfo = metainfo.replace("@VERSION@", VERSION).replace("@CHANNEL@", CHANNEL)
+    (metainfo_dir / "io.github.Frelidon.OpenHardwareControl.metainfo.xml").write_text(metainfo, encoding="utf-8")
+
     rules_dir = package_root / "usr/lib/udev/rules.d"
     rules_dir.mkdir(parents=True)
     shutil.copy2(ROOT / "71-nzxt-kraken-2023.rules", rules_dir)
+
+    libexec_dir = package_root / "usr/libexec"
+    libexec_dir.mkdir(parents=True, exist_ok=True)
+    helper = libexec_dir / "open-hardware-control-fan-helper"
+    shutil.copy2(ROOT / "ohc_fan_helper.py", helper)
+    helper.chmod(0o755)
+
+    polkit_dir = package_root / "usr/share/polkit-1/actions"
+    polkit_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(
+        ROOT / "io.github.Frelidon.OpenHardwareControl.fan.policy",
+        polkit_dir / "io.github.Frelidon.OpenHardwareControl.fan.policy",
+    )
 
 
 def build_deb(temp: Path) -> Path:
@@ -159,35 +211,72 @@ def build_deb(temp: Path) -> Path:
         "\n".join(
             [
                 "Package: open-hardware-control",
-                f"Version: {VERSION}",
+                f"Version: {VERSION + '~intern1' if INTERNAL else VERSION}",
                 "Section: utils",
                 "Priority: optional",
                 "Architecture: all",
                 "Maintainer: Frelidon <noreply@github.com>",
-                "Depends: python3, liquidctl, python3-pil, python3-pyside6.qtwidgets, python3-pyside6.qtsvg, policykit-1",
-                "Homepage: https://github.com/Frelidon/kraken-control-linux",
-                "Description: NZXT Kraken and Corsair/OpenLinkHub control for Linux",
+                "Depends: python3, liquidctl, python3-pil, python3-pyside6.qtwidgets, python3-pyside6.qtnetwork, python3-pyside6.qtdbus, python3-pyside6.qtsvg, policykit-1",
+                "Homepage: https://github.com/Frelidon/open-hardware-control",
+                "Description: NZXT Kraken, Corsair/OpenLinkHub and RGB Studio for Linux",
                 " Open-source Linux GUI for Kraken LCD, pump, fan and RGB control",
-                " with an allow-listed local OpenLinkHub integration for Corsair devices.",
+                " with local OpenLinkHub and optional loopback-only OpenRGB SDK integration.",
                 "",
             ]
         ),
         encoding="utf-8",
     )
-    output = DIST / f"open-hardware-control_{VERSION}_all.deb"
-    subprocess.run(["dpkg-deb", "--build", "--root-owner-group", str(root), str(output)], check=True)
+    deb_version = VERSION + "~intern1" if INTERNAL else VERSION
+    output = DIST / f"open-hardware-control_{deb_version}_all.deb"
+    # Use a single gzip worker for broad apt/dpkg compatibility.  The explicit
+    # payload check below also rejects the control-only package observed on the
+    # current overlay-based internal builder instead of publishing it.
+    subprocess.run(
+        [
+            "dpkg-deb",
+            "-Zgzip",
+            "-z9",
+            "--threads-max=1",
+            "--build",
+            "--root-owner-group",
+            str(root),
+            str(output),
+        ],
+        check=True,
+    )
+    listing = subprocess.run(
+        ["dpkg-deb", "--contents", str(output)],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    if "./usr/share/open-hardware-control/VERSION" not in listing or output.stat().st_size < 64 * 1024:
+        raise SystemExit("Debian package validation failed: runtime payload is incomplete")
     return output
 
 
 def build_rpm(temp: Path) -> Path:
+    rpm_release = "0.intern1" if INTERNAL else "1"
+    output = DIST / f"open-hardware-control-{VERSION}-{rpm_release}.noarch.rpm"
     if not shutil.which("rpmbuild"):
-        raise SystemExit("rpmbuild is required to build the Fedora RPM")
+        payload = temp / f"open-hardware-control-{VERSION}-fallback-root"
+        payload.mkdir()
+        install_runtime_tree(payload)
+        build_noarch_rpm(
+            payload,
+            output,
+            version=VERSION,
+            release=rpm_release,
+            channel=CHANNEL,
+        )
+        print("Built RPM with the standard-library fallback writer (rpmbuild unavailable)")
+        return output
     top = temp / "rpmbuild"
     for name in ("BUILD", "BUILDROOT", "RPMS", "SOURCES", "SPECS", "SRPMS"):
         (top / name).mkdir(parents=True)
 
-    payload = temp / "rpm-payload" / f"open-hardware-control-{VERSION}"
-    payload.mkdir(parents=True)
+    payload = temp / f"open-hardware-control-{VERSION}"
+    payload.mkdir()
     install_runtime_tree(payload)
     source = top / "SOURCES" / f"open-hardware-control-{VERSION}.tar.gz"
     with tarfile.open(source, "w:gz") as archive:
@@ -197,10 +286,10 @@ def build_rpm(temp: Path) -> Path:
     spec.write_text(
         f"""Name:           open-hardware-control
 Version:        {VERSION}
-Release:        1%{{?dist}}
-Summary:        NZXT Kraken and Corsair/OpenLinkHub control for Linux
+Release:        {"0.intern1" if INTERNAL else "1"}%{{?dist}}
+Summary:        NZXT Kraken, Corsair/OpenLinkHub and RGB Studio for Linux
 License:        GPL-3.0-or-later
-URL:            https://github.com/Frelidon/kraken-control-linux
+URL:            https://github.com/Frelidon/open-hardware-control
 Source0:        %{{name}}-%{{version}}.tar.gz
 BuildArch:      noarch
 Requires:       python3
@@ -212,7 +301,7 @@ Requires:       polkit
 
 %description
 Open-source Linux GUI for NZXT Kraken LCD, pump, fan and RGB control with
-an allow-listed local OpenLinkHub integration for Corsair devices.
+local OpenLinkHub and optional loopback-only OpenRGB SDK integration.
 
 %prep
 %setup -q
@@ -226,21 +315,24 @@ cp -a usr %{{buildroot}}/
 %files
 /usr/bin/open-hardware-control
 /usr/bin/open-hardware-control-diagnostics
+/usr/bin/open-hardware-control-desktop-shell
 /usr/bin/kraken-control
 /usr/share/open-hardware-control
 /usr/share/applications/open-hardware-control.desktop
 /usr/share/icons/hicolor/scalable/apps/open-hardware-control.svg
+/usr/share/metainfo/io.github.Frelidon.OpenHardwareControl.metainfo.xml
 /usr/lib/udev/rules.d/71-nzxt-kraken-2023.rules
+/usr/libexec/open-hardware-control-fan-helper
+/usr/share/polkit-1/actions/io.github.Frelidon.OpenHardwareControl.fan.policy
 
 %changelog
-* Fri Aug 14 2026 Frelidon <noreply@github.com> - {VERSION}-1
-- Open Hardware Control {VERSION}
+* Sun Aug 23 2026 Frelidon <noreply@github.com> - {VERSION}-{"0.intern1" if INTERNAL else "1"}
+- Open Hardware Control {VERSION} {CHANNEL}
 """,
         encoding="utf-8",
     )
     subprocess.run(["rpmbuild", "-bb", "--define", f"_topdir {top}", str(spec)], check=True)
     built = next((top / "RPMS").rglob("*.rpm"))
-    output = DIST / f"open-hardware-control-{VERSION}-1.noarch.rpm"
     shutil.copy2(built, output)
     return output
 
@@ -248,21 +340,23 @@ cp -a usr %{{buildroot}}/
 with tempfile.TemporaryDirectory(prefix="open-hardware-control-release-") as temp_name:
     temp = Path(temp_name)
 
-    runtime_name = f"open-hardware-control-{VERSION}"
+    suffix = "-INTERN" if INTERNAL else ""
+    runtime_name = f"open-hardware-control-{VERSION}{suffix}"
     runtime = temp / runtime_name
     runtime.mkdir()
     copy_tree(ROOT, runtime, developer=False)
     write_manifest(runtime)
-    write_zip(runtime, DIST / f"open_hardware_control_v{VERSION.replace('.', '_')}.zip", runtime_name)
+    zip_suffix = "_INTERN" if INTERNAL else ""
+    write_zip(runtime, DIST / f"open_hardware_control_v{VERSION.replace('.', '_')}{zip_suffix}.zip", runtime_name)
 
-    developer_name = f"Entwicklerpaket {VERSION}"
+    developer_name = f"Entwicklerpaket {VERSION}{' INTERN' if INTERNAL else ''}"
     developer = temp / developer_name
     developer.mkdir()
     copy_tree(ROOT, developer, developer=True)
     write_manifest(developer)
     write_zip(developer, DIST / f"{developer_name}.zip", developer_name)
 
-    source_name = f"open-hardware-control-{VERSION}-source"
+    source_name = f"open-hardware-control-{VERSION}{'-INTERN' if INTERNAL else ''}-source"
     source_root = temp / source_name
     source_root.mkdir()
     copy_tree(ROOT, source_root, developer=True)

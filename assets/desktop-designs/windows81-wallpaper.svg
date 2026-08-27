@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="3840" height="2160" viewBox="0 0 3840 2160">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#072f64"/>
+      <stop offset="0.55" stop-color="#126b9f"/>
+      <stop offset="1" stop-color="#6ec4be"/>
+    </linearGradient>
+    <radialGradient id="sun">
+      <stop offset="0" stop-color="#fff6bc" stop-opacity="0.78"/>
+      <stop offset="1" stop-color="#8ad3cf" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="3840" height="2160" fill="url(#base)"/>
+  <ellipse cx="2850" cy="470" rx="1120" ry="880" fill="url(#sun)"/>
+  <path d="M0 1840 C650 1300 1220 1360 1740 1700 C2240 2010 2910 1370 3840 1240 L3840 2160 L0 2160 Z" fill="#113a65" opacity="0.54"/>
+  <path d="M0 1990 C780 1650 1430 1810 2070 1940 C2790 2090 3200 1660 3840 1570 L3840 2160 L0 2160 Z" fill="#071f45" opacity="0.55"/>
+  <g fill="#ffffff" opacity="0.42">
+    <circle cx="500" cy="470" r="7"/><circle cx="920" cy="690" r="5"/><circle cx="1430" cy="330" r="8"/>
+    <circle cx="1870" cy="710" r="6"/><circle cx="3390" cy="340" r="5"/>
+  </g>
+</svg>

@@ -37,24 +37,45 @@ package_for() {
     case "$PACKAGE_FAMILY:$key" in
         dnf:liquidctl) echo "liquidctl" ;;
         dnf:pyside6) echo "python3-pyside6" ;;
+        dnf:pyside6network) echo "python3-pyside6" ;;
+        dnf:pyside6dbus) echo "python3-pyside6" ;;
         dnf:qtsvg) echo "qt6-qtsvg" ;;
         dnf:pillow) echo "python3-pillow" ;;
+        dnf:kconfig6) echo "kf6-kconfig" ;;
+        dnf:qdbus6) echo "qt6-qttools" ;;
+        dnf:openrgb) echo "openrgb" ;;
+        dnf:openrgb_udev) echo "openrgb-udev-rules" ;;
         dnf:polkit) echo "polkit" ;;
         apt:liquidctl) echo "liquidctl" ;;
         apt:pyside6) echo "python3-pyside6.qtwidgets" ;;
+        apt:pyside6network) echo "python3-pyside6.qtnetwork" ;;
+        apt:pyside6dbus) echo "python3-pyside6.qtdbus" ;;
         apt:qtsvg) echo "python3-pyside6.qtsvg" ;;
         apt:pillow) echo "python3-pil" ;;
+        apt:kconfig6) echo "libkf6config-bin" ;;
+        apt:qdbus6) echo "qdbus-qt6" ;;
         apt:polkit) echo "policykit-1" ;;
+        apt:openrgb) echo "openrgb" ;;
         pacman:liquidctl) echo "liquidctl" ;;
         pacman:pyside6) echo "pyside6" ;;
+        pacman:pyside6network) echo "pyside6" ;;
+        pacman:pyside6dbus) echo "pyside6" ;;
         pacman:qtsvg) echo "qt6-svg" ;;
         pacman:pillow) echo "python-pillow" ;;
+        pacman:kconfig6) echo "kconfig" ;;
+        pacman:qdbus6) echo "qt6-tools" ;;
         pacman:polkit) echo "polkit" ;;
+        pacman:openrgb) echo "openrgb" ;;
         zypper:liquidctl) echo "liquidctl" ;;
         zypper:pyside6) echo "python3-pyside6" ;;
+        zypper:pyside6network) echo "python3-pyside6" ;;
+        zypper:pyside6dbus) echo "python3-pyside6" ;;
         zypper:qtsvg) echo "libQt6Svg6" ;;
         zypper:pillow) echo "python3-Pillow" ;;
+        zypper:kconfig6) echo "kf6-kconfig" ;;
+        zypper:qdbus6) echo "qt6-tools-qdbus" ;;
         zypper:polkit) echo "polkit" ;;
+        zypper:openrgb) echo "openrgb" ;;
         *) return 1 ;;
     esac
 }
@@ -69,12 +90,39 @@ add_missing() {
     [[ -n "$package" ]] && missing_packages+=("$package")
 }
 
-if [[ "$MODE" != "--check-gui-and-install" ]]; then
+qdbus6_available() {
+    command -v qdbus6 >/dev/null 2>&1 ||
+        command -v qdbus-qt6 >/dev/null 2>&1 ||
+        [[ -x /usr/lib64/qt6/bin/qdbus ]] ||
+        [[ -x /usr/lib/qt6/bin/qdbus ]]
+}
+
+CHECK_GUI_ONLY=false
+CHECK_DESKTOP_ONLY=false
+CHECK_OPENRGB_ONLY=false
+case "$MODE" in
+    --check-gui-and-install) CHECK_GUI_ONLY=true ;;
+    --check-desktop|--install-desktop|--check-desktop-and-install) CHECK_DESKTOP_ONLY=true ;;
+    --check-openrgb|--install-openrgb|--check-openrgb-and-install) CHECK_OPENRGB_ONLY=true ;;
+esac
+
+if [[ "$CHECK_OPENRGB_ONLY" == true ]]; then
+    command -v openrgb >/dev/null 2>&1 || command -v OpenRGB >/dev/null 2>&1 || add_missing "openrgb" "OpenRGB mit lokalem SDK-Server"
+    if [[ "$PACKAGE_FAMILY" == "dnf" ]] && ! rpm -q openrgb-udev-rules >/dev/null 2>&1; then
+        add_missing "openrgb_udev" "OpenRGB-udev-Regeln für Benutzerzugriff"
+    fi
+elif [[ "$CHECK_DESKTOP_ONLY" == true ]]; then
+    command -v kwriteconfig6 >/dev/null 2>&1 || add_missing "kconfig6" "kwriteconfig6 / KDE Frameworks 6 KConfig"
+    qdbus6_available || add_missing "qdbus6" "Qt-6-D-Bus-Werkzeug (qdbus)"
+    python3 -c 'from PySide6.QtNetwork import QLocalServer' >/dev/null 2>&1 || add_missing "pyside6network" "PySide6 QtNetwork für die lokale Kachelübersicht"
+    python3 -c 'from PySide6.QtDBus import QDBusConnection' >/dev/null 2>&1 || add_missing "pyside6dbus" "PySide6 QtDBus für die Charms-Leiste"
+elif [[ "$CHECK_GUI_ONLY" == true ]]; then
+    python3 -c 'import PySide6' >/dev/null 2>&1 || add_missing "pyside6" "PySide6 / Qt for Python"
+    python3 -c 'from PySide6.QtGui import QImageReader; assert any(bytes(x).lower() == b"svg" for x in QImageReader.supportedImageFormats())' >/dev/null 2>&1 || add_missing "qtsvg" "Qt-SVG-Unterstützung"
+else
     command -v liquidctl >/dev/null 2>&1 || add_missing "liquidctl" "liquidctl"
-fi
-python3 -c 'import PySide6' >/dev/null 2>&1 || add_missing "pyside6" "PySide6 / Qt for Python"
-python3 -c 'from PySide6.QtGui import QImageReader; assert any(bytes(x).lower() == b"svg" for x in QImageReader.supportedImageFormats())' >/dev/null 2>&1 || add_missing "qtsvg" "Qt-SVG-Unterstützung"
-if [[ "$MODE" != "--check-gui-and-install" ]]; then
+    python3 -c 'import PySide6' >/dev/null 2>&1 || add_missing "pyside6" "PySide6 / Qt for Python"
+    python3 -c 'from PySide6.QtGui import QImageReader; assert any(bytes(x).lower() == b"svg" for x in QImageReader.supportedImageFormats())' >/dev/null 2>&1 || add_missing "qtsvg" "Qt-SVG-Unterstützung"
     python3 -c 'from PIL import Image' >/dev/null 2>&1 || add_missing "pillow" "Pillow"
 fi
 
@@ -113,6 +161,8 @@ show_error() {
 ask_confirmation() {
     local purpose="für das NZXT-Modul"
     [[ "$MODE" == "--check-gui-and-install" ]] && purpose="für die grafische Oberfläche"
+    [[ "$CHECK_DESKTOP_ONLY" == true ]] && purpose="für die KDE-Plasma-Desktop-Designs"
+    [[ "$CHECK_OPENRGB_ONLY" == true ]] && purpose="für das optionale RGB-Studio"
     local message="Open Hardware Control benötigt ${purpose} folgende Pakete:\n\n${label_list}\n\nDistribution: ${DISTRO_ID} (${PACKAGE_FAMILY})\nEs werden nur die bereits eingerichteten Paketquellen verwendet. Es werden keine fremden Paketquellen hinzugefügt.\n\nFortfahren?"
     if command -v kdialog >/dev/null 2>&1; then
         kdialog --title "Abhängigkeiten installieren" --yesno "$message"
@@ -132,7 +182,7 @@ ask_confirmation() {
     return 1
 }
 
-if [[ "$MODE" == "--check" ]]; then
+if [[ "$MODE" == "--check" || "$MODE" == "--check-desktop" || "$MODE" == "--check-openrgb" ]]; then
     printf '%s\n' "${missing_packages[@]}"
     exit 10
 fi
@@ -142,12 +192,12 @@ if [[ "$PACKAGE_FAMILY" == "unknown" || -z "$PACKAGE_MANAGER" || ${#missing_pack
     exit 2
 fi
 
-if [[ "$MODE" == "--check-and-install" || "$MODE" == "--check-gui-and-install" ]]; then
+if [[ "$MODE" == "--check-and-install" || "$MODE" == "--check-gui-and-install" || "$MODE" == "--check-desktop-and-install" || "$MODE" == "--check-openrgb-and-install" ]]; then
     if ! ask_confirmation; then
         echo "Installation abgebrochen."
         exit 20
     fi
-elif [[ "$MODE" != "--install" ]]; then
+elif [[ "$MODE" != "--install" && "$MODE" != "--install-desktop" && "$MODE" != "--install-openrgb" ]]; then
     echo "Unbekannter Modus: $MODE" >&2
     exit 64
 fi
@@ -172,12 +222,23 @@ else
 fi
 
 remaining=()
-if [[ "$MODE" != "--check-gui-and-install" ]]; then
+if [[ "$CHECK_OPENRGB_ONLY" == true ]]; then
+    command -v openrgb >/dev/null 2>&1 || command -v OpenRGB >/dev/null 2>&1 || remaining+=("OpenRGB")
+    if [[ "$PACKAGE_FAMILY" == "dnf" ]] && ! rpm -q openrgb-udev-rules >/dev/null 2>&1; then
+        remaining+=("openrgb-udev-rules")
+    fi
+elif [[ "$CHECK_DESKTOP_ONLY" == true ]]; then
+    command -v kwriteconfig6 >/dev/null 2>&1 || remaining+=("kwriteconfig6")
+    qdbus6_available || remaining+=("qdbus (Qt 6)")
+    python3 -c 'from PySide6.QtNetwork import QLocalServer' >/dev/null 2>&1 || remaining+=("PySide6 QtNetwork")
+    python3 -c 'from PySide6.QtDBus import QDBusConnection' >/dev/null 2>&1 || remaining+=("PySide6 QtDBus")
+elif [[ "$CHECK_GUI_ONLY" == true ]]; then
+    python3 -c 'import PySide6' >/dev/null 2>&1 || remaining+=("PySide6")
+    python3 -c 'from PySide6.QtGui import QImageReader; assert any(bytes(x).lower() == b"svg" for x in QImageReader.supportedImageFormats())' >/dev/null 2>&1 || remaining+=("Qt SVG")
+else
     command -v liquidctl >/dev/null 2>&1 || remaining+=("liquidctl")
-fi
-python3 -c 'import PySide6' >/dev/null 2>&1 || remaining+=("PySide6")
-python3 -c 'from PySide6.QtGui import QImageReader; assert any(bytes(x).lower() == b"svg" for x in QImageReader.supportedImageFormats())' >/dev/null 2>&1 || remaining+=("Qt SVG")
-if [[ "$MODE" != "--check-gui-and-install" ]]; then
+    python3 -c 'import PySide6' >/dev/null 2>&1 || remaining+=("PySide6")
+    python3 -c 'from PySide6.QtGui import QImageReader; assert any(bytes(x).lower() == b"svg" for x in QImageReader.supportedImageFormats())' >/dev/null 2>&1 || remaining+=("Qt SVG")
     python3 -c 'from PIL import Image' >/dev/null 2>&1 || remaining+=("Pillow")
 fi
 

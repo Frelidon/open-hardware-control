@@ -5,4 +5,4 @@ ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 VERSION="${1:-$(tr -d '\r\n' < "$ROOT/VERSION")}" 
 cd "$ROOT"
 ./scripts/check_release.sh
-python3 scripts/build_release.py "$VERSION"
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/build_release.py "$VERSION"

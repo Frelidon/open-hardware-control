@@ -3,8 +3,14 @@
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 VERSION="$(tr -d '\r\n' < "$ROOT/VERSION")"
+CHANNEL="$(tr -d '\r\n' < "$ROOT/BUILD_CHANNEL")"
 TAG="${1:-v$VERSION}"
 cd "$ROOT"
+
+if [[ "$CHANNEL" != "STABLE" ]]; then
+  echo "Refusing public GitHub release: BUILD_CHANNEL is $CHANNEL, not STABLE." >&2
+  exit 1
+fi
 
 if ! command -v gh >/dev/null 2>&1 || ! gh auth status >/dev/null 2>&1; then
   echo "GitHub CLI is missing or not authenticated. Run: gh auth login --web" >&2
@@ -28,6 +34,7 @@ if git rev-parse "$TAG" >/dev/null 2>&1; then
 fi
 
 ./scripts/check_release.sh
+./scripts/check_drive_backup.sh
 ./scripts/build_release.sh "$VERSION"
 
 printf 'Create and push tag %s? This will trigger the public GitHub Release workflow. [y/N] ' "$TAG"

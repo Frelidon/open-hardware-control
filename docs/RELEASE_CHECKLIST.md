@@ -9,6 +9,9 @@
 - [ ] real hardware smoke test completed where relevant
 - [ ] no personal logs, profiles, secrets or proprietary assets added
 - [ ] CI on `main` is green
+- [ ] final commit is backed up with `./scripts/prepare_drive_backup.sh`
+- [ ] exact backup ZIP is uploaded to the configured Google Drive folder
+- [ ] `./scripts/check_drive_backup.sh` passes for the exact final `HEAD`
 
 ## Release
 

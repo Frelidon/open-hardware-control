@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "provider": "google-drive",
+  "cursor_plugin": "google-drive",
+  "drive_folder": "OpenHardware-Control/Backups",
+  "local_staging_dir": ".ohc-backups",
+  "require_clean_worktree": true,
+  "require_drive_backup_before_git_push": true,
+  "include_git_bundle": true,
+  "include_head_source_archive": true,
+  "notes": "OAuth credentials must never be stored in this repository. Connect the official Google Drive plugin in Cursor or use a user-controlled Drive mount fallback."
+}

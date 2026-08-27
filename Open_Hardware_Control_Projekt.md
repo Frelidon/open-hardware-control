@@ -1,12 +1,103 @@
 # Open Hardware Control – zentrale Projektdokumentation
 
-Stand: **3.0.9**, 14. August 2026
+Stand: **3.4.26 INTERN**, 27. August 2026
 
 ## Zielbild
 
-Open Hardware Control by Frelidon ist die gemeinsame, modular erweiterbare Linux-Oberfläche für unterstützte Hardware. Die komplette bisherige NZXT-Kraken-Anwendung bleibt als fest eingebautes NZXT-Modul erhalten. Corsair-Hardware wird über OpenLinkHub eingebunden. Spätere Gerätefamilien können als weitere Module hinzukommen, ohne die Navigation mit einer langen Reihe von Hauptreitern zu überladen.
+Open Hardware Control by Frelidon ist die gemeinsame, modular erweiterbare Linux-Oberfläche für unterstützte Hardware. Die komplette bisherige NZXT-Kraken-Anwendung bleibt als fest eingebautes NZXT-Modul erhalten. Corsair-Hardware wird über OpenLinkHub eingebunden. Zusätzliche RGB-Geräte erscheinen über eine von OHC automatisch verwaltete lokale Hardware-Engine. Spätere Gerätefamilien können als weitere Module hinzukommen, ohne die Navigation mit einer langen Reihe von Hauptreitern zu überladen.
 
 Open Radeon Control Center bleibt ein eigenständiges Projekt. Es wird weder technisch noch organisatorisch in Open Hardware Control verschmolzen.
+
+## Version 3.4.26 INTERN
+
+Das Repository besitzt nun ein dauerhaftes, versioniertes KI-Projektgedächtnis für Cursor und andere Coding-Agenten. Projektregeln, Session-Hook, Backup-Gate und Release-Skripte sorgen dafür, dass neue Chats den aktuellen Stand wiederfinden und kein GitHub-Push ohne bestätigtes Google-Drive-Backup des exakten Commits erfolgt.
+
+## Version 3.4.16 INTERN
+
+- Übernimmt schnelle RGB-Parameteränderungen seriell nach dem Latest-value-wins-Prinzip.
+- Ordnet SDK-Bestätigungen dem tatsächlich übertragenen Frame zu.
+- Prüft den Gerätebestand einmal pro Minute rein lesend und schützt die vollständige Liste vor kurzzeitigen 7→2-Startresultaten.
+
+## Version 3.4.15 INTERN
+
+RGB Studio zeigt jeden OHC-Modus einzeln mit Beschreibung und genau den dafür sinnvollen Farbfeldern. Farben sind als Hexcode, Standardfarbe oder über den Farbdialog wählbar. Die Standardreihenfolge beginnt mit der verwalteten Engine, gefolgt von Geräten/Effekten, PC-Aufbau und Gruppen. Die Hauptbereiche von RGB, LCD und Kühlung sind benutzersortierbar, ihre innere Struktur bleibt fest. Die Übersicht bleibt zuerst und ergänzt ein-/ausblendbare CPU-, GPU-, VRAM- und Topologiekarten.
+
+## Version 3.4.13 INTERN
+
+Animationen für OpenRGB-Direct-Geräte verwenden nun einen dauerhaften Mehrgeräte-SDK-Worker mit 25-Hz-Ziel und ohne Prozess-/TCP-Neustart pro Gerät. Der RGB-Einrichtungsassistent verbindet Konfliktprüfung, Umbenennen, Einzeltest, Zonen-Sichttest, Thermaltake-Aufbau und GPU-External-Control.
+
+## Version 3.4.10 INTERN
+
+Die realen Logs erklären den Ausfall von MSI MYSTIC LIGHT und Airgoo AG-DRGB16: OpenRGB meldet die Kanalnamen, hat für diese variablen ARGB-Zonen aber null Farbplätze angelegt. OHC liest deshalb aktuelle Größe sowie Mindest-/Höchstwert über SDK 5 und bietet einen eigenen Einrichtungsdialog für `Lüfter/Geräte × LEDs je Gerät`. Bekannte A1-/A2-Lüfterzahlen aus der Thermaltake-Ansicht werden vorgeschlagen, die modellabhängige LED-Zahl bleibt eine bewusste Benutzereingabe.
+
+Beim Anwenden validiert OHC jede Zone, sendet den offiziell dokumentierten `RESIZEZONE`-Auftrag, liest die neue Größe zurück, aktiviert Direct Mode und überträgt erst dann die Farbe. Eine noch fehlende Zonengröße ist keine defekte Hardware und führt deshalb nicht mehr nach drei Frames zur Sitzungssperre. NZXT-Aufträge laufen bei gemischter Auswahl zuerst, damit die Kraken nicht hinter mehreren seriellen OpenRGB-Rücklesungen wartet.
+
+## Version 3.4.8 INTERN
+
+Direct-Geräte werden nicht länger schon nach erfolgreichem Socketversand als eingestellt gewertet. Der OHC-SDK-Helfer synchronisiert Geräteanzahl, Controller, Modus, Zonen und tatsächlichen Farbpuffer, schreibt vollständig abgebildete Controller zoneweise und liest den kompletten Zielzustand zurück. Damit erhalten ENE DRAM, MSI MYSTIC LIGHT und Airgoo den Treiberpfad, der ihre gemeldeten Zonen unmittelbar aktualisiert.
+
+Eine `/proc`-Prüfung erkennt außerdem eine separat laufende OpenRGB-Oberfläche auch ohne offenen SDK-Port. OHC blockiert dann seine Engine und jeden RGB-Auftrag, nennt die fremde PID und beendet den Prozess nicht. Bei gemeinsamer Auswahl aller drei NZXT-Kanäle wird der auf der Referenzhardware bestätigte `sync`-Pfad genutzt; einzeln ausgewählte Kanäle bleiben getrennt.
+
+## Version 3.4.7 INTERN
+
+Der im realen RAM-Test gemeldete OpenRGB-SDK-Server verwendet Protokollversion 5. Der OHC-Schreiber unterstützt nun die Revisionen 4 und 5 und handelt die gemeinsame Revision nach demselben Mindestprinzip wie der offizielle OpenRGB-Client aus. Paket-, Geräte-, LED-, Farb- und Loopback-Grenzen bleiben unverändert.
+
+Der NZXT-2023-Treiber in liquidctl 1.16.0 akzeptiert `marquee-4` auf Frelidons Controller nicht. OHC bietet diesen Alias nicht mehr an und verwendet für Glut-Komet den gültigen Hardwaremodus `pulse`; Kreisel und Abwechselnd erhalten ebenfalls bestätigte Alternativen. Zusätzlich besitzt die gesamte Anwendung nun eine eigene Kernel-Dateisperre. Sie liegt vor jedem Qt-/Backend-/Hardwareaufbau, sodass ein zweiter Start niemals eine zweite Kraken-, liquidctl- oder OpenRGB-Sitzung eröffnet.
+
+## Version 3.4.6 INTERN
+
+Die RGB-Geräteauswahl besitzt jetzt eine gut lesbare Ergebnisliste mit Steuerweg und Status. Direct-Geräte werden pro verwalteter Engine-Sitzung nur einmal in den benutzerdefinierten Modus versetzt; weitere Farbframes verwenden ausschließlich den SDK-LED-Pfad. Fehler eines einzelnen Geräts halten Mehrgeräteaktionen nicht mehr vollständig an. Die getrennt bezeichnete GPU-/Hardwaremodus-Auswahl beeinflusst OHC-Effekte nicht mehr unbeabsichtigt, der bereits über `liquidctl` dargestellte NZXT-Controller erscheint nicht zusätzlich als OpenRGB-Duplikat und die RGB-Seite stellt ihre Scrollposition nach Aktionen zuverlässig wieder her. Aktuelle und vorherige Sitzungsprotokolle werden automatisch unter `~/.local/state/open-hardware-control/` geführt und vom Diagnosepaket übernommen.
+
+## Version 3.4.5 INTERN
+
+Der Fedora-Coredump für Airgoo AG-DRGB16 bestätigt den OpenRGB-`ApplyOptions`-Abbruch auch bei einem gültigen Einzelgerätebefehl. OHC schreibt Direct-Geräte deshalb mit einem eigenen, begrenzten Loopback-SDK-Helfer, während OpenRGB separat installiert bleibt und weiterhin Erkennung sowie Hardwareprotokolle übernimmt. Statische Farben, Einzeltest und OHC-Animationen umgehen so den abstürzenden CLI-Pfad.
+
+Die RGB-Seite bewahrt beim Kachel-/Gruppenneuaufbau ihre Scrollposition. Frelidons Thermaltake-Ansicht startet geordnet mit zwölf Lüftern: 3 oben, 2 vorne, 3 an Rückwand/Seite, 3 auf der Netzteilabdeckung vorne und 1 hinten. Eigene Blöcke können hinzugefügt, bearbeitet, entfernt und automatisch angeordnet werden; vorhandene eigene Gruppen und Blöcke bleiben bei der Schemaaktualisierung erhalten.
+
+## Version 3.4.4 INTERN
+
+Die vierzehn gemeldeten OpenRGB-Geräte wurden als vollständiges Spiegelinventar `0…6` plus `7…13` erkannt und auf sieben tatsächliche Backendmeldungen reduziert. Die Reset-/Neustart-Reihenfolge invalidiert alte Erkennungsantworten und schaltet Schreibaktionen erst nach erfolgreichem Engine-Neustart wieder frei. Die bisherige PC-Formularansicht wurde durch einen verschiebbaren Thermaltake-360-mm-Aufbau ersetzt.
+
+## Version 3.4.3 INTERN
+
+Vier Coredumps von OpenRGB `1.0~rc2` auf Fedora 44 bestätigen gerätespezifische `ApplyOptions`-Abstürze auch bei gültigen Einzelgerätebefehlen. Die Anwendung erkennt die charakteristische `stl_vector`-Assertion, isoliert nur die zugeordnete Gerätekachel für die aktuelle Sitzung und setzt Befehlsfolgen mit den übrigen Geräten fort. Direct-Mode-Fehler werden pro Gerät gezählt, sodass erfolgreiche Frames anderer Controller einen wiederholt fehlschlagenden Controller nicht länger verdecken.
+
+## Version 3.4.2 INTERN
+
+Der Start-Hotfix korrigiert die Initialisierungsreihenfolge der RGB-Vorschau: Ihr Zeitgeber existiert nun vor dem Aufbau der RGB-Seite. Zusätzlich schützt ein Fallback gegen vergleichbare frühe Aufrufe. Automatische private Start- und Absturzprotokolle im XDG-Zustandsverzeichnis werden vom Diagnosewerkzeug anonymisiert mit erfasst.
+
+## Version 3.4.1 INTERN
+
+Das RGB-Studio startet das separat installierte OpenRGB-Backend selbst als privaten, fensterlosen Kindprozess auf `127.0.0.1:6742`. Ein eigener OpenRGB-Start ist nicht mehr nötig. Version 3.4.1 verarbeitet jedes Gerät in einer eigenen seriellen CLI-Transaktion, nachdem OpenRGB 1.0~rc2 bei mehreren `--device`-Blöcken reproduzierbar in `ApplyOptions` abgestürzt ist. Geräte ohne Direct Mode erhalten passende gemeldete native Fallbacks.
+
+Auswahl und Gruppen bleiben erhalten, auch wenn die Oberfläche vor der asynchronen Erkennung aufgebaut wird. Gleichnamige Geräte sind getrennt benennbar. Die neue PC-Skizze speichert Position, Anzahl, Anschluss, Gruppe und zugeordnete Kacheln; Frelidons Vorlage enthält Kraken, A1/A2, B6/B7 und `SYS-FAN6`. Die separate sichtbare NZXT-RGB-Box entfällt zugunsten der gemeinsamen `led1`-bis-`led3`-Kacheln.
+
+Schreibzugriffe bleiben pro Sitzung gesperrt. Eine fremde OpenRGB-Instanz und eine zweite schreibende OHC-Instanz werden blockiert. ENE-DRAM-Namensvarianten werden paarweise dedupliziert, ohne echte Riegel zusammenzulegen. NZXT „Flügel“ und andere topology-sensitive Modi werden pro physischem Lüfterkanal übertragen. Eine Softwareanimation hat höchstens einen Einzelgeräteprozess gleichzeitig und stoppt nach drei Fehlern. Der Komplett-Reset beendet Animationen, setzt verfügbare Hardwarestandards und gibt die verwaltete Engine frei.
+
+OpenRGB und das Effects Plugin wurden als GPL-2.0-or-later geprüft. Eine Kombination unter GPLv3 wäre lizenzseitig grundsätzlich möglich. 3.4.1 übernimmt dennoch keinen fremden C++-/Plugin-Code und keine Assets, sondern verwendet den separaten Dienst und eigene Algorithmen. Der Build bleibt intern, bis reale Mehrgeräte- und Distributionsprüfungen erfolgt sind.
+
+Der Desktop-Design-Bereich ist seit 3.3.0 ausdrücklich experimentell, standardmäßig ausgeschaltet und vollständig aus Navigation und Ansichtsmenü verborgen. Er erscheint erst nach Aktivierung in den Einstellungen; bis dahin erfolgt auch kein Paketangebot.
+
+## Version 3.2.0 INTERN
+
+Windows-8/8.1-Kachelübersicht und Charms-Leiste, freie auswählbare OHC-Symbole/Mauszeiger sowie selektierbare
+Desktop-Backups mit geprüftem Export/Import und Breeze-Light-Notfallfallback. Der Build bleibt intern.
+
+## Version 3.1.1 INTERN
+
+Fedora 44 liefert das für Plasma-Skripte verwendete Qt-6-D-Bus-Werkzeug als `qdbus-qt6` statt `qdbus6` aus.
+Die Anwendung erkennt jetzt beide Namen und bekannte Qt6-Systempfade direkt. Fehlende KDE-Werkzeuge werden
+einmal automatisch angeboten und können auch später über den Desktop-Design-Bereich installiert werden. Die
+Paketzuordnung unterstützt DNF, APT, Pacman und Zypper; optionale Desktop-Abhängigkeiten blockieren die
+Hardwaresteuerung nicht.
+
+Die hierarchische Navigation enthält neu **System → Desktop-Designs**. Das Modul wird nur in einer erkannten KDE-Plasma-6-Sitzung freigeschaltet und bietet eine Windows-11-artige Anordnung mit unterer Leiste sowie eine macOS-artige Anordnung mit oberer Systemleiste und unterem Dock. Beide Anordnungen besitzen einen hellen und einen dunklen Modus.
+
+Die Vorschau ist vollständig schreibfrei. Erst ein eigener Bestätigungsdialog startet die Änderung. Unmittelbar davor werden `kdeglobals`, `kwinrc`, Plasma-Leistenlayout und weitere ausdrücklich berührte KDE-Dateien in einem datierten Benutzer-Backup gesichert. Scheitert ein Schritt, wird dieses Backup automatisch wiederhergestellt. Das letzte Backup lässt sich zusätzlich manuell aus der Oberfläche zurückspielen.
+
+Für die Optik werden ausschließlich bereits vorhandene KDE-Breeze-Komponenten, Noto Sans und zwei im Projekt erstellte GPL-SVG-Hintergründe verwendet. Es gibt keine externen Design-Downloads, keine zusätzlichen Paketquellen, keine Administratoraktion und keine Microsoft-/Apple-Logos, -Schriften oder -Hintergrundbilder. Andere Desktopumgebungen werden nicht verändert.
+
+Der Build ist ausdrücklich intern: ZIP, DEB und RPM tragen eine INTERN-/intern1-Kennzeichnung. `BUILD_CHANNEL=INTERN` sperrt die öffentlichen Veröffentlichungshelfer, damit dieser Teststand nicht versehentlich als GitHub-Release erscheint. Die Hardwarefunktionen aus 3.0.9 bleiben unverändert enthalten.
 
 ## Version 3.0.9
 

@@ -12,7 +12,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from kraken_lcd_designs import COLOR_PRESETS, DEFAULT_ACCENT, DESIGNS, LABELS, normalize_hex_color, render_hardware_animation, render_hardware_design, render_hardware_frame  # noqa: E402
+from kraken_lcd_designs import COLOR_PRESETS, DEFAULT_ACCENT, DESIGNS, LABELS, normalize_hex_color, render_hardware_animation, render_hardware_design, render_hardware_frame, render_layered_hardware_animation, overlay_clock_on_frame  # noqa: E402
 
 
 assert normalize_hex_color("#00C8FF") == "#00c8ff"
@@ -66,6 +66,37 @@ for fps in (20, 25):
             assert image.convert("RGB").tobytes() != first_frame
 
 assert len(digests) >= len(DESIGNS)
+assert len(DESIGNS) >= 8
+
+clock_overlay = overlay_clock_on_frame(
+    Image.new("RGB", (240, 240), (0, 0, 0)),
+    enabled=True,
+    show_date=True,
+    font_size=64,
+    text_color_hex="#ffffff",
+    background_color_hex="#10141c",
+)
+assert clock_overlay.size == (240, 240)
+assert clock_overlay.convert("L").getextrema()[1] > 0
+
+background = output_dir / "layer-background.png"
+Image.new("RGB", (320, 240), (12, 44, 78)).save(background)
+layered = render_layered_hardware_animation(
+    background,
+    "neon_grid",
+    DEFAULT_ACCENT,
+    31.8,
+    62.4,
+    55.9,
+    output_dir / "layered.gif",
+    fps=20,
+    overlay_animated=True,
+    opacity_percent=75,
+    scale_percent=82,
+)
+with Image.open(layered) as image:
+    assert image.size == (240, 240)
+    assert image.n_frames == 20
 
 snapshot = render_hardware_frame("system_trio", DEFAULT_ACCENT, 31.8, 62.4, 55.9)
 live = render_hardware_frame(
@@ -92,4 +123,4 @@ fahrenheit = render_hardware_frame(
 )
 assert fahrenheit.tobytes() != snapshot.tobytes()
 
-print("Five clean static/animated LCD designs, split text controls, Fahrenheit and four renderer languages passed.")
+print("Eight clean static/animated LCD designs, layered preview, split text controls, Fahrenheit and four renderer languages passed.")

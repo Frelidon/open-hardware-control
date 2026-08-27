@@ -1,0 +1,12 @@
+---
+description: Release, packaging and GitHub publication rules
+globs: "VERSION,BUILD_CHANNEL,CHANGELOG.md,README*.md,docs/RELEASE_*.md,scripts/**,.github/**"
+alwaysApply: false
+---
+
+- `VERSION`, `APP_VERSION`, README artifact names and release notes must agree.
+- `BUILD_CHANNEL=INTERN` intentionally blocks public release publication.
+- Run `./scripts/check_release.sh` before release packaging/publication.
+- Preserve reproducible ZIP/source/DEB/RPM/developer-package and SHA256 generation.
+- No GitHub publication until the Drive backup gate passes.
+- Do not create a public release from an internal build merely because tests pass.

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+  "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <vendor>Open Hardware Control</vendor>
+  <vendor_url>https://github.com/Frelidon/open-hardware-control</vendor_url>
+  <action id="io.github.Frelidon.OpenHardwareControl.fan-control">
+    <description>Control calibrated NCT6687 motherboard fans</description>
+    <description xml:lang="de">Kalibrierte NCT6687-Mainboardlüfter steuern</description>
+    <message>Authentication is required to change motherboard fan control</message>
+    <message xml:lang="de">Zum Ändern der Mainboard-Lüftersteuerung ist eine Authentifizierung erforderlich</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/libexec/open-hardware-control-fan-helper</annotate>
+    <annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
+  </action>
+</policyconfig>

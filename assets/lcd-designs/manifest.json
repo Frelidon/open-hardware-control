@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "license": "GPL-3.0-or-later",
+  "third_party_media": false,
+  "themes": [
+    {
+      "id": "nebula-vanguard",
+      "name": "Nebula Vanguard",
+      "gif": "nebula-vanguard.gif",
+      "preview": "nebula-vanguard-preview-320.png",
+      "source": "nebula-vanguard-source-640.png",
+      "fps": 20,
+      "size": "240x240"
+    },
+    {
+      "id": "ringworld-runner",
+      "name": "Ringworld Runner",
+      "gif": "ringworld-runner.gif",
+      "preview": "ringworld-runner-preview-320.png",
+      "source": "ringworld-runner-source-640.png",
+      "fps": 20,
+      "size": "240x240"
+    },
+    {
+      "id": "singularity-dive",
+      "name": "Singularity Dive",
+      "gif": "singularity-dive.gif",
+      "preview": "singularity-dive-preview-320.png",
+      "source": "singularity-dive-source-640.png",
+      "fps": 20,
+      "size": "240x240"
+    },
+    {
+      "id": "abyssal-bloom",
+      "name": "Abyssal Bloom",
+      "gif": "abyssal-bloom.gif",
+      "preview": "abyssal-bloom-preview-320.png",
+      "source": "abyssal-bloom-source-640.png",
+      "fps": 20,
+      "size": "240x240"
+    },
+    {
+      "id": "neon-rain",
+      "name": "Neon Rain",
+      "gif": "neon-rain.gif",
+      "preview": "neon-rain-preview-320.png",
+      "source": "neon-rain-source-640.png",
+      "fps": 20,
+      "size": "240x240"
+    },
+    {
+      "id": "magma-heart",
+      "name": "Magma Heart",
+      "gif": "magma-heart.gif",
+      "preview": "magma-heart-preview-320.png",
+      "source": "magma-heart-source-640.png",
+      "fps": 20,
+      "size": "240x240"
+    },
+    {
+      "id": "polar-aurora",
+      "name": "Polar Aurora",
+      "gif": "polar-aurora.gif",
+      "preview": "polar-aurora-preview-320.png",
+      "source": "polar-aurora-source-640.png",
+      "fps": 20,
+      "size": "240x240"
+    },
+    {
+      "id": "firefly-grove",
+      "name": "Firefly Grove",
+      "gif": "firefly-grove.gif",
+      "preview": "firefly-grove-preview-320.png",
+      "source": "firefly-grove-source-640.png",
+      "fps": 20,
+      "size": "240x240"
+    }
+  ]
+}

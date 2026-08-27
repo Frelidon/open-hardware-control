@@ -1,16 +1,21 @@
-# Open Hardware Control 3.0.9 auf GitHub veröffentlichen
+# Open Hardware Control 3.4.26 INTERN – Veröffentlichung derzeit gesperrt
 
 Repository: <https://github.com/Frelidon/kraken-control-linux>
+
+Diese interne Testversion darf noch nicht öffentlich veröffentlicht werden. `BUILD_CHANNEL=INTERN` sorgt dafür,
+dass `scripts/create_release.sh` und `scripts/publish_github.sh` abbrechen. Erst nach realem KDE-/Hardwaretest,
+der Umstellung auf `BUILD_CHANNEL=STABLE` und einer erneuten vollständigen Paketprüfung werden Branch, Pull Request,
+Tag und GitHub-Release erstellt. Die folgenden Suchbegriffe bleiben für die spätere öffentliche Version vorgemerkt.
 
 ## Suchbeschreibung und Topics
 
 Empfohlene Repository-Beschreibung:
 
-> Open-source NZXT Kraken LCD, pump, fan and RGB control for Linux with Corsair/OpenLinkHub integration.
+> Open-source NZXT Kraken LCD, pump, fan and RGB control for Linux with Corsair/OpenLinkHub and local OpenRGB SDK integration.
 
 Empfohlene GitHub-Topics:
 
-`linux`, `nzxt`, `nzxt-kraken`, `kraken`, `kraken-lcd`, `aio-cooler`, `liquidctl`, `fan-control`, `lcd-display`, `hardware-control`, `openlinkhub`, `corsair`, `python`, `pyside6`, `fedora`
+`linux`, `nzxt`, `nzxt-kraken`, `kraken`, `kraken-lcd`, `aio-cooler`, `liquidctl`, `fan-control`, `rgb-control`, `openrgb`, `lcd-display`, `hardware-control`, `openlinkhub`, `corsair`, `python`, `pyside6`, `fedora`
 
 Mit angemeldeter GitHub CLI:
 
@@ -39,33 +44,37 @@ gh repo edit Frelidon/kraken-control-linux \
 ```bash
 ./scripts/check_release.sh
 sudo apt install rpm
-./scripts/build_release.sh 3.0.9
+./scripts/build_release.sh 3.4.26
 cd dist
 sha256sum -c SHA256SUMS
 ```
 
 Erwartete Dateien:
 
-- `open_hardware_control_v3_0_9.zip`
-- `open-hardware-control_3.0.9_all.deb`
-- `open-hardware-control-3.0.9-1.noarch.rpm`
-- `open-hardware-control-3.0.9-source.tar.gz`
-- `Entwicklerpaket 3.0.9.zip`
+- `open_hardware_control_v3_4_26_INTERN.zip`
+- `open-hardware-control_3.4.26~intern1_all.deb`
+- `open-hardware-control-3.4.26-0.intern1.noarch.rpm`
+- `open-hardware-control-3.4.26-INTERN-source.tar.gz`
+- `Entwicklerpaket 3.4.26 INTERN.zip`
 - `SHA256SUMS`
 
-## Veröffentlichung
+## Spätere Veröffentlichung
 
 Nach einem grünen Pull Request und sauberem `main`:
 
 ```bash
-git tag -a v3.0.9 -m "Open Hardware Control v3.0.9"
-git push origin v3.0.9
+git tag -a v3.4.26 -m "Open Hardware Control v3.4.26"
+git push origin v3.4.26
 ```
 
-Der Workflow `.github/workflows/release.yml` führt die Tests erneut aus, baut sämtliche Release-Dateien aus demselben Tag und erstellt anschließend das öffentliche GitHub-Release mit `docs/RELEASE_NOTES_v3.0.9.md`.
+Der Workflow `.github/workflows/release.yml` darf erst nach der STABLE-Umstellung verwendet werden. Er führt die Tests erneut aus, baut sämtliche Release-Dateien aus demselben Tag und erstellt anschließend das öffentliche GitHub-Release.
 
 Kontrolle:
 
 ```bash
-gh release view v3.0.9 --web
+gh release view v3.4.26 --web
 ```
+
+## Drive-Backup-Gate vor GitHub
+
+Vor jedem späteren Push muss `BACKUP_AND_RELEASE_POLICY.md` erfüllt sein. `./scripts/check_drive_backup.sh` muss für den exakten finalen `HEAD` erfolgreich sein; Cursor blockiert direkte Push-/Release-Befehle andernfalls zusätzlich per Projekt-Hook.

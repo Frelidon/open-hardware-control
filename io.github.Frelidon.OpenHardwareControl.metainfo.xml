@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.Frelidon.OpenHardwareControl</id>
+  <name>Open Hardware Control</name>
+  <summary>Open-source hardware control for Linux by Frelidon</summary>
+  <developer id="io.github.Frelidon">
+    <name>Frelidon</name>
+  </developer>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <description>
+    <p>
+      Open Hardware Control is an independent open-source Linux application for controlling and monitoring supported PC hardware from one interface.
+    </p>
+    <p>Current integrations include:</p>
+    <ul>
+      <li>NZXT Kraken cooling, pump, radiator fans, RGB and LCD controls</li>
+      <li>LCD images, GIF playback, live hardware dashboards and layered LCD designs</li>
+      <li>Corsair hardware through the local OpenLinkHub service</li>
+      <li>RGB Studio using a loopback-only OpenRGB SDK connection</li>
+      <li>Safety-gated motherboard and case fan control through Linux hwmon/NCT6687</li>
+      <li>Profiles, hardware detection, diagnostics and safety-oriented device handoffs</li>
+    </ul>
+    <p>
+      This is an unofficial independent community project. It is not affiliated with, endorsed by, or officially supported by NZXT, Corsair, OpenLinkHub, OpenRGB or other hardware vendors mentioned by the application.
+    </p>
+  </description>
+  <launchable type="desktop-id">open-hardware-control.desktop</launchable>
+  <icon type="stock">open-hardware-control</icon>
+  <categories>
+    <category>System</category>
+    <category>Settings</category>
+  </categories>
+  <keywords>
+    <keyword>hardware</keyword>
+    <keyword>NZXT</keyword>
+    <keyword>Kraken</keyword>
+    <keyword>Corsair</keyword>
+    <keyword>OpenLinkHub</keyword>
+    <keyword>OpenRGB</keyword>
+    <keyword>RGB</keyword>
+    <keyword>LCD</keyword>
+    <keyword>cooling</keyword>
+    <keyword>fan control</keyword>
+  </keywords>
+  <url type="homepage">https://github.com/Frelidon/open-hardware-control</url>
+  <url type="bugtracker">https://github.com/Frelidon/open-hardware-control/issues</url>
+  <url type="vcs-browser">https://github.com/Frelidon/open-hardware-control</url>
+  <url type="help">https://github.com/Frelidon/open-hardware-control#readme</url>
+  <screenshots>
+    <screenshot type="default">
+      <image type="source">https://raw.githubusercontent.com/Frelidon/open-hardware-control/main/docs/images/screenshots/01-dashboard-overview.png</image>
+      <caption>Hardware overview and live status</caption>
+    </screenshot>
+    <screenshot>
+      <image type="source">https://raw.githubusercontent.com/Frelidon/open-hardware-control/main/docs/images/screenshots/02-cooling-control.png</image>
+      <caption>Cooling control for pump and radiator fans</caption>
+    </screenshot>
+    <screenshot>
+      <image type="source">https://raw.githubusercontent.com/Frelidon/open-hardware-control/main/docs/images/screenshots/03-rgb-control.png</image>
+      <caption>RGB Studio and supported lighting devices</caption>
+    </screenshot>
+    <screenshot>
+      <image type="source">https://raw.githubusercontent.com/Frelidon/open-hardware-control/main/docs/images/screenshots/04-lcd-control.png</image>
+      <caption>NZXT Kraken LCD controls and previews</caption>
+    </screenshot>
+    <screenshot>
+      <image type="source">https://raw.githubusercontent.com/Frelidon/open-hardware-control/main/docs/images/screenshots/06-profiles-management.png</image>
+      <caption>Reusable hardware and display profiles</caption>
+    </screenshot>
+  </screenshots>
+  <content_rating type="oars-1.1" />
+  <releases>
+    <release version="@VERSION@" date="2026-08-26">
+      <description>
+        <p>@CHANNEL@ build with calibration-gated motherboard fan control through Linux hwmon/NCT6687, per-channel sensor curves and safety fallbacks, ENE-DRAM reinitialization, and the existing coordinated LCD/RGB hardware paths.</p>
+      </description>
+    </release>
+  </releases>
+</component>

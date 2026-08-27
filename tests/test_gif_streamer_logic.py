@@ -69,6 +69,13 @@ with tempfile.TemporaryDirectory() as td:
     assert off_meta["interpolation_kind"] == "off"
     assert off_meta["motion_pairs"] == 0
 
+    # 3.4.22 regression: the UI passes a sixth scale argument.  The streamer
+    # must accept it and bake the requested zoom into the prepared frames.
+    scaled, scaled_meta = mod.prepare_gif(path, 0, 25, True, "cam", 140)
+    assert scaled_meta["source_frames"] == 4
+    assert len(scaled) == len(cam)
+    assert all(len(frame.data) == 240*240*2 for frame in scaled)
+
     assert mod.prepared_frame_index(cam, 0.000, 1.0) == 0
     assert mod.prepared_frame_index(cam, 0.999, 1.0) == len(cam)-1
     assert mod.prepared_frame_index(cam, 1.001, 1.0) == 0
@@ -94,8 +101,31 @@ with tempfile.TemporaryDirectory() as td:
     assert len({frame.data for frame in hardware_frames}) == 27
     assert mod.hardware_dynamic_fields("water_halo") == (False, False)
     assert mod.hardware_dynamic_fields("cpu_gpu_dual") == (True, True)
+    assert mod.hardware_dynamic_fields("radar_sweep") == (True, True)
     assert mod.displayed_temperature(61.49) == 61
     assert mod.displayed_temperature(61.51) == 62
+
+    layered_spec_path = Path(td) / "layered-hardware.json"
+    layered_spec_path.write_text(json.dumps({
+        "schema": 2,
+        "design_id": "neon_grid",
+        "accent_hex": "#00c8ff",
+        "liquid": 30.0,
+        "cpu": 52.0,
+        "gpu": 44.0,
+        "content_fps": 25,
+        "layer_background_path": str(path),
+        "layer_overlay_animated": False,
+        "layer_opacity_percent": 75,
+        "layer_scale_percent": 84,
+        "layer_x_percent": 48,
+        "layer_y_percent": 52,
+    }), encoding="utf-8")
+    layered_spec = mod.load_hardware_spec(layered_spec_path)
+    layered_frames, layered_meta = mod.prepare_hardware_animation(layered_spec, 0, "cam")
+    assert layered_meta["layered"] is True
+    assert layered_meta["layer_background_frames"] == 4
+    assert len(layered_frames) == 27
 
     # A gradual animation with a large final-to-first reset must be reported as
     # a probable visible loop transition, without rejecting the GIF.

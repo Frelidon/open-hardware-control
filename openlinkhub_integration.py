@@ -3,7 +3,7 @@
 """Safe local OpenLinkHub discovery, service and control integration.
 
 The GUI invokes this dependency-free helper out of process.  It deliberately
-limits API access to the loopback interface.  Version 3.0.9 exposes a bounded
+limits API access to the loopback interface.  Version 3.4.17 INTERNAL retains a bounded
 allow-list of documented OpenLinkHub write endpoints; arbitrary paths and
 arbitrary JSON are never accepted from the GUI.
 """
@@ -146,7 +146,7 @@ def _api_request(
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
-            "User-Agent": "Open-Hardware-Control/3.0.9",
+            "User-Agent": "Open-Hardware-Control/3.4.17-INTERN",
         },
     )
     with urlopen(request, timeout=timeout) as response:  # noqa: S310 - loopback validated above

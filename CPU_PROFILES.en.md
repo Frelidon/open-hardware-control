@@ -1,4 +1,4 @@
-# AMD AM5 processor profiles in Open Hardware Control 3.0.9
+# AMD AM5 processor profiles in Open Hardware Control 3.4.16 INTERNAL
 
 The profiles only control the supported NZXT Kraken cooling hardware. Pump and radiator-fan curves now use CPU temperature directly. CPU Tjmax and Kraken liquid temperature remain separate quantities.
 

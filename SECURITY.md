@@ -1,4 +1,4 @@
-# Sicherheit – Open Hardware Control by Frelidon 3.0.9
+# Sicherheit – Open Hardware Control by Frelidon 3.4.23 INTERN
 
 ## Projektstatus
 
@@ -16,6 +16,20 @@ Direkte Corsair-Schreibzugriffe sind beim Programmstart gesperrt, gelten nach Be
 
 Wenn Benutzer- und Systemdienst gleichzeitig laufen, muss eine Instanz beendet werden, bevor die Hardware weiter bedient wird. Vollständige Corsair-Einstellungen erfolgen im lokalen OpenLinkHub-Web-Dashboard.
 
+## RGB-Studio und OpenRGB
+
+- OpenRGB ist nicht eingebettet und bleibt ein separat installierter Prozess. Open Hardware Control übernimmt weder dessen Hardwaretreiber noch den C++-Code des Effects Plugins.
+- Der Adapter akzeptiert ausschließlich IP-Loopback und verwendet fest `127.0.0.1:6742`. Ein externer Host kann nicht über Oberfläche, Profil oder Kommandozeile eingetragen werden.
+- Vor jedem Auftrag muss der lokale Port erreichbar sein. Erkennung und native Nicht-Direct-Modi enthalten ausdrücklich `--client 127.0.0.1:6742`; Direct-Schreibzugriffe gehen über `openrgb_sdk.py` ausschließlich an dieselbe geprüfte Loopback-Adresse. Ein stiller Rückfall auf OpenRGB-Standalone-Hardwarezugriff ist ausgeschlossen.
+- Gerätenummern, Modi, Hex-Farben, Helligkeit und LED-Anzahl werden begrenzt und ohne Shell als Argumentliste übergeben.
+- Schreibzugriffe sind beim Programmstart gesperrt und gelten nach Warnbestätigung nur für die laufende Sitzung.
+- Ein vom aktiven NZXT-Modul erkanntes NZXT-Gerät bleibt im OpenRGB-Pfad gesperrt. Dasselbe gilt für Corsair-Geräte, solange OpenLinkHub erkannt ist.
+- Softwareanimationen benötigen den vom Gerät gemeldeten Direct Mode, übertragen über den begrenzten lokalen SDK-Helfer höchstens einen Prozess/Frame gleichzeitig und stoppen nach drei aufeinanderfolgenden Fehlern.
+- Open Hardware Control startet das installierte Backend bei Bedarf selbst als privaten, fensterlosen Kindprozess und beendet nur den selbst gestarteten Prozess.
+- Eine fremd gestartete OpenRGB-Instanz wird für OHC-Schreibzugriffe gesperrt; zusätzlich verhindert eine Prozesssperre zwei gleichzeitig schreibende OHC-Instanzen.
+- Gerätegruppen, ENE-DRAM-Deduplizierung und NZXT-Effektargumente werden vor jedem Hardwarebefehl validiert.
+- RGB-Profile laden Einstellungen und Gerätewunsch, starten aber nie automatisch eine Softwareanimation.
+
 ## Sicherheitsmodell
 
 - Die grafische Anwendung läuft als normaler Benutzer und verwendet kein `sudo`.
@@ -23,8 +37,37 @@ Wenn Benutzer- und Systemdienst gleichzeitig laufen, muss eine Instanz beendet w
 - Die mitgelieferte udev-Regel beschränkt den Zugriff auf die bekannten NZXT-USB-IDs und verwendet `0660` plus `uaccess`.
 - Die Anwendung enthält keine Telemetrie, keinen Cloud-Dienst und keine automatische Netzwerkübertragung.
 - Diagnoseberichte werden lokal erstellt, sind rein lesend und werden mit Dateirechten `0600` gespeichert.
-- Beim Desktop-Autostart beginnt ein gespeicherter experimenteller LCD-Modus erst nach fünf Sekunden. Ein vorher erkannter echter Absturz blockiert die automatische Wiederaufnahme weiterhin.
+- Beim Desktop-Autostart beginnt ein gespeicherter experimenteller LCD-Modus erst nach zehn Sekunden. Ein vorher erkannter echter Absturz blockiert die automatische Wiederaufnahme weiterhin.
 - Ein geordnetes Desktop-Sitzungsende löscht den Crashmarker vor der USB-Bereinigung; ein hart beendeter oder abgestürzter Prozess behält den Sicherheitsfallback.
+
+## KDE-Desktop-Designs
+
+- Der Bereich ist ab 3.4.1 ausdrücklich experimentell, standardmäßig ausgeschaltet und aus Menü sowie Navigation verborgen. In diesem Zustand erscheint auch kein automatisches Paketangebot.
+- Das Modul ist ausschließlich in einer erkannten KDE-Plasma-6-Sitzung aktiv.
+- Eine Vorschau führt keinen Schreibbefehl aus; das Anwenden und Wiederherstellen erfordern jeweils einen eigenen Bestätigungsdialog.
+- Vor dem Anwenden werden nur die ausdrücklich berührten KDE-/Plasma-Konfigurationsdateien und OHC-Integrationsdateien in ein datiertes Benutzer-Backup kopiert.
+- Ein Transaktionsmarker erkennt unterbrochene Änderungen. Zuerst wird das Backup geladen; schlägt auch dies fehl, folgt KDE Breeze Light als Notfallzustand.
+- Backup-Importe akzeptieren nur erlaubte relative Pfade und reguläre Dateien innerhalb fester Größenlimits und prüfen jede Datei gegen SHA-256.
+- Die Windows-8/8.1-Kachelübersicht liest lokale `.desktop`-Dateien, verwirft Shell-/Interpreterstarter und startet ausschließlich bereinigte Argumentlisten ohne Shell.
+- Das Modul läuft ohne Administratorrechte, verwendet keine Shell, lädt keine Designs aus dem Internet und fügt keine Paketquellen hinzu.
+- Die vier mitgelieferten SVG-Hintergründe und alle OHC-Symbole/Mauszeiger wurden für Open Hardware Control erstellt; Microsoft-/Apple-Logos, -Schriften, -Originalzeiger und -Hintergründe sind nicht enthalten.
+- `BUILD_CHANNEL=INTERN` verhindert eine versehentliche Veröffentlichung durch die mitgelieferten GitHub-Skripte.
+
+## Mainboard-Lüftersteuerung ab 3.4.23
+
+Die Mainboard-Funktion schreibt ausschließlich in vom Linux-hwmon-Subsystem bereits bereitgestellte `pwmN`-/`pwmN_enable`-Dateien. OHC öffnet keine Roh-I/O-Ports, führt keine eigenen SMBus-Registersequenzen aus und umgeht weder Secure Boot noch MOK.
+
+Ab 3.4.23.1 bleibt die GUI auch dann unprivilegiert, wenn der Kernel die NCT6687-PWM-Dateien root-schreibbar (`0644`) bereitstellt. Ein separat installierter, root-eigener Polkit-Helfer akzeptiert keine beliebigen Pfade oder Shell-Kommandos, sondern ausschließlich begrenzte Aktionen für den automatisch erkannten `nct6687`-hwmon: Kanäle 1–8, PWM 0–100 %, Firmware-Rückgabe und den Treiber-Watchdog.
+
+- Eine reine Geräteerkennung ist schreibfrei.
+- Ein PWM-Kanal darf erst nach dem ausdrücklich bestätigten 70-%-/10-s-Sicht-/Hörtest mit RPM-Beobachtung für automatische Regelung aktiviert werden; Mainboardname und `pwmN` werden niemals blind einer physischen Lüftergruppe zugeordnet.
+- Der Kalibrierungstest speichert den vorherigen PWM-/Enable-Zustand und versucht ihn nach zehn Sekunden auch dann wiederherzustellen, wenn die physische Zuordnung nicht bestätigt wird.
+- Die automatische Regelung schreibt nur Kanäle, die zugleich schreibbar, kalibriert und einzeln aktiviert sind.
+- Drei aufeinanderfolgende fehlende Sensorwerte lösen für den betroffenen aktiven Kanal einen 70-%-Fallback aus. Ab 90 °C fordert die Regelung 100 % an. Diese Softwarefallbacks ersetzen keine BIOS-/Firmware-Schutzfunktionen.
+- Beim Abschalten der OHC-Regelung und beim geordneten Programmende versucht OHC, die Firmware-/BIOS-Steuerung über den vom Treiber angebotenen `pwmN_enable`-Modus wiederherzustellen. Bietet nct6687d zusätzlich `fan_control_watchdog` an, wird während aktiver OHC-Regelung ein 10-s-Lease aufgefrischt; endet der steuernde Prozess unerwartet, kann der Treiber geänderte Kanäle selbst auf die zuvor gesicherte Firmwarekurve zurückstellen. Ein harter Stromausfall kann naturgemäß keinen letzten Softwarebefehl garantieren.
+- Ist ein sysfs-PWM-Kanal für den aktuellen Benutzer nicht schreibbar, versucht OHC keinen privilegierten versteckten Schreibweg. Die Anwendung zeigt stattdessen Treiber-/Secure-Boot-Diagnose und Einrichtungshinweise.
+
+Vor der ersten produktiven Nutzung müssen die realen Lüftergruppen einzeln kalibriert und ihre Drehzahlen beobachtet werden.
 
 ## Kühlung
 

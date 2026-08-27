@@ -55,6 +55,7 @@ import tempfile
 import time
 from collections import deque
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from PIL import Image, ImageChops, ImageSequence, ImageStat
@@ -63,10 +64,13 @@ from kraken_lcd_designs import (
     DEFAULT_LABEL_COLOR,
     DEFAULT_VALUE_COLOR,
     DESIGNS,
+    compose_hardware_layer,
     normalize_hex_color,
+    overlay_clock_on_frame,
     render_hardware_frame,
 )
-from kraken_sensors import read_amd_cpu_temperature, read_amd_gpu_temperature
+from kraken_sensors import SystemMetricSampler, read_amd_cpu_temperature, read_amd_gpu_temperature
+from nzxt_esc_profiles import render_profile as render_imported_profile
 
 KRAKEN_DESCRIPTION = "NZXT Kraken 2023"
 KRAKEN_PRODUCT_ID = 0x300E
@@ -119,6 +123,22 @@ class PreparedFrame:
 
 
 @dataclass(frozen=True)
+class ImportedProfileSpec:
+    profile: dict[str, object]
+    metrics: dict[str, float | None]
+    temperature_unit: str = "c"
+    content_fps: int = 12
+
+    def with_metrics(self, metrics: dict[str, float | None]) -> "ImportedProfileSpec":
+        return ImportedProfileSpec(
+            profile=self.profile,
+            metrics=metrics,
+            temperature_unit=self.temperature_unit,
+            content_fps=self.content_fps,
+        )
+
+
+@dataclass(frozen=True)
 class HardwareSpec:
     design_id: str
     accent_hex: str
@@ -133,22 +153,46 @@ class HardwareSpec:
     label_scale_percent: int = 125
     value_scale_percent: int = 125
     temperature_unit: str = "c"
+    layer_background_path: str | None = None
+    layer_overlay_animated: bool = True
+    layer_opacity_percent: int = 82
+    layer_scale_percent: int = 88
+    layer_x_percent: int = 50
+    layer_y_percent: int = 50
+    layer_clock_enabled: bool = False
+    layer_clock_use_24h: bool = True
+    layer_clock_show_date: bool = True
+    layer_clock_font_size: int = 64
+    layer_clock_text_color_hex: str = "#ffffff"
+    layer_clock_background_color_hex: str = "#10141c"
 
     def with_temperatures(self, cpu: float | None, gpu: float | None) -> "HardwareSpec":
         return HardwareSpec(
-            self.design_id,
-            self.accent_hex,
-            self.liquid,
-            cpu,
-            gpu,
-            self.language,
-            self.font_scale_percent,
-            self.content_fps,
-            self.label_color_hex,
-            self.value_color_hex,
-            self.label_scale_percent,
-            self.value_scale_percent,
-            self.temperature_unit,
+            design_id=self.design_id,
+            accent_hex=self.accent_hex,
+            liquid=self.liquid,
+            cpu=cpu,
+            gpu=gpu,
+            language=self.language,
+            font_scale_percent=self.font_scale_percent,
+            content_fps=self.content_fps,
+            label_color_hex=self.label_color_hex,
+            value_color_hex=self.value_color_hex,
+            label_scale_percent=self.label_scale_percent,
+            value_scale_percent=self.value_scale_percent,
+            temperature_unit=self.temperature_unit,
+            layer_background_path=self.layer_background_path,
+            layer_overlay_animated=self.layer_overlay_animated,
+            layer_opacity_percent=self.layer_opacity_percent,
+            layer_scale_percent=self.layer_scale_percent,
+            layer_x_percent=self.layer_x_percent,
+            layer_y_percent=self.layer_y_percent,
+            layer_clock_enabled=self.layer_clock_enabled,
+            layer_clock_use_24h=self.layer_clock_use_24h,
+            layer_clock_show_date=self.layer_clock_show_date,
+            layer_clock_font_size=self.layer_clock_font_size,
+            layer_clock_text_color_hex=self.layer_clock_text_color_hex,
+            layer_clock_background_color_hex=self.layer_clock_background_color_hex,
         )
 
 
@@ -172,24 +216,31 @@ def rgb565_bytes(image: Image.Image) -> bytes:
     return bytes(result)
 
 
-def _fit_square(frame: Image.Image) -> Image.Image:
+def _fit_square(frame: Image.Image, scale_percent: int = 100) -> Image.Image:
     rgba = frame.convert("RGBA")
     width, height = rgba.size
     side = min(width, height)
     left = (width - side) // 2
     top = (height - side) // 2
     rgba = rgba.crop((left, top, left + side, top + side))
-    return rgba.resize(LCD_SIZE, Image.Resampling.LANCZOS).convert("RGB")
+    scale_percent = max(60, min(160, int(scale_percent)))
+    target = max(1, int(round(LCD_SIZE[0] * scale_percent / 100.0)))
+    resized = rgba.resize((target, target), Image.Resampling.LANCZOS)
+    canvas = Image.new("RGBA", LCD_SIZE, (0, 0, 0, 255))
+    x = (LCD_SIZE[0] - target) // 2
+    y = (LCD_SIZE[1] - target) // 2
+    canvas.alpha_composite(resized, (x, y))
+    return canvas.convert("RGB")
 
 
-def _load_source_frames(path: Path, orientation_deg: int) -> list[SourceFrame]:
+def _load_source_frames(path: Path, orientation_deg: int, scale_percent: int = 100) -> list[SourceFrame]:
     frames: list[SourceFrame] = []
     with Image.open(path) as source:
         if not getattr(source, "is_animated", False):
             raise ValueError("Die ausgewählte GIF-Datei enthält keine Animation.")
         default_duration_ms = max(MIN_SOURCE_FRAME_MS, int(source.info.get("duration", 100) or 100))
         for frame in ImageSequence.Iterator(source):
-            prepared = _fit_square(frame.copy())
+            prepared = _fit_square(frame.copy(), scale_percent)
             if orientation_deg:
                 prepared = prepared.rotate(-orientation_deg, expand=False)
             duration_ms = max(
@@ -352,11 +403,12 @@ def prepare_gif(
     fixed_fps: int,
     interpolate: bool = True,
     transport_mode: str = "cam",
+    scale_percent: int = 100,
 ) -> tuple[list[PreparedFrame], dict[str, object]]:
     if fixed_fps < 0 or fixed_fps > MAX_STREAM_FPS:
         raise ValueError(f"Ungültige GIF-Bildrate: {fixed_fps}")
 
-    source_frames = _load_source_frames(path, orientation_deg)
+    source_frames = _load_source_frames(path, orientation_deg, scale_percent)
     source_starts, total_duration_s = _starts(source_frames)
     loop_diagnostics = loop_transition_diagnostics(source_frames)
     source_average_fps = len(source_frames) / total_duration_s
@@ -453,6 +505,17 @@ def load_hardware_spec(path: Path) -> HardwareSpec:
     content_fps = int(payload.get("content_fps", 25))
     if content_fps not in (20, 25):
         raise ValueError("Hardwareanimation unterstützt nur 20 oder 25 FPS Inhalt.")
+    layer_background_path: str | None = None
+    background_value = str(payload.get("layer_background_path", "")).strip()
+    if background_value:
+        background = Path(background_value).expanduser()
+        if not background.is_file():
+            raise ValueError("Der gespeicherte Ebenen-Hintergrund ist nicht mehr vorhanden.")
+        if background.stat().st_size > 128 * 1024 * 1024:
+            raise ValueError("Der Ebenen-Hintergrund überschreitet 128 MiB.")
+        if background.suffix.casefold() not in {".png", ".jpg", ".jpeg", ".bmp", ".webp", ".gif"}:
+            raise ValueError("Nicht unterstütztes Format für den Ebenen-Hintergrund.")
+        layer_background_path = str(background.resolve())
 
     def optional_temperature(name: str, upper: float) -> float | None:
         value = payload.get(name)
@@ -475,7 +538,136 @@ def load_hardware_spec(path: Path) -> HardwareSpec:
         value_scale_percent=value_scale,
         temperature_unit=temperature_unit,
         content_fps=content_fps,
+        layer_background_path=layer_background_path,
+        layer_overlay_animated=bool(payload.get("layer_overlay_animated", True)),
+        layer_opacity_percent=max(10, min(100, int(payload.get("layer_opacity_percent", 82)))),
+        layer_scale_percent=max(40, min(125, int(payload.get("layer_scale_percent", 88)))),
+        layer_x_percent=max(0, min(100, int(payload.get("layer_x_percent", 50)))),
+        layer_y_percent=max(0, min(100, int(payload.get("layer_y_percent", 50)))),
+        layer_clock_enabled=bool(payload.get("layer_clock_enabled", False)),
+        layer_clock_use_24h=bool(payload.get("layer_clock_use_24h", True)),
+        layer_clock_show_date=bool(payload.get("layer_clock_show_date", True)),
+        layer_clock_font_size=max(24, min(88, int(payload.get("layer_clock_font_size", 64)))),
+        layer_clock_text_color_hex=normalize_hex_color(str(payload.get("layer_clock_text_color_hex", "#ffffff"))) or "#ffffff",
+        layer_clock_background_color_hex=normalize_hex_color(str(payload.get("layer_clock_background_color_hex", "#10141c"))) or "#10141c",
     )
+
+
+def load_imported_profile_spec(path: Path) -> ImportedProfileSpec:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    profile = payload.get("profile") if isinstance(payload, dict) else None
+    if not isinstance(profile, dict):
+        raise ValueError("Importiertes LCD-Profil-Spec enthält kein gültiges Profil.")
+    raw_metrics = payload.get("metrics") if isinstance(payload.get("metrics"), dict) else {}
+    metrics: dict[str, float | None] = {}
+    for key, value in raw_metrics.items():
+        if value is None:
+            metrics[str(key)] = None
+            continue
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            continue
+        if math.isfinite(number):
+            metrics[str(key)] = number
+    unit = str(payload.get("temperature_unit", "c")).casefold()
+    if unit not in {"c", "f"}:
+        unit = "c"
+    fps = max(5, min(20, int(payload.get("content_fps", 12))))
+    return ImportedProfileSpec(profile=profile, metrics=metrics, temperature_unit=unit, content_fps=fps)
+
+
+def prepare_imported_profile_animation(
+    spec: ImportedProfileSpec,
+    orientation_deg: int,
+    transport_mode: str,
+) -> tuple[list[PreparedFrame], dict[str, object]]:
+    """Render a one-second live timeline from an imported ESC/OHC profile.
+
+    The proven Kraken 2023 USB transport still runs at ~26.667 Hz. Expensive
+    profile composition is capped to <=20 unique content frames per second and
+    those frames are phase-mapped into the transport cache.
+    """
+    transport_fps = requested_transport_fps(transport_mode)
+    loop_duration_s = 1.0
+    content_count = max(5, min(20, spec.content_fps))
+    base_time = datetime.now()
+    logical: list[Image.Image] = []
+    for index in range(content_count):
+        frame_time = base_time + timedelta(seconds=index / content_count)
+        image = render_imported_profile(
+            spec.profile, spec.metrics, temperature_unit=spec.temperature_unit,
+            now=frame_time, target_resolution=LCD_SIZE,
+        )
+        if orientation_deg:
+            image = image.rotate(-orientation_deg, expand=False)
+        logical.append(image.convert("RGB"))
+    phase_count = max(2, int(math.ceil(loop_duration_s * transport_fps - 1e-12)))
+    interval = loop_duration_s / phase_count
+    prepared: list[PreparedFrame] = []
+    unique: set[bytes] = set()
+    for phase in range(phase_count):
+        content_index = min(content_count - 1, int((phase / phase_count) * content_count))
+        data = rgb565_bytes(logical[content_index])
+        prepared.append(PreparedFrame(data, interval))
+        unique.add(data)
+    return prepared, {
+        "source_frames": content_count,
+        "content_frames": content_count,
+        "output_frames": len(prepared),
+        "transport_cache_frames": len(prepared),
+        "transport_cache_fps": round(len(prepared) / loop_duration_s, 3),
+        "source_duration_ms": 1000,
+        "source_duration_s": loop_duration_s,
+        "target_fps": content_count,
+        "content_fps": float(content_count),
+        "transport_fps": round(transport_fps, 3),
+        "transport_mode": transport_mode,
+        "interpolation": False,
+        "interpolation_kind": "imported-profile-live",
+        "interpolated_transport_frames": 0,
+        "motion_pairs": 0,
+        "motion_confidence_avg": 0.0,
+        "unique_transport_frames": len(unique),
+        "loop_warning": False,
+        "loop_transition_score": 0.0,
+        "typical_transition_score": 0.0,
+        "loop_warning_ratio": 0.0,
+        "imported_profile_live": True,
+    }
+
+
+def render_imported_profile_cache_worker(
+    spec: ImportedProfileSpec, orientation_deg: int, transport_mode: str, output_path: str,
+) -> dict[str, object]:
+    started = time.monotonic()
+    frames, metadata = prepare_imported_profile_animation(spec, orientation_deg, transport_mode)
+    destination = Path(output_path)
+    temporary = destination.with_suffix(destination.suffix + ".part")
+    temporary.write_bytes(b"".join(frame.data for frame in frames))
+    temporary.replace(destination)
+    return {**metadata, "cache_path": str(destination), "generation_ms": round((time.monotonic() - started) * 1000.0, 1)}
+
+
+def load_layer_background_frames(path: Path) -> tuple[list[SourceFrame], float]:
+    """Load a bounded static image/GIF timeline used under a hardware layer."""
+    frames: list[SourceFrame] = []
+    with Image.open(path) as source:
+        if source.width * source.height > 50_000_000:
+            raise ValueError("Das Ebenen-Hintergrundbild ist zu groß (maximal 50 Megapixel).")
+        default_ms = max(MIN_SOURCE_FRAME_MS, int(source.info.get("duration", 100) or 100))
+        for index, frame in enumerate(ImageSequence.Iterator(source)):
+            if index >= 250:
+                break
+            duration_ms = max(
+                MIN_SOURCE_FRAME_MS,
+                int(frame.info.get("duration", default_ms) or default_ms),
+            )
+            frames.append(SourceFrame(_fit_square(frame.copy()), duration_ms / 1000.0))
+    if not frames:
+        raise ValueError("Der Ebenen-Hintergrund enthält kein lesbares Bild.")
+    source_duration = sum(frame.duration_s for frame in frames)
+    return frames, max(1.0, min(4.0, source_duration))
 
 
 def prepare_hardware_animation(
@@ -485,11 +677,19 @@ def prepare_hardware_animation(
 ) -> tuple[list[PreparedFrame], dict[str, object]]:
     """Prepare one second of ring/orbit phases with live-value markers."""
     transport_fps = requested_transport_fps(transport_mode)
-    phase_count = max(2, int(math.ceil(HARDWARE_LOOP_DURATION_S * transport_fps - 1e-12)))
-    phase_interval = HARDWARE_LOOP_DURATION_S / phase_count
+    layer_frames: list[SourceFrame] = []
+    layer_starts: list[float] = []
+    layer_source_duration = 0.0
+    loop_duration_s = HARDWARE_LOOP_DURATION_S
+    if spec.layer_background_path:
+        layer_frames, loop_duration_s = load_layer_background_frames(Path(spec.layer_background_path))
+        layer_starts, layer_source_duration = _starts(layer_frames)
+    phase_count = max(2, int(math.ceil(loop_duration_s * transport_fps - 1e-12)))
+    phase_interval = loop_duration_s / phase_count
     prepared: list[PreparedFrame] = []
     unique_data: set[bytes] = set()
     for index in range(phase_count):
+        elapsed_s = index * phase_interval
         image = render_hardware_frame(
             spec.design_id,
             spec.accent_hex,
@@ -503,9 +703,27 @@ def prepare_hardware_animation(
             label_scale_percent=spec.label_scale_percent,
             value_scale_percent=spec.value_scale_percent,
             temperature_unit=spec.temperature_unit,
-            phase=index / phase_count,
+            phase=(elapsed_s % 1.0) if spec.layer_overlay_animated else 0.0,
             live_sensor_status=True,
         )
+        if layer_frames:
+            sample_time = elapsed_s % max(layer_source_duration, phase_interval)
+            background_index = max(0, bisect.bisect_right(layer_starts, sample_time) - 1)
+            image = compose_hardware_layer(
+                layer_frames[background_index].image,
+                image,
+                opacity_percent=spec.layer_opacity_percent,
+                scale_percent=spec.layer_scale_percent,
+                x_percent=spec.layer_x_percent,
+                y_percent=spec.layer_y_percent,
+            )
+        if spec.layer_clock_enabled:
+            image = overlay_clock_on_frame(
+                image, enabled=True, use_24h=spec.layer_clock_use_24h,
+                show_date=spec.layer_clock_show_date, font_size=spec.layer_clock_font_size,
+                text_color_hex=spec.layer_clock_text_color_hex,
+                background_color_hex=spec.layer_clock_background_color_hex,
+            )
         if orientation_deg:
             image = image.rotate(-orientation_deg, expand=False)
         data = rgb565_bytes(image)
@@ -518,9 +736,9 @@ def prepare_hardware_animation(
         "content_frames": spec.content_fps,
         "output_frames": len(prepared),
         "transport_cache_frames": len(prepared),
-        "transport_cache_fps": round(len(prepared) / HARDWARE_LOOP_DURATION_S, 3),
-        "source_duration_ms": 1000,
-        "source_duration_s": HARDWARE_LOOP_DURATION_S,
+        "transport_cache_fps": round(len(prepared) / loop_duration_s, 3),
+        "source_duration_ms": int(round(loop_duration_s * 1000)),
+        "source_duration_s": loop_duration_s,
         "target_fps": spec.content_fps,
         "content_fps": float(spec.content_fps),
         "transport_fps": round(transport_fps, 3),
@@ -540,6 +758,8 @@ def prepare_hardware_animation(
         "cpu": spec.cpu,
         "gpu": spec.gpu,
         "sensor_interval_s": HARDWARE_SENSOR_INTERVAL_S,
+        "layered": bool(layer_frames),
+        "layer_background_frames": len(layer_frames),
     }
     return prepared, metadata
 
@@ -577,10 +797,12 @@ def frames_from_cache_file(path: Path, frame_count: int, duration_s: float) -> l
 
 
 def hardware_dynamic_fields(design_id: str) -> tuple[bool, bool]:
-    return design_id in {"cpu_orbit", "cpu_gpu_dual", "system_trio"}, design_id in {
+    return design_id in {"cpu_orbit", "cpu_gpu_dual", "system_trio", "neon_grid", "radar_sweep"}, design_id in {
         "gpu_arc",
         "cpu_gpu_dual",
         "system_trio",
+        "neon_grid",
+        "radar_sweep",
     }
 
 
@@ -763,16 +985,22 @@ def run_stream(
     transport_mode: str,
     *,
     hardware_spec_path: Path | None = None,
+    imported_profile_spec_path: Path | None = None,
+    scale_percent: int = 100,
 ) -> int:
     started_prepare = time.monotonic()
     hardware_spec = load_hardware_spec(hardware_spec_path) if hardware_spec_path is not None else None
+    imported_profile_spec = load_imported_profile_spec(imported_profile_spec_path) if imported_profile_spec_path is not None else None
     if hardware_spec is not None:
         frames, metadata = prepare_hardware_animation(hardware_spec, orientation, transport_mode)
+        interpolate = False
+    elif imported_profile_spec is not None:
+        frames, metadata = prepare_imported_profile_animation(imported_profile_spec, orientation, transport_mode)
         interpolate = False
     else:
         if path is None:
             raise ValueError("Keine GIF-Datei angegeben.")
-        frames, metadata = prepare_gif(path, orientation, fixed_fps, interpolate, transport_mode)
+        frames, metadata = prepare_gif(path, orientation, fixed_fps, interpolate, transport_mode, scale_percent)
     prepare_ms = int((time.monotonic() - started_prepare) * 1000)
     try:
         liquidctl_version = importlib.metadata.version("liquidctl")
@@ -812,7 +1040,8 @@ def run_stream(
     loop_duration_s = float(metadata["source_duration_s"])
     histogram = {"lt20": 0, "20_30": 0, "30_35": 0, "35_42": 0, "ge42": 0}
     dynamic_cpu, dynamic_gpu = hardware_dynamic_fields(hardware_spec.design_id) if hardware_spec else (False, False)
-    live_cache_enabled = bool(hardware_spec and (dynamic_cpu or dynamic_gpu))
+    imported_sampler = SystemMetricSampler() if imported_profile_spec is not None else None
+    live_cache_enabled = bool(imported_profile_spec is not None or (hardware_spec and (dynamic_cpu or dynamic_gpu)))
     cache_context = tempfile.TemporaryDirectory(prefix="kraken-live-cache-") if live_cache_enabled else contextlib.nullcontext(None)
     worker_context = (
         concurrent.futures.ProcessPoolExecutor(
@@ -875,13 +1104,16 @@ def run_stream(
             liquid_snapshot=hardware_spec.liquid if hardware_spec else None,
             cpu_live=dynamic_cpu,
             gpu_live=dynamic_gpu,
-            sensor_interval_s=HARDWARE_SENSOR_INTERVAL_S if live_cache_enabled else None,
+            sensor_interval_s=(1.0 if imported_profile_spec is not None else HARDWARE_SENSOR_INTERVAL_S) if live_cache_enabled else None,
+            imported_profile_live=bool(imported_profile_spec),
         )
 
         render_future: concurrent.futures.Future[dict[str, object]] | None = None
         pending_spec: HardwareSpec | None = None
         active_spec = hardware_spec
-        next_sensor_read = time.monotonic() + HARDWARE_SENSOR_INTERVAL_S
+        pending_profile_spec: ImportedProfileSpec | None = None
+        active_profile_spec = imported_profile_spec
+        next_sensor_read = time.monotonic() + (1.0 if imported_profile_spec is not None else HARDWARE_SENSOR_INTERVAL_S)
         cache_sequence = 0
 
         while True:
@@ -898,14 +1130,17 @@ def run_stream(
                     cache_path.unlink(missing_ok=True)
                     if pending_spec is not None:
                         active_spec = pending_spec
+                    if pending_profile_spec is not None:
+                        active_profile_spec = pending_profile_spec
                     emit(
                         "sensor_update",
-                        cpu=active_spec.cpu if active_spec else None,
-                        gpu=active_spec.gpu if active_spec else None,
-                        liquid_snapshot=active_spec.liquid if active_spec else None,
+                        cpu=(active_profile_spec.metrics.get("cpuTemp") if active_profile_spec else active_spec.cpu if active_spec else None),
+                        gpu=(active_profile_spec.metrics.get("gpuTemp") if active_profile_spec else active_spec.gpu if active_spec else None),
+                        liquid_snapshot=(active_profile_spec.metrics.get("liquidTemp") if active_profile_spec else active_spec.liquid if active_spec else None),
                         hardware_design=active_spec.design_id if active_spec else None,
-                        cpu_live=dynamic_cpu,
-                        gpu_live=dynamic_gpu,
+                        imported_profile=bool(active_profile_spec),
+                        cpu_live=dynamic_cpu or bool(active_profile_spec),
+                        gpu_live=dynamic_gpu or bool(active_profile_spec),
                         generation_ms=rendered.get("generation_ms", "?"),
                         transport_cache_frames=len(frames),
                     )
@@ -913,9 +1148,32 @@ def run_stream(
                     emit("sensor_update_error", message=str(exc))
                 render_future = None
                 pending_spec = None
+                pending_profile_spec = None
+
+            if active_profile_spec is not None and render_future is None and now >= next_sensor_read:
+                next_sensor_read = now + 1.0
+                metrics = dict(active_profile_spec.metrics)
+                if imported_sampler is not None:
+                    for key, value in imported_sampler.sample().items():
+                        if value is not None:
+                            metrics[key] = value
+                measured_cpu, _cpu_label = read_amd_cpu_temperature()
+                measured_gpu, _gpu_label = read_amd_gpu_temperature()
+                if measured_cpu is not None:
+                    metrics["cpuTemp"] = measured_cpu
+                if measured_gpu is not None:
+                    metrics["gpuTemp"] = measured_gpu
+                if render_executor is not None and cache_directory is not None:
+                    pending_profile_spec = active_profile_spec.with_metrics(metrics)
+                    cache_sequence += 1
+                    output_path = str(Path(cache_directory) / f"profile-cache-{cache_sequence:05d}.rgb565")
+                    render_future = render_executor.submit(
+                        render_imported_profile_cache_worker, pending_profile_spec, orientation, transport_mode, output_path
+                    )
 
             if (
                 live_cache_enabled
+                and active_profile_spec is None
                 and active_spec is not None
                 and render_future is None
                 and now >= next_sensor_read
@@ -1116,16 +1374,18 @@ def parse_args() -> argparse.Namespace:
     source = parser.add_mutually_exclusive_group(required=True)
     source.add_argument("--file", type=Path)
     source.add_argument("--hardware-spec", type=Path)
+    source.add_argument("--imported-profile-spec", type=Path)
     parser.add_argument("--orientation", type=int, choices=(0, 90, 180, 270), default=0)
     parser.add_argument("--fps", type=int, choices=(0, 5, 8, 10, 12, 15, 20, 24, 25, 26, 27), default=0)
     parser.add_argument("--transport", choices=("cam", "safe"), default="cam")
     parser.add_argument("--interpolate", action="store_true", help="Use motion-compensated intermediate frames")
+    parser.add_argument("--scale", type=int, default=100, help="Center zoom for normal GIF content (60..160 percent)")
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
-    source_path = args.hardware_spec if args.hardware_spec is not None else args.file
+    source_path = args.hardware_spec if args.hardware_spec is not None else args.imported_profile_spec if args.imported_profile_spec is not None else args.file
     if source_path is None or not source_path.exists():
         emit("error", message="GIF- oder Hardwareanimations-Datei wurde nicht gefunden.")
         return 2
@@ -1140,6 +1400,8 @@ def main() -> int:
             args.interpolate,
             args.transport,
             hardware_spec_path=args.hardware_spec,
+            imported_profile_spec_path=args.imported_profile_spec,
+            scale_percent=max(60, min(160, args.scale)),
         )
     except KeyboardInterrupt:
         emit("stopped", reason="keyboard")

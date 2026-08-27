@@ -1,4 +1,4 @@
-# Corsair-/OpenLinkHub-Integration in 3.0.9
+# Corsair-/OpenLinkHub-Integration in 3.4.16 INTERN
 
 ## Unterstützter Umfang
 

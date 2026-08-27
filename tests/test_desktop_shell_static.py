@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+"""Dependency-free security checks for the optional desktop shell."""
+
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+source = (ROOT / "desktop_shell.py").read_text(encoding="utf-8")
+kwin = (ROOT / "assets/desktop-designs/kwin/ohc-charms/contents/code/main.js").read_text(encoding="utf-8")
+
+assert "shell=True" not in source
+assert "requests" not in source
+assert "urllib" not in source
+assert "http://" not in source and "https://" not in source
+assert "discover_applications" in source
+assert "FORBIDDEN_PROGRAMS" in source
+assert "QProcess.startDetached" in source
+assert "registerScreenEdge(KWin.ElectricTopRight" in kwin
+assert "registerScreenEdge(KWin.ElectricBottomRight" in kwin
+assert '"Meta+C"' in kwin
+assert '"Meta+Space"' in kwin
+assert "callDBus" in kwin
+
+print("Desktop shell static safety checks passed.")
