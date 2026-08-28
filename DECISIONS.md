@@ -24,6 +24,7 @@ This file records decisions that future agents must preserve unless the project 
 - OpenLinkHub and OpenRGB integrations remain loopback-only unless security architecture is explicitly redesigned.
 - Mainboard PWM control requires physical channel confirmation/calibration before automatic control. Never infer electrical fan mapping from board model alone.
 - CPU_FAN/PUMP_FAN ownership must not conflict with Kraken cooling ownership.
+- **3.4.27:** CoolerControl service autostart may be changed from OHC only through an explicit confirmation and Polkit authorization. Disabling the service must not start OHC fan control automatically; enabling it must first stop OHC mainboard control and restore firmware/BIOS ownership.
 - Firmware update/flashing features require a separate explicit design/review; no agent may infer or invent firmware-write protocols.
 
 ## Assets and licensing

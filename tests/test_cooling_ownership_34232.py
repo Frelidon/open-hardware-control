@@ -47,6 +47,7 @@ def test_detect_uses_service_and_process(monkeypatch):
     status = co.detect_cooling_owner()
     assert status.coolercontrol_service_active is True
     assert status.coolercontrol_process_active is True
+    assert status.coolercontrol_service_enabled is True
 
 
 def test_switch_rejects_unknown_action():
@@ -67,3 +68,20 @@ def test_switch_is_fixed_to_coolercontrol_service(monkeypatch):
     ok, detail = co.stop_coolercontrol()
     assert ok is True and detail == ""
     assert calls == [["/usr/bin/pkexec", "/usr/bin/systemctl", "stop", "coolercontrold.service"]]
+
+
+def test_permanent_switch_is_fixed_to_service_and_uses_now(monkeypatch):
+    calls = []
+    monkeypatch.setattr(co.shutil, "which", lambda name: f"/usr/bin/{name}")
+
+    def runner(command, *, timeout=5.0):
+        calls.append(command)
+        return subprocess.CompletedProcess(command, 0, "", "")
+
+    monkeypatch.setattr(co, "_run", runner)
+    assert co.disable_coolercontrol() == (True, "")
+    assert co.enable_coolercontrol() == (True, "")
+    assert calls == [
+        ["/usr/bin/pkexec", "/usr/bin/systemctl", "disable", "--now", "coolercontrold.service"],
+        ["/usr/bin/pkexec", "/usr/bin/systemctl", "enable", "--now", "coolercontrold.service"],
+    ]

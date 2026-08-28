@@ -44,12 +44,12 @@ The next internal work starts with a consistent application-wide design pass, fo
 - Corsair remains mediated through local OpenLinkHub rather than direct, guessed Corsair USB writes.
 - LCD/GIF and Kraken hardware requests remain coordinated so simultaneous subsystems do not fight for the same device.
 
-## Confirmed next-work gaps
+## Confirmed next work and first 3.4.27 progress
 
 - RGB Studio, LCD, Profiles, Log, Corsair/OpenLinkHub, Settings, About and Help still use mixed page structures and need the current dashboard design applied consistently.
 - Kraken quick-profile buttons do not yet update their active visual state after a successful Leise, Ausbalanciert or Leistung write.
 - Mainboard chassis-fan cards currently select and expand the first detected channel automatically; the target behavior is collapsed by default with at most one explicitly selected card expanded.
-- CoolerControl conflict detection correctly checks the `coolercontrold` service/process, but the UI needs to explain that the background daemon may remain active after the graphical CoolerControl window is closed.
+- CoolerControl ownership now distinguishes the `coolercontrold` background daemon from the closed graphical client, reports its autostart state and provides confirmed controls for temporary takeover or permanent service disable/enable.
 
 ## Known boundaries / not automatically claimed
 

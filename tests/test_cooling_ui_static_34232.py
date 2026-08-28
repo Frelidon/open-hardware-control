@@ -29,6 +29,10 @@ def test_coolercontrol_ownership_is_exclusive():
     assert 'CoolerControl besitzt aktuell die Mainboard-Lüftersteuerung' in CODE
     assert 'stop_coolercontrol()' in CODE
     assert 'start_coolercontrol()' in CODE
+    assert 'CoolerControl dauerhaft deaktivieren' in CODE
+    assert 'CoolerControl dauerhaft aktivieren' in CODE
+    assert 'disable_coolercontrol()' in CODE
+    assert 'enable_coolercontrol()' in CODE
 
 
 def test_guided_assistant_has_safe_contrast_and_layout():

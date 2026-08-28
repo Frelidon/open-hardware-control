@@ -10,6 +10,7 @@ Open Hardware Control is developed incrementally. Features are tested before the
 - Introduce shared module headers, status panels, section cards and action-button states instead of maintaining a separate visual structure on every page.
 - Preserve the existing page behavior, navigation anchors and hardware ownership boundaries during the visual migration.
 - Clarify CoolerControl ownership messages: distinguish the closed graphical client from the active `coolercontrold` background service and explain whether the service is running or starts automatically.
+- Let the user explicitly stop CoolerControl for the current session or permanently disable and later re-enable its system-service autostart through a confirmed Polkit action.
 
 ### 3.4.28 INTERN — cooling interaction
 

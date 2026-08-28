@@ -4,8 +4,9 @@
 
 The functions in this module never write fan PWM values.  They only detect a
 competing CoolerControl daemon and, after an explicit user action, ask systemd
-to stop/start that daemon through pkexec.  This keeps ownership transitions
-separate from the NCT6687 fan helper and makes them easy to test.
+to stop/start or enable/disable that daemon through pkexec.  This keeps
+ownership transitions separate from the NCT6687 fan helper and makes them easy
+to test.
 """
 from __future__ import annotations
 
@@ -21,6 +22,7 @@ COOLERCONTROL_PROCESS = "coolercontrold"
 class CoolingOwnerStatus:
     coolercontrol_service_active: bool = False
     coolercontrol_process_active: bool = False
+    coolercontrol_service_enabled: bool = False
 
     @property
     def coolercontrol_active(self) -> bool:
@@ -41,9 +43,12 @@ def _run(command: list[str], *, timeout: float = 5.0) -> subprocess.CompletedPro
 def detect_cooling_owner() -> CoolingOwnerStatus:
     systemctl = shutil.which("systemctl")
     service_active = False
+    service_enabled = False
     if systemctl:
         result = _run([systemctl, "is-active", "--quiet", COOLERCONTROL_SERVICE])
         service_active = bool(result is not None and result.returncode == 0)
+        result = _run([systemctl, "is-enabled", "--quiet", COOLERCONTROL_SERVICE])
+        service_enabled = bool(result is not None and result.returncode == 0)
 
     pgrep = shutil.which("pgrep")
     process_active = False
@@ -51,7 +56,7 @@ def detect_cooling_owner() -> CoolingOwnerStatus:
         result = _run([pgrep, "-x", COOLERCONTROL_PROCESS])
         process_active = bool(result is not None and result.returncode == 0)
 
-    return CoolingOwnerStatus(service_active, process_active)
+    return CoolingOwnerStatus(service_active, process_active, service_enabled)
 
 
 def _switch_coolercontrol(action: str, *, timeout: float = 20.0) -> tuple[bool, str]:
@@ -78,3 +83,30 @@ def stop_coolercontrol() -> tuple[bool, str]:
 
 def start_coolercontrol() -> tuple[bool, str]:
     return _switch_coolercontrol("start")
+
+
+def _set_coolercontrol_enabled(enabled: bool, *, timeout: float = 30.0) -> tuple[bool, str]:
+    pkexec = shutil.which("pkexec") or "/usr/bin/pkexec"
+    systemctl = shutil.which("systemctl") or "/usr/bin/systemctl"
+    if not shutil.which("pkexec"):
+        return False, "pkexec/Polkit ist nicht verfügbar"
+    action = "enable" if enabled else "disable"
+    result = _run([pkexec, systemctl, action, "--now", COOLERCONTROL_SERVICE], timeout=timeout)
+    if result is None:
+        return False, "CoolerControl-Autostart konnte nicht geändert werden"
+    if result.returncode != 0:
+        text = (result.stderr or result.stdout or "").strip()
+        if result.returncode in {126, 127}:
+            return False, "Authentifizierung wurde abgebrochen oder verweigert"
+        return False, text or f"systemctl {action} --now fehlgeschlagen ({result.returncode})"
+    return True, ""
+
+
+def disable_coolercontrol() -> tuple[bool, str]:
+    """Stop CoolerControl now and disable its system-service autostart."""
+    return _set_coolercontrol_enabled(False)
+
+
+def enable_coolercontrol() -> tuple[bool, str]:
+    """Enable CoolerControl's system service and start it immediately."""
+    return _set_coolercontrol_enabled(True)

@@ -187,7 +187,13 @@ from mainboard_fan_control import (
     validate_curve as validate_mainboard_curve,
 )
 
-from cooling_ownership import detect_cooling_owner, start_coolercontrol, stop_coolercontrol
+from cooling_ownership import (
+    detect_cooling_owner,
+    disable_coolercontrol,
+    enable_coolercontrol,
+    start_coolercontrol,
+    stop_coolercontrol,
+)
 
 from nzxt_rgb import (
     NZXT_EFFECTS,
@@ -7150,9 +7156,12 @@ class KrakenControl(QMainWindow):
         self.cooling_takeover_button.clicked.connect(self.take_over_cooling_from_coolercontrol)
         self.cooling_release_button = QPushButton("An CoolerControl zurückgeben")
         self.cooling_release_button.clicked.connect(self.release_cooling_to_coolercontrol)
+        self.cooling_autostart_button = QPushButton("CoolerControl-Autostart verwalten")
+        self.cooling_autostart_button.clicked.connect(self.toggle_coolercontrol_autostart)
         ownership_layout.addWidget(self.cooling_ownership_label, 1)
         ownership_layout.addWidget(self.cooling_takeover_button)
         ownership_layout.addWidget(self.cooling_release_button)
+        ownership_layout.addWidget(self.cooling_autostart_button)
         mb_layout.addWidget(ownership_box)
 
         mb_status_row = QHBoxLayout()
@@ -7577,15 +7586,28 @@ class KrakenControl(QMainWindow):
     def refresh_cooling_ownership_status(self) -> None:
         self.cooling_owner_status = detect_cooling_owner()
         conflict = self.cooling_owner_status.coolercontrol_active
+        autostart = self.cooling_owner_status.coolercontrol_service_enabled
         if hasattr(self, "cooling_ownership_label"):
             if conflict:
+                startup_text = (
+                    "Der Dienst ist für den Systemstart aktiviert."
+                    if autostart
+                    else "Der Dienst wurde manuell gestartet; sein Systemstart ist deaktiviert."
+                )
                 self.cooling_ownership_label.setText(
-                    "⚠ CoolerControl/coolercontrold ist aktiv. OHC überwacht die Mainboardlüfter nur und schreibt keine PWM-Werte, bis du die Steuerung ausdrücklich übernimmst."
+                    "⚠ Der CoolerControl-Hintergrunddienst coolercontrold ist aktiv – auch wenn das Programmfenster geschlossen ist. "
+                    f"{startup_text} OHC überwacht die Mainboardlüfter nur und schreibt keine PWM-Werte, bis du die Steuerung ausdrücklich übernimmst."
                 )
                 self.cooling_ownership_label.setObjectName("warningText")
             else:
+                startup_text = (
+                    "Der Dienst ist momentan gestoppt, startet beim nächsten Systemstart aber erneut."
+                    if autostart
+                    else "Der automatische Systemstart von CoolerControl ist dauerhaft deaktiviert."
+                )
                 self.cooling_ownership_label.setText(
-                    "✓ Kein konkurrierender CoolerControl-Daemon aktiv. OHC darf nach Kalibrierung die bestätigten System-Fan-Kanäle übernehmen."
+                    "✓ Kein konkurrierender CoolerControl-Hintergrunddienst aktiv. "
+                    f"{startup_text} OHC darf nach Kalibrierung die bestätigten System-Fan-Kanäle übernehmen."
                 )
                 self.cooling_ownership_label.setObjectName("healthGood")
             self.cooling_ownership_label.style().unpolish(self.cooling_ownership_label)
@@ -7594,6 +7616,15 @@ class KrakenControl(QMainWindow):
             self.cooling_takeover_button.setEnabled(conflict)
         if hasattr(self, "cooling_release_button"):
             self.cooling_release_button.setEnabled(not conflict)
+        if hasattr(self, "cooling_autostart_button"):
+            self.cooling_autostart_button.setText(
+                "CoolerControl dauerhaft deaktivieren"
+                if autostart
+                else "CoolerControl dauerhaft aktivieren"
+            )
+            self.cooling_autostart_button.setToolTip(
+                "Ändert nach ausdrücklicher Bestätigung den systemweiten Autostart von coolercontrold und benötigt Administratorrechte."
+            )
         if hasattr(self, "mainboard_master_enable"):
             self.mainboard_master_enable.setEnabled(not conflict)
         if hasattr(self, "cooling_auto_case_button"):
@@ -7636,6 +7667,49 @@ class KrakenControl(QMainWindow):
         self.coolercontrol_stopped_by_ohc = False
         self.log_message("KÜHLUNGSBESITZ: OHC hat alle Kanäle an Firmware zurückgegeben · CoolerControl gestartet")
         self.footer_status.setText("Mainboard-Lüfter an CoolerControl zurückgegeben")
+        QTimer.singleShot(700, self.refresh_cooling_ownership_status)
+
+    def toggle_coolercontrol_autostart(self) -> None:
+        """Explicitly enable or disable CoolerControl's system service."""
+        self.refresh_cooling_ownership_status()
+        enable = not self.cooling_owner_status.coolercontrol_service_enabled
+        if enable:
+            title = "CoolerControl dauerhaft aktivieren"
+            message = (
+                "CoolerControl für den automatischen Systemstart aktivieren und den Hintergrunddienst jetzt starten?\n\n"
+                "Eine aktive OHC-Mainboardregelung wird vorher beendet und die Lüfter werden an Firmware/BIOS zurückgegeben. "
+                "Für diese systemweite Änderung ist eine Administrator-Bestätigung erforderlich."
+            )
+        else:
+            title = "CoolerControl dauerhaft deaktivieren"
+            message = (
+                "Den CoolerControl-Hintergrunddienst jetzt beenden und seinen automatischen Systemstart dauerhaft deaktivieren?\n\n"
+                "OHC startet dadurch keine Lüfterregelung automatisch. Bestätigte Kanäle können anschließend bewusst in OHC aktiviert werden. "
+                "Für diese systemweite Änderung ist eine Administrator-Bestätigung erforderlich."
+            )
+        answer = QMessageBox.question(
+            self,
+            title,
+            message,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        if enable:
+            if self.mainboard_control_active:
+                self.mainboard_master_enable.setChecked(False)
+            self.restore_all_mainboard_fans_to_firmware(quiet=True)
+            ok, detail = enable_coolercontrol()
+        else:
+            ok, detail = disable_coolercontrol()
+        if not ok:
+            self.show_error(f"CoolerControl konnte nicht dauerhaft {'aktiviert' if enable else 'deaktiviert'} werden: {detail}")
+            return
+        self.coolercontrol_stopped_by_ohc = not enable
+        state = "dauerhaft aktiviert und gestartet" if enable else "beendet und dauerhaft deaktiviert"
+        self.log_message(f"KÜHLUNGSBESITZ: CoolerControl {state}")
+        self.footer_status.setText(f"CoolerControl {state}")
         QTimer.singleShot(700, self.refresh_cooling_ownership_status)
 
     def select_cooling_layout_slot(self, slot_id: str) -> None:
