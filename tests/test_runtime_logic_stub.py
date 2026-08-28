@@ -389,6 +389,9 @@ assert switch_state.calls == [
 ]
 
 assert mod.UI_TRANSLATIONS['en']['LCD-Transport'] == 'LCD transport'
+assert mod.UI_TRANSLATIONS['en']['Kurve & Details bearbeiten'] == 'Edit curve & details'
+assert mod.UI_TRANSLATIONS['es']['Kurve & Details schließen'] == 'Cerrar curva y detalles'
+assert mod.UI_TRANSLATIONS['fr']['Kurve & Details bearbeiten'].startswith('Modifier')
 for language in ('en', 'es', 'fr'):
     for source in (
         'Schrift- und Zahlen-Größe',

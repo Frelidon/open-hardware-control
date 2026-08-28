@@ -58,7 +58,7 @@ def test_new_runtime_module_is_packaged():
     assert 'cooling_ownership.py' in INSTALL
     for module in (
         'app_constants.py', 'command_backend.py', 'cooling_widgets.py',
-        'localization_catalog.py', 'privacy_logging.py', 'temperature_utils.py',
+        'cooling_card_state.py', 'localization_catalog.py', 'privacy_logging.py', 'temperature_utils.py',
     ):
         assert f'"{module}"' in BUILD
         assert module in INSTALL

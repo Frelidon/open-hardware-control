@@ -235,6 +235,7 @@ from app_constants import (
     SUPPORTED_UI_LANGUAGES,
 )
 from command_backend import Backend, CommandResult, PendingCommand
+from cooling_card_state import normalize_expanded_channel, toggle_expanded_channel
 from cooling_widgets import CurveEditor, FanCurveMiniPreview
 from localization_catalog import HELP_TOPICS, SETUP_TRANSLATIONS, UI_TRANSLATIONS
 from privacy_logging import (
@@ -2404,6 +2405,7 @@ class KrakenControl(QMainWindow):
         self.mainboard_assistant_contrast_requested = False
         self.mainboard_last_inventory_signature: tuple[str, ...] = ()
         self.mainboard_selected_channel_id = ""
+        self.mainboard_expanded_channel_id = ""
         self.cooling_owner_status = detect_cooling_owner()
         self.coolercontrol_stopped_by_ohc = False
         self.cooling_layout_selected_slot_id = ""
@@ -6496,6 +6498,10 @@ class KrakenControl(QMainWindow):
         channels = self.chassis_mainboard_channels()
         if self.mainboard_selected_channel_id not in {c.stable_id for c in channels}:
             self.mainboard_selected_channel_id = channels[0].stable_id if channels else ""
+        self.mainboard_expanded_channel_id = normalize_expanded_channel(
+            getattr(self, "mainboard_expanded_channel_id", ""),
+            (channel.stable_id for channel in channels),
+        )
 
         # Hidden compatibility table: useful for diagnostics/export without
         # forcing users into a nested table/scrollbar.
@@ -6551,9 +6557,9 @@ class KrakenControl(QMainWindow):
                     rpm = int(channel.rpm_path.read_text(encoding="ascii").strip()) if channel.rpm_path else None
                 except (OSError, ValueError):
                     rpm = None
-                selected = channel.stable_id == self.mainboard_selected_channel_id
+                expanded = channel.stable_id == self.mainboard_expanded_channel_id
                 frame = QFrame()
-                frame.setObjectName("fanChannelCardSelected" if selected else "fanChannelCard")
+                frame.setObjectName("fanChannelCardSelected" if expanded else "fanChannelCard")
                 card = QVBoxLayout(frame)
                 card.setContentsMargins(14, 10, 14, 10)
                 card.setSpacing(8)
@@ -6589,8 +6595,9 @@ class KrakenControl(QMainWindow):
                 header.addWidget(status)
                 test_btn = QPushButton("Testen")
                 test_btn.clicked.connect(lambda _checked=False, cid=channel.stable_id: self.test_mainboard_channel_from_card(cid))
-                curve_btn = QPushButton("Kurve")
-                curve_btn.clicked.connect(lambda _checked=False, cid=channel.stable_id: self.open_mainboard_curve_dialog(cid))
+                curve_btn = QPushButton("Kurve & Details schließen" if expanded else "Kurve & Details bearbeiten")
+                curve_btn.setObjectName("primaryAction" if expanded else "")
+                curve_btn.clicked.connect(lambda _checked=False, cid=channel.stable_id: self.toggle_mainboard_fan_card_details(cid))
                 assign_btn = QPushButton("Zuordnen")
                 assign_btn.clicked.connect(lambda _checked=False, cid=channel.stable_id: self.open_mainboard_assignment_from_card(cid))
                 header.addWidget(test_btn)
@@ -6616,7 +6623,7 @@ class KrakenControl(QMainWindow):
                 footer.addWidget(enable_btn)
                 card.addLayout(footer)
 
-                if selected:
+                if expanded:
                     detail = QFrame()
                     detail.setObjectName("fanInlineDetail")
                     detail_layout = QHBoxLayout(detail)
@@ -6639,10 +6646,6 @@ class KrakenControl(QMainWindow):
                     )
                     meta.setTextFormat(Qt.TextFormat.RichText)
                     detail_layout.addWidget(meta, 1)
-                    edit = QPushButton("Kurve & Details bearbeiten")
-                    edit.setObjectName("primaryAction")
-                    edit.clicked.connect(lambda _checked=False, cid=channel.stable_id: self.open_mainboard_curve_dialog(cid))
-                    detail_layout.addWidget(edit)
                     card.addWidget(detail)
                 self.mainboard_fan_cards_layout.addWidget(frame)
 
@@ -6656,6 +6659,21 @@ class KrakenControl(QMainWindow):
     def test_mainboard_channel_from_card(self, channel_id: str) -> None:
         self.select_mainboard_channel(str(channel_id))
         self.start_mainboard_fan_calibration()
+
+    def toggle_mainboard_fan_card_details(self, channel_id: str) -> None:
+        """Keep chassis-fan cards collapsed by default and expand at most one."""
+        channel_ids = [channel.stable_id for channel in self.chassis_mainboard_channels()]
+        requested = str(channel_id)
+        expanded = toggle_expanded_channel(
+            getattr(self, "mainboard_expanded_channel_id", ""), requested, channel_ids
+        )
+        if not expanded:
+            self.close_mainboard_curve_overlay()
+            return
+        self.mainboard_selected_channel_id = requested
+        self.mainboard_expanded_channel_id = expanded
+        self.refresh_mainboard_fan_table()
+        self.open_mainboard_curve_dialog(requested)
 
     def open_mainboard_assignment_from_card(self, channel_id: str) -> None:
         self.select_mainboard_channel(str(channel_id))
@@ -6870,9 +6888,13 @@ class KrakenControl(QMainWindow):
         self.log_message(f"MAINBOARD-FAN: Eingebetteten Kurveneditor geöffnet · {channel.stable_id}")
 
     def close_mainboard_curve_overlay(self) -> None:
+        had_expanded_card = bool(getattr(self, "mainboard_expanded_channel_id", ""))
         if hasattr(self, "mainboard_curve_overlay"):
             self.mainboard_curve_overlay.setVisible(False)
         self.mainboard_curve_overlay_channel_id = ""
+        self.mainboard_expanded_channel_id = ""
+        if had_expanded_card and hasattr(self, "mainboard_fan_cards_layout"):
+            self.refresh_mainboard_fan_table()
 
     def test_mainboard_curve_overlay_channel(self) -> None:
         channel_id = str(getattr(self, "mainboard_curve_overlay_channel_id", ""))

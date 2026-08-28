@@ -926,6 +926,19 @@ UI_TRANSLATIONS["fr"].update({
     "Keine Fremdmedien · acht originale OHC-Designs": "Aucun média tiers · huit designs OHC originaux",
 })
 
+UI_TRANSLATIONS["en"].update({
+    "Kurve & Details bearbeiten": "Edit curve & details",
+    "Kurve & Details schließen": "Close curve & details",
+})
+UI_TRANSLATIONS["es"].update({
+    "Kurve & Details bearbeiten": "Editar curva y detalles",
+    "Kurve & Details schließen": "Cerrar curva y detalles",
+})
+UI_TRANSLATIONS["fr"].update({
+    "Kurve & Details bearbeiten": "Modifier la courbe et les détails",
+    "Kurve & Details schließen": "Fermer la courbe et les détails",
+})
+
 SETUP_TRANSLATIONS: dict[str, dict[str, str]] = {
     "de": {
         "window": "Ersteinrichtung", "welcome": "Willkommen", "welcome_text": "Dieser Assistent richtet Design, Monitoranpassung und ein erstes Kühlprofil ein. Alle Einstellungen lassen sich später ändern.",

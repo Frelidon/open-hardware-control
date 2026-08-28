@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 main_code = (ROOT / "kraken_control.py").read_text(encoding="utf-8")
 module_names = (
-    "app_constants.py", "command_backend.py", "cooling_widgets.py",
+    "app_constants.py", "command_backend.py", "cooling_card_state.py", "cooling_widgets.py",
     "localization_catalog.py", "privacy_logging.py", "temperature_utils.py",
 )
 module_code = {name: (ROOT / name).read_text(encoding="utf-8") for name in module_names}

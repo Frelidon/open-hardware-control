@@ -13,6 +13,7 @@ main_tree = ast.parse(main_code)
 modules = {
     "app_constants.py": ("APP_VERSION", "KRAKEN_MATCH"),
     "command_backend.py": ("CommandResult", "Backend"),
+    "cooling_card_state.py": ("normalize_expanded_channel", "toggle_expanded_channel"),
     "cooling_widgets.py": ("CurveEditor", "FanCurveMiniPreview"),
     "localization_catalog.py": ("UI_TRANSLATIONS", "SETUP_TRANSLATIONS", "HELP_TOPICS"),
     "privacy_logging.py": ("redact_private_text", "write_application_crash_log"),

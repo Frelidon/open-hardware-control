@@ -15,9 +15,9 @@ Open Hardware Control is developed incrementally. Features are tested before the
 
 ### 3.4.28 INTERN — cooling interaction
 
-- Show all chassis-fan cards collapsed by default.
-- Give every card a clear `Kurve & Details bearbeiten` action and expand only the selected card.
-- Keep the embedded curve editor associated with that selected fan and allow the currently open card to be collapsed again.
+- Completed ahead in 3.4.27: show all chassis-fan cards collapsed by default.
+- Completed ahead in 3.4.27: give every card a clear `Kurve & Details bearbeiten` action and expand only the selected card.
+- Completed ahead in 3.4.27: keep the embedded curve editor associated with that selected fan and allow the currently open card to be collapsed again.
 - Add regression tests for successful/failed Kraken profile writes, initial collapsed state and single-card expansion.
 
 ### 3.4.29 INTERN — UI finish and reliability

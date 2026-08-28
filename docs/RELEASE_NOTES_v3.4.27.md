@@ -20,6 +20,12 @@
 - A manual value, CPU curve or general saved profile clears the quick-profile highlight instead of leaving a stale selection visible.
 - A confirmed quick-profile state is reconstructed from the stored pump and fan mode details after restart.
 
+## Chassis-fan curve cards
+
+- Detected chassis-fan cards remain compact and collapsed instead of opening the first channel automatically.
+- Every card provides a clear curve/details action; opening another card closes the previous one.
+- Closing the embedded editor also collapses its associated card without changing fan-control ownership or saved curves.
+
 ## Local AI project handoff
 
 - `START_HIER_LOKALE_KI.md` gives local coding models a short mandatory project and safety entry point.

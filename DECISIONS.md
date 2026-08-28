@@ -15,6 +15,7 @@ This file records decisions that future agents must preserve unless the project 
 - **3.4.25:** Modern compact PySide6 visual language should stay consistent across Overview, Cooling, RGB Studio, LCD, Profiles, Log, OpenLinkHub, Settings, About, Help and Desktop Designs.
 - **3.4.25:** Chassis fan curves use the embedded interactive editor and stored table values remain synchronized with draggable points.
 - **3.4.27:** Kraken quick-profile buttons represent confirmed device state, not click intent. A profile becomes active only after both pump and radiator-fan writes succeed; manual values, curves and general profiles clear the quick-profile highlight.
+- **3.4.27:** Internal mainboard-channel selection and visible chassis-fan-card expansion are separate states. Detection may select a channel for compatibility, but it must not open a card; only an explicit user action expands at most one card.
 
 ## Hardware ownership and safety
 

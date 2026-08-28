@@ -25,6 +25,7 @@ The 3.4.27 codebase has also begun an incremental local-AI-oriented split of the
 - Kraken Leise/Ausbalanciert/Leistung buttons become fully blue only after both requested hardware writes succeed and are cleared by individual/manual control.
 - Local AI handoff files and a credential-free Git bundle provide LM Studio/Qwen2.5-Coder setup, full branch history, a mandatory repository startup sequence and a permission-gated GitHub branch workflow without storing credentials.
 - First compatibility-preserving monolith split: six focused modules reduce the main file by roughly 1,600 lines, avoid circular imports and are included in installation and release packaging.
+- Chassis-fan cards now start collapsed, expose `Kurve & Details bearbeiten` on every card, expand only one explicit selection and collapse again when the action or embedded editor is closed.
 
 ## What 3.4.26 adds
 
@@ -61,7 +62,7 @@ The 3.4.27 codebase has also begun an incremental local-AI-oriented split of the
 
 - RGB Studio, LCD, Profiles, Log, Corsair/OpenLinkHub, Settings, About and Help now share the current blue-tinted dashboard surface design.
 - Kraken quick-profile buttons now track the last fully successful Leise, Ausbalanciert or Leistung write instead of displaying a static default.
-- Mainboard chassis-fan cards currently select and expand the first detected channel automatically; the target behavior is collapsed by default with at most one explicitly selected card expanded.
+- Mainboard chassis-fan cards keep their internal channel selection separate from visible expansion; all cards start collapsed and at most one explicitly opened card is expanded.
 - CoolerControl ownership now distinguishes the `coolercontrold` background daemon from the closed graphical client, reports its autostart state and provides confirmed controls for temporary takeover or permanent service disable/enable.
 
 ## Known boundaries / not automatically claimed

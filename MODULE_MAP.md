@@ -16,6 +16,7 @@ Die Zerlegung erfolgt in kleinen, testbaren Schritten. Hardware-Schreiblogik, Be
 | `temperature_utils.py` | Temperatur-Einheiten und Umrechnungen | Nein |
 | `privacy_logging.py` | Datenschutzfilter, Start- und Absturzprotokolle | Nein |
 | `command_backend.py` | Serieller `QProcess`-/liquidctl-Auftragsweg | Ja, nur über vorhandene validierte Befehle |
+| `cooling_card_state.py` | Reiner Ein-/Ausklappzustand der Gehäuselüfterkarten | Nein |
 | `cooling_widgets.py` | Hardwareunabhängiger Kurveneditor und Mini-Vorschau | Nein |
 | `localization_catalog.py` | Übersetzungen und integrierte Hilfethemen | Nein |
 | `ui_layout.py` | Gespeicherte Navigations- und Layoutmodelle | Nein |
@@ -29,6 +30,7 @@ Die neuen Basismodule importieren `kraken_control.py` niemals zurück. Dadurch b
 privacy_logging ──> app_constants
 command_backend ──> app_constants + privacy_logging
 cooling_widgets ──> temperature_utils
+cooling_card_state       (keine Projektabhängigkeit)
 localization_catalog    (keine Projektabhängigkeit)
 kraken_control ──> alle oben genannten Module
 ```

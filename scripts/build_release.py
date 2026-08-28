@@ -57,6 +57,7 @@ RUNTIME_FILES = {
     "hardware_request_coordinator.py",
     "mainboard_fan_control.py",
     "cooling_ownership.py",
+    "cooling_card_state.py",
     "cooling_widgets.py",
     "command_backend.py",
     "ohc_fan_helper.py",

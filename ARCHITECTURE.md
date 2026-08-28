@@ -13,6 +13,7 @@ Open Hardware Control is a single Linux desktop application with modular hardwar
 - `temperature_utils.py` — hardware-independent temperature unit conversion.
 - `privacy_logging.py` — privacy redaction plus bounded startup/crash logging.
 - `command_backend.py` — serialized `QProcess`/liquidctl command queue used by the UI orchestrator.
+- `cooling_card_state.py` — pure single-expanded-card state transitions for the chassis-fan UI.
 - `cooling_widgets.py` — hardware-independent curve editor and compact fan-curve preview.
 - `localization_catalog.py` — static translations and built-in help topics without Qt/hardware dependencies.
 - `ui_layout.py` — persisted UI layout/navigation model.

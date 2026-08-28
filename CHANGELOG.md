@@ -9,6 +9,7 @@
 - Made Kraken quick-profile buttons reflect the last successfully transmitted Leise, Ausbalanciert or Leistung profile instead of showing a static default selection.
 - Added a complete LM Studio/Qwen2.5-Coder handoff with a mandatory start file, reusable initial prompt, credential-free Git bundle, repository access instructions and guarded GitHub workflow.
 - Began a compatibility-preserving split of the historical main file into focused constants, temperature, privacy/logging, command-backend, cooling-widget and localization modules, with a task-oriented module map for context-limited local coding models.
+- Changed chassis-fan cards to start collapsed, open only one explicitly selected card and close the associated embedded curve editor from the same card action.
 
 ## 3.4.26 INTERN
 
