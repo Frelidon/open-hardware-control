@@ -364,7 +364,10 @@ with tempfile.TemporaryDirectory(prefix="open-hardware-control-release-") as tem
     with tarfile.open(DIST / f"{source_name}.tar.gz", "w:gz") as archive:
         archive.add(source_root, arcname=source_name)
 
-    build_deb(temp)
+    if os.environ.get("OHC_SKIP_DEB") == "1":
+        print("Skipping DEB build because OHC_SKIP_DEB=1")
+    else:
+        build_deb(temp)
     if os.environ.get("OHC_SKIP_RPM") == "1":
         print("Skipping RPM build because OHC_SKIP_RPM=1")
     else:

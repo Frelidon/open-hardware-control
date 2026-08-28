@@ -49,3 +49,9 @@ Alle Release-Artefakte werden mit folgendem Befehl gebaut. Auf Debian/Ubuntu mus
 ```bash
 ./scripts/build_release.sh 3.4.27
 ```
+
+Für ein lokales Fedora-Testpaket ohne installiertes `dpkg-deb` kann ausschließlich das DEB übersprungen werden; RPM, ZIPs, Quellarchiv und Prüfsummen werden weiterhin gebaut:
+
+```bash
+OHC_SKIP_DEB=1 ./scripts/build_release.sh 3.4.27
+```
