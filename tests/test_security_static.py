@@ -284,6 +284,9 @@ assert 'mainboard_fan_control.py' in installer
 assert 'nzxt_esc_profiles.py' in installer
 build_release_code = (ROOT / "scripts/build_release.py").read_text(encoding="utf-8")
 assert 'os.environ.get("OHC_SKIP_DEB") == "1"' in build_release_code
+assert '"_buildhost open-hardware-control.invalid"' in build_release_code
+assert 'filter=anonymize_tar_metadata' in build_release_code
+assert 'info.uname = "root"' in build_release_code
 rpm_fallback_code = (ROOT / "scripts/build_rpm_fallback.py").read_text(encoding="utf-8")
 assert 'usr/libexec/open-hardware-control-fan-helper' in rpm_fallback_code
 assert 'usr/share/polkit-1/actions/io.github.Frelidon.OpenHardwareControl.fan.policy' in rpm_fallback_code

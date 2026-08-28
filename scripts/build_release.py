@@ -129,6 +129,15 @@ def write_zip(source: Path, output: Path, archive_root: str) -> None:
                 archive.writestr(info, stream.read(), compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
 
 
+def anonymize_tar_metadata(info: tarfile.TarInfo) -> tarfile.TarInfo:
+    """Keep local account and machine identities out of distributed archives."""
+    info.uid = 0
+    info.gid = 0
+    info.uname = "root"
+    info.gname = "root"
+    return info
+
+
 def install_runtime_tree(package_root: Path) -> None:
     app_dir = package_root / "usr/share/open-hardware-control"
     app_dir.mkdir(parents=True)
@@ -280,7 +289,7 @@ def build_rpm(temp: Path) -> Path:
     install_runtime_tree(payload)
     source = top / "SOURCES" / f"open-hardware-control-{VERSION}.tar.gz"
     with tarfile.open(source, "w:gz") as archive:
-        archive.add(payload, arcname=payload.name)
+        archive.add(payload, arcname=payload.name, filter=anonymize_tar_metadata)
 
     spec = top / "SPECS" / "open-hardware-control.spec"
     spec.write_text(
@@ -331,7 +340,18 @@ cp -a usr %{{buildroot}}/
 """,
         encoding="utf-8",
     )
-    subprocess.run(["rpmbuild", "-bb", "--define", f"_topdir {top}", str(spec)], check=True)
+    subprocess.run(
+        [
+            "rpmbuild",
+            "-bb",
+            "--define",
+            f"_topdir {top}",
+            "--define",
+            "_buildhost open-hardware-control.invalid",
+            str(spec),
+        ],
+        check=True,
+    )
     built = next((top / "RPMS").rglob("*.rpm"))
     shutil.copy2(built, output)
     return output
@@ -362,7 +382,7 @@ with tempfile.TemporaryDirectory(prefix="open-hardware-control-release-") as tem
     copy_tree(ROOT, source_root, developer=True)
     write_manifest(source_root)
     with tarfile.open(DIST / f"{source_name}.tar.gz", "w:gz") as archive:
-        archive.add(source_root, arcname=source_name)
+        archive.add(source_root, arcname=source_name, filter=anonymize_tar_metadata)
 
     if os.environ.get("OHC_SKIP_DEB") == "1":
         print("Skipping DEB build because OHC_SKIP_DEB=1")
