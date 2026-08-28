@@ -10,7 +10,7 @@ Open Radeon Control Center bleibt ein eigenständiges Projekt. Es wird weder tec
 
 ## Version 3.4.26 INTERN
 
-Das Repository besitzt nun ein dauerhaftes, versioniertes KI-Projektgedächtnis für Cursor und andere Coding-Agenten. Projektregeln, Session-Hook, Backup-Gate und Release-Skripte sorgen dafür, dass neue Chats den aktuellen Stand wiederfinden und kein GitHub-Push ohne bestätigtes Google-Drive-Backup des exakten Commits erfolgt.
+Das Repository besitzt nun ein dauerhaftes, versioniertes KI-Projektgedächtnis für Cursor und andere Coding-Agenten. Projektregeln, Session-Hook und Release-Skripte sorgen dafür, dass neue Chats den aktuellen Stand wiederfinden und Veröffentlichungen nur aus einem geprüften, committed Stand mit ausdrücklicher Freigabe erfolgen.
 
 ## Version 3.4.16 INTERN
 

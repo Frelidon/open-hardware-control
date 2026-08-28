@@ -4,10 +4,8 @@
 
 - Added repository-native long-term AI project memory through `AGENTS.md`, project status, architecture, durable decisions, device-support summary and cross-agent handoff docs.
 - Added version-controlled Cursor project rules and slash workflows so fresh chats deterministically recover project constraints instead of depending on old chat context.
-- Added Cursor project hooks: session context injection, a fail-closed `beforeShellExecution` GitHub backup gate and explicit confirmation for destructive shell/Git commands.
-- Added a reproducible backup workflow that stores a full Git bundle plus exact `HEAD` source snapshot, SHA-256-binds it to the current commit and invalidates authorization after the next commit.
-- Added the official Cursor Google Drive plugin workflow without storing OAuth credentials in the repository; publication confirmation can only be recorded after the exact generated archive is reported uploaded.
-- Wired GitHub publish/release scripts to require a verified Drive backup before repository/tag publication.
+- Added Cursor project hooks for session context injection and explicit confirmation of destructive shell/Git commands.
+- Kept GitHub publication guarded by release-channel, clean-worktree, authentication, test and explicit-approval requirements without a Google Drive or external backup dependency.
 
 ## 3.4.25 INTERN
 

@@ -9,12 +9,6 @@
     ],
     "beforeShellExecution": [
       {
-        "command": "python3 .cursor/hooks/guard-github-push.py",
-        "matcher": "git\\s+push|gh\\s+repo\\s+create.*--push|gh\\s+release\\s+create",
-        "timeout": 20,
-        "failClosed": true
-      },
-      {
         "command": "python3 .cursor/hooks/guard-destructive-shell.py",
         "matcher": "rm\\s+-[^\\n]*r|git\\s+reset\\s+--hard|git\\s+clean\\s+-|git\\s+push[^\\n]*(--force|-f\\b)|git\\s+branch\\s+-D|git\\s+tag\\s+-d|git\\s+checkout\\s+--\\s|git\\s+restore\\s+\\.",
         "timeout": 10,

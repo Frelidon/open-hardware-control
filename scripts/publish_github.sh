@@ -63,13 +63,6 @@ elif ! git rev-parse --verify HEAD >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! ./scripts/check_drive_backup.sh; then
-  echo >&2
-  echo "GitHub publication is blocked until the exact current HEAD is backed up to Google Drive." >&2
-  echo "Run ./scripts/prepare_drive_backup.sh, upload the generated ZIP, confirm it, then rerun this script." >&2
-  exit 1
-fi
-
 gh repo create "$REPO_NAME" \
   --public \
   --source=. \

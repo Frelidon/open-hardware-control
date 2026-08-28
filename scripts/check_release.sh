@@ -57,11 +57,11 @@ fi
 
 for required in \
   LICENSE README.md README.en.md INSTALL.md CHANGELOG.md SECURITY.md PRIVACY.md BUILD_CHANNEL \
-  CONTRIBUTING.md SOURCE_CODE.md DEVELOPER_PACKAGE.md VERSION AGENTS.md PROJECT_STATUS.md ARCHITECTURE.md DECISIONS.md DEVICE_SUPPORT.md AI_HANDOFF.md BACKUP_AND_RELEASE_POLICY.md CURSOR_SETUP.md AGENT_BACKUP_CONFIG.json \
+  CONTRIBUTING.md SOURCE_CODE.md DEVELOPER_PACKAGE.md VERSION AGENTS.md PROJECT_STATUS.md ARCHITECTURE.md DECISIONS.md DEVICE_SUPPORT.md AI_HANDOFF.md CURSOR_SETUP.md \
   kraken_control.py kraken_cam_streamer.py openlinkhub_integration.py openrgb_integration.py openrgb_sdk.py rgb_effects.py ui_layout.py desktop_designs.py \
   desktop_assets.py desktop_shell.py DESKTOP_SECURITY_AUDIT.md RGB_STUDIO.md RGB_SECURITY_AUDIT.md SECURITY_SCAN_REPORT.json \
-  scripts/build_release.py scripts/build_release.sh scripts/agent_backup.py scripts/prepare_drive_backup.sh scripts/confirm_drive_backup.sh scripts/check_drive_backup.sh \
-  .cursor/hooks.json .cursor/hooks/session-start.py .cursor/hooks/guard-github-push.py .cursor/hooks/guard-destructive-shell.py; do
+  scripts/build_release.py scripts/build_release.sh \
+  .cursor/hooks.json .cursor/hooks/session-start.py .cursor/hooks/guard-destructive-shell.py; do
   [[ -f "$required" ]] || { echo "Missing required file: $required" >&2; exit 1; }
 done
 
@@ -76,12 +76,17 @@ else
 fi
 grep -Fq 'developer_name = f"Entwicklerpaket {VERSION}' scripts/build_release.py
 
-python3 -m json.tool AGENT_BACKUP_CONFIG.json >/dev/null
 python3 -m json.tool .cursor/hooks.json >/dev/null
 
 grep -Fq 'alwaysApply: true' .cursor/rules/00-project-core.mdc
 grep -Fq 'beforeShellExecution' .cursor/hooks.json
-grep -Fq './scripts/check_drive_backup.sh' scripts/create_release.sh
-grep -Fq './scripts/check_drive_backup.sh' scripts/publish_github.sh
+for removed in \
+  AGENT_BACKUP_CONFIG.json BACKUP_AND_RELEASE_POLICY.md \
+  .cursor/commands/backup-before-push.md .cursor/hooks/guard-github-push.py .cursor/rules/40-git-backup.mdc \
+  scripts/agent_backup.py scripts/check_drive_backup.sh scripts/confirm_drive_backup.sh scripts/prepare_drive_backup.sh; do
+  [[ ! -e "$removed" ]] || { echo "Removed backup workflow file still exists: $removed" >&2; exit 1; }
+done
+! grep -Fq 'check_drive_backup.sh' scripts/create_release.sh
+! grep -Fq 'check_drive_backup.sh' scripts/publish_github.sh
 
 echo "All repository release checks passed for $VERSION."

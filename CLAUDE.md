@@ -10,4 +10,4 @@ Before editing, read:
 4. `ARCHITECTURE.md`
 5. `DEVICE_SUPPORT.md`
 
-Do not bypass `BACKUP_AND_RELEASE_POLICY.md` before GitHub publication.
+Do not push, tag or publish without a clean tested worktree and an explicit project-owner request.

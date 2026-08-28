@@ -60,8 +60,7 @@ Safety invariant: only the private local engine is writable; external OpenRGB ow
 - `scripts/security_scan_release.py` — static release privacy/security scan.
 - `scripts/build_release.py` / `.sh` — reproducible package generation.
 - `scripts/create_release.sh`, `scripts/publish_github.sh` — GitHub publication entry points.
-- `scripts/agent_backup.py` and shell wrappers — local Git/Drive backup gate.
-- `.cursor/hooks.json` — agent-time enforcement for direct GitHub push/release commands.
+- `.cursor/hooks.json` — session context and confirmation for destructive shell/Git commands.
 
 ## Persistence
 

@@ -75,6 +75,6 @@ Kontrolle:
 gh release view v3.4.26 --web
 ```
 
-## Drive-Backup-Gate vor GitHub
+## Sicherheitsprüfung vor GitHub
 
-Vor jedem späteren Push muss `BACKUP_AND_RELEASE_POLICY.md` erfüllt sein. `./scripts/check_drive_backup.sh` muss für den exakten finalen `HEAD` erfolgreich sein; Cursor blockiert direkte Push-/Release-Befehle andernfalls zusätzlich per Projekt-Hook.
+Vor einem Push müssen der beabsichtigte Stand vollständig committed, der Arbeitsbaum sauber und die relevanten Tests erfolgreich sein. Öffentliche Tags und Releases benötigen zusätzlich `BUILD_CHANNEL=STABLE` und eine ausdrückliche Freigabe des Projektinhabers. Eine Google-Drive- oder andere externe Backup-Pflicht besteht nicht.

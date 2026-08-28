@@ -23,6 +23,3 @@ kraken-diagnostics-*.txt
 *~
 .DS_Store
 Thumbs.db
-
-# Local AI/Drive backup staging and authorization state
-.ohc-backups/

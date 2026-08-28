@@ -37,9 +37,8 @@ This file records decisions that future agents must preserve unless the project 
 - **3.4.26:** Agents must update `PROJECT_STATUS.md` after meaningful project changes and this file when a durable decision changes.
 - **3.4.26:** Cursor project rules and hooks are version-controlled so fresh chats inherit project constraints.
 
-## Backup and GitHub publication
+## GitHub publication
 
-- **3.4.26:** Before any GitHub push/tag/release, create a backup bound to the exact current Git `HEAD`, upload the exact archive to the configured Google Drive location and confirm that upload locally.
-- **3.4.26:** A new commit invalidates the previous backup authorization automatically because the stored `HEAD` no longer matches.
-- **3.4.26:** Cursor's `beforeShellExecution` hook must block direct push/release commands when the backup gate is stale/missing. Do not weaken the hook to bypass the policy.
-- **3.4.26:** Google OAuth credentials are never stored in the repository.
+- **2026-08-27 / 3.4.26:** The project owner explicitly removed the Google Drive backup workflow and its mandatory push gate. GitHub publication does not depend on Google Drive or another external backup provider.
+- **2026-08-27 / 3.4.26:** Pushes, tags and releases still require a clean committed worktree, relevant successful tests, the correct release channel and an explicit project-owner request.
+- **2026-08-27 / 3.4.26:** Authentication credentials and tokens must never be stored in the repository.

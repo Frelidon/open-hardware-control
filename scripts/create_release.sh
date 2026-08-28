@@ -34,7 +34,6 @@ if git rev-parse "$TAG" >/dev/null 2>&1; then
 fi
 
 ./scripts/check_release.sh
-./scripts/check_drive_backup.sh
 ./scripts/build_release.sh "$VERSION"
 
 printf 'Create and push tag %s? This will trigger the public GitHub Release workflow. [y/N] ' "$TAG"

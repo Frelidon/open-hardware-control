@@ -15,13 +15,8 @@ When the repository is opened as a trusted Cursor workspace, project hooks are l
 1. Open the repository root in Cursor (not a random extracted subfolder).
 2. Mark the workspace trusted so project hooks can run.
 3. Open Customize and verify the project rules/hooks are visible.
-4. Install/sign into the official Google Drive plugin.
-5. Start a fresh Agent chat and run `/project-start`.
-6. Ask the agent to report the current version, channel, Git branch and major modules before editing anything.
-
-## Google Drive
-
-The repository stores only policy/configuration, never Google credentials. The default remote folder is defined in `AGENT_BACKUP_CONFIG.json`.
+4. Start a fresh Agent chat and run `/project-start`.
+5. Ask the agent to report the current version, channel, Git branch and major modules before editing anything.
 
 ## Fresh chat behavior
 

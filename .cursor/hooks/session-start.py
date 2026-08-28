@@ -14,6 +14,6 @@ context = (
     f"Open Hardware Control project session. Repository version={version}, channel={channel}. "
     "Before substantive edits, read AGENTS.md, PROJECT_STATUS.md, DECISIONS.md and ARCHITECTURE.md. "
     "For hardware changes also read DEVICE_SUPPORT.md/SUPPORTED_DEVICES.md. "
-    "Never push/release to GitHub until BACKUP_AND_RELEASE_POLICY.md is satisfied and scripts/check_drive_backup.sh passes."
+    "Push, tag or release only from a clean tested worktree after an explicit project-owner request."
 )
 print(json.dumps({'additional_context': context}))

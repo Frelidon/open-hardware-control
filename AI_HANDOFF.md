@@ -24,11 +24,10 @@ Update `PROJECT_STATUS.md` with what is now true, not what was merely discussed.
 
 ## Before GitHub
 
-Run the backup gate described in `BACKUP_AND_RELEASE_POLICY.md`. A successful local test does **not** replace the Google Drive backup requirement.
+Require a clean committed worktree, run the relevant release checks and verify the release channel. Push, tag or create a release only after an explicit project-owner request.
 
 ## Recommended Cursor commands
 
 - `/project-start` — recover project context.
 - `/finish-feature` — tests + memory/documentation handoff.
-- `/backup-before-push` — create/upload/confirm/verify Drive backup.
 - `/release-preflight` — full release safety check.

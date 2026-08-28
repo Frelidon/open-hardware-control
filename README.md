@@ -14,13 +14,13 @@ Projekt-Repository: <https://github.com/Frelidon/open-hardware-control>
 
 > **Inoffizielles unabhängiges Community-Projekt:** Bisher besteht keine offizielle Unterstützung, Kooperation, Freigabe oder Verbindung zu NZXT, Corsair, be quiet!, OpenLinkHub, OpenRGB oder anderen genannten Herstellern und Projekten. Produkt- und Markennamen dienen nur der Kompatibilitätsbeschreibung. Hersteller und Rechteinhaber erreichen Frelidon über die öffentliche Kontaktadresse im GitHub-Profil oder über den Steam-Benutzernamen **Frelidon**.
 
-Version 3.4.26 INTERN baut auf dem 3.4.25-OHC-Design auf und ergänzt ein dauerhaftes KI-Projektgedächtnis sowie ein verpflichtendes Backup-vor-GitHub-System. Die Anwendung nutzt jetzt eine dauerhafte kompakte Seitenleiste ohne „Community Edition“-Untertitel, eigene Seitentitel, eine neu strukturierte Übersicht, die modernisierte Kühlungszentrale sowie direkte System-Fan-Karten mit Test/Kurve/Zuordnung. Lüfterkurven werden direkt in einer eingebetteten interaktiven Kurvenkarte bearbeitet, damit kein unnötiges Hoch-und-runter-Scrollen mehr nötig ist. Der Gehäuselüfter-Assistent ist jetzt als vierstufiger Ablauf Erkennen → Testen → Zuordnen → Speichern aufgebaut. Die bestehende NCT6687-/Polkit-/CoolerControl-Sicherheitslogik bleibt erhalten.
+Version 3.4.26 INTERN baut auf dem 3.4.25-OHC-Design auf und ergänzt ein dauerhaftes KI-Projektgedächtnis sowie reproduzierbare Entwicklungs- und Release-Prüfungen. Die Anwendung nutzt jetzt eine dauerhafte kompakte Seitenleiste ohne „Community Edition“-Untertitel, eigene Seitentitel, eine neu strukturierte Übersicht, die modernisierte Kühlungszentrale sowie direkte System-Fan-Karten mit Test/Kurve/Zuordnung. Lüfterkurven werden direkt in einer eingebetteten interaktiven Kurvenkarte bearbeitet, damit kein unnötiges Hoch-und-runter-Scrollen mehr nötig ist. Der Gehäuselüfter-Assistent ist jetzt als vierstufiger Ablauf Erkennen → Testen → Zuordnen → Speichern aufgebaut. Die bestehende NCT6687-/Polkit-/CoolerControl-Sicherheitslogik bleibt erhalten.
 
 ## Neu in 3.4.26 INTERN
 
 - Dauerhaftes KI-Projektgedächtnis über `AGENTS.md`, Status-, Architektur-, Entscheidungs- und Geräteunterlagen.
 - Cursor-Projektregeln, Slash-Kommandos und Session-Start-Hook für zuverlässige Übergaben zwischen neuen Chats.
-- Verpflichtendes Google-Drive-Backup-Gate vor GitHub-Push/Tag/Release, gebunden an den exakten Git-Commit und SHA-256.
+- Release-Prüfungen für Version, Kanal, Tests, Datenschutz und reproduzierbare Artefakte ohne externe Backup-Abhängigkeit.
 - Destruktive Shell-/Git-Befehle benötigen in Cursor eine ausdrückliche Bestätigung.
 
 ## Neu in 3.4.25 INTERN
@@ -437,11 +437,11 @@ sudo apt install './open-hardware-control_3.4.26~intern1_all.deb'
 
 ### Universelles Installationspaket
 
-Das ZIP funktioniert auf Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_24_INTERN.zip` herunter und führe aus:
+Das ZIP funktioniert auf Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_26_INTERN.zip` herunter und führe aus:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_24_INTERN.zip
+unzip open_hardware_control_v3_4_26_INTERN.zip
 cd open-hardware-control-3.4.26-INTERN
 chmod +x install.sh
 ./install.sh

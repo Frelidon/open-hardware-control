@@ -14,13 +14,13 @@ Project repository: <https://github.com/Frelidon/open-hardware-control>
 
 > **Unofficial independent community project:** Open Hardware Control is not supported, approved, endorsed, operated by, or affiliated with NZXT, Corsair, be quiet!, OpenLinkHub, OpenRGB, or any other named manufacturer or project. Product and brand names are used only to describe compatibility. Manufacturers and rights holders can contact Frelidon through the public contact address in the GitHub profile or the Steam username **Frelidon**.
 
-Version 3.4.26 INTERNAL builds on the 3.4.25 OHC interface and adds durable AI project memory plus a mandatory backup-before-GitHub workflow. The app now uses a compact persistent sidebar without a “Community Edition” subtitle, dedicated page headers, a redesigned overview, a modern cooling center and direct chassis-fan cards with Test/Curve/Assign actions. Fan curves are edited in an embedded interactive curve card to avoid long scroll trips. The chassis-fan assistant now uses four explicit steps: Detect → Test → Assign → Save. Existing NCT6687, Polkit and CoolerControl ownership safety stays intact.
+Version 3.4.26 INTERNAL builds on the 3.4.25 OHC interface and adds durable AI project memory plus reproducible development and release checks. The app now uses a compact persistent sidebar without a “Community Edition” subtitle, dedicated page headers, a redesigned overview, a modern cooling center and direct chassis-fan cards with Test/Curve/Assign actions. Fan curves are edited in an embedded interactive curve card to avoid long scroll trips. The chassis-fan assistant now uses four explicit steps: Detect → Test → Assign → Save. Existing NCT6687, Polkit and CoolerControl ownership safety stays intact.
 
 ## New in 3.4.26 INTERNAL
 
 - Durable AI project memory through `AGENTS.md` plus status, architecture, decision and device-support documents.
 - Cursor project rules, slash commands and a session-start hook for reliable handoffs between fresh chats.
-- Mandatory Google Drive backup gate before GitHub push/tag/release, bound to the exact Git commit and SHA-256.
+- Release validation for version, channel, tests, privacy and reproducible artifacts without an external backup dependency.
 - Destructive shell/Git commands require explicit confirmation in Cursor.
 
 ## New in 3.4.25 INTERNAL

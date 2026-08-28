@@ -8,5 +8,5 @@ alwaysApply: false
 - `BUILD_CHANNEL=INTERN` intentionally blocks public release publication.
 - Run `./scripts/check_release.sh` before release packaging/publication.
 - Preserve reproducible ZIP/source/DEB/RPM/developer-package and SHA256 generation.
-- No GitHub publication until the Drive backup gate passes.
+- Require a clean committed worktree and explicit project-owner approval before GitHub publication.
 - Do not create a public release from an internal build merely because tests pass.

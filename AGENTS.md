@@ -52,18 +52,12 @@ If a request conflicts with these files or the current code, stop and explain th
 
 ## Git and GitHub safety
 
-**Never upload/push project state to GitHub until the Google Drive backup gate passes.**
-
 Before any `git push`, GitHub repository push, tag push or GitHub release action:
 
 1. Ensure the worktree is clean and the intended changes are committed.
-2. Run `./scripts/prepare_drive_backup.sh`.
-3. Upload the exact generated archive to the configured Google Drive folder using Cursor's official Google Drive plugin, or the documented fallback.
-4. Only after the upload reports success, run `./scripts/confirm_drive_backup.sh` with the uploaded file identity/name.
-5. Run `./scripts/check_drive_backup.sh` and require success.
-6. Only then push to GitHub.
-
-The Cursor `beforeShellExecution` hook independently enforces this gate for direct push/release commands. Do not bypass, disable or edit the guard merely to make a push succeed.
+2. Run the relevant tests and inspect the final diff.
+3. Keep `BUILD_CHANNEL=INTERN` until a public release is intentionally prepared and validated.
+4. Require an explicit project-owner request before pushing, tagging or creating a release.
 
 ## Destructive commands
 
@@ -72,8 +66,6 @@ Do not run destructive commands (`rm -rf`, `git reset --hard`, `git clean -f`, f
 ## Secrets and privacy
 
 - Never commit passwords, OAuth tokens, API keys, private keys, personal logs or unredacted diagnostics.
-- Do not place Google credentials in this repository. Google Drive authentication belongs to Cursor/plugin OAuth or a user-controlled local mount.
-- Keep `.ohc-backups/` local and ignored by Git.
 
 ## Fresh-chat handoff
 

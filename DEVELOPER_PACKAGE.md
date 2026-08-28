@@ -10,7 +10,7 @@ Das Entwicklerpaket enthält:
 - das reversible KDE-Desktop-Design-Modul und zwei eigene GPL-SVG-Hintergründe
 - zentrale Projekt- und OpenLinkHub-Dokumentation
 - SHA-256-Prüfsummen
-- Cursor/AI-Projektgedächtnis, Regeln, Hooks, Slash-Workflows und Google-Drive-Backup-Gate
+- Cursor/AI-Projektgedächtnis, Regeln, Hooks und Slash-Workflows
 
 Die Anwendung wird direkt aus `kraken_control.py` gestartet. Der Dateiname bleibt intern erhalten, weil er das vollständige historische NZXT-Modul trägt; der sichtbare Programmname und der installierte Starter lauten `Open Hardware Control` beziehungsweise `open-hardware-control`.
 

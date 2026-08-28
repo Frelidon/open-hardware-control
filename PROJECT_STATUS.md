@@ -16,11 +16,8 @@ Version 3.4.26 adds a repository-native AI development layer so Cursor, Codex, C
 - `PROJECT_STATUS.md`, `ARCHITECTURE.md`, `DECISIONS.md`, `DEVICE_SUPPORT.md` and `AI_HANDOFF.md` as maintained project memory.
 - Cursor project rules under `.cursor/rules/`.
 - Cursor slash workflows under `.cursor/commands/`.
-- Project-level Cursor hooks with a `beforeShellExecution` GitHub backup gate and destructive-command confirmation guard.
-- A reproducible Git backup bundle + HEAD source snapshot with SHA-256 verification.
-- A confirmation record bound to the exact Git `HEAD`; a new commit invalidates the previous push authorization automatically.
-- Google Drive workflow documentation using Cursor's official Google Drive plugin without storing OAuth credentials in the repository.
-- Release/publish scripts wired to refuse GitHub publication if the backup gate is not valid.
+- Project-level Cursor hooks with session context injection and destructive-command confirmation.
+- Release/publish scripts that enforce release channel, clean-worktree, authentication and test requirements without an external backup dependency.
 
 ## Current major modules
 
@@ -49,7 +46,6 @@ Version 3.4.26 adds a repository-native AI development layer so Cursor, Codex, C
 - Firmware flashing/version switching is not a supported feature in this repository.
 - GPU fan control is not part of the mainboard PWM subsystem.
 - Open Radeon Control Center remains separate.
-- Cursor Google Drive OAuth cannot be embedded in source; the user must connect the official plugin once in Cursor.
 
 ## Before the next public release
 
@@ -57,4 +53,4 @@ Version 3.4.26 adds a repository-native AI development layer so Cursor, Codex, C
 - Run all release checks.
 - Verify current documentation/version references.
 - Confirm no secrets/personal logs are present.
-- Create and verify a Google Drive backup for the exact final commit before any GitHub push/tag/release.
+- Require a clean committed state and explicit project-owner approval before any GitHub push/tag/release.

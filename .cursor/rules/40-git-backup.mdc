@@ -1,7 +1,0 @@
----
-description: Mandatory Google Drive backup gate before any GitHub upload
-globs:
-alwaysApply: true
----
-
-Before `git push`, tag push, `gh repo create --push` or `gh release create`, follow @BACKUP_AND_RELEASE_POLICY.md exactly. The backup must correspond to the exact current Git `HEAD` and `./scripts/check_drive_backup.sh` must pass. Upload the generated archive using Cursor's official Google Drive plugin to the folder configured in @AGENT_BACKUP_CONFIG.json, then confirm only after the plugin reports success. Never disable/bypass the hook or fabricate a Drive confirmation.
