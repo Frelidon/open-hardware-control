@@ -1,10 +1,10 @@
-# Komponenten- und Versionsübersicht – Version 3.4.26 INTERN
+# Komponenten- und Versionsübersicht – Version 3.4.27 INTERN
 
 ## Getestete Referenzkonfiguration
 
 | Komponente | Version / Stand |
 |---|---|
-| Open Hardware Control by Frelidon | 3.4.26 INTERN |
+| Open Hardware Control by Frelidon | 3.4.27 INTERN |
 | OHC RGB-Effekt-Engine | Schema/Engine 1 · 10 eigene Effekte |
 | OHC Mainboard-Fan-Modul | 3.4.25 · Linux hwmon/NCT6687 · kalibrierungspflichtige PWM-Kanäle · CPU/GPU/Kühlmittel/max/gewichtet · Hysterese/Delay · Leise/Ausbalanciert/Leistung · Fallback/Firmware-Rückgabe |
 | OpenRGB | optional installiert · von OHC verwalteter fensterloser Kindprozess auf `127.0.0.1:6742`; Fedora-44-Test mit `1.0~rc2`; Direct-Farben über eigenen OHC-SDK-Helfer statt CLI-ApplyOptions |

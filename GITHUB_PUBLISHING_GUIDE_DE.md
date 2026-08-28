@@ -1,4 +1,4 @@
-# Open Hardware Control 3.4.26 INTERN – Veröffentlichung derzeit gesperrt
+# Open Hardware Control 3.4.27 INTERN – Veröffentlichung derzeit gesperrt
 
 Repository: <https://github.com/Frelidon/kraken-control-linux>
 
@@ -44,18 +44,18 @@ gh repo edit Frelidon/kraken-control-linux \
 ```bash
 ./scripts/check_release.sh
 sudo apt install rpm
-./scripts/build_release.sh 3.4.26
+./scripts/build_release.sh 3.4.27
 cd dist
 sha256sum -c SHA256SUMS
 ```
 
 Erwartete Dateien:
 
-- `open_hardware_control_v3_4_26_INTERN.zip`
-- `open-hardware-control_3.4.26~intern1_all.deb`
-- `open-hardware-control-3.4.26-0.intern1.noarch.rpm`
-- `open-hardware-control-3.4.26-INTERN-source.tar.gz`
-- `Entwicklerpaket 3.4.26 INTERN.zip`
+- `open_hardware_control_v3_4_27_INTERN.zip`
+- `open-hardware-control_3.4.27~intern1_all.deb`
+- `open-hardware-control-3.4.27-0.intern1.noarch.rpm`
+- `open-hardware-control-3.4.27-INTERN-source.tar.gz`
+- `Entwicklerpaket 3.4.27 INTERN.zip`
 - `SHA256SUMS`
 
 ## Spätere Veröffentlichung
@@ -63,8 +63,8 @@ Erwartete Dateien:
 Nach einem grünen Pull Request und sauberem `main`:
 
 ```bash
-git tag -a v3.4.26 -m "Open Hardware Control v3.4.26"
-git push origin v3.4.26
+git tag -a v3.4.27 -m "Open Hardware Control v3.4.27"
+git push origin v3.4.27
 ```
 
 Der Workflow `.github/workflows/release.yml` darf erst nach der STABLE-Umstellung verwendet werden. Er führt die Tests erneut aus, baut sämtliche Release-Dateien aus demselben Tag und erstellt anschließend das öffentliche GitHub-Release.
@@ -72,7 +72,7 @@ Der Workflow `.github/workflows/release.yml` darf erst nach der STABLE-Umstellun
 Kontrolle:
 
 ```bash
-gh release view v3.4.26 --web
+gh release view v3.4.27 --web
 ```
 
 ## Sicherheitsprüfung vor GitHub

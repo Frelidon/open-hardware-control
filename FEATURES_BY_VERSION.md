@@ -3,6 +3,7 @@
 
 | Version | Erstmals hinzugekommene Hauptfunktionen |
 |---|---|
+| 3.4.27 INTERN | Getrennte CoolerControl-Daemon-/Autostartanzeige sowie bestätigte Polkit-Aktionen für vorübergehende Übernahme, dauerhaftes Deaktivieren und erneutes Aktivieren mit sicherer Firmware-/BIOS-Übergabe. |
 | 3.4.23.2 INTERN | Kompaktes Cooling-Dashboard, CoolerControl-Ownership-Sperre, einzelne System-Fan-Karten mit Kurvenvorschau sowie grafischer PWM/RGB-Gehäuse-Assistent mit sicherem 30/80-%-Kontrasttest und persistenter Einbauplatz-Zuordnung. |
 | 3.4.23.1 INTERN | Polkit-geschützter NCT6687-Fan-Helper für root-geschützte hwmon-PWM-Schreibzugriffe, 10-s-Kalibrierung mit RPM-Verlauf, MSI-EC-verträgliche Zielbestätigung und treibereigene Firmwarekurven-Rückgabe über pwmN_enable=2. |
 | 3.4.23 INTERN | Sichere Mainboard-Lüftersteuerung über Linux-hwmon/NCT6687 mit bestätigungspflichtiger 70-%-Kalibrierung, individuellen Sensorquellen/Kurven je PWM-Kanal, Leise/Ausbalanciert/Leistung-Vorlagen mit sicherer Empfehlung, Sensor-Fallback, optionalem nct6687d-10-s-Watchdog, Firmware-Rückgabe, Secure-Boot-/Treiberdiagnose sowie ENE-DRAM-Reinitialisierung im RGB-Studio. |

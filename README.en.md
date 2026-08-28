@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.26 INTERNAL
+# Open Hardware Control by Frelidon 3.4.27 INTERNAL
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -14,7 +14,13 @@ Project repository: <https://github.com/Frelidon/open-hardware-control>
 
 > **Unofficial independent community project:** Open Hardware Control is not supported, approved, endorsed, operated by, or affiliated with NZXT, Corsair, be quiet!, OpenLinkHub, OpenRGB, or any other named manufacturer or project. Product and brand names are used only to describe compatibility. Manufacturers and rights holders can contact Frelidon through the public contact address in the GitHub profile or the Steam username **Frelidon**.
 
-Version 3.4.26 INTERNAL builds on the 3.4.25 OHC interface and adds durable AI project memory plus reproducible development and release checks. The app now uses a compact persistent sidebar without a “Community Edition” subtitle, dedicated page headers, a redesigned overview, a modern cooling center and direct chassis-fan cards with Test/Curve/Assign actions. Fan curves are edited in an embedded interactive curve card to avoid long scroll trips. The chassis-fan assistant now uses four explicit steps: Detect → Test → Assign → Save. Existing NCT6687, Polkit and CoolerControl ownership safety stays intact.
+Version 3.4.27 INTERNAL starts the next interface pass with clearer CoolerControl management. OHC now distinguishes a closed graphical client from the still-running `coolercontrold` background service, reports its autostart state, and can stop it temporarily, disable it persistently, or enable it persistently again after explicit confirmation.
+
+## New in 3.4.27 INTERNAL
+
+- Separate status for the active CoolerControl background daemon and system autostart.
+- Confirmed Polkit actions for temporary OHC takeover, persistent disable, or re-enable and immediate start of CoolerControl.
+- Safe handoff: disabling CoolerControl never starts OHC fan control automatically; enabling CoolerControl first returns motherboard channels to firmware/BIOS ownership.
 
 ## New in 3.4.26 INTERNAL
 

@@ -1,8 +1,8 @@
-# Entwicklerpaket 3.4.26 INTERN
+# Entwicklerpaket 3.4.27 INTERN
 
 Das Entwicklerpaket enthält:
 
-- den vollständigen editierbaren Quellbaum von Open Hardware Control 3.4.26 INTERN
+- den vollständigen editierbaren Quellbaum von Open Hardware Control 3.4.27 INTERN
 - alle Python-, Shell-, Test-, Dokumentations- und GitHub-Workflow-Dateien
 - den reproduzierbaren Builder für ZIP, DEB, RPM, Quellarchiv und Prüfsummen
 - die fünf eigenen OpenLinkHub-Maus-SVGs und ihre Zuordnungslogik
@@ -47,5 +47,5 @@ Der Installer kann für einen isolierten Pakettest mit `OHC_INSTALL_HOME=/absolu
 Alle Release-Artefakte werden mit folgendem Befehl gebaut. Auf Debian/Ubuntu muss zusätzlich das Paket `rpm` für den Fedora-RPM-Build installiert sein:
 
 ```bash
-./scripts/build_release.sh 3.4.26
+./scripts/build_release.sh 3.4.27
 ```

@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.26 INTERN
+# Open Hardware Control by Frelidon 3.4.27 INTERN
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -14,7 +14,13 @@ Projekt-Repository: <https://github.com/Frelidon/open-hardware-control>
 
 > **Inoffizielles unabhängiges Community-Projekt:** Bisher besteht keine offizielle Unterstützung, Kooperation, Freigabe oder Verbindung zu NZXT, Corsair, be quiet!, OpenLinkHub, OpenRGB oder anderen genannten Herstellern und Projekten. Produkt- und Markennamen dienen nur der Kompatibilitätsbeschreibung. Hersteller und Rechteinhaber erreichen Frelidon über die öffentliche Kontaktadresse im GitHub-Profil oder über den Steam-Benutzernamen **Frelidon**.
 
-Version 3.4.26 INTERN baut auf dem 3.4.25-OHC-Design auf und ergänzt ein dauerhaftes KI-Projektgedächtnis sowie reproduzierbare Entwicklungs- und Release-Prüfungen. Die Anwendung nutzt jetzt eine dauerhafte kompakte Seitenleiste ohne „Community Edition“-Untertitel, eigene Seitentitel, eine neu strukturierte Übersicht, die modernisierte Kühlungszentrale sowie direkte System-Fan-Karten mit Test/Kurve/Zuordnung. Lüfterkurven werden direkt in einer eingebetteten interaktiven Kurvenkarte bearbeitet, damit kein unnötiges Hoch-und-runter-Scrollen mehr nötig ist. Der Gehäuselüfter-Assistent ist jetzt als vierstufiger Ablauf Erkennen → Testen → Zuordnen → Speichern aufgebaut. Die bestehende NCT6687-/Polkit-/CoolerControl-Sicherheitslogik bleibt erhalten.
+Version 3.4.27 INTERN beginnt die nächste Oberflächenrunde mit einer verständlicheren CoolerControl-Verwaltung. OHC unterscheidet nun das geschlossene Programmfenster vom weiterlaufenden `coolercontrold`-Hintergrunddienst, zeigt dessen Autostartzustand an und kann den Dienst nach ausdrücklicher Bestätigung nur vorübergehend beenden, dauerhaft deaktivieren oder wieder dauerhaft aktivieren.
+
+## Neu in 3.4.27 INTERN
+
+- Getrennte Anzeige von laufendem CoolerControl-Hintergrunddienst und aktiviertem Systemstart.
+- Bestätigte Polkit-Aktionen für vorübergehende OHC-Übernahme, dauerhaftes Deaktivieren sowie erneutes Aktivieren und Starten von CoolerControl.
+- Sichere Übergabe: OHC startet seine Lüfterregelung beim Deaktivieren nicht ungefragt; vor dem Aktivieren von CoolerControl gehen Mainboard-Kanäle an Firmware/BIOS zurück.
 
 ## Neu in 3.4.26 INTERN
 
@@ -419,30 +425,30 @@ Die Animation kann dabei kurz stehen bleiben, muss aber weder neu eingelesen noc
 
 ### Fedora und Nobara – RPM
 
-Lade `open-hardware-control-3.4.26-0.intern1.noarch.rpm` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control-3.4.27-0.intern1.noarch.rpm` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.26-0.intern1.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.27-0.intern1.noarch.rpm
 ```
 
 ### Debian, Ubuntu und Linux Mint – DEB
 
-Lade `open-hardware-control_3.4.26~intern1_all.deb` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control_3.4.27~intern1_all.deb` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.26~intern1_all.deb'
+sudo apt install './open-hardware-control_3.4.27~intern1_all.deb'
 ```
 
 ### Universelles Installationspaket
 
-Das ZIP funktioniert auf Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_26_INTERN.zip` herunter und führe aus:
+Das ZIP funktioniert auf Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_27_INTERN.zip` herunter und führe aus:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_26_INTERN.zip
-cd open-hardware-control-3.4.26-INTERN
+unzip open_hardware_control_v3_4_27_INTERN.zip
+cd open-hardware-control-3.4.27-INTERN
 chmod +x install.sh
 ./install.sh
 ```

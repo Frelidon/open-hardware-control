@@ -71,9 +71,9 @@
   </screenshots>
   <content_rating type="oars-1.1" />
   <releases>
-    <release version="@VERSION@" date="2026-08-26">
+    <release version="@VERSION@" date="2026-08-28">
       <description>
-        <p>@CHANNEL@ build with calibration-gated motherboard fan control through Linux hwmon/NCT6687, per-channel sensor curves and safety fallbacks, ENE-DRAM reinitialization, and the existing coordinated LCD/RGB hardware paths.</p>
+        <p>@CHANNEL@ build with explicit CoolerControl background-service and autostart management, calibration-gated motherboard fan control, and the existing coordinated LCD/RGB hardware paths.</p>
       </description>
     </release>
   </releases>

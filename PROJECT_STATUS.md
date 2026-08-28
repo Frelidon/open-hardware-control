@@ -1,6 +1,6 @@
 # Open Hardware Control — Project Status
 
-**Current development version:** 3.4.26 INTERN
+**Current development version:** 3.4.27 INTERN
 
 **Status date:** 28 August 2026
 
@@ -12,7 +12,13 @@ Continue Open Hardware Control as a modular Linux hardware-control application w
 
 Version 3.4.26 adds a repository-native AI development layer so Cursor, Codex, Claude Code and future coding agents can recover project context from files rather than depending on one long chat.
 
-The next internal work starts with a consistent application-wide design pass, followed by a focused cooling interaction pass. The detailed sequence is maintained in `ROADMAP.md`.
+Version 3.4.27 development has started with clearer CoolerControl ownership and persistent service controls. The remaining work continues with a consistent application-wide design pass, followed by a focused cooling interaction pass. The detailed sequence is maintained in `ROADMAP.md`.
+
+## What 3.4.27 adds so far
+
+- Separate reporting for the CoolerControl graphical client, active `coolercontrold` background service and service-autostart state.
+- Confirmed Polkit actions to stop CoolerControl temporarily, disable it permanently or enable and start it again.
+- Safe ownership transitions: disabling CoolerControl never starts OHC fan control automatically; enabling CoolerControl first returns mainboard channels to firmware/BIOS ownership.
 
 ## What 3.4.26 adds
 

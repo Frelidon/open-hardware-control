@@ -1,12 +1,16 @@
 # Open Hardware Control – zentrale Projektdokumentation
 
-Stand: **3.4.26 INTERN**, 27. August 2026
+Stand: **3.4.27 INTERN**, 28. August 2026
 
 ## Zielbild
 
 Open Hardware Control by Frelidon ist die gemeinsame, modular erweiterbare Linux-Oberfläche für unterstützte Hardware. Die komplette bisherige NZXT-Kraken-Anwendung bleibt als fest eingebautes NZXT-Modul erhalten. Corsair-Hardware wird über OpenLinkHub eingebunden. Zusätzliche RGB-Geräte erscheinen über eine von OHC automatisch verwaltete lokale Hardware-Engine. Spätere Gerätefamilien können als weitere Module hinzukommen, ohne die Navigation mit einer langen Reihe von Hauptreitern zu überladen.
 
 Open Radeon Control Center bleibt ein eigenständiges Projekt. Es wird weder technisch noch organisatorisch in Open Hardware Control verschmolzen.
+
+## Version 3.4.27 INTERN
+
+Die Kühlungszentrale unterscheidet nun zwischen dem geschlossenen CoolerControl-Fenster, einem weiterhin laufenden `coolercontrold`-Hintergrunddienst und dessen Autostartzustand. Nach ausdrücklicher Bestätigung kann OHC CoolerControl nur für die aktuelle Sitzung beenden, den Systemdienst dauerhaft deaktivieren oder ihn wieder dauerhaft aktivieren und sofort starten. Die Übergabe bleibt exklusiv: Beim Deaktivieren startet OHC keine Regelung automatisch; beim Aktivieren gibt OHC seine Mainboard-Kanäle zuerst an Firmware/BIOS zurück.
 
 ## Version 3.4.26 INTERN
 

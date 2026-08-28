@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.4.27 INTERN
+
+- Distinguished the closed CoolerControl graphical client from the active `coolercontrold` background service and its system-autostart state.
+- Added confirmed Polkit controls to stop CoolerControl temporarily, disable its system service permanently, or enable and start it again.
+- Kept mainboard-fan ownership safe: disabling CoolerControl does not activate OHC automatically, while enabling it returns channels to firmware/BIOS control before starting the competing service.
+
 ## 3.4.26 INTERN
 
 - Added repository-native long-term AI project memory through `AGENTS.md`, project status, architecture, durable decisions, device-support summary and cross-agent handoff docs.

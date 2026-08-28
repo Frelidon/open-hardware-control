@@ -205,7 +205,7 @@ from nzxt_rgb import (
 
 APP_NAME = "Open Hardware Control"
 DISPLAY_NAME = "Open Hardware Control by Frelidon"
-APP_VERSION = "3.4.26"
+APP_VERSION = "3.4.27"
 BUILD_CHANNEL = "INTERN"
 APP_DISPLAY_VERSION = f"{APP_VERSION} {BUILD_CHANNEL}"
 ORG_NAME = "FloriLinuxTools"
