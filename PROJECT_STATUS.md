@@ -12,13 +12,16 @@ Continue Open Hardware Control as a modular Linux hardware-control application w
 
 Version 3.4.26 adds a repository-native AI development layer so Cursor, Codex, Claude Code and future coding agents can recover project context from files rather than depending on one long chat.
 
-Version 3.4.27 development has started with clearer CoolerControl ownership and persistent service controls. The remaining work continues with a consistent application-wide design pass, followed by a focused cooling interaction pass. The detailed sequence is maintained in `ROADMAP.md`.
+Version 3.4.27 now combines clearer CoolerControl ownership and persistent service controls with the application-wide blue dashboard design and confirmed Kraken quick-profile feedback. The remaining cooling interaction work is tracked in `ROADMAP.md`.
 
 ## What 3.4.27 adds so far
 
 - Separate reporting for the CoolerControl graphical client, active `coolercontrold` background service and service-autostart state.
 - Confirmed Polkit actions to stop CoolerControl temporarily, disable it permanently or enable and start it again.
 - Safe ownership transitions: disabling CoolerControl never starts OHC fan control automatically; enabling CoolerControl first returns mainboard channels to firmware/BIOS ownership.
+- Blue-tinted cards, editors, tables and inputs across RGB Studio, LCD, Profiles, Log, Corsair/OpenLinkHub, Settings, About, Help and Kraken detail areas.
+- Kraken Leise/Ausbalanciert/Leistung buttons become fully blue only after both requested hardware writes succeed and are cleared by individual/manual control.
+- Local AI handoff files provide LM Studio/Qwen2.5-Coder setup, a mandatory repository startup sequence and a permission-gated GitHub branch workflow without storing credentials.
 
 ## What 3.4.26 adds
 
@@ -50,10 +53,10 @@ Version 3.4.27 development has started with clearer CoolerControl ownership and 
 - Corsair remains mediated through local OpenLinkHub rather than direct, guessed Corsair USB writes.
 - LCD/GIF and Kraken hardware requests remain coordinated so simultaneous subsystems do not fight for the same device.
 
-## Confirmed next work and first 3.4.27 progress
+## Confirmed next work and 3.4.27 progress
 
-- RGB Studio, LCD, Profiles, Log, Corsair/OpenLinkHub, Settings, About and Help still use mixed page structures and need the current dashboard design applied consistently.
-- Kraken quick-profile buttons do not yet update their active visual state after a successful Leise, Ausbalanciert or Leistung write.
+- RGB Studio, LCD, Profiles, Log, Corsair/OpenLinkHub, Settings, About and Help now share the current blue-tinted dashboard surface design.
+- Kraken quick-profile buttons now track the last fully successful Leise, Ausbalanciert or Leistung write instead of displaying a static default.
 - Mainboard chassis-fan cards currently select and expand the first detected channel automatically; the target behavior is collapsed by default with at most one explicitly selected card expanded.
 - CoolerControl ownership now distinguishes the `coolercontrold` background daemon from the closed graphical client, reports its autostart state and provides confirmed controls for temporary takeover or permanent service disable/enable.
 

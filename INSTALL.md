@@ -8,7 +8,7 @@ Empfohlenes RPM-Paket:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.17-0.intern1.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.27-0.intern2.noarch.rpm
 ```
 
 Alternativ das universelle ZIP verwenden. Die benötigten Pakete lauten:
@@ -23,7 +23,7 @@ Empfohlenes DEB-Paket:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.17~intern1_all.deb'
+sudo apt install './open-hardware-control_3.4.27~intern2_all.deb'
 ```
 
 Alternativ das universelle ZIP verwenden. Die benötigten Pakete lauten:

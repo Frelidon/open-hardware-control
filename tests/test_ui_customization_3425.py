@@ -48,6 +48,16 @@ for title in (
 ):
     assert title in code, title
 
+# Detail panels, editors and tables share the same blue-tinted card language.
+for token in (
+    'panel_rgba =',
+    'panel_border_rgba =',
+    'QTableWidget, QPlainTextEdit, QTextEdit, QTextBrowser, QListWidget',
+    'QHeaderView::section',
+    'background: {panel_rgba};',
+):
+    assert token in code, token
+
 # Version-like four-part numbers are not blindly redacted as IPv4 addresses.
 assert 'Four-part application versions' in code
 print('3.4.25 navigation, curve editor, CPU default and design-consistency guards passed.')

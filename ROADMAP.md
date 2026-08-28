@@ -6,15 +6,15 @@ Open Hardware Control is developed incrementally. Features are tested before the
 
 ### 3.4.27 INTERN — consistent application design
 
-- Apply the current dashboard design language consistently to RGB Studio, LCD, Profiles, Log, Corsair/OpenLinkHub, Settings, About and Help.
-- Introduce shared module headers, status panels, section cards and action-button states instead of maintaining a separate visual structure on every page.
+- Completed: apply the current dashboard design language consistently to RGB Studio, LCD, Profiles, Log, Corsair/OpenLinkHub, Settings, About and Help.
+- Completed: introduce shared blue-tinted module headers, status panels, section cards, editors and tables instead of maintaining a separate visual structure on every page.
 - Preserve the existing page behavior, navigation anchors and hardware ownership boundaries during the visual migration.
 - Clarify CoolerControl ownership messages: distinguish the closed graphical client from the active `coolercontrold` background service and explain whether the service is running or starts automatically.
 - Let the user explicitly stop CoolerControl for the current session or permanently disable and later re-enable its system-service autostart through a confirmed Polkit action.
+- Completed ahead of the cooling pass: mark Kraken quick profiles only after both pump and fan writes succeed and clear stale selection after individual control.
 
 ### 3.4.28 INTERN — cooling interaction
 
-- Mark the Kraken quick profile Leise, Ausbalanciert or Leistung only after pump and fan writes have succeeded; update the profile label and the complete button/card state together.
 - Show all chassis-fan cards collapsed by default.
 - Give every card a clear `Kurve & Details bearbeiten` action and expand only the selected card.
 - Keep the embedded curve editor associated with that selected fan and allow the currently open card to be collapsed again.

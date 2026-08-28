@@ -1,0 +1,12 @@
+Arbeite als lokale Coding-KI am Projekt Open Hardware Control by Frelidon.
+
+Lies zuerst START_HIER_LOKALE_KI.md und danach die dort vorgeschriebene Pflichtreihenfolge vollständig. Prüfe außerdem VERSION, BUILD_CHANNEL, git status, den aktuellen Branch, origin und die letzten Commits. Ändere noch keine Datei und führe keine Hardware-Schreibbefehle aus.
+
+Melde mir anschließend kurz:
+1. aktuelle Version und Release-Kanal,
+2. Branch und Arbeitsbaumzustand,
+3. die wichtigsten Hardware-/GitHub-Sicherheitsgrenzen,
+4. welche nächste offene Aufgabe PROJECT_STATUS.md und ROADMAP.md nennen,
+5. ob Dokumentation und Quellcode einen erkennbaren Widerspruch enthalten.
+
+Git push, Pull Request, Tag oder Release sind ohne meine spätere ausdrückliche Freigabe verboten. Zugangsdaten oder Gerätecodes dürfen nie gespeichert oder committed werden.

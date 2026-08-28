@@ -14,13 +14,16 @@ Project repository: <https://github.com/Frelidon/open-hardware-control>
 
 > **Unofficial independent community project:** Open Hardware Control is not supported, approved, endorsed, operated by, or affiliated with NZXT, Corsair, be quiet!, OpenLinkHub, OpenRGB, or any other named manufacturer or project. Product and brand names are used only to describe compatibility. Manufacturers and rights holders can contact Frelidon through the public contact address in the GitHub profile or the Steam username **Frelidon**.
 
-Version 3.4.27 INTERNAL starts the next interface pass with clearer CoolerControl management. OHC now distinguishes a closed graphical client from the still-running `coolercontrold` background service, reports its autostart state, and can stop it temporarily, disable it persistently, or enable it persistently again after explicit confirmation.
+Version 3.4.27 INTERNAL combines clearer CoolerControl management with consistent blue-tinted cards and honest Kraken-profile feedback. OHC distinguishes a closed graphical client from the still-running `coolercontrold` service and only marks a Kraken quick profile after successful hardware transmission.
 
 ## New in 3.4.27 INTERNAL
 
 - Separate status for the active CoolerControl background daemon and system autostart.
 - Confirmed Polkit actions for temporary OHC takeover, persistent disable, or re-enable and immediate start of CoolerControl.
 - Safe handoff: disabling CoolerControl never starts OHC fan control automatically; enabling CoolerControl first returns motherboard channels to firmware/BIOS ownership.
+- Consistent blue-tinted surfaces across RGB Studio, LCD, Profiles, Log, Corsair/OpenLinkHub, Settings, About, Help and Kraken details.
+- Silent, Balanced and Performance only become fully blue after successful pump and fan writes.
+- Complete local-AI handoff for LM Studio/Qwen2.5-Coder with a start prompt, repository rules and guarded GitHub workflow.
 
 ## New in 3.4.26 INTERNAL
 
@@ -291,14 +294,14 @@ Fedora/Nobara RPM:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.23-0.intern1.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.27-0.intern2.noarch.rpm
 ```
 
 Debian/Ubuntu/Linux Mint DEB:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.23~intern1_all.deb'
+sudo apt install './open-hardware-control_3.4.27~intern2_all.deb'
 ```
 
 Universal ZIP for the supported distro families:

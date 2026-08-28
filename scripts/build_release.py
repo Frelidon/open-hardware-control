@@ -220,7 +220,7 @@ def build_deb(temp: Path) -> Path:
         "\n".join(
             [
                 "Package: open-hardware-control",
-                f"Version: {VERSION + '~intern1' if INTERNAL else VERSION}",
+                f"Version: {VERSION + '~intern2' if INTERNAL else VERSION}",
                 "Section: utils",
                 "Priority: optional",
                 "Architecture: all",
@@ -235,7 +235,7 @@ def build_deb(temp: Path) -> Path:
         ),
         encoding="utf-8",
     )
-    deb_version = VERSION + "~intern1" if INTERNAL else VERSION
+    deb_version = VERSION + "~intern2" if INTERNAL else VERSION
     output = DIST / f"open-hardware-control_{deb_version}_all.deb"
     # Use a single gzip worker for broad apt/dpkg compatibility.  The explicit
     # payload check below also rejects the control-only package observed on the
@@ -265,7 +265,7 @@ def build_deb(temp: Path) -> Path:
 
 
 def build_rpm(temp: Path) -> Path:
-    rpm_release = "0.intern1" if INTERNAL else "1"
+    rpm_release = "0.intern2" if INTERNAL else "1"
     output = DIST / f"open-hardware-control-{VERSION}-{rpm_release}.noarch.rpm"
     if not shutil.which("rpmbuild"):
         payload = temp / f"open-hardware-control-{VERSION}-fallback-root"
@@ -295,7 +295,7 @@ def build_rpm(temp: Path) -> Path:
     spec.write_text(
         f"""Name:           open-hardware-control
 Version:        {VERSION}
-Release:        {"0.intern1" if INTERNAL else "1"}%{{?dist}}
+Release:        {"0.intern2" if INTERNAL else "1"}%{{?dist}}
 Summary:        NZXT Kraken, Corsair/OpenLinkHub and RGB Studio for Linux
 License:        GPL-3.0-or-later
 URL:            https://github.com/Frelidon/open-hardware-control
@@ -335,7 +335,7 @@ cp -a usr %{{buildroot}}/
 /usr/share/polkit-1/actions/io.github.Frelidon.OpenHardwareControl.fan.policy
 
 %changelog
-* Sun Aug 23 2026 Frelidon <noreply@github.com> - {VERSION}-{"0.intern1" if INTERNAL else "1"}
+* Fri Aug 28 2026 Frelidon <noreply@github.com> - {VERSION}-{"0.intern2" if INTERNAL else "1"}
 - Open Hardware Control {VERSION} {CHANNEL}
 """,
         encoding="utf-8",

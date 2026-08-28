@@ -57,7 +57,7 @@ fi
 
 for required in \
   LICENSE README.md README.en.md INSTALL.md CHANGELOG.md SECURITY.md PRIVACY.md BUILD_CHANNEL \
-  CONTRIBUTING.md SOURCE_CODE.md DEVELOPER_PACKAGE.md VERSION AGENTS.md PROJECT_STATUS.md ARCHITECTURE.md DECISIONS.md DEVICE_SUPPORT.md AI_HANDOFF.md CURSOR_SETUP.md \
+  CONTRIBUTING.md SOURCE_CODE.md DEVELOPER_PACKAGE.md VERSION AGENTS.md PROJECT_STATUS.md ARCHITECTURE.md DECISIONS.md DEVICE_SUPPORT.md AI_HANDOFF.md CURSOR_SETUP.md START_HIER_LOKALE_KI.md LM_STUDIO_ANLEITUNG_DE.md LOCAL_AI_STARTPROMPT.txt \
   kraken_control.py kraken_cam_streamer.py openlinkhub_integration.py openrgb_integration.py openrgb_sdk.py rgb_effects.py ui_layout.py desktop_designs.py \
   desktop_assets.py desktop_shell.py DESKTOP_SECURITY_AUDIT.md RGB_STUDIO.md RGB_SECURITY_AUDIT.md SECURITY_SCAN_REPORT.json \
   scripts/build_release.py scripts/build_release.sh \
@@ -67,8 +67,8 @@ done
 
 if [[ "$CHANNEL" == "INTERN" ]]; then
   grep -Fq "open_hardware_control_v${VERSION//./_}_INTERN.zip" README.md
-  grep -Fq "open-hardware-control_${VERSION}~intern1_all.deb" README.md
-  grep -Fq "open-hardware-control-${VERSION}-0.intern1.noarch.rpm" README.md
+  grep -Fq "open-hardware-control_${VERSION}~intern2_all.deb" README.md
+  grep -Fq "open-hardware-control-${VERSION}-0.intern2.noarch.rpm" README.md
 else
   grep -Fq "open_hardware_control_v${VERSION//./_}.zip" README.md
   grep -Fq "open-hardware-control_${VERSION}_all.deb" README.md

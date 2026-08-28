@@ -2,6 +2,8 @@
 
 Use this when moving work between Cursor chats, Codex, Claude Code or another coding agent.
 
+For LM Studio with a local model, begin with `START_HIER_LOKALE_KI.md`; the user-facing setup steps and reusable first prompt are in `LM_STUDIO_ANLEITUNG_DE.md` and `LOCAL_AI_STARTPROMPT.txt`.
+
 ## Start a fresh session
 
 1. Read `AGENTS.md`.

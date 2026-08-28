@@ -1,6 +1,6 @@
 # Open Hardware Control 3.4.27 INTERN – Veröffentlichung derzeit gesperrt
 
-Repository: <https://github.com/Frelidon/kraken-control-linux>
+Repository: <https://github.com/Frelidon/open-hardware-control>
 
 Diese interne Testversion darf noch nicht öffentlich veröffentlicht werden. `BUILD_CHANNEL=INTERN` sorgt dafür,
 dass `scripts/create_release.sh` und `scripts/publish_github.sh` abbrechen. Erst nach realem KDE-/Hardwaretest,
@@ -20,7 +20,7 @@ Empfohlene GitHub-Topics:
 Mit angemeldeter GitHub CLI:
 
 ```bash
-gh repo edit Frelidon/kraken-control-linux \
+gh repo edit Frelidon/open-hardware-control \
   --description "Open-source NZXT Kraken LCD, pump, fan and RGB control for Linux with Corsair/OpenLinkHub integration." \
   --add-topic linux \
   --add-topic nzxt \
@@ -39,6 +39,40 @@ gh repo edit Frelidon/kraken-control-linux \
   --add-topic fedora
 ```
 
+## Internen Arbeitsstand sicher hochladen
+
+Ein interner Entwicklungsbranch darf gesichert oder als Pull Request bereitgestellt werden, wenn der Projektinhaber dies ausdrücklich beauftragt. Das ist noch keine öffentliche Veröffentlichung.
+
+Einmalige Anmeldung führt der Benutzer selbst aus:
+
+```bash
+gh auth login --web
+```
+
+Danach prüft die lokale KI zunächst nur lesend:
+
+```bash
+gh auth status
+git remote -v
+git branch --show-current
+git status --short
+git diff --check
+```
+
+Das erwartete Remote ist `https://github.com/Frelidon/open-hardware-control.git`. Vor dem Push müssen die beabsichtigten Änderungen committed, die passenden Tests erfolgreich und der Arbeitsbaum sauber sein. Erst nach der ausdrücklichen Freigabe des Projektinhabers:
+
+```bash
+git push -u origin "$(git branch --show-current)"
+```
+
+Optional darf danach ebenfalls nur auf ausdrücklichen Auftrag ein Pull Request erstellt werden:
+
+```bash
+gh pr create --fill
+```
+
+Tokens, Passwörter und GitHub-Gerätecodes gehören niemals in Prompts, Projektdateien oder Commits. Force-Push, Branchlöschung, Tags und Releases sind eigene, gesondert freizugebende Aktionen.
+
 ## Release lokal prüfen
 
 ```bash
@@ -52,8 +86,8 @@ sha256sum -c SHA256SUMS
 Erwartete Dateien:
 
 - `open_hardware_control_v3_4_27_INTERN.zip`
-- `open-hardware-control_3.4.27~intern1_all.deb`
-- `open-hardware-control-3.4.27-0.intern1.noarch.rpm`
+- `open-hardware-control_3.4.27~intern2_all.deb`
+- `open-hardware-control-3.4.27-0.intern2.noarch.rpm`
 - `open-hardware-control-3.4.27-INTERN-source.tar.gz`
 - `Entwicklerpaket 3.4.27 INTERN.zip`
 - `SHA256SUMS`

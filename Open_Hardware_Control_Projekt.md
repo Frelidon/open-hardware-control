@@ -101,7 +101,7 @@ Die Vorschau ist vollständig schreibfrei. Erst ein eigener Bestätigungsdialog 
 
 Für die Optik werden ausschließlich bereits vorhandene KDE-Breeze-Komponenten, Noto Sans und zwei im Projekt erstellte GPL-SVG-Hintergründe verwendet. Es gibt keine externen Design-Downloads, keine zusätzlichen Paketquellen, keine Administratoraktion und keine Microsoft-/Apple-Logos, -Schriften oder -Hintergrundbilder. Andere Desktopumgebungen werden nicht verändert.
 
-Der Build ist ausdrücklich intern: ZIP, DEB und RPM tragen eine INTERN-/intern1-Kennzeichnung. `BUILD_CHANNEL=INTERN` sperrt die öffentlichen Veröffentlichungshelfer, damit dieser Teststand nicht versehentlich als GitHub-Release erscheint. Die Hardwarefunktionen aus 3.0.9 bleiben unverändert enthalten.
+Der Build ist ausdrücklich intern: ZIP, DEB und RPM tragen eine INTERN-/intern2-Kennzeichnung. `BUILD_CHANNEL=INTERN` sperrt die öffentlichen Veröffentlichungshelfer, damit dieser Teststand nicht versehentlich als GitHub-Release erscheint. Die Hardwarefunktionen aus 3.0.9 bleiben unverändert enthalten.
 
 ## Version 3.0.9
 

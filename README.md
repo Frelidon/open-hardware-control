@@ -14,13 +14,16 @@ Projekt-Repository: <https://github.com/Frelidon/open-hardware-control>
 
 > **Inoffizielles unabhängiges Community-Projekt:** Bisher besteht keine offizielle Unterstützung, Kooperation, Freigabe oder Verbindung zu NZXT, Corsair, be quiet!, OpenLinkHub, OpenRGB oder anderen genannten Herstellern und Projekten. Produkt- und Markennamen dienen nur der Kompatibilitätsbeschreibung. Hersteller und Rechteinhaber erreichen Frelidon über die öffentliche Kontaktadresse im GitHub-Profil oder über den Steam-Benutzernamen **Frelidon**.
 
-Version 3.4.27 INTERN beginnt die nächste Oberflächenrunde mit einer verständlicheren CoolerControl-Verwaltung. OHC unterscheidet nun das geschlossene Programmfenster vom weiterlaufenden `coolercontrold`-Hintergrunddienst, zeigt dessen Autostartzustand an und kann den Dienst nach ausdrücklicher Bestätigung nur vorübergehend beenden, dauerhaft deaktivieren oder wieder dauerhaft aktivieren.
+Version 3.4.27 INTERN verbindet die verständlichere CoolerControl-Verwaltung mit einem einheitlichen blau getönten Kartendesign und ehrlicher Kraken-Profilanzeige. OHC unterscheidet das geschlossene Programmfenster vom weiterlaufenden `coolercontrold`-Hintergrunddienst und markiert ein Kraken-Schnellprofil erst nach erfolgreicher Hardwareübertragung.
 
 ## Neu in 3.4.27 INTERN
 
 - Getrennte Anzeige von laufendem CoolerControl-Hintergrunddienst und aktiviertem Systemstart.
 - Bestätigte Polkit-Aktionen für vorübergehende OHC-Übernahme, dauerhaftes Deaktivieren sowie erneutes Aktivieren und Starten von CoolerControl.
 - Sichere Übergabe: OHC startet seine Lüfterregelung beim Deaktivieren nicht ungefragt; vor dem Aktivieren von CoolerControl gehen Mainboard-Kanäle an Firmware/BIOS zurück.
+- Einheitliches blau getöntes Design für RGB-Studio, LCD, Profile, Log, Corsair/OpenLinkHub, Einstellungen, Über, Hilfe und Kraken-Details.
+- Leise, Ausbalanciert und Leistung werden erst nach erfolgreicher Pumpen- und Lüfterübertragung vollständig blau markiert.
+- Vollständige lokale-KI-Übergabe für LM Studio/Qwen2.5-Coder mit Startprompt, Projektregeln und abgesichertem GitHub-Ablauf.
 
 ## Neu in 3.4.26 INTERN
 
@@ -425,20 +428,20 @@ Die Animation kann dabei kurz stehen bleiben, muss aber weder neu eingelesen noc
 
 ### Fedora und Nobara – RPM
 
-Lade `open-hardware-control-3.4.27-0.intern1.noarch.rpm` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control-3.4.27-0.intern2.noarch.rpm` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.27-0.intern1.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.27-0.intern2.noarch.rpm
 ```
 
 ### Debian, Ubuntu und Linux Mint – DEB
 
-Lade `open-hardware-control_3.4.27~intern1_all.deb` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control_3.4.27~intern2_all.deb` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.27~intern1_all.deb'
+sudo apt install './open-hardware-control_3.4.27~intern2_all.deb'
 ```
 
 ### Universelles Installationspaket

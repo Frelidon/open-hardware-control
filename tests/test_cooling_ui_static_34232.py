@@ -16,6 +16,15 @@ def test_compact_dashboard_and_cards_exist():
     assert 'mainboard_fan_cards_layout' in CODE
 
 
+def test_kraken_quick_profile_highlight_tracks_confirmed_device_state():
+    assert 'self.cooling_quick_profile_buttons' in CODE
+    assert 'button.setProperty("profileState", "inactive")' in CODE
+    assert 'QPushButton#coolingQuickProfileButton[profileState="active"]' in CODE
+    assert 'self.update_cooling_quick_profile_state(name)' in CODE
+    assert 'self.restore_cooling_quick_profile_state()' in CODE
+    assert 'button.setObjectName("profilePrimary")' not in CODE
+
+
 def test_cpu_and_pump_are_excluded_from_chassis_control():
     assert 'mainboard_channel_is_chassis_fan(channel)' in CODE
     assert 'CPU_FAN und PUMP_FAN bleiben im separaten CPU-/Kraken-Bereich' in CODE

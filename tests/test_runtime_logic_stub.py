@@ -294,6 +294,73 @@ assert mode_state.cooling_mode_buttons['fan']['curve'].properties['coolingState'
 assert mode_state.cooling_mode_buttons['pump']['curve'].repolished == 2
 assert mode_state.cooling_mode_buttons['fan']['manual'].repolished == 2
 
+class ProfileLabelFake:
+    def __init__(self): self.text = ''
+    def setText(self, text): self.text = text
+
+class QuickProfileStateFake:
+    cooling_modes = {
+        'pump': ('Feste Drehzahl', '75 % · Profil Leistung'),
+        'fan': ('Feste Drehzahl', '75 % · Profil Leistung'),
+    }
+    cooling_cpu_active_profile = ProfileLabelFake()
+    cooling_quick_profile_buttons = {
+        'Leise': ModeButtonFake(),
+        'Ausbalanciert': ModeButtonFake(),
+        'Leistung': ModeButtonFake(),
+    }
+    def update_cooling_quick_profile_state(self, name):
+        mod.KrakenControl.update_cooling_quick_profile_state(self, name)
+
+quick_state = QuickProfileStateFake()
+mod.KrakenControl.restore_cooling_quick_profile_state(quick_state)
+assert quick_state.cooling_cpu_active_profile.text == 'Leistung'
+assert quick_state.cooling_quick_profile_buttons['Leistung'].properties['profileState'] == 'active'
+assert quick_state.cooling_quick_profile_buttons['Leise'].properties['profileState'] == 'inactive'
+mod.KrakenControl.update_cooling_quick_profile_state(quick_state, '')
+assert quick_state.cooling_cpu_active_profile.text == 'Individuell'
+assert all(button.properties['profileState'] == 'inactive' for button in quick_state.cooling_quick_profile_buttons.values())
+
+class ProfileSliderFake:
+    def __init__(self): self.current = None
+    def setValue(self, value): self.current = value
+
+class ProfileBackendFake:
+    def __init__(self): self.callbacks = []
+    def run_async(self, _args, callback, timeout): self.callbacks.append(callback)
+
+class QuickProfileApplyFake:
+    kraken_write_busy = False
+    pump_slider = ProfileSliderFake()
+    fan_slider = ProfileSliderFake()
+    backend = ProfileBackendFake()
+    footer_status = ProfileLabelFake()
+    cpu_curve_last_duties = {}
+    confirmed = []
+    modes = []
+    def defer_cooling_action_for_gif(self, *_args): return False
+    def has_kraken_write_access(self): return True
+    def show_permission_error(self, message): raise AssertionError(message)
+    def show_error(self, message): raise AssertionError(message)
+    def set_cooling_mode(self, channel, mode, detail): self.modes.append((channel, mode, detail))
+    def update_cooling_quick_profile_state(self, name): self.confirmed.append(name)
+    def refresh_status(self): pass
+
+apply_state = QuickProfileApplyFake()
+mod.QTimer.singleShot = staticmethod(lambda _delay, _callback: None)
+mod.KrakenControl.apply_quick_profile(apply_state, 'Leise', 45, 35, notify=False)
+assert apply_state.confirmed == []
+assert len(apply_state.backend.callbacks) == 1
+apply_state.backend.callbacks.pop(0)(types.SimpleNamespace(ok=True, combined=''))
+assert apply_state.confirmed == []
+assert len(apply_state.backend.callbacks) == 1
+apply_state.backend.callbacks.pop(0)(types.SimpleNamespace(ok=True, combined=''))
+assert apply_state.confirmed == ['Leise']
+assert apply_state.modes == [
+    ('pump', 'Feste Drehzahl', '45 % · Profil Leise'),
+    ('fan', 'Feste Drehzahl', '35 % · Profil Leise'),
+]
+
 class ValueFake:
     def __init__(self, value): self._value = value
     def value(self): return self._value

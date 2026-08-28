@@ -7372,7 +7372,7 @@ class KrakenControl(QMainWindow):
         cpu_title = QHBoxLayout()
         cpu_title.addWidget(QLabel("●  CPU / Kraken", objectName="coolingCardTitle"))
         cpu_title.addStretch()
-        self.cooling_cpu_active_profile = QLabel("Ausbalanciert")
+        self.cooling_cpu_active_profile = QLabel("Noch nicht gesetzt")
         self.cooling_cpu_active_profile.setObjectName("accentText")
         cpu_title.addWidget(self.cooling_cpu_active_profile)
         cpu_layout.addLayout(cpu_title)
@@ -7381,11 +7381,13 @@ class KrakenControl(QMainWindow):
         self.cooling_cpu_summary_label.setWordWrap(True)
         cpu_layout.addWidget(self.cooling_cpu_summary_label)
         cpu_profiles = QHBoxLayout()
+        self.cooling_quick_profile_buttons: dict[str, QPushButton] = {}
         for title, pump, fan in (("Leise", 45, 35), ("Ausbalanciert", 55, 50), ("Leistung", 75, 75)):
             button = QPushButton(title)
-            if title == "Ausbalanciert":
-                button.setObjectName("profilePrimary")
+            button.setObjectName("coolingQuickProfileButton")
+            button.setProperty("profileState", "inactive")
             button.clicked.connect(lambda _checked=False, n=title, p=pump, f=fan: self.apply_quick_profile(n, p, f))
+            self.cooling_quick_profile_buttons[title] = button
             cpu_profiles.addWidget(button)
         cpu_layout.addLayout(cpu_profiles)
         self.cooling_cpu_details_button = QPushButton("Details einblenden ⌄")
@@ -12780,6 +12782,27 @@ class KrakenControl(QMainWindow):
         pressed = accent.darker(125)
         is_dark_palette = palette.color(QPalette.ColorRole.Window).lightness() < 150
         surface_rgba = "rgba(25, 31, 41, 232)" if is_dark_palette else "rgba(255, 255, 255, 242)"
+        panel_rgba = (
+            "rgba(12, 30, 47, 226)"
+            if is_dark_palette
+            else f"rgba({accent.red()}, {accent.green()}, {accent.blue()}, 18)"
+        )
+        panel_border_rgba = (
+            f"rgba({accent.red()}, {accent.green()}, {accent.blue()}, 92)"
+            if is_dark_palette
+            else f"rgba({accent.red()}, {accent.green()}, {accent.blue()}, 70)"
+        )
+        input_rgba = "rgba(8, 23, 38, 238)" if is_dark_palette else "rgba(255, 255, 255, 246)"
+        neutral_button_rgba = (
+            "rgba(24, 45, 64, 238)"
+            if is_dark_palette
+            else f"rgba({accent.red()}, {accent.green()}, {accent.blue()}, 24)"
+        )
+        table_header_rgba = (
+            "rgba(20, 48, 72, 245)"
+            if is_dark_palette
+            else f"rgba({accent.red()}, {accent.green()}, {accent.blue()}, 32)"
+        )
         # Light mode gets a stronger frosted sheet so text/controls stay readable
         # over bright animations; dark/system keep a slightly more transparent veil.
         content_rgba = "rgba(17, 22, 29, 166)" if is_dark_palette else "rgba(244, 246, 248, 214)"
@@ -12822,14 +12845,14 @@ class KrakenControl(QMainWindow):
                 padding: 8px;
             }}
             QFrame#valueCard, QFrame#profileCard {{
-                border: 1px solid palette(midlight);
+                border: 1px solid {panel_border_rgba};
                 border-radius: 10px;
-                background: {surface_rgba};
+                background: {panel_rgba};
             }}
             QFrame#rgbDeviceTile {{
-                border: 2px solid palette(midlight);
+                border: 2px solid {panel_border_rgba};
                 border-radius: 12px;
-                background: palette(base);
+                background: {panel_rgba};
             }}
             QFrame#rgbDeviceTile:hover {{ border-color: {accent.name()}; }}
             QLabel#profileTitle {{ font-size: 17px; font-weight: 700; }}
@@ -12840,24 +12863,24 @@ class KrakenControl(QMainWindow):
                 color: #aaaaaa;
             }}
             CurveEditor#curveEditor {{
-                border: 1px solid palette(midlight);
+                border: 1px solid {panel_border_rgba};
                 border-radius: 10px;
-                background: palette(base);
+                background: {input_rgba};
             }}
             QGroupBox {{
-                border: 1px solid palette(midlight);
+                border: 1px solid {panel_border_rgba};
                 border-radius: 10px;
                 margin-top: 14px;
                 padding: 12px;
                 font-weight: 700;
-                background: {surface_rgba};
+                background: {panel_rgba};
             }}
             QGroupBox::title {{ subcontrol-origin: margin; left: 12px; padding: 0 6px; }}
             QPushButton {{
                 padding: 8px 13px;
-                border: 1px solid palette(midlight);
+                border: 1px solid {panel_border_rgba};
                 border-radius: 7px;
-                background: palette(button);
+                background: {neutral_button_rgba};
             }}
             QPushButton:hover {{ border-color: {hover.name()}; color: {accent.name()}; }}
             QPushButton:pressed {{ border-color: {pressed.name()}; background: palette(midlight); }}
@@ -12884,29 +12907,60 @@ class KrakenControl(QMainWindow):
                 background: #1b6f44;
                 color: #ffffff;
             }}
+            QPushButton#coolingQuickProfileButton[profileState="active"] {{
+                border: 2px solid {accent.lighter(125).name()};
+                background: {accent.name()};
+                color: #ffffff;
+                font-weight: 800;
+            }}
+            QPushButton#coolingQuickProfileButton[profileState="active"]:hover {{
+                border-color: {accent.lighter(140).name()};
+                background: {hover.name()};
+                color: #ffffff;
+            }}
+            QPushButton#coolingQuickProfileButton[profileState="active"]:pressed {{
+                border-color: {accent.lighter(150).name()};
+                background: {pressed.name()};
+                color: #ffffff;
+            }}
             QPushButton:focus, QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QTableWidget:focus {{
                 border: 2px solid {accent.name()};
             }}
-            QTabWidget::pane {{ border: 1px solid palette(midlight); border-radius: 8px; background: {surface_rgba}; }}
+            QTabWidget::pane {{ border: 1px solid {panel_border_rgba}; border-radius: 8px; background: {panel_rgba}; }}
             QScrollArea#settingsScrollArea {{ border: none; background: transparent; }}
             QScrollArea#settingsScrollArea > QWidget > QWidget {{ background: transparent; }}
             QWidget#settingsContent {{ background: transparent; }}
             QTabBar::tab {{ padding: 9px 16px; border-bottom: 2px solid transparent; }}
             QTabBar::tab:selected {{ font-weight: 700; color: {accent.name()}; border-bottom-color: {accent.name()}; }}
             QTreeWidget#hardwareNavigation {{
-                border: 1px solid palette(midlight);
+                border: 1px solid {panel_border_rgba};
                 border-radius: 10px;
-                background: {surface_rgba};
+                background: {panel_rgba};
                 padding: 7px;
             }}
             QTreeWidget#hardwareNavigation::item {{ min-height: 30px; padding: 3px 7px; border-radius: 6px; }}
             QTreeWidget#hardwareNavigation::item:selected {{ background: {accent.name()}; color: white; font-weight: 700; }}
-            QTableWidget {{ border: 1px solid palette(midlight); border-radius: 6px; gridline-color: palette(midlight); }}
+            QTableWidget, QPlainTextEdit, QTextEdit, QTextBrowser, QListWidget {{
+                border: 1px solid {panel_border_rgba};
+                border-radius: 7px;
+                background: {input_rgba};
+                alternate-background-color: {panel_rgba};
+                selection-background-color: {accent.name()};
+                selection-color: #ffffff;
+            }}
+            QHeaderView::section {{
+                border: none;
+                border-right: 1px solid {panel_border_rgba};
+                border-bottom: 1px solid {panel_border_rgba};
+                padding: 7px;
+                background: {table_header_rgba};
+                font-weight: 700;
+            }}
             QLineEdit, QComboBox, QSpinBox {{
                 padding: 6px;
-                border: 1px solid palette(midlight);
+                border: 1px solid {panel_border_rgba};
                 border-radius: 6px;
-                background: palette(base);
+                background: {input_rgba};
             }}
             QFrame#navigationRail {{
                 background: rgba(7, 19, 31, 238);
@@ -12935,8 +12989,8 @@ class KrakenControl(QMainWindow):
             QFrame#dashboardStatusBanner, QFrame#dashboardSection, QFrame#coolingSummaryCard,
             QFrame#fanChannelCard, QFrame#fanChannelCardSelected, QFrame#fanInlineDetail,
             QFrame#moduleHeroCard, QFrame#curveOverlayCard {{
-                background: rgba(12, 30, 47, 226);
-                border: 1px solid rgba(94, 123, 150, 105);
+                background: {panel_rgba};
+                border: 1px solid {panel_border_rgba};
                 border-radius: 11px;
             }}
             QFrame#moduleHeroCard {{
@@ -13846,6 +13900,7 @@ class KrakenControl(QMainWindow):
                 self.kraken_write_busy = False
                 self.cpu_curve_last_write = time.monotonic()
                 self.cpu_curve_force_update = False
+                self.update_cooling_quick_profile_state("")
                 self.footer_status.setText(f"Kühlung aus Profil „{name}“ aktiv")
                 QTimer.singleShot(700, self.refresh_status)
                 return
@@ -14293,6 +14348,7 @@ class KrakenControl(QMainWindow):
                 detail = "Nach 3.0.5-Migration · Software-Regelung"
             self.cooling_modes[channel] = (mode, detail)
         self.update_cooling_mode_label()
+        self.restore_cooling_quick_profile_state()
         self.auto_max_checkbox.setChecked(self.settings.value("safety/auto_max", True, type=bool))
         saved_cpu = str(self.settings.value("cpu/profile", ""))
         cpu_index = self.cpu_profile_combo.findData(saved_cpu)
@@ -15420,6 +15476,7 @@ class KrakenControl(QMainWindow):
                     if fallback:
                         detail = f"{duty} % · sicherer Sensorfehler-Fallback"
                     self.set_cooling_mode(channel, "CPU-Temperaturkurve", detail)
+                self.update_cooling_quick_profile_state("")
                 self.cpu_curve_force_update = False
                 self.cpu_curve_fallback_active = fallback
                 values = " · ".join(
@@ -15616,6 +15673,45 @@ class KrakenControl(QMainWindow):
                     else "Nicht aktiver Kühlmodus"
                 )
 
+    def update_cooling_quick_profile_state(self, name: str) -> None:
+        """Show a quick profile as active only after its device writes succeeded."""
+        buttons = getattr(self, "cooling_quick_profile_buttons", {})
+        active_name = str(name).strip()
+        if hasattr(self, "cooling_cpu_active_profile"):
+            if active_name:
+                label = active_name
+            else:
+                modes = getattr(self, "cooling_modes", {})
+                unknown = all(
+                    str(modes.get(channel, ("", ""))[0]).strip().casefold() in {"", "unbekannt"}
+                    for channel in ("pump", "fan")
+                )
+                label = "Noch nicht gesetzt" if unknown else "Individuell"
+            self.cooling_cpu_active_profile.setText(label)
+        for title, button in buttons.items():
+            state = "active" if title == active_name else "inactive"
+            if button.property("profileState") == state:
+                continue
+            button.setProperty("profileState", state)
+            button.style().unpolish(button)
+            button.style().polish(button)
+            button.update()
+            button.setAccessibleDescription(
+                "Aktives, erfolgreich übertragenes Kraken-Profil"
+                if state == "active"
+                else "Nicht aktives Kraken-Profil"
+            )
+
+    def restore_cooling_quick_profile_state(self) -> None:
+        pump_detail = str(self.cooling_modes.get("pump", ("", ""))[1])
+        fan_detail = str(self.cooling_modes.get("fan", ("", ""))[1])
+        for name in ("Leise", "Ausbalanciert", "Leistung", "Sicheres Standardprofil", "Sicherheit"):
+            marker = f"Profil {name}"
+            if marker in pump_detail and marker in fan_detail:
+                self.update_cooling_quick_profile_state(name)
+                return
+        self.update_cooling_quick_profile_state("")
+
     def update_cooling_mode_label(self) -> None:
         if not hasattr(self, "cooling_mode_label"):
             return
@@ -15680,6 +15776,7 @@ class KrakenControl(QMainWindow):
                 self.permission_retry_after = 0.0
                 self.footer_status.setText(f"{label} auf {duty} % gesetzt")
                 self.set_cooling_mode(channel, "Feste Drehzahl", f"{duty} %")
+                self.update_cooling_quick_profile_state("")
                 self.cpu_curve_last_duties[channel] = None
                 QTimer.singleShot(700, self.refresh_status)
             else:
@@ -15715,6 +15812,7 @@ class KrakenControl(QMainWindow):
             self.footer_status.setText(f"Profil „{name}“ aktiv")
             self.set_cooling_mode("pump", "Feste Drehzahl", f"{pump} % · Profil {name}")
             self.set_cooling_mode("fan", "Feste Drehzahl", f"{fan} % · Profil {name}")
+            self.update_cooling_quick_profile_state(name)
             self.cpu_curve_last_duties = {"pump": None, "fan": None}
             if notify:
                 self.tray.showMessage(APP_NAME, f"Profil „{name}“ wurde angewendet.")
