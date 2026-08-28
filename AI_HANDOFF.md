@@ -7,10 +7,12 @@ For LM Studio with a local model, begin with `START_HIER_LOKALE_KI.md`; the user
 ## Start a fresh session
 
 1. Read `AGENTS.md`.
-2. Read `PROJECT_STATUS.md`, `DECISIONS.md`, `ARCHITECTURE.md` and `DEVICE_SUPPORT.md`.
+2. Read `PROJECT_STATUS.md`, `DECISIONS.md`, `ARCHITECTURE.md`, `MODULE_MAP.md` and `DEVICE_SUPPORT.md`.
 3. Read the latest section of `CHANGELOG.md` and current release notes.
 4. Inspect `git status`, current branch and recent commits.
 5. Inspect the exact code/tests related to the requested feature before proposing edits.
+
+For a context-limited local model, use the task-specific file sets in `MODULE_MAP.md`; do not load all of `kraken_control.py` when a targeted `rg` search and one focused section are sufficient.
 
 ## During work
 

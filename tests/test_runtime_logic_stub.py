@@ -162,7 +162,10 @@ class OwnedProcessFake:
     def processId(self): return self._pid
 
 original_qprocess = mod.QProcess
+backend_mod = sys.modules['command_backend']
+original_backend_qprocess = backend_mod.QProcess
 mod.QProcess = QProcessTypeFake
+backend_mod.QProcess = QProcessTypeFake
 try:
     owned_backend = types.SimpleNamespace(
         _process=OwnedProcessFake(1, 19402),
@@ -174,6 +177,7 @@ try:
     assert mod.Backend.active_process_id_for(owned_backend, 'openrgb') == 0
 finally:
     mod.QProcess = original_qprocess
+    backend_mod.QProcess = original_backend_qprocess
 
 class RGBTestClientFake:
     def color_command(self, device_id, colors, direct=False):

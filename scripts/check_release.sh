@@ -24,7 +24,7 @@ if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
   echo "Invalid VERSION: $VERSION" >&2
   exit 1
 fi
-if ! grep -Fq "APP_VERSION = \"$VERSION\"" kraken_control.py; then
+if ! grep -Fq "APP_VERSION = \"$VERSION\"" app_constants.py; then
   echo "APP_VERSION does not match VERSION $VERSION." >&2
   exit 1
 fi
@@ -57,8 +57,8 @@ fi
 
 for required in \
   LICENSE README.md README.en.md INSTALL.md CHANGELOG.md SECURITY.md PRIVACY.md BUILD_CHANNEL \
-  CONTRIBUTING.md SOURCE_CODE.md DEVELOPER_PACKAGE.md VERSION AGENTS.md PROJECT_STATUS.md ARCHITECTURE.md DECISIONS.md DEVICE_SUPPORT.md AI_HANDOFF.md CURSOR_SETUP.md START_HIER_LOKALE_KI.md LM_STUDIO_ANLEITUNG_DE.md LOCAL_AI_STARTPROMPT.txt \
-  kraken_control.py kraken_cam_streamer.py openlinkhub_integration.py openrgb_integration.py openrgb_sdk.py rgb_effects.py ui_layout.py desktop_designs.py \
+  CONTRIBUTING.md SOURCE_CODE.md DEVELOPER_PACKAGE.md VERSION AGENTS.md PROJECT_STATUS.md ARCHITECTURE.md MODULE_MAP.md DECISIONS.md DEVICE_SUPPORT.md AI_HANDOFF.md CURSOR_SETUP.md START_HIER_LOKALE_KI.md LM_STUDIO_ANLEITUNG_DE.md LOCAL_AI_STARTPROMPT.txt \
+  kraken_control.py app_constants.py command_backend.py cooling_widgets.py localization_catalog.py privacy_logging.py temperature_utils.py kraken_cam_streamer.py openlinkhub_integration.py openrgb_integration.py openrgb_sdk.py rgb_effects.py ui_layout.py desktop_designs.py \
   desktop_assets.py desktop_shell.py DESKTOP_SECURITY_AUDIT.md RGB_STUDIO.md RGB_SECURITY_AUDIT.md SECURITY_SCAN_REPORT.json \
   scripts/build_release.py scripts/build_release.sh \
   .cursor/hooks.json .cursor/hooks/session-start.py .cursor/hooks/guard-destructive-shell.py; do

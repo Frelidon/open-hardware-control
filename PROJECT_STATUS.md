@@ -14,6 +14,8 @@ Version 3.4.26 adds a repository-native AI development layer so Cursor, Codex, C
 
 Version 3.4.27 now combines clearer CoolerControl ownership and persistent service controls with the application-wide blue dashboard design and confirmed Kraken quick-profile feedback. The remaining cooling interaction work is tracked in `ROADMAP.md`.
 
+The 3.4.27 codebase has also begun an incremental local-AI-oriented split of the historical `kraken_control.py` monolith. The executable remains compatible, while independent constants, temperature helpers, privacy logging, the serial command backend, cooling widgets and localization/help data now live in focused modules documented by `MODULE_MAP.md`.
+
 ## What 3.4.27 adds so far
 
 - Separate reporting for the CoolerControl graphical client, active `coolercontrold` background service and service-autostart state.
@@ -22,6 +24,7 @@ Version 3.4.27 now combines clearer CoolerControl ownership and persistent servi
 - Blue-tinted cards, editors, tables and inputs across RGB Studio, LCD, Profiles, Log, Corsair/OpenLinkHub, Settings, About, Help and Kraken detail areas.
 - Kraken Leise/Ausbalanciert/Leistung buttons become fully blue only after both requested hardware writes succeed and are cleared by individual/manual control.
 - Local AI handoff files and a credential-free Git bundle provide LM Studio/Qwen2.5-Coder setup, full branch history, a mandatory repository startup sequence and a permission-gated GitHub branch workflow without storing credentials.
+- First compatibility-preserving monolith split: six focused modules reduce the main file by roughly 1,600 lines, avoid circular imports and are included in installation and release packaging.
 
 ## What 3.4.26 adds
 
@@ -35,7 +38,8 @@ Version 3.4.27 now combines clearer CoolerControl ownership and persistent servi
 ## Current major modules
 
 - NZXT Kraken control: `nzxt_backend.py`, `kraken_sensors.py`, `kraken_cam_streamer.py`, `kraken_lcd_designs.py`, `nzxt_rgb.py`, `nzxt_esc_profiles.py`.
-- Main GUI and orchestration: `kraken_control.py`, `ui_layout.py`.
+- Main GUI and orchestration: `kraken_control.py`, `cooling_widgets.py`, `localization_catalog.py`, `ui_layout.py`.
+- Shared application infrastructure: `app_constants.py`, `temperature_utils.py`, `privacy_logging.py`, `command_backend.py`.
 - Hardware request coordination: `hardware_request_coordinator.py`, `cooling_ownership.py`.
 - Mainboard fan control: `mainboard_fan_control.py`, `ohc_fan_helper.py` plus Polkit policy.
 - Corsair/OpenLinkHub: `openlinkhub_integration.py`, `openlinkhub_mouse_visuals.py`.

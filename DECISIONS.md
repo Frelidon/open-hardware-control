@@ -38,6 +38,8 @@ This file records decisions that future agents must preserve unless the project 
 - **3.4.26:** Repository memory files and tests are the durable source of truth; a long chat is not.
 - **3.4.26:** Agents must update `PROJECT_STATUS.md` after meaningful project changes and this file when a durable decision changes.
 - **3.4.26:** Cursor project rules and hooks are version-controlled so fresh chats inherit project constraints.
+- **3.4.27:** The historical `kraken_control.py` monolith is reduced incrementally through focused, non-circular modules. During migration it remains the executable compatibility orchestrator and re-exports moved names; large simultaneous UI and hardware-writer rewrites are not accepted.
+- **3.4.27:** `MODULE_MAP.md` is the task-routing guide for context-limited local coding models. Agents should read targeted functions and their direct dependencies instead of loading the complete main file for every task.
 
 ## GitHub publication
 

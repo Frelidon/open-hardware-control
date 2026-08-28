@@ -3,6 +3,7 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 code = (root / "kraken_control.py").read_text(encoding="utf-8")
+privacy = (root / "privacy_logging.py").read_text(encoding="utf-8")
 fan = (root / "mainboard_fan_control.py").read_text(encoding="utf-8")
 
 # Fixed navigation anchors and editable middle modules.
@@ -59,5 +60,5 @@ for token in (
     assert token in code, token
 
 # Version-like four-part numbers are not blindly redacted as IPv4 addresses.
-assert 'Four-part application versions' in code
+assert 'Four-part application versions' in privacy
 print('3.4.25 navigation, curve editor, CPU default and design-consistency guards passed.')

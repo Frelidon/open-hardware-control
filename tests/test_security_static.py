@@ -3,7 +3,15 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-code = (ROOT / "kraken_control.py").read_text(encoding="utf-8")
+main_code = (ROOT / "kraken_control.py").read_text(encoding="utf-8")
+module_names = (
+    "app_constants.py", "command_backend.py", "cooling_widgets.py",
+    "localization_catalog.py", "privacy_logging.py", "temperature_utils.py",
+)
+module_code = {name: (ROOT / name).read_text(encoding="utf-8") for name in module_names}
+# Static guards search the complete runtime implementation even though the
+# former monolith is now split into focused modules.
+code = main_code + "\n" + "\n".join(module_code.values())
 rule = (ROOT / "71-nzxt-kraken-2023.rules").read_text(encoding="utf-8")
 installer = (ROOT / "install.sh").read_text(encoding="utf-8")
 helper = (ROOT / "install-udev-rule.sh").read_text(encoding="utf-8")
@@ -12,6 +20,11 @@ diagnostics = (ROOT / "collect-diagnostics.sh").read_text(encoding="utf-8")
 assert 'APP_VERSION = "3.4.27"' in code
 assert 'BUILD_CHANNEL = "INTERN"' in code
 assert 'APP_NAME = "Open Hardware Control"' in code
+assert "from command_backend import Backend" in main_code
+assert "from cooling_widgets import CurveEditor, FanCurveMiniPreview" in main_code
+assert "from localization_catalog import HELP_TOPICS, SETUP_TRANSLATIONS, UI_TRANSLATIONS" in main_code
+assert "from privacy_logging import (" in main_code
+assert "from temperature_utils import (" in main_code
 assert "make_navigation_sidebar" in code
 assert "update_navigation_visibility" in code
 assert "Nicht erkannte Geräte/Module anzeigen" in code

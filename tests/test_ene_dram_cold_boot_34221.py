@@ -4,9 +4,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 code = (ROOT / "kraken_control.py").read_text(encoding="utf-8")
+constants = (ROOT / "app_constants.py").read_text(encoding="utf-8")
 integration = (ROOT / "openrgb_integration.py").read_text(encoding="utf-8")
 
-assert 'APP_VERSION = "3.4.27"' in code
+assert 'APP_VERSION = "3.4.27"' in constants
 assert "def prime_ene_dram_cold_start" in code
 assert "def is_ene_dram_device" in code
 assert "RGB-ENE-WAKE: Kaltstart-Reclaim über OpenRGB-Treiber" in code

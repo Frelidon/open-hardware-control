@@ -8,9 +8,17 @@ Open Hardware Control is a single Linux desktop application with modular hardwar
 
 ### 1. UI / application orchestration
 
-- `kraken_control.py` — main PySide6 application, navigation, page composition, state orchestration and legacy NZXT module integration.
+- `kraken_control.py` — executable PySide6 compatibility orchestrator, navigation, page composition and the still-unextracted legacy feature controllers.
+- `app_constants.py` — application identity, version and shared defaults.
+- `temperature_utils.py` — hardware-independent temperature unit conversion.
+- `privacy_logging.py` — privacy redaction plus bounded startup/crash logging.
+- `command_backend.py` — serialized `QProcess`/liquidctl command queue used by the UI orchestrator.
+- `cooling_widgets.py` — hardware-independent curve editor and compact fan-curve preview.
+- `localization_catalog.py` — static translations and built-in help topics without Qt/hardware dependencies.
 - `ui_layout.py` — persisted UI layout/navigation model.
 - `desktop_shell.py`, `desktop_designs.py`, `desktop_assets.py` — KDE desktop-design tooling kept logically separate from hardware writers.
+
+`MODULE_MAP.md` is the task-oriented reading guide for local coding models. New base modules must not import `kraken_control.py`; the main file re-exports moved names during the incremental migration so existing tests and integrations remain compatible.
 
 ### 2. Coordination and ownership
 

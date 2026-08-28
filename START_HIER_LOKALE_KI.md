@@ -9,7 +9,7 @@ Du arbeitest am Projekt **Open Hardware Control by Frelidon**. Handle als vorsic
 ## Pflichtstart vor jeder Änderung
 
 1. Lies `AGENTS.md` vollständig.
-2. Lies `PROJECT_STATUS.md`, `DECISIONS.md`, `ARCHITECTURE.md` und `DEVICE_SUPPORT.md`.
+2. Lies `PROJECT_STATUS.md`, `DECISIONS.md`, `ARCHITECTURE.md`, `MODULE_MAP.md` und `DEVICE_SUPPORT.md`.
 3. Wenn Hardware betroffen ist, lies zusätzlich `SUPPORTED_DEVICES.md`.
 4. Lies den neuesten Abschnitt von `CHANGELOG.md` und die aktuellen Release Notes.
 5. Prüfe `VERSION`, `BUILD_CHANNEL`, `git status`, den aktuellen Branch und die letzten Commits.
@@ -44,6 +44,7 @@ Antworte nach diesem Start zunächst nur mit:
 ## Arbeitsweise für ein lokales 14B-Modell
 
 - Bearbeite jeweils eine klar abgegrenzte Aufgabe.
+- Nutze die aufgabenspezifischen Dateigruppen in `MODULE_MAP.md`; lade die große Hauptdatei nicht vollständig, wenn eine gezielte Funktionssuche genügt.
 - Suche gezielt mit `rg`; lade nicht ungefragt das gesamte Repository in eine Antwort.
 - Lies die tatsächlich betroffenen Funktionen und Tests vollständig, bevor du sie änderst.
 - Erhalte vorhandene APIs und Einstellungswerte, sofern keine geprüfte Migration vorgesehen ist.
@@ -53,7 +54,7 @@ Antworte nach diesem Start zunächst nur mit:
 
 ## Aktueller Einstiegspunkt
 
-Der aktuelle Entwicklungsstand ist in `PROJECT_STATUS.md` beschrieben. Version 3.4.27 INTERN umfasst unter anderem die CoolerControl-Dienstverwaltung, die vereinheitlichten blau getönten Detailflächen und die bestätigungsbasierte Markierung der Kraken-Schnellprofile. Als noch offener Kühlungsbereich ist insbesondere das standardmäßig eingeklappte, jeweils nur einzeln geöffnete Bearbeiten der Gehäuselüfterkarten dokumentiert.
+Der aktuelle Entwicklungsstand ist in `PROJECT_STATUS.md` beschrieben. Version 3.4.27 INTERN umfasst unter anderem die CoolerControl-Dienstverwaltung, die vereinheitlichten blau getönten Detailflächen, die bestätigungsbasierte Markierung der Kraken-Schnellprofile und den ersten kompatiblen Schnitt der historischen Hauptdatei in fokussierte Module. Als noch offener Kühlungsbereich ist insbesondere das standardmäßig eingeklappte, jeweils nur einzeln geöffnete Bearbeiten der Gehäuselüfterkarten dokumentiert.
 
 ## GitHub-Ziel
 
