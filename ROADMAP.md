@@ -1,14 +1,31 @@
 # Roadmap
 
-Kraken Control is developed incrementally. Features are tested before they are treated as stable.
+Open Hardware Control is developed incrementally. Features are tested before they are treated as stable.
 
-## Near term
+## Next internal versions
 
-- Continue accessibility and keyboard-only testing.
-- Improve translations and move user-visible strings toward dedicated translation resources.
-- Broaden hardware testing without claiming untested devices as compatible.
+### 3.4.27 INTERN — consistent application design
+
+- Apply the current dashboard design language consistently to RGB Studio, LCD, Profiles, Log, Corsair/OpenLinkHub, Settings, About and Help.
+- Introduce shared module headers, status panels, section cards and action-button states instead of maintaining a separate visual structure on every page.
+- Preserve the existing page behavior, navigation anchors and hardware ownership boundaries during the visual migration.
+- Clarify CoolerControl ownership messages: distinguish the closed graphical client from the active `coolercontrold` background service and explain whether the service is running or starts automatically.
+
+### 3.4.28 INTERN — cooling interaction
+
+- Mark the Kraken quick profile Leise, Ausbalanciert or Leistung only after pump and fan writes have succeeded; update the profile label and the complete button/card state together.
+- Show all chassis-fan cards collapsed by default.
+- Give every card a clear `Kurve & Details bearbeiten` action and expand only the selected card.
+- Keep the embedded curve editor associated with that selected fan and allow the currently open card to be collapsed again.
+- Add regression tests for successful/failed Kraken profile writes, initial collapsed state and single-card expansion.
+
+### 3.4.29 INTERN — UI finish and reliability
+
+- Complete keyboard navigation, focus-state and scaling checks for the migrated pages.
+- Review translations and move further user-visible strings toward dedicated translation resources.
+- Add visual/static regression coverage for the shared page components and cooling states.
+- Broaden real-hardware testing without claiming untested devices as compatible.
 - Improve profile validation and migration handling.
-- Add more automated regression tests for LCD, background and cooling-control state logic.
 
 ## Packaging
 

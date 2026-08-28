@@ -1,7 +1,9 @@
 # Open Hardware Control — Project Status
 
-**Current development version:** 3.4.26 INTERN  
-**Status date:** 27 August 2026  
+**Current development version:** 3.4.26 INTERN
+
+**Status date:** 28 August 2026
+
 **Release channel:** INTERNAL — public release scripts remain blocked while `BUILD_CHANNEL=INTERN`.
 
 ## Current objective
@@ -9,6 +11,8 @@
 Continue Open Hardware Control as a modular Linux hardware-control application while preserving the mature NZXT Kraken path and expanding validated integrations without introducing competing hardware writers.
 
 Version 3.4.26 adds a repository-native AI development layer so Cursor, Codex, Claude Code and future coding agents can recover project context from files rather than depending on one long chat.
+
+The next internal work starts with a consistent application-wide design pass, followed by a focused cooling interaction pass. The detailed sequence is maintained in `ROADMAP.md`.
 
 ## What 3.4.26 adds
 
@@ -39,6 +43,13 @@ Version 3.4.26 adds a repository-native AI development layer so Cursor, Codex, C
 - RGB Studio manages a private loopback OpenRGB engine and isolates conflicting/external writers.
 - Corsair remains mediated through local OpenLinkHub rather than direct, guessed Corsair USB writes.
 - LCD/GIF and Kraken hardware requests remain coordinated so simultaneous subsystems do not fight for the same device.
+
+## Confirmed next-work gaps
+
+- RGB Studio, LCD, Profiles, Log, Corsair/OpenLinkHub, Settings, About and Help still use mixed page structures and need the current dashboard design applied consistently.
+- Kraken quick-profile buttons do not yet update their active visual state after a successful Leise, Ausbalanciert or Leistung write.
+- Mainboard chassis-fan cards currently select and expand the first detected channel automatically; the target behavior is collapsed by default with at most one explicitly selected card expanded.
+- CoolerControl conflict detection correctly checks the `coolercontrold` service/process, but the UI needs to explain that the background daemon may remain active after the graphical CoolerControl window is closed.
 
 ## Known boundaries / not automatically claimed
 
