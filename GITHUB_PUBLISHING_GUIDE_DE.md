@@ -90,6 +90,7 @@ Erwartete Dateien:
 - `open-hardware-control-3.4.27-0.intern2.noarch.rpm`
 - `open-hardware-control-3.4.27-INTERN-source.tar.gz`
 - `Entwicklerpaket 3.4.27 INTERN.zip`
+- `Open_Hardware_Control_3.4.27_INTERN_LOCAL_AI.gitbundle`
 - `SHA256SUMS`
 
 ## Spätere Veröffentlichung

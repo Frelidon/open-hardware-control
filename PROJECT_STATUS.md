@@ -21,7 +21,7 @@ Version 3.4.27 now combines clearer CoolerControl ownership and persistent servi
 - Safe ownership transitions: disabling CoolerControl never starts OHC fan control automatically; enabling CoolerControl first returns mainboard channels to firmware/BIOS ownership.
 - Blue-tinted cards, editors, tables and inputs across RGB Studio, LCD, Profiles, Log, Corsair/OpenLinkHub, Settings, About, Help and Kraken detail areas.
 - Kraken Leise/Ausbalanciert/Leistung buttons become fully blue only after both requested hardware writes succeed and are cleared by individual/manual control.
-- Local AI handoff files provide LM Studio/Qwen2.5-Coder setup, a mandatory repository startup sequence and a permission-gated GitHub branch workflow without storing credentials.
+- Local AI handoff files and a credential-free Git bundle provide LM Studio/Qwen2.5-Coder setup, full branch history, a mandatory repository startup sequence and a permission-gated GitHub branch workflow without storing credentials.
 
 ## What 3.4.26 adds
 

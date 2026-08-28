@@ -4,7 +4,7 @@ Diese Anleitung beschreibt die sichere Übergabe des vollständigen Open-Hardwar
 
 ## Empfohlene Variante: Bionic-Projekt mit direktem Ordnerzugriff
 
-1. Entpacke das **Entwicklerpaket 3.4.27 INTERN** in einen eigenen Ordner. Wenn du bereits direkt im Git-Repository arbeitest, verwende stattdessen den vorhandenen Repository-Ordner.
+1. Verwende auf diesem Rechner am einfachsten direkt den vorhandenen Git-Repository-Ordner. Für eine Übertragung auf einen anderen Rechner oder in einen neuen Ordner verwende das mitgelieferte `Open_Hardware_Control_3.4.27_INTERN_LOCAL_AI.gitbundle` wie im nächsten Abschnitt beschrieben. Das Entwickler-ZIP ist eine vollständige Quelldatei-Sicherung, enthält aber absichtlich keinen `.git`-Ordner.
 2. Öffne LM Studio und erstelle ein neues **Project**.
 3. Aktiviere **Allow coding / Coding erlauben**.
 4. Wähle über **Choose a folder** genau den Ordner, in dem `AGENTS.md`, `START_HIER_LOKALE_KI.md`, `kraken_control.py` und `.git` liegen. Wähle nicht nur `dist` und nicht einen übergeordneten Sammelordner.
@@ -15,6 +15,21 @@ Diese Anleitung beschreibt die sichere Übergabe des vollständigen Open-Hardwar
 9. Prüfe die von der KI gemeldete Version, den Branch und den Arbeitsbaum, bevor du ihr eine Änderungsaufgabe gibst.
 
 LM Studio beschreibt dieses Vorgehen offiziell so: Ein Bionic-Projekt mit aktiviertem Coding darf den ausgewählten Codeordner durchsuchen, bearbeiten, Git verwenden und Shell-Befehle ausführen. Dateien und Ordner können außerdem als Projektmaterial angehängt werden: <https://lmstudio.ai/docs/bionic/quick-start>
+
+## Portables Projekt mit vollständigem Git-Verlauf einrichten
+
+Das lokale-KI-Git-Bundle enthält den aktuellen Branch und seine vollständige benötigte Historie, jedoch keine Passwörter oder Tokens. Ersetze den ersten Pfad durch den tatsächlichen Downloadpfad:
+
+```bash
+git clone --branch codex/3.4.27-intern \
+  /vollstaendiger/pfad/Open_Hardware_Control_3.4.27_INTERN_LOCAL_AI.gitbundle \
+  open-hardware-control-local-ai
+cd open-hardware-control-local-ai
+git remote set-url origin https://github.com/Frelidon/open-hardware-control.git
+git remote -v
+```
+
+Wähle anschließend `open-hardware-control-local-ai` als LM-Studio-Projektordner. So kann die Coding-KI lokal suchen, ändern, testen und committen. Ein Push bleibt trotzdem bis zu deiner ausdrücklichen Freigabe verboten.
 
 ## Falls das Modell als einzelne GGUF-Datei vorliegt
 

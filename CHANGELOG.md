@@ -7,7 +7,7 @@
 - Kept mainboard-fan ownership safe: disabling CoolerControl does not activate OHC automatically, while enabling it returns channels to firmware/BIOS control before starting the competing service.
 - Unified RGB Studio, LCD, Profiles, Log, Corsair/OpenLinkHub, Settings, About, Help and Kraken detail areas with the blue-tinted dashboard card design.
 - Made Kraken quick-profile buttons reflect the last successfully transmitted Leise, Ausbalanciert or Leistung profile instead of showing a static default selection.
-- Added a complete LM Studio/Qwen2.5-Coder handoff with a mandatory start file, reusable initial prompt, repository access instructions and guarded GitHub workflow.
+- Added a complete LM Studio/Qwen2.5-Coder handoff with a mandatory start file, reusable initial prompt, credential-free Git bundle, repository access instructions and guarded GitHub workflow.
 
 ## 3.4.26 INTERN
 

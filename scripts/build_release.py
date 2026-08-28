@@ -358,6 +358,30 @@ cp -a usr %{{buildroot}}/
     return output
 
 
+def build_local_ai_git_bundle() -> Path:
+    """Create a credential-free portable Git handoff for local coding agents."""
+    if not shutil.which("git"):
+        raise SystemExit("git is required to build the local-AI handoff bundle")
+    branch = subprocess.run(
+        ["git", "branch", "--show-current"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    if not branch:
+        raise SystemExit("Local-AI Git bundle requires a named current branch")
+    suffix = "_INTERN" if INTERNAL else ""
+    output = DIST / f"Open_Hardware_Control_{VERSION}{suffix}_LOCAL_AI.gitbundle"
+    subprocess.run(
+        ["git", "bundle", "create", str(output), f"refs/heads/{branch}"],
+        cwd=ROOT,
+        check=True,
+    )
+    subprocess.run(["git", "bundle", "verify", str(output)], cwd=ROOT, check=True)
+    return output
+
+
 with tempfile.TemporaryDirectory(prefix="open-hardware-control-release-") as temp_name:
     temp = Path(temp_name)
 
@@ -384,6 +408,8 @@ with tempfile.TemporaryDirectory(prefix="open-hardware-control-release-") as tem
     write_manifest(source_root)
     with tarfile.open(DIST / f"{source_name}.tar.gz", "w:gz") as archive:
         archive.add(source_root, arcname=source_name, filter=anonymize_tar_metadata)
+
+    build_local_ai_git_bundle()
 
     if os.environ.get("OHC_SKIP_DEB") == "1":
         print("Skipping DEB build because OHC_SKIP_DEB=1")
