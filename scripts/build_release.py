@@ -64,6 +64,7 @@ RUNTIME_FILES = {
     "kraken_sensors.py",
     "nzxt_backend.py",
     "LICENSE",
+    "LOCAL_AI_STARTPROMPT.txt",
     "openlinkhub_integration.py",
     "openlinkhub_mouse_visuals.py",
     "openrgb_integration.py",
