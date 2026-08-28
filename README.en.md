@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.27 INTERNAL
+# Open Hardware Control by Frelidon 3.4.28 INTERNAL
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -14,10 +14,12 @@ Project repository: <https://github.com/Frelidon/open-hardware-control>
 
 > **Unofficial independent community project:** Open Hardware Control is not supported, approved, endorsed, operated by, or affiliated with NZXT, Corsair, be quiet!, OpenLinkHub, OpenRGB, or any other named manufacturer or project. Product and brand names are used only to describe compatibility. Manufacturers and rights holders can contact Frelidon through the public contact address in the GitHub profile or the Steam username **Frelidon**.
 
-Version 3.4.27 INTERNAL combines clearer CoolerControl management with consistent blue-tinted cards and honest Kraken-profile feedback. OHC distinguishes a closed graphical client from the still-running `coolercontrold` service and only marks a Kraken quick profile after successful hardware transmission.
+Version 3.4.28 INTERNAL combines clearer CoolerControl management with consistent blue-tinted cards and honest Kraken-profile feedback. OHC distinguishes a closed graphical client from the still-running `coolercontrold` service and only marks a Kraken quick profile after successful hardware transmission.
 
-## New in 3.4.27 INTERNAL
+## New in 3.4.28 INTERNAL
 
+- Chassis-fan cards remain compact initially, open only the explicitly selected curve and close through the same action.
+- The further split module structure and `MODULE_MAP.md` reduce context requirements for local coding models.
 - Separate status for the active CoolerControl background daemon and system autostart.
 - Confirmed Polkit actions for temporary OHC takeover, persistent disable, or re-enable and immediate start of CoolerControl.
 - Safe handoff: disabling CoolerControl never starts OHC fan control automatically; enabling CoolerControl first returns motherboard channels to firmware/BIOS ownership.
@@ -294,14 +296,14 @@ Fedora/Nobara RPM:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.27-0.intern2.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.28-0.intern2.noarch.rpm
 ```
 
 Debian/Ubuntu/Linux Mint DEB:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.27~intern2_all.deb'
+sudo apt install './open-hardware-control_3.4.28~intern2_all.deb'
 ```
 
 Universal ZIP for the supported distro families:

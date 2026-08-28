@@ -3,6 +3,7 @@
 
 | Version | Erstmals hinzugekommene Hauptfunktionen |
 |---|---|
+| 3.4.28 INTERN | Standardmäßig eingeklappte Gehäuselüfterkarten, höchstens eine geöffnete Kurvenbearbeitung, weiter modularisierte lokale-KI-Struktur und robuster Fedora-Paketbau ohne zwingendes `dpkg-deb`. |
 | 3.4.27 INTERN | Getrennte CoolerControl-Daemon-/Autostartanzeige, bestätigte Polkit-Dienstaktionen, einheitliche blau getönte Detailflächen auf allen Hauptseiten sowie vollständig blaue Kraken-Schnellprofile erst nach erfolgreicher Hardwareübertragung. |
 | 3.4.23.2 INTERN | Kompaktes Cooling-Dashboard, CoolerControl-Ownership-Sperre, einzelne System-Fan-Karten mit Kurvenvorschau sowie grafischer PWM/RGB-Gehäuse-Assistent mit sicherem 30/80-%-Kontrasttest und persistenter Einbauplatz-Zuordnung. |
 | 3.4.23.1 INTERN | Polkit-geschützter NCT6687-Fan-Helper für root-geschützte hwmon-PWM-Schreibzugriffe, 10-s-Kalibrierung mit RPM-Verlauf, MSI-EC-verträgliche Zielbestätigung und treibereigene Firmwarekurven-Rückgabe über pwmN_enable=2. |

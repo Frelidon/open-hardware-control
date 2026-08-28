@@ -25,7 +25,8 @@ assert toggle_expanded_channel("hwmon5:pwm2", "missing", channels) == "hwmon5:pw
 code = (ROOT / "kraken_control.py").read_text(encoding="utf-8")
 assert 'self.mainboard_expanded_channel_id = ""' in code
 assert 'expanded = channel.stable_id == self.mainboard_expanded_channel_id' in code
-assert '"Kurve & Details schließen" if expanded else "Kurve & Details bearbeiten"' in code
+assert 'curve_action_source = "Kurve & Details schließen" if expanded else "Kurve & Details bearbeiten"' in code
+assert "QPushButton(self.tr_static(curve_action_source))" in code
 assert "def toggle_mainboard_fan_card_details" in code
 assert "self.mainboard_expanded_channel_id = normalize_expanded_channel" in code
 assert "self.mainboard_expanded_channel_id = channels[0].stable_id" not in code

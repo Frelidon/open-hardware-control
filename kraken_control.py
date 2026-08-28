@@ -6595,7 +6595,8 @@ class KrakenControl(QMainWindow):
                 header.addWidget(status)
                 test_btn = QPushButton("Testen")
                 test_btn.clicked.connect(lambda _checked=False, cid=channel.stable_id: self.test_mainboard_channel_from_card(cid))
-                curve_btn = QPushButton("Kurve & Details schließen" if expanded else "Kurve & Details bearbeiten")
+                curve_action_source = "Kurve & Details schließen" if expanded else "Kurve & Details bearbeiten"
+                curve_btn = QPushButton(self.tr_static(curve_action_source))
                 curve_btn.setObjectName("primaryAction" if expanded else "")
                 curve_btn.clicked.connect(lambda _checked=False, cid=channel.stable_id: self.toggle_mainboard_fan_card_details(cid))
                 assign_btn = QPushButton("Zuordnen")

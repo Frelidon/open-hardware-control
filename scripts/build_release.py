@@ -38,6 +38,7 @@ EXCLUDED_DIRS = {
 }
 EXCLUDED_FILES = {"MANIFEST.sha256", "SHA256SUMS"}
 EXCLUDED_SUFFIXES = {".pyc", ".pyo"}
+ARCHIVE_MTIME = 946684800  # 2000-01-01 UTC; valid for tar/RPM and reproducible.
 
 RUNTIME_FILES = {
     "BUILD_CHANNEL",
@@ -143,6 +144,9 @@ def anonymize_tar_metadata(info: tarfile.TarInfo) -> tarfile.TarInfo:
     info.gid = 0
     info.uname = "root"
     info.gname = "root"
+    # Extracted source directories can inherit invalid pre-epoch dates.
+    # Normalize every entry so rpmbuild stays warning-free and reproducible.
+    info.mtime = ARCHIVE_MTIME
     return info
 
 
@@ -420,6 +424,8 @@ with tempfile.TemporaryDirectory(prefix="open-hardware-control-release-") as tem
 
     if os.environ.get("OHC_SKIP_DEB") == "1":
         print("Skipping DEB build because OHC_SKIP_DEB=1")
+    elif not shutil.which("dpkg-deb"):
+        print("Skipping DEB build because dpkg-deb is unavailable on this system")
     else:
         build_deb(temp)
     if os.environ.get("OHC_SKIP_RPM") == "1":

@@ -1,6 +1,6 @@
 # Open Hardware Control – zentrale Projektdokumentation
 
-Stand: **3.4.27 INTERN**, 28. August 2026
+Stand: **3.4.28 INTERN**, 28. August 2026
 
 ## Zielbild
 
@@ -8,7 +8,7 @@ Open Hardware Control by Frelidon ist die gemeinsame, modular erweiterbare Linux
 
 Open Radeon Control Center bleibt ein eigenständiges Projekt. Es wird weder technisch noch organisatorisch in Open Hardware Control verschmolzen.
 
-## Version 3.4.27 INTERN
+## Version 3.4.28 INTERN
 
 Die Kühlungszentrale unterscheidet nun zwischen dem geschlossenen CoolerControl-Fenster, einem weiterhin laufenden `coolercontrold`-Hintergrunddienst und dessen Autostartzustand. Nach ausdrücklicher Bestätigung kann OHC CoolerControl nur für die aktuelle Sitzung beenden, den Systemdienst dauerhaft deaktivieren oder ihn wieder dauerhaft aktivieren und sofort starten. Die Übergabe bleibt exklusiv: Beim Deaktivieren startet OHC keine Regelung automatisch; beim Aktivieren gibt OHC seine Mainboard-Kanäle zuerst an Firmware/BIOS zurück.
 

@@ -1,8 +1,8 @@
 # Open Hardware Control — Project Status
 
-**Current development version:** 3.4.27 INTERN
+**Current development version:** 3.4.28 INTERN
 
-**Status date:** 28 August 2026
+**Status date:** 29 August 2026
 
 **Release channel:** INTERNAL — public release scripts remain blocked while `BUILD_CHANNEL=INTERN`.
 
@@ -12,11 +12,11 @@ Continue Open Hardware Control as a modular Linux hardware-control application w
 
 Version 3.4.26 adds a repository-native AI development layer so Cursor, Codex, Claude Code and future coding agents can recover project context from files rather than depending on one long chat.
 
-Version 3.4.27 now combines clearer CoolerControl ownership and persistent service controls with the application-wide blue dashboard design and confirmed Kraken quick-profile feedback. The remaining cooling interaction work is tracked in `ROADMAP.md`.
+Version 3.4.28 now combines clearer CoolerControl ownership and persistent service controls with the application-wide blue dashboard design and confirmed Kraken quick-profile feedback. The remaining cooling interaction work is tracked in `ROADMAP.md`.
 
-The 3.4.27 codebase has also begun an incremental local-AI-oriented split of the historical `kraken_control.py` monolith. The executable remains compatible, while independent constants, temperature helpers, privacy logging, the serial command backend, cooling widgets and localization/help data now live in focused modules documented by `MODULE_MAP.md`.
+The 3.4.28 codebase has also begun an incremental local-AI-oriented split of the historical `kraken_control.py` monolith. The executable remains compatible, while independent constants, temperature helpers, privacy logging, the serial command backend, cooling widgets and localization/help data now live in focused modules documented by `MODULE_MAP.md`.
 
-## What 3.4.27 adds so far
+## What 3.4.28 adds so far
 
 - Separate reporting for the CoolerControl graphical client, active `coolercontrold` background service and service-autostart state.
 - Confirmed Polkit actions to stop CoolerControl temporarily, disable it permanently or enable and start it again.
@@ -24,7 +24,7 @@ The 3.4.27 codebase has also begun an incremental local-AI-oriented split of the
 - Blue-tinted cards, editors, tables and inputs across RGB Studio, LCD, Profiles, Log, Corsair/OpenLinkHub, Settings, About, Help and Kraken detail areas.
 - Kraken Leise/Ausbalanciert/Leistung buttons become fully blue only after both requested hardware writes succeed and are cleared by individual/manual control.
 - Local AI handoff files and a credential-free Git bundle provide LM Studio/Qwen2.5-Coder setup, full branch history, a mandatory repository startup sequence and a permission-gated GitHub branch workflow without storing credentials.
-- First compatibility-preserving monolith split: six focused modules reduce the main file by roughly 1,600 lines, avoid circular imports and are included in installation and release packaging.
+- First compatibility-preserving monolith split: seven focused modules reduce the main file by roughly 1,600 lines, avoid circular imports and are included in installation and release packaging.
 - Chassis-fan cards now start collapsed, expose `Kurve & Details bearbeiten` on every card, expand only one explicit selection and collapse again when the action or embedded editor is closed.
 
 ## What 3.4.26 adds
@@ -58,7 +58,7 @@ The 3.4.27 codebase has also begun an incremental local-AI-oriented split of the
 - Corsair remains mediated through local OpenLinkHub rather than direct, guessed Corsair USB writes.
 - LCD/GIF and Kraken hardware requests remain coordinated so simultaneous subsystems do not fight for the same device.
 
-## Confirmed next work and 3.4.27 progress
+## Confirmed next work and 3.4.28 progress
 
 - RGB Studio, LCD, Profiles, Log, Corsair/OpenLinkHub, Settings, About and Help now share the current blue-tinted dashboard surface design.
 - Kraken quick-profile buttons now track the last fully successful Leise, Ausbalanciert or Leistung write instead of displaying a static default.

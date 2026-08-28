@@ -54,7 +54,7 @@ Antworte nach diesem Start zunächst nur mit:
 
 ## Aktueller Einstiegspunkt
 
-Der aktuelle Entwicklungsstand ist in `PROJECT_STATUS.md` beschrieben. Version 3.4.27 INTERN umfasst unter anderem die CoolerControl-Dienstverwaltung, die vereinheitlichten blau getönten Detailflächen, die bestätigungsbasierte Markierung der Kraken-Schnellprofile und den ersten kompatiblen Schnitt der historischen Hauptdatei in fokussierte Module. Als noch offener Kühlungsbereich ist insbesondere das standardmäßig eingeklappte, jeweils nur einzeln geöffnete Bearbeiten der Gehäuselüfterkarten dokumentiert.
+Der aktuelle Entwicklungsstand ist in `PROJECT_STATUS.md` beschrieben. Version 3.4.28 INTERN umfasst unter anderem die CoolerControl-Dienstverwaltung, die vereinheitlichten blau getönten Detailflächen, die bestätigungsbasierte Markierung der Kraken-Schnellprofile, den ersten kompatiblen Schnitt der historischen Hauptdatei in fokussierte Module und die standardmäßig eingeklappten, jeweils nur einzeln geöffneten Gehäuselüfterkarten.
 
 ## GitHub-Ziel
 

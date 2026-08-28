@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.4.28 INTERN
+
+- Made chassis-fan cards start collapsed, expand only one explicit selection and close together with their embedded curve editor.
+- Split chassis-fan expansion state into a small hardware-independent module and expanded the task-oriented local-AI module map.
+- Fixed dynamically rebuilt chassis-fan curve buttons so they immediately use the selected interface language.
+- Made the release builder skip an unavailable Debian tool cleanly on Fedora while still producing ZIP, source, Git-bundle and RPM assets.
+- Normalized tar metadata timestamps to prevent invalid inherited directory dates from producing RPM warnings.
+
 ## 3.4.27 INTERN
 
 - Distinguished the closed CoolerControl graphical client from the active `coolercontrold` background service and its system-autostart state.
