@@ -1,4 +1,4 @@
-# Software und Links – Open Hardware Control 3.4.29.5 INTERN
+# Software und Links – Open Hardware Control 3.4.29.6 INTERN
 
 | Komponente | Zweck | Projekt | Lizenz |
 |---|---|---|---|

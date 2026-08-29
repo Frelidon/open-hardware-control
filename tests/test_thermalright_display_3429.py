@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from thermalright_display import (
+    DEFAULT_NOTCH_MASK_WIDTH,
     DEFAULT_OVERLAYS,
     LEVITA_CUTOUT_HEIGHT,
     LEVITA_CUTOUT_WIDTH,
@@ -20,7 +21,10 @@ from thermalright_display import (
     ThermalrightCli,
     build_apply_sequence,
     clamp_overlay_outside_cutout,
+    create_black_notch_mask,
+    notch_safe_right_x,
     parse_detect_output,
+    prepare_shifted_media,
     scan_media_directory,
 )
 
@@ -72,6 +76,32 @@ def test_overlay_is_clamped_outside_physical_cutout() -> None:
     assert safe.y == LEVITA_HEIGHT - 1
 
 
+def test_wide_notch_mask_is_real_black_transparent_png(tmp_path: Path) -> None:
+    from PIL import Image
+
+    mask = create_black_notch_mask(tmp_path, DEFAULT_NOTCH_MASK_WIDTH)
+    with Image.open(mask) as image:
+        assert image.size == (LEVITA_WIDTH, LEVITA_HEIGHT)
+        assert image.getpixel((0, 0)) == (0, 0, 0, 0)
+        assert image.getpixel((LEVITA_WIDTH - 1, LEVITA_HEIGHT // 2)) == (0, 0, 0, 255)
+    assert notch_safe_right_x(DEFAULT_NOTCH_MASK_WIDTH) == 1280
+
+
+def test_shifted_image_is_a_cached_copy_and_keeps_original(tmp_path: Path) -> None:
+    from PIL import Image
+
+    source = tmp_path / "source.png"
+    Image.new("RGB", (1600, 720), (255, 0, 0)).save(source)
+    prepared = prepare_shifted_media(source, tmp_path / "cache", offset_x=-160)
+    assert prepared.transformed
+    assert prepared.path != source
+    with Image.open(prepared.path) as image:
+        assert image.getpixel((0, 100)) == (255, 0, 0)
+        assert image.getpixel((1599, 100)) == (0, 0, 0)
+    with Image.open(source) as original:
+        assert original.getpixel((1599, 100)) == (255, 0, 0)
+
+
 def test_cli_builds_bounded_shell_free_commands(tmp_path: Path) -> None:
     media = tmp_path / "design name.mp4"
     media.write_bytes(b"video")
@@ -89,11 +119,35 @@ def test_cli_builds_bounded_shell_free_commands(tmp_path: Path) -> None:
         for command, _tolerated in sequence
         if "split-mode" in command
     )
+    assert any("--hide-unit" in command for command, _tolerated in sequence)
     assert all(isinstance(command, tuple) for command, _tolerated in sequence)
     assert not any("sh" == part for command, _tolerated in sequence for part in command)
     gpu = next(command for command, _tolerated in sequence if "ohc-gpu-temp" in command and "overlay-add" in command)
     assert "gpu:primary:temp" in gpu
     assert "GPU {value:.0f}°C" in gpu
+
+
+def test_apply_sequence_loads_real_mask_before_metrics(tmp_path: Path) -> None:
+    media = tmp_path / "design.png"
+    media.write_bytes(b"image")
+    mask = tmp_path / "mask.png"
+    mask.write_bytes(b"mask")
+    cli = ThermalrightCli("/usr/bin/trcc")
+    sequence = build_apply_sequence(
+        cli, media, DEFAULT_OVERLAYS, split_mode=0,
+        mask_path=mask, safe_right_x=1280,
+    )
+    commands = [command for command, _tolerated in sequence]
+    assert commands[:5] == [
+        ("/usr/bin/trcc", "display", "split-mode", "87ad:70db", "0"),
+        ("/usr/bin/trcc", "display", "load-image", "87ad:70db", str(media.resolve())),
+        ("/usr/bin/trcc", "display", "apply-mask", "87ad:70db", str(mask.resolve())),
+        ("/usr/bin/trcc", "display", "mask-position", "87ad:70db", "0", "0"),
+        ("/usr/bin/trcc", "display", "mask-visible", "87ad:70db", "on"),
+    ]
+    metric_commands = [command for command in commands if "overlay-add" in command]
+    assert metric_commands
+    assert all(int(command[command.index("--x") + 1]) < 1280 for command in metric_commands)
 
 
 def test_cli_runner_never_uses_shell() -> None:

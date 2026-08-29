@@ -34,6 +34,7 @@ This file records decisions that future agents must preserve unless the project 
 - **3.4.29.2:** In Frelidon's confirmed personal Airgoo wiring, Channel B6 is the separate Jungle Leopard GPU support with 24 LEDs. It must remain a component zone independent from both ENE-DRAM controllers; this reference default must not be generalized to unrelated layouts or hubs.
 - **3.4.29.3:** Mainboard PWM curve writes may reuse one explicitly authorized, fixed-path Polkit helper child for the OHC process lifetime. The helper protocol must remain pipe-bound, length-limited and restricted to validated NCT6687 probe/percent/restore/watchdog operations; OHC restores firmware ownership before ending the session on orderly exit.
 - **3.4.29.5:** OHC must neutralise persisted external TRCC split state before loading any Levita media. Decorative split styles remain preview-only while the installed/backend Qt renderer is known to crash; the physical 80-pixel cutout remains an independent OHC overlay-safety boundary.
+- **3.4.29.6:** The visible Levita camera/notch exclusion is an explicit user-adjustable OHC mask, not inferred from a speculative USB write. OHC may prepare shifted local cache copies of supported media but must never rewrite imported designs; movable metrics must be clamped against the selected mask boundary.
 
 ## Assets and licensing
 

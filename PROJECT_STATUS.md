@@ -1,6 +1,6 @@
 # Open Hardware Control — Project Status
 
-**Current development version:** 3.4.29.5 INTERN
+**Current development version:** 3.4.29.6 INTERN
 
 **Status date:** 29 August 2026
 
@@ -24,10 +24,11 @@ The 3.4.29 codebase has also begun an incremental local-AI-oriented split of the
 - Hotfix 3.4.29.3 keeps one narrowly validated Polkit fan-helper session alive after explicit authorization, so a running CPU curve no longer times out after the authorization cache expires. It also skips unnecessary liquidctl initialization on Thermalright-only systems, hides obsolete Kraken clock controls and learns a stable 7-to-6 OpenRGB inventory change without weakening the large-drop cold-start safeguard.
 - Hotfix 3.4.29.4 fixes startup when the LCD studio restores a saved TRCC media directory before the main Log page exists. The regression now starts the complete UI with a persisted real image. TRCC Linux 9.9.11 has also physically completed the red/green/blue/black cycle on the reference `87ad:70db` display; its full handshake confirms model ID 64, sub-byte 3 and 1600×720.
 - Hotfix 3.4.29.5 resets TRCC's persisted decorative split mode to zero before loading media. This avoids the confirmed TRCC 9.9.11/PySide6 6.11 `QImage.mirrored()` crash; styles A–C stay available as clearly marked local previews, while the physical 80-pixel right cutout remains protected.
+- Version 3.4.29.6 applies a real adjustable black TRCC mask over the camera/notch area instead of merely drawing a preview guide. Its wider 320-pixel reference default, persistent background X/Y shift and two overlay spacing presets remain user-adjustable; locally prepared image/video copies never overwrite imported originals. Formats that already include `°C` or `%` now suppress TRCC's second unit suffix.
 
 - Full-width Thermalright Levita Vision studio inside the existing LCD page.
 - Local-only import for images, videos, `.zt` media and complete TRCC layout directories containing `config1.dc`; imported manufacturer assets are neither copied nor packaged.
-- A true 1600×720 editor with the verified right-hand 80-pixel Levita panel cutout (`x=1520…1599`) shown as a protected zone.
+- A true 1600×720 editor with a real adjustable 80–800-pixel black right-hand mask (320-pixel reference default), background X/Y movement and matching dynamic protection for movable hardware values.
 - Movable, hideable, resizable and recolorable CPU temperature/load, GPU temperature/load, memory and clock overlays.
 - Test mode enabled by default: previews and the local color-cycle test perform no USB writes.
 - Hardware detection, color test, media/theme loading and the live metric render loop use bounded shell-free commands through the separately installed TRCC Linux backend. Decorative split modes remain preview-only until the confirmed TRCC Qt compatibility defect is fixed.

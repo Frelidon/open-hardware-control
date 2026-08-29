@@ -12,6 +12,7 @@ PySide6 or connected hardware.
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+import hashlib
 from pathlib import Path
 import re
 import shutil
@@ -31,6 +32,15 @@ LEVITA_CUTOUT_Y = 0
 LEVITA_CUTOUT_WIDTH = 80
 LEVITA_CUTOUT_HEIGHT = 720
 
+# The camera housing on the reference Levita visibly covers more than the
+# protocol table's narrow physical edge marker.  OHC therefore ships a wider,
+# user-adjustable black render mask while retaining the 80 px value above as
+# the lowest safe limit.
+DEFAULT_NOTCH_MASK_WIDTH = 320
+MAX_NOTCH_MASK_WIDTH = 800
+DEFAULT_BACKGROUND_OFFSET_X = -160
+DEFAULT_BACKGROUND_OFFSET_Y = 0
+
 SUPPORTED_IMAGE_SUFFIXES = frozenset({".png", ".jpg", ".jpeg", ".bmp", ".webp"})
 SUPPORTED_VIDEO_SUFFIXES = frozenset({".mp4", ".mov", ".webm", ".mkv", ".avi", ".zt"})
 SUPPORTED_MEDIA_SUFFIXES = SUPPORTED_IMAGE_SUFFIXES | SUPPORTED_VIDEO_SUFFIXES
@@ -42,6 +52,13 @@ class MediaEntry:
     path: Path
     relative_name: str
     kind: str
+
+
+@dataclass(frozen=True, slots=True)
+class PreparedMedia:
+    path: Path
+    transformed: bool = False
+    warning: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,10 +78,11 @@ class OverlaySpec:
     show_unit: bool = True
     bold: bool = True
 
-    def bounded(self) -> "OverlaySpec":
+    def bounded(self, *, safe_right_x: int = LEVITA_CUTOUT_X) -> "OverlaySpec":
+        right = max(1, min(LEVITA_WIDTH, int(safe_right_x)))
         return replace(
             self,
-            x=max(0, min(LEVITA_CUTOUT_X - 1, int(self.x))),
+            x=max(0, min(right - 1, int(self.x))),
             y=max(0, min(LEVITA_HEIGHT - 1, int(self.y))),
             size=max(12, min(160, int(self.size))),
             color=normalize_color(self.color),
@@ -72,12 +90,12 @@ class OverlaySpec:
 
 
 DEFAULT_OVERLAYS: tuple[OverlaySpec, ...] = (
-    OverlaySpec("ohc-cpu-temp", "CPU-Temperatur", "metric", "cpu:temp", format="CPU {value:.0f}°C", sample="CPU 51 °C", x=240, y=590, size=52, color="#32c5ff"),
-    OverlaySpec("ohc-cpu-load", "CPU-Auslastung", "metric", "cpu:usage", format="CPU {value:.0f}%", sample="CPU 18 %", x=520, y=590, size=44, color="#32c5ff"),
-    OverlaySpec("ohc-gpu-temp", "GPU-Temperatur", "metric", "gpu:primary:temp", format="GPU {value:.0f}°C", sample="GPU 47 °C", x=820, y=590, size=52, color="#44d7b6"),
-    OverlaySpec("ohc-gpu-load", "GPU-Auslastung", "metric", "gpu:primary:usage", format="GPU {value:.0f}%", sample="GPU 32 %", x=1110, y=590, size=44, color="#44d7b6"),
-    OverlaySpec("ohc-memory", "Arbeitsspeicher", "metric", "memory:percent", format="RAM {value:.0f}%", sample="RAM 41 %", x=1370, y=590, size=40, color="#6dd401"),
-    OverlaySpec("ohc-clock", "Uhrzeit", "clock", source="time", format="{value}", sample="13:38", x=1360, y=90, size=56, color="#ffffff"),
+    OverlaySpec("ohc-cpu-temp", "CPU-Temperatur", "metric", "cpu:temp", format="CPU {value:.0f}°C", sample="CPU 51 °C", x=200, y=540, size=38, color="#32c5ff", show_unit=False),
+    OverlaySpec("ohc-cpu-load", "CPU-Auslastung", "metric", "cpu:usage", format="CPU {value:.0f}%", sample="CPU 18 %", x=200, y=630, size=38, color="#32c5ff", show_unit=False),
+    OverlaySpec("ohc-gpu-temp", "GPU-Temperatur", "metric", "gpu:primary:temp", format="GPU {value:.0f}°C", sample="GPU 47 °C", x=600, y=540, size=38, color="#44d7b6", show_unit=False),
+    OverlaySpec("ohc-gpu-load", "GPU-Auslastung", "metric", "gpu:primary:usage", format="GPU {value:.0f}%", sample="GPU 32 %", x=600, y=630, size=38, color="#44d7b6", show_unit=False),
+    OverlaySpec("ohc-memory", "Arbeitsspeicher", "metric", "memory:percent", format="RAM {value:.0f}%", sample="RAM 41 %", x=1000, y=540, size=38, color="#6dd401", show_unit=False),
+    OverlaySpec("ohc-clock", "Uhrzeit", "clock", source="time", format="{value}", sample="13:38", x=1000, y=630, size=38, color="#ffffff"),
 )
 
 
@@ -159,22 +177,140 @@ def media_is_supported(path: Path) -> bool:
     return path.is_file() and path.suffix.casefold() in SUPPORTED_MEDIA_SUFFIXES
 
 
+def bounded_notch_width(width: int) -> int:
+    return max(LEVITA_CUTOUT_WIDTH, min(MAX_NOTCH_MASK_WIDTH, int(width)))
+
+
+def notch_safe_right_x(width: int, *, visible: bool = True) -> int:
+    return LEVITA_WIDTH - bounded_notch_width(width) if visible else LEVITA_CUTOUT_X
+
+
+def create_black_notch_mask(cache_dir: Path, width: int) -> Path:
+    """Create a full-canvas transparent PNG with an opaque right-hand bar."""
+    from PIL import Image, ImageDraw
+
+    bounded_width = bounded_notch_width(width)
+    directory = cache_dir.expanduser().resolve()
+    directory.mkdir(parents=True, exist_ok=True)
+    target = directory / f"ohc-levita-notch-{LEVITA_WIDTH}x{LEVITA_HEIGHT}-w{bounded_width}.png"
+    if target.is_file():
+        return target
+    image = Image.new("RGBA", (LEVITA_WIDTH, LEVITA_HEIGHT), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+    draw.rectangle(
+        (LEVITA_WIDTH - bounded_width, 0, LEVITA_WIDTH - 1, LEVITA_HEIGHT - 1),
+        fill=(0, 0, 0, 255),
+    )
+    image.save(target, format="PNG")
+    return target
+
+
+def prepare_shifted_media(
+    media: Path,
+    cache_dir: Path,
+    *,
+    offset_x: int = 0,
+    offset_y: int = 0,
+    ffmpeg: str | None = None,
+) -> PreparedMedia:
+    """Render a shifted copy for OHC without modifying imported source media."""
+    source = media.expanduser().resolve()
+    x = max(-600, min(600, int(offset_x)))
+    y = max(-300, min(300, int(offset_y)))
+    if x == 0 and y == 0:
+        return PreparedMedia(source)
+    if source.is_dir() or source.suffix.casefold() == ".zt":
+        return PreparedMedia(
+            source,
+            warning="Hintergrundverschiebung ist bei kompletten TRCC-Layouts und .zt-Dateien noch nicht möglich.",
+        )
+    if not media_is_supported(source):
+        raise ValueError(f"Nicht unterstützte oder fehlende Mediendatei: {source}")
+
+    directory = cache_dir.expanduser().resolve()
+    directory.mkdir(parents=True, exist_ok=True)
+    stat = source.stat()
+    fingerprint = hashlib.sha256(
+        f"{source}:{stat.st_size}:{stat.st_mtime_ns}:{x}:{y}:v1".encode("utf-8")
+    ).hexdigest()[:24]
+
+    if source.suffix.casefold() in SUPPORTED_IMAGE_SUFFIXES:
+        from PIL import Image
+
+        target = directory / f"shifted-{fingerprint}.png"
+        if not target.is_file():
+            with Image.open(source) as opened:
+                image = opened.convert("RGB")
+                scale = max(LEVITA_WIDTH / image.width, LEVITA_HEIGHT / image.height)
+                fitted = image.resize(
+                    (max(1, round(image.width * scale)), max(1, round(image.height * scale))),
+                    Image.Resampling.LANCZOS,
+                )
+                left = max(0, (fitted.width - LEVITA_WIDTH) // 2)
+                top = max(0, (fitted.height - LEVITA_HEIGHT) // 2)
+                fitted = fitted.crop((left, top, left + LEVITA_WIDTH, top + LEVITA_HEIGHT))
+                canvas = Image.new("RGB", (LEVITA_WIDTH, LEVITA_HEIGHT), (0, 0, 0))
+                canvas.paste(fitted, (x, y))
+                canvas.save(target, format="PNG")
+        return PreparedMedia(target, transformed=True)
+
+    executable = ffmpeg or shutil.which("ffmpeg")
+    if not executable:
+        return PreparedMedia(source, warning="Für die Verschiebung eines Videos wird ffmpeg benötigt.")
+    target = directory / f"shifted-{fingerprint}.mp4"
+    if not target.is_file():
+        pad_x, pad_y = abs(x), abs(y)
+        filter_graph = (
+            f"scale={LEVITA_WIDTH}:{LEVITA_HEIGHT}:force_original_aspect_ratio=increase,"
+            f"crop={LEVITA_WIDTH}:{LEVITA_HEIGHT},"
+            f"pad={LEVITA_WIDTH + 2 * pad_x}:{LEVITA_HEIGHT + 2 * pad_y}:{pad_x}:{pad_y}:black,"
+            f"crop={LEVITA_WIDTH}:{LEVITA_HEIGHT}:{pad_x - x}:{pad_y - y},format=yuv420p"
+        )
+        try:
+            completed = subprocess.run(
+                [
+                    executable, "-v", "error", "-y", "-i", str(source),
+                    "-vf", filter_graph, "-an", "-c:v", "libx264", "-preset", "veryfast",
+                    "-crf", "18", "-movflags", "+faststart", str(target),
+                ],
+                capture_output=True, text=True, timeout=300, check=False,
+            )
+        except subprocess.TimeoutExpired:
+            return PreparedMedia(source, warning="Die lokale Video-Verschiebung hat länger als fünf Minuten gedauert.")
+        if completed.returncode != 0 or not target.is_file():
+            target.unlink(missing_ok=True)
+            detail = (completed.stderr or "ffmpeg-Fehler").strip().splitlines()[-1]
+            return PreparedMedia(source, warning=f"Video konnte nicht verschoben werden: {detail}")
+    return PreparedMedia(target, transformed=True)
+
+
 def parse_detect_output(output: str) -> bool:
     return bool(re.search(r"(?i)(?<![0-9a-f])87ad\s*:\s*70db(?![0-9a-f])", output or ""))
 
 
-def overlay_intersects_cutout(spec: OverlaySpec, *, estimated_width: int | None = None) -> bool:
+def overlay_intersects_cutout(
+    spec: OverlaySpec,
+    *,
+    estimated_width: int | None = None,
+    safe_right_x: int = LEVITA_CUTOUT_X,
+) -> bool:
     """Conservatively test a centered text element against the right cutout."""
-    item = spec.bounded()
+    item = spec.bounded(safe_right_x=safe_right_x)
     width = estimated_width if estimated_width is not None else max(item.size * 2, len(item.sample) * item.size // 2)
-    return item.x + max(1, int(width)) // 2 >= LEVITA_CUTOUT_X
+    return item.x + max(1, int(width)) // 2 >= safe_right_x
 
 
-def clamp_overlay_outside_cutout(spec: OverlaySpec, *, estimated_width: int | None = None) -> OverlaySpec:
-    item = spec.bounded()
+def clamp_overlay_outside_cutout(
+    spec: OverlaySpec,
+    *,
+    estimated_width: int | None = None,
+    safe_right_x: int = LEVITA_CUTOUT_X,
+) -> OverlaySpec:
+    right = max(1, min(LEVITA_WIDTH, int(safe_right_x)))
+    item = spec.bounded(safe_right_x=right)
     width = estimated_width if estimated_width is not None else max(item.size * 2, len(item.sample) * item.size // 2)
     half = max(1, int(width)) // 2
-    return replace(item, x=min(item.x, max(0, LEVITA_CUTOUT_X - half - 8)))
+    return replace(item, x=min(item.x, max(0, right - half - 8)))
 
 
 class ThermalrightCli:
@@ -240,8 +376,23 @@ class ThermalrightCli:
             raise ValueError("Ungültige OHC-Ebenenkennung")
         return self._command("display", "overlay-delete", THERMALRIGHT_DEVICE_KEY, ident)
 
-    def overlay_add_args(self, spec: OverlaySpec) -> tuple[str, ...]:
-        item = clamp_overlay_outside_cutout(spec)
+    def apply_mask_args(self, path: Path) -> tuple[str, ...]:
+        source = path.expanduser().resolve()
+        if not source.is_file() or source.suffix.casefold() not in SUPPORTED_IMAGE_SUFFIXES:
+            raise ValueError(f"Nicht unterstützte oder fehlende Maskendatei: {source}")
+        return self._command("display", "apply-mask", THERMALRIGHT_DEVICE_KEY, source)
+
+    def mask_position_args(self, x: int = 0, y: int = 0) -> tuple[str, ...]:
+        return self._command(
+            "display", "mask-position", THERMALRIGHT_DEVICE_KEY,
+            max(0, min(LEVITA_WIDTH, int(x))), max(0, min(LEVITA_HEIGHT, int(y))),
+        )
+
+    def mask_visible_args(self, visible: bool) -> tuple[str, ...]:
+        return self._command("display", "mask-visible", THERMALRIGHT_DEVICE_KEY, "on" if visible else "off")
+
+    def overlay_add_args(self, spec: OverlaySpec, *, safe_right_x: int = LEVITA_CUTOUT_X) -> tuple[str, ...]:
+        item = clamp_overlay_outside_cutout(spec, safe_right_x=safe_right_x)
         args: list[object] = [
             "display", "overlay-add", THERMALRIGHT_DEVICE_KEY, item.kind,
             "--x", item.x, "--y", item.y, "--color", item.color,
@@ -275,6 +426,8 @@ def build_apply_sequence(
     overlays: Iterable[OverlaySpec],
     *,
     split_mode: int,
+    mask_path: Path | None = None,
+    safe_right_x: int = LEVITA_CUTOUT_X,
 ) -> list[tuple[tuple[str, ...], bool]]:
     """Build the deterministic apply sequence; bool marks tolerated failures.
 
@@ -285,18 +438,27 @@ def build_apply_sequence(
     ``split_mode`` is retained for preview/settings compatibility, but is not
     sent to the affected backend.
     """
-    items = [item.bounded() for item in overlays]
+    right = max(1, min(LEVITA_WIDTH, int(safe_right_x)))
+    items = [item.bounded(safe_right_x=right) for item in overlays]
     # Keep settings input bounded even while hardware split modes are disabled.
     _requested_split_mode = max(0, min(3, int(split_mode)))
     commands: list[tuple[tuple[str, ...], bool]] = [
         (cli.split_mode_args(0), False),
         (cli.load_media_args(media), False),
     ]
+    if mask_path is not None:
+        commands.extend((
+            (cli.apply_mask_args(mask_path), False),
+            (cli.mask_position_args(0, 0), False),
+            (cli.mask_visible_args(True), False),
+        ))
+    else:
+        commands.append((cli.mask_visible_args(False), False))
     for item in items:
         commands.append((cli.overlay_delete_args(item.ident), True))
     for item in items:
         if item.visible:
-            commands.append((cli.overlay_add_args(item), False))
+            commands.append((cli.overlay_add_args(item, safe_right_x=right), False))
     commands.append((cli.overlay_enabled_args(any(item.visible for item in items)), False))
     return commands
 

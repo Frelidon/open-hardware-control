@@ -2,7 +2,7 @@
 
 Jeder weitergegebene Open-Hardware-Control-Stand soll vollständig nachvollziehbar bleiben.
 
-Das interne Installations-ZIP 3.4.29.5 enthält den direkt editierbaren Python-Quellcode einschließlich `desktop_shell.py`, `desktop_assets.py` und `desktop_designs.py`:
+Das interne Installations-ZIP 3.4.29.6 enthält den direkt editierbaren Python-Quellcode einschließlich `desktop_shell.py`, `desktop_assets.py` und `desktop_designs.py`:
 
 - `kraken_control.py`
 - `openlinkhub_integration.py` (lokale OpenLinkHub-API-, validierte Schreib- und Benutzerdienst-Anbindung)
@@ -33,10 +33,10 @@ Das interne Installations-ZIP 3.4.29.5 enthält den direkt editierbaren Python-Q
 Zu jedem Release werden aus genau demselben Git-Stand erzeugt:
 
 - `open_hardware_control_v3_4_16_INTERN.zip` – universelles internes Benutzerpaket
-- `open-hardware-control_3.4.29.5~intern2_all.deb` – internes Debian/Ubuntu/Linux-Mint-Paket
-- `open-hardware-control-3.4.29.5-0.intern2.noarch.rpm` – internes Fedora/Nobara-Paket
-- `open-hardware-control-3.4.29.5-INTERN-source.tar.gz` – vollständiger Quellcode-Snapshot
-- `Entwicklerpaket 3.4.29.5 INTERN.zip` – vollständiger editierbarer Projektbaum einschließlich Tests, Werkzeuge und GitHub-Automatisierung
+- `open-hardware-control_3.4.29.6~intern2_all.deb` – internes Debian/Ubuntu/Linux-Mint-Paket
+- `open-hardware-control-3.4.29.6-0.intern2.noarch.rpm` – internes Fedora/Nobara-Paket
+- `open-hardware-control-3.4.29.6-INTERN-source.tar.gz` – vollständiger Quellcode-Snapshot
+- `Entwicklerpaket 3.4.29.6 INTERN.zip` – vollständiger editierbarer Projektbaum einschließlich Tests, Werkzeuge und GitHub-Automatisierung
 - `SHA256SUMS` – Prüfsummen aller Release-Dateien
 
 Die enthaltenen Test-GIFs werden vollständig aus dem mitgelieferten GPL-Quellcode erzeugt und sind keine externen Mediendateien. `scripts/build_release.py` baut alle Pakete reproduzierbar aus dem ausgecheckten Quellbaum.

@@ -37,6 +37,9 @@ from PySide6.QtWidgets import (
 )
 
 from thermalright_display import (
+    DEFAULT_BACKGROUND_OFFSET_X,
+    DEFAULT_BACKGROUND_OFFSET_Y,
+    DEFAULT_NOTCH_MASK_WIDTH,
     DEFAULT_OVERLAYS,
     LEVITA_CUTOUT_HEIGHT,
     LEVITA_CUTOUT_WIDTH,
@@ -48,18 +51,28 @@ from thermalright_display import (
     OverlaySpec,
     SUPPORTED_IMAGE_SUFFIXES,
     ThermalrightCli,
+    bounded_notch_width,
     build_apply_sequence,
     clamp_overlay_outside_cutout,
+    create_black_notch_mask,
+    notch_safe_right_x,
     parse_detect_output,
+    prepare_shifted_media,
     scan_media_directory,
 )
 
 
 class _MovableOverlayItem(QGraphicsSimpleTextItem):
-    def __init__(self, spec: OverlaySpec, moved: Callable[[str, int, int], None]) -> None:
+    def __init__(
+        self,
+        spec: OverlaySpec,
+        moved: Callable[[str, int, int], None],
+        safe_right_x: int,
+    ) -> None:
         super().__init__(spec.sample or spec.label)
         self.ident = spec.ident
         self._moved = moved
+        self._safe_right_x = safe_right_x
         font = QFont()
         font.setPixelSize(spec.size)
         font.setBold(spec.bold)
@@ -78,7 +91,7 @@ class _MovableOverlayItem(QGraphicsSimpleTextItem):
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: object) -> object:
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange and isinstance(value, QPointF):
             rect = self.boundingRect()
-            x = max(0.0, min(float(LEVITA_CUTOUT_X) - rect.width() - 8.0, value.x()))
+            x = max(0.0, min(float(self._safe_right_x) - rect.width() - 8.0, value.x()))
             y = max(0.0, min(float(LEVITA_HEIGHT) - rect.height(), value.y()))
             return QPointF(x, y)
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
@@ -100,6 +113,10 @@ class ThermalrightCanvas(QGraphicsView):
         self._background = QPixmap()
         self._specs: tuple[OverlaySpec, ...] = tuple(DEFAULT_OVERLAYS)
         self._split_mode = 0
+        self._background_x = DEFAULT_BACKGROUND_OFFSET_X
+        self._background_y = DEFAULT_BACKGROUND_OFFSET_Y
+        self._notch_visible = True
+        self._notch_width = DEFAULT_NOTCH_MASK_WIDTH
         self.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         self.setBackgroundBrush(QColor("#07111d"))
         self.setMinimumHeight(315)
@@ -114,6 +131,16 @@ class ThermalrightCanvas(QGraphicsView):
 
     def set_specs(self, specs: Iterable[OverlaySpec]) -> None:
         self._specs = tuple(specs)
+        self.rebuild()
+
+    def set_background_offset(self, x: int, y: int) -> None:
+        self._background_x = max(-600, min(600, int(x)))
+        self._background_y = max(-300, min(300, int(y)))
+        self.rebuild()
+
+    def set_notch_mask(self, visible: bool, width: int) -> None:
+        self._notch_visible = bool(visible)
+        self._notch_width = bounded_notch_width(width)
         self.rebuild()
 
     def set_split_mode(self, mode: int) -> None:
@@ -136,6 +163,7 @@ class ThermalrightCanvas(QGraphicsView):
             placeholder.setPos(LEVITA_WIDTH / 2 - placeholder.boundingRect().width() / 2, 270)
         else:
             item = self._scene.addPixmap(self._background)
+            item.setPos(self._background_x, self._background_y)
             item.setZValue(-20)
 
         if self._split_mode:
@@ -151,23 +179,25 @@ class ThermalrightCanvas(QGraphicsView):
             label.setPos((LEVITA_WIDTH - label.boundingRect().width()) / 2, 43)
             label.setZValue(6)
 
-        cutout = QGraphicsRectItem(
-            LEVITA_CUTOUT_X, LEVITA_CUTOUT_Y, LEVITA_CUTOUT_WIDTH, LEVITA_CUTOUT_HEIGHT,
-        )
+        cutout_width = self._notch_width if self._notch_visible else LEVITA_CUTOUT_WIDTH
+        cutout_x = LEVITA_WIDTH - cutout_width
+        cutout = QGraphicsRectItem(cutout_x, LEVITA_CUTOUT_Y, cutout_width, LEVITA_CUTOUT_HEIGHT)
         cutout.setBrush(QColor(0, 0, 0, 235))
-        cutout.setPen(QPen(QColor("#ff526f"), 4, Qt.PenStyle.DashLine))
+        cutout.setPen(QPen(QColor("#00c8ff" if self._notch_visible else "#ff526f"), 4))
         cutout.setZValue(30)
-        cutout.setToolTip("Physische Levita-Aussparung · 80 px · keine Hardwarewerte hier platzieren")
+        cutout.setToolTip(f"Schwarzer Kamera-/Notch-Balken · {cutout_width} px · keine Hardwarewerte hier platzieren")
         self._scene.addItem(cutout)
-        cutout_label = self._scene.addSimpleText("NOTCH")
-        cutout_label.setBrush(QColor("#ff526f"))
+        cutout_label = self._scene.addSimpleText(f"NOTCH · {cutout_width} px")
+        cutout_label.setBrush(QColor("#00c8ff" if self._notch_visible else "#ff526f"))
         cutout_label.setRotation(-90)
-        cutout_label.setPos(1560, 390)
+        cutout_label.setPos(LEVITA_WIDTH - cutout_width / 2 + 12, 430)
         cutout_label.setZValue(31)
 
+        safe_right_x = notch_safe_right_x(self._notch_width, visible=self._notch_visible)
         for spec in self._specs:
             if spec.visible:
-                self._scene.addItem(_MovableOverlayItem(clamp_overlay_outside_cutout(spec), self._moved))
+                safe = clamp_overlay_outside_cutout(spec, safe_right_x=safe_right_x)
+                self._scene.addItem(_MovableOverlayItem(safe, self._moved, safe_right_x))
         self.fitInView(self._scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
 
     def resizeEvent(self, event) -> None:  # type: ignore[no-untyped-def]
@@ -206,6 +236,7 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.play_process: QProcess | None = None
         self.test_colors = [QColor("#ef3340"), QColor("#16c172"), QColor("#2878ff"), QColor("#000000")]
         self.test_color_index = 0
+        self.pending_apply_warning = ""
 
         self.command_process = QProcess(self)
         self.command_process.setProcessChannelMode(QProcess.ProcessChannelMode.SeparateChannels)
@@ -226,7 +257,7 @@ class ThermalrightDisplayStudio(QGroupBox):
         outer.setSpacing(12)
         intro = QLabel(
             "Lokale Thermalright-Designs importieren, CPU/GPU/RAM/Uhr frei verschieben und zuerst vollständig "
-            "ohne USB-Zugriff testen. Die Levita-Aussparung rechts (80 px) ist als gesperrte Zone markiert."
+            "ohne USB-Zugriff testen. Hintergrund und schwarzer Kamera-/Notch-Balken sind frei einstellbar."
         )
         intro.setWordWrap(True)
         intro.setObjectName("infoText")
@@ -268,6 +299,53 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.canvas = ThermalrightCanvas(self._overlay_moved)
         outer.addWidget(self.canvas)
 
+        geometry_box = QGroupBox("Hintergrund und schwarzer Kamera-/Notch-Balken")
+        geometry_grid = QGridLayout(geometry_box)
+        self.background_x = QSpinBox()
+        self.background_x.setRange(-600, 600)
+        self.background_x.setSuffix(" px")
+        self.background_x.setValue(int(self.settings.value(
+            "thermalright/background_x", DEFAULT_BACKGROUND_OFFSET_X,
+        ) or 0))
+        self.background_y = QSpinBox()
+        self.background_y.setRange(-300, 300)
+        self.background_y.setSuffix(" px")
+        self.background_y.setValue(int(self.settings.value(
+            "thermalright/background_y", DEFAULT_BACKGROUND_OFFSET_Y,
+        ) or 0))
+        self.notch_visible = QCheckBox("Schwarzen Balken wirklich auf das Display legen")
+        self.notch_visible.setChecked(self.settings.value(
+            "thermalright/notch_visible", True, type=bool,
+        ))
+        self.notch_width = QSpinBox()
+        self.notch_width.setRange(LEVITA_CUTOUT_WIDTH, 800)
+        self.notch_width.setSuffix(" px")
+        self.notch_width.setValue(bounded_notch_width(int(self.settings.value(
+            "thermalright/notch_width", DEFAULT_NOTCH_MASK_WIDTH,
+        ) or DEFAULT_NOTCH_MASK_WIDTH)))
+        geometry_grid.addWidget(QLabel("Hintergrund X"), 0, 0)
+        geometry_grid.addWidget(self.background_x, 0, 1)
+        geometry_grid.addWidget(QLabel("Hintergrund Y"), 0, 2)
+        geometry_grid.addWidget(self.background_y, 0, 3)
+        geometry_grid.addWidget(self.notch_visible, 1, 0, 1, 2)
+        geometry_grid.addWidget(QLabel("Balkenbreite"), 1, 2)
+        geometry_grid.addWidget(self.notch_width, 1, 3)
+        wide_preset = QPushButton("Breiter Standard · 320 px und Bild nach links")
+        wide_preset.clicked.connect(self.apply_wide_notch_preset)
+        geometry_grid.addWidget(wide_preset, 2, 0, 1, 4)
+        geometry_note = QLabel(
+            "X/Y verschiebt eine lokal erzeugte Arbeitskopie; das importierte Original bleibt unverändert. "
+            "Der schwarze Balken wird als echte Maske an TRCC übertragen."
+        )
+        geometry_note.setWordWrap(True)
+        geometry_note.setObjectName("muted")
+        geometry_grid.addWidget(geometry_note, 3, 0, 1, 4)
+        outer.addWidget(geometry_box)
+        self.background_x.valueChanged.connect(self._display_geometry_changed)
+        self.background_y.valueChanged.connect(self._display_geometry_changed)
+        self.notch_visible.toggled.connect(self._display_geometry_changed)
+        self.notch_width.valueChanged.connect(self._display_geometry_changed)
+
         options_row = QHBoxLayout()
         options_row.addWidget(QLabel("Notch / Dynamic Island"))
         self.split_mode = QComboBox()
@@ -304,7 +382,7 @@ class ThermalrightDisplayStudio(QGroupBox):
             visible.setChecked(spec.visible)
             label = QLabel(spec.label)
             x_spin = QSpinBox()
-            x_spin.setRange(0, LEVITA_CUTOUT_X - 1)
+            x_spin.setRange(0, max(0, self._safe_right_x() - 1))
             x_spin.setValue(spec.x)
             y_spin = QSpinBox()
             y_spin.setRange(0, LEVITA_HEIGHT - 1)
@@ -328,7 +406,13 @@ class ThermalrightDisplayStudio(QGroupBox):
                 grid.addWidget(widget, row, column)
         reset_button = QPushButton("Hardware-Infos zurücksetzen")
         reset_button.clicked.connect(self.reset_overlays)
-        grid.addWidget(reset_button, len(self.overlay_specs) + 1, 0, 1, 6)
+        grid.addWidget(reset_button, len(self.overlay_specs) + 1, 0, 1, 2)
+        two_rows_button = QPushButton("Zwei saubere Reihen")
+        two_rows_button.clicked.connect(lambda: self.apply_overlay_layout("two_rows"))
+        grid.addWidget(two_rows_button, len(self.overlay_specs) + 1, 2, 1, 2)
+        vertical_button = QPushButton("Untereinander")
+        vertical_button.clicked.connect(lambda: self.apply_overlay_layout("vertical"))
+        grid.addWidget(vertical_button, len(self.overlay_specs) + 1, 4, 1, 2)
         outer.addWidget(overlays_box)
 
         action_row = QHBoxLayout()
@@ -355,6 +439,8 @@ class ThermalrightDisplayStudio(QGroupBox):
         outer.addWidget(safety)
         self.canvas.set_specs(self.overlay_specs)
         self.canvas.set_split_mode(saved_split)
+        self.canvas.set_background_offset(self.background_x.value(), self.background_y.value())
+        self.canvas.set_notch_mask(self.notch_visible.isChecked(), self.notch_width.value())
 
     def _load_overlays(self) -> list[OverlaySpec]:
         raw = str(self.settings.value("thermalright/overlays", "") or "")
@@ -505,19 +591,94 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.settings.setValue("thermalright/split_mode", mode)
         self.canvas.set_split_mode(mode)
 
+    def _safe_right_x(self) -> int:
+        if not hasattr(self, "notch_width") or not hasattr(self, "notch_visible"):
+            return notch_safe_right_x(DEFAULT_NOTCH_MASK_WIDTH, visible=True)
+        return notch_safe_right_x(
+            self.notch_width.value(), visible=self.notch_visible.isChecked(),
+        )
+
+    def _display_geometry_changed(self) -> None:
+        self.settings.setValue("thermalright/background_x", self.background_x.value())
+        self.settings.setValue("thermalright/background_y", self.background_y.value())
+        self.settings.setValue("thermalright/notch_visible", self.notch_visible.isChecked())
+        self.settings.setValue("thermalright/notch_width", self.notch_width.value())
+        self.canvas.set_background_offset(self.background_x.value(), self.background_y.value())
+        self.canvas.set_notch_mask(self.notch_visible.isChecked(), self.notch_width.value())
+        right = self._safe_right_x()
+        self.overlay_specs = [
+            clamp_overlay_outside_cutout(item, safe_right_x=right)
+            for item in self.overlay_specs
+        ]
+        for spec in self.overlay_specs:
+            controls = self.overlay_controls.get(spec.ident, {})
+            x_spin = controls.get("x")
+            if isinstance(x_spin, QSpinBox):
+                x_spin.setMaximum(max(0, right - 1))
+            self._sync_overlay_controls(spec.ident)
+        self._save_overlays()
+        self.canvas.set_specs(self.overlay_specs)
+
+    def apply_wide_notch_preset(self) -> None:
+        for widget in (self.background_x, self.background_y, self.notch_width, self.notch_visible):
+            widget.blockSignals(True)
+        self.background_x.setValue(DEFAULT_BACKGROUND_OFFSET_X)
+        self.background_y.setValue(DEFAULT_BACKGROUND_OFFSET_Y)
+        self.notch_width.setValue(DEFAULT_NOTCH_MASK_WIDTH)
+        self.notch_visible.setChecked(True)
+        for widget in (self.background_x, self.background_y, self.notch_width, self.notch_visible):
+            widget.blockSignals(False)
+        self._display_geometry_changed()
+        self._status("Breiter Notch-Standard aktiv · 320 px schwarzer Balken · Hintergrund 160 px nach links")
+
+    def apply_overlay_layout(self, layout: str) -> None:
+        right = self._safe_right_x()
+        if layout == "two_rows":
+            columns = (max(150, right // 6), max(430, right // 2), max(760, right * 5 // 6))
+            positions = (
+                (columns[0], 550), (columns[0], 630),
+                (columns[1], 550), (columns[1], 630),
+                (columns[2], 550), (columns[2], 630),
+            )
+            size = 38
+            message = "Hardware-Infos in zwei sauberen Reihen angeordnet"
+        elif layout == "vertical":
+            x = max(180, right - 230)
+            positions = tuple((x, 130 + index * 95) for index in range(len(self.overlay_specs)))
+            size = 36
+            message = "Hardware-Infos mit gleichmäßigem Abstand untereinander angeordnet"
+        else:
+            return
+        self.overlay_specs = [
+            clamp_overlay_outside_cutout(
+                replace(spec, x=positions[index][0], y=positions[index][1], size=size),
+                safe_right_x=right,
+            )
+            for index, spec in enumerate(self.overlay_specs)
+        ]
+        for spec in self.overlay_specs:
+            self._sync_overlay_controls(spec.ident)
+        self._save_overlays()
+        self.canvas.set_specs(self.overlay_specs)
+        self._status(message)
+
     def _overlay_index(self, ident: str) -> int:
         return next(index for index, item in enumerate(self.overlay_specs) if item.ident == ident)
 
     def _overlay_control_changed(self, ident: str, **changes: object) -> None:
         index = self._overlay_index(ident)
-        self.overlay_specs[index] = clamp_overlay_outside_cutout(replace(self.overlay_specs[index], **changes))
+        self.overlay_specs[index] = clamp_overlay_outside_cutout(
+            replace(self.overlay_specs[index], **changes), safe_right_x=self._safe_right_x(),
+        )
         self._sync_overlay_controls(ident)
         self._save_overlays()
         self.canvas.set_specs(self.overlay_specs)
 
     def _overlay_moved(self, ident: str, x: int, y: int) -> None:
         index = self._overlay_index(ident)
-        updated = clamp_overlay_outside_cutout(replace(self.overlay_specs[index], x=x, y=y))
+        updated = clamp_overlay_outside_cutout(
+            replace(self.overlay_specs[index], x=x, y=y), safe_right_x=self._safe_right_x(),
+        )
         if updated.x == self.overlay_specs[index].x and updated.y == self.overlay_specs[index].y:
             return
         self.overlay_specs[index] = updated
@@ -549,7 +710,10 @@ class ThermalrightDisplayStudio(QGroupBox):
             self._overlay_control_changed(ident, color=color.name())
 
     def reset_overlays(self) -> None:
-        self.overlay_specs = list(DEFAULT_OVERLAYS)
+        self.overlay_specs = [
+            clamp_overlay_outside_cutout(item, safe_right_x=self._safe_right_x())
+            for item in DEFAULT_OVERLAYS
+        ]
         for spec in self.overlay_specs:
             self._sync_overlay_controls(spec.ident)
         self._save_overlays()
@@ -587,13 +751,27 @@ class ThermalrightDisplayStudio(QGroupBox):
             self._status("Hardwaremodus benötigt das separat installierte TRCC-Linux-Backend", error=True)
             return
         try:
+            prepared = prepare_shifted_media(
+                media,
+                self.cache_dir / "prepared-media",
+                offset_x=self.background_x.value(),
+                offset_y=self.background_y.value(),
+            )
+            mask_path = (
+                create_black_notch_mask(self.cache_dir / "masks", self.notch_width.value())
+                if self.notch_visible.isChecked()
+                else None
+            )
             sequence = build_apply_sequence(
-                self.cli, media, self.overlay_specs,
+                self.cli, prepared.path, self.overlay_specs,
                 split_mode=int(self.split_mode.currentData() or 0),
+                mask_path=mask_path,
+                safe_right_x=self._safe_right_x(),
             )
         except (RuntimeError, ValueError) as exc:
             self._status(str(exc), error=True)
             return
+        self.pending_apply_warning = prepared.warning
         self._stop_play_process()
         self._start_queue(sequence, self._apply_finished)
         if int(self.split_mode.currentData() or 0):
@@ -615,7 +793,14 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.play_process.setProcessChannelMode(QProcess.ProcessChannelMode.SeparateChannels)
         self.play_process.finished.connect(self._play_finished)
         self.play_process.start(args[0], list(args[1:]))
-        self._status("Levita-Design aktiv · Hintergrund und Hardwarewerte werden live aktualisiert")
+        if self.pending_apply_warning:
+            self._status(
+                "Levita-Design aktiv · schwarzer Balken angewendet · " + self.pending_apply_warning,
+                error=True,
+            )
+        else:
+            self._status("Levita-Design aktiv · verschobener Hintergrund, schwarzer Balken und Hardwarewerte laufen")
+        self.pending_apply_warning = ""
 
     def run_display_test(self) -> None:
         if self.test_mode.isChecked():

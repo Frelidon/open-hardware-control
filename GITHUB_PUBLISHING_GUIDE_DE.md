@@ -1,4 +1,4 @@
-# Open Hardware Control 3.4.29.5 INTERN – Veröffentlichung derzeit gesperrt
+# Open Hardware Control 3.4.29.6 INTERN – Veröffentlichung derzeit gesperrt
 
 Repository: <https://github.com/Frelidon/open-hardware-control>
 
@@ -78,7 +78,7 @@ Tokens, Passwörter und GitHub-Gerätecodes gehören niemals in Prompts, Projekt
 ```bash
 ./scripts/check_release.sh
 sudo apt install rpm
-./scripts/build_release.sh 3.4.29.5
+./scripts/build_release.sh 3.4.29.6
 cd dist
 sha256sum -c SHA256SUMS
 ```
@@ -86,11 +86,11 @@ sha256sum -c SHA256SUMS
 Erwartete Dateien:
 
 - `open_hardware_control_v3_4_28_INTERN.zip`
-- `open-hardware-control_3.4.29.5~intern2_all.deb`
-- `open-hardware-control-3.4.29.5-0.intern2.noarch.rpm`
-- `open-hardware-control-3.4.29.5-INTERN-source.tar.gz`
-- `Entwicklerpaket 3.4.29.5 INTERN.zip`
-- `Open_Hardware_Control_3.4.29.5_INTERN_LOCAL_AI.gitbundle`
+- `open-hardware-control_3.4.29.6~intern2_all.deb`
+- `open-hardware-control-3.4.29.6-0.intern2.noarch.rpm`
+- `open-hardware-control-3.4.29.6-INTERN-source.tar.gz`
+- `Entwicklerpaket 3.4.29.6 INTERN.zip`
+- `Open_Hardware_Control_3.4.29.6_INTERN_LOCAL_AI.gitbundle`
 - `SHA256SUMS`
 
 ## Spätere Veröffentlichung
@@ -98,8 +98,8 @@ Erwartete Dateien:
 Nach einem grünen Pull Request und sauberem `main`:
 
 ```bash
-git tag -a v3.4.29.5 -m "Open Hardware Control v3.4.29.5"
-git push origin v3.4.29.5
+git tag -a v3.4.29.6 -m "Open Hardware Control v3.4.29.6"
+git push origin v3.4.29.6
 ```
 
 Der Workflow `.github/workflows/release.yml` darf erst nach der STABLE-Umstellung verwendet werden. Er führt die Tests erneut aus, baut sämtliche Release-Dateien aus demselben Tag und erstellt anschließend das öffentliche GitHub-Release.
@@ -107,7 +107,7 @@ Der Workflow `.github/workflows/release.yml` darf erst nach der STABLE-Umstellun
 Kontrolle:
 
 ```bash
-gh release view v3.4.29.5 --web
+gh release view v3.4.29.6 --web
 ```
 
 ## Sicherheitsprüfung vor GitHub

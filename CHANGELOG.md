@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.4.29.6 INTERN
+
+- Replace the preview-only 80-pixel cutout marker with a real transparent TRCC mask whose opaque black right-hand bar is adjustable from 80 to 800 pixels and defaults to a wider 320 pixels on the reference Levita.
+- Add persistent background X/Y movement. Images and ordinary videos are transformed into local cached working copies while imported originals remain untouched; complete TRCC layouts and `.zt` files retain their original background with an explicit compatibility notice.
+- Stop appending TRCC units to formats that already contain `°C` or `%`, removing the duplicated `C`/unit text observed on hardware.
+- Add two-row and vertical overlay layout presets while retaining individual X/Y, size, visibility and color controls. Overlay placement now respects the selected black-bar width.
+
 ## 3.4.29.5 INTERN
 
 - Neutralise TRCC Linux's persisted decorative split mode before loading display media. This prevents its Qt renderer from crashing on PySide6 6.11 when TRCC 9.9.11 calls `QImage.mirrored()` with unsupported keyword arguments.
