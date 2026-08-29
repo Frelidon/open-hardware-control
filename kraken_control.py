@@ -237,7 +237,13 @@ from app_constants import (
 from command_backend import Backend, CommandResult, PendingCommand
 from cooling_card_state import normalize_expanded_channel, toggle_expanded_channel
 from cooling_widgets import CurveEditor, FanCurveMiniPreview
-from localization_catalog import HELP_TOPICS, SETUP_TRANSLATIONS, UI_TRANSLATIONS
+from localization_catalog import (
+    HELP_TOPICS,
+    SETUP_TRANSLATIONS,
+    UI_TRANSLATIONS,
+    _ABOUT_SUMMARY_TEXT,
+    _GIF_SAFETY_TEXT,
+)
 from privacy_logging import (
     append_startup_event,
     application_state_directory,

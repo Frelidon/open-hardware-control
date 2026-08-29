@@ -47,7 +47,7 @@ spec=importlib.util.spec_from_file_location('kraken_v29',str(ROOT / 'kraken_cont
 mod=importlib.util.module_from_spec(spec)
 sys.modules[spec.name]=mod
 spec.loader.exec_module(mod)
-assert mod.APP_VERSION=='3.4.29'
+assert mod.APP_VERSION=='3.4.29.1'
 assert mod.BUILD_CHANNEL=='INTERN'
 assert mod.APP_NAME=='Open Hardware Control'
 assert len(mod.AM5_CPU_PROFILES)>=20
@@ -257,6 +257,8 @@ assert mod.GIF_HELPER_NAME == "kraken_cam_streamer.py"
 assert mod.UI_TRANSLATIONS["en"]["Beim Systemstart minimiert/im Tray starten"].startswith("Start minimized")
 
 assert mod.UI_TRANSLATIONS['en']['Bewegungsglättung (Motion-Interpolation)'].startswith('Motion')
+assert mod._GIF_SAFETY_TEXT.startswith("Kein nativer Firmware-2.x-GIF-Modus")
+assert mod._ABOUT_SUMMARY_TEXT.startswith("Gemeinsame, quelloffene Linux-Hardwarezentrale")
 
 assert mod.KrakenControl.cooling_mode_kind('Feste Drehzahl') == 'manual'
 assert mod.KrakenControl.cooling_mode_kind('CPU-Assistenz') == 'manual'

@@ -8,7 +8,7 @@ Empfohlenes RPM-Paket:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29-0.intern2.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.1-0.intern2.noarch.rpm
 ```
 
 Alternativ das universelle ZIP verwenden. Die benötigten Pakete lauten:
@@ -23,7 +23,7 @@ Empfohlenes DEB-Paket:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29~intern2_all.deb'
+sudo apt install './open-hardware-control_3.4.29.1~intern2_all.deb'
 ```
 
 Alternativ das universelle ZIP verwenden. Die benötigten Pakete lauten:
@@ -38,7 +38,7 @@ sudo apt install liquidctl python3-pyside6.qtwidgets python3-pyside6.qtsvg pytho
 ```bash
 sudo pacman -S --needed liquidctl pyside6 python-pillow qt6-svg polkit unzip
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_INTERN.zip
+unzip open_hardware_control_v3_4_29_1_INTERN.zip
 cd open-hardware-control-3.4.17-INTERN
 chmod +x install.sh
 ./install.sh
@@ -49,7 +49,7 @@ chmod +x install.sh
 ```bash
 sudo zypper install liquidctl python3-pyside6 python3-Pillow libQt6Svg6 polkit unzip
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_INTERN.zip
+unzip open_hardware_control_v3_4_29_1_INTERN.zip
 cd open-hardware-control-3.4.17-INTERN
 chmod +x install.sh
 ./install.sh
@@ -63,7 +63,7 @@ Für alle oben genannten Distributionen:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_INTERN.zip
+unzip open_hardware_control_v3_4_29_1_INTERN.zip
 cd open-hardware-control-3.4.17-INTERN
 chmod +x install.sh
 ./install.sh

@@ -1,6 +1,6 @@
 # Open Hardware Control – zentrale Projektdokumentation
 
-Stand: **3.4.29 INTERN**, 29. August 2026
+Stand: **3.4.29.1 INTERN**, 29. August 2026
 
 ## Zielbild
 
@@ -9,6 +9,8 @@ Open Hardware Control by Frelidon ist die gemeinsame, modular erweiterbare Linux
 Open Radeon Control Center bleibt ein eigenständiges Projekt. Es wird weder technisch noch organisatorisch in Open Hardware Control verschmolzen.
 
 ## Version 3.4.29 INTERN
+
+Hotfix 3.4.29.1 ergänzt die beim ersten Modulschnitt fehlenden expliziten Importe für LCD- und Über-Seitentexte. Ein echter Offscreen-Test baut nun alle elf Hauptseiten vollständig auf, ohne Hardwareerkennung zu starten.
 
 Die LCD-Seite enthält ein lokales Thermalright-Levita-Studio mit echter 1600×720-Arbeitsfläche, geschützter rechter 80-Pixel-Aussparung, lokalen Medien-/TRCC-Imports und frei positionierbaren CPU-, GPU-, RAM- und Uhrzeitwerten. Der Testmodus schreibt standardmäßig nicht auf USB; reale Übertragung wird ausschließlich an das separat installierte GPL-Backend TRCC Linux delegiert.
 

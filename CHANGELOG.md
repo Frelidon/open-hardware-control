@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.4.29.1 INTERN
+
+- Fixed the immediate 3.4.29 startup crash caused by missing explicit imports for the localized LCD GIF safety and About-page source strings after modularization.
+- Added a real PySide6 offscreen startup regression that constructs all 11 main pages while suppressing hardware initialization.
+
 ## 3.4.29 INTERN
 
 - Added a local-first Thermalright Levita Vision display studio with a 1600×720 canvas, protected 80-pixel right cutout, local TRCC/image/video import, movable CPU/GPU/RAM/clock overlays and a USB-safe test mode enabled by default.

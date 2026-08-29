@@ -33,8 +33,8 @@ Das interne Installations-ZIP 3.4.17 enthält den direkt editierbaren Python-Que
 Zu jedem Release werden aus genau demselben Git-Stand erzeugt:
 
 - `open_hardware_control_v3_4_16_INTERN.zip` – universelles internes Benutzerpaket
-- `open-hardware-control_3.4.29~intern2_all.deb` – internes Debian/Ubuntu/Linux-Mint-Paket
-- `open-hardware-control-3.4.29-0.intern2.noarch.rpm` – internes Fedora/Nobara-Paket
+- `open-hardware-control_3.4.29.1~intern2_all.deb` – internes Debian/Ubuntu/Linux-Mint-Paket
+- `open-hardware-control-3.4.29.1-0.intern2.noarch.rpm` – internes Fedora/Nobara-Paket
 - `open-hardware-control-3.4.17-INTERN-source.tar.gz` – vollständiger Quellcode-Snapshot
 - `Entwicklerpaket 3.4.17 INTERN.zip` – vollständiger editierbarer Projektbaum einschließlich Tests, Werkzeuge und GitHub-Automatisierung
 - `SHA256SUMS` – Prüfsummen aller Release-Dateien

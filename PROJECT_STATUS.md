@@ -1,6 +1,6 @@
 # Open Hardware Control — Project Status
 
-**Current development version:** 3.4.29 INTERN
+**Current development version:** 3.4.29.1 INTERN
 
 **Status date:** 29 August 2026
 
@@ -17,6 +17,8 @@ Version 3.4.29 adds a local-first Thermalright Levita Vision display studio to t
 The 3.4.29 codebase has also begun an incremental local-AI-oriented split of the historical `kraken_control.py` monolith. The executable remains compatible, while independent constants, temperature helpers, privacy logging, the serial command backend, cooling widgets and localization/help data now live in focused modules documented by `MODULE_MAP.md`.
 
 ## What 3.4.29 adds so far
+
+- Hotfix 3.4.29.1 restores application startup by importing both private localized LCD/About source strings that were missed during the first modularization pass. A real offscreen construction test now builds all 11 main pages without initializing hardware.
 
 - Full-width Thermalright Levita Vision studio inside the existing LCD page.
 - Local-only import for images, videos, `.zt` media and complete TRCC layout directories containing `config1.dc`; imported manufacturer assets are neither copied nor packaged.

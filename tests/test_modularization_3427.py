@@ -45,7 +45,11 @@ for moved_name in (
 assert len(main_code.splitlines()) < 22_000
 assert "from command_backend import Backend, CommandResult, PendingCommand" in main_code
 assert "from cooling_widgets import CurveEditor, FanCurveMiniPreview" in main_code
-assert "from localization_catalog import HELP_TOPICS, SETUP_TRANSLATIONS, UI_TRANSLATIONS" in main_code
+assert "from localization_catalog import (" in main_code
+assert "_ABOUT_SUMMARY_TEXT," in main_code
+assert "_GIF_SAFETY_TEXT," in main_code
+assert "gif_safety_note = QLabel(_GIF_SAFETY_TEXT)" in main_code
+assert "description = QLabel(_ABOUT_SUMMARY_TEXT)" in main_code
 assert "from app_constants import (" in main_code
 
 print("3.4.27 modularization and local-AI context guards passed.")

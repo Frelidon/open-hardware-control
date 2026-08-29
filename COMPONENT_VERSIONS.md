@@ -1,10 +1,10 @@
-# Komponenten- und Versionsübersicht – Version 3.4.29 INTERN
+# Komponenten- und Versionsübersicht – Version 3.4.29.1 INTERN
 
 ## Getestete Referenzkonfiguration
 
 | Komponente | Version / Stand |
 |---|---|
-| Open Hardware Control by Frelidon | 3.4.29 INTERN |
+| Open Hardware Control by Frelidon | 3.4.29.1 INTERN |
 | OHC RGB-Effekt-Engine | Schema/Engine 1 · 10 eigene Effekte |
 | OHC Mainboard-Fan-Modul | 3.4.25 · Linux hwmon/NCT6687 · kalibrierungspflichtige PWM-Kanäle · CPU/GPU/Kühlmittel/max/gewichtet · Hysterese/Delay · Leise/Ausbalanciert/Leistung · Fallback/Firmware-Rückgabe |
 | OHC Thermalright-Levita-Modul | 3.4.29 · Display USB `87ad:70db` · 1600×720 logisch · TRCC-Backend optional · Pumpe/Radiator über getrennt bestätigte Mainboard-PWM-Header |

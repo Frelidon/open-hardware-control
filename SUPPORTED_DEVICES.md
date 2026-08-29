@@ -1,4 +1,4 @@
-# Unterstützte Geräte – Open Hardware Control 3.4.29 INTERN
+# Unterstützte Geräte – Open Hardware Control 3.4.29.1 INTERN
 
 ## Direkt getestetes NZXT-Modul
 
