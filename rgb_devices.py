@@ -36,7 +36,7 @@ RGB_LAYOUT_POSITIONS = (
     "top", "front", "side", "bottom", "rear", "gpu", "gpu-support", "ram", "pump"
 )
 RGB_LAYOUT_AIRFLOWS = {"intake", "exhaust", "component"}
-THERMALTAKE_LAYOUT_VERSION = 4
+THERMALTAKE_LAYOUT_VERSION = 5
 
 
 @dataclass(frozen=True)
@@ -81,6 +81,17 @@ def fan_zone_plausibility_warning(units: int, leds_per_unit: int) -> str:
     if clean_units > 12:
         return f"{clean_units} Lüfter an einer Zone sind ungewöhnlich viele."
     return ""
+
+
+def flori_component_zone_defaults(zone_names: Iterable[str]) -> dict[str, dict[str, int]]:
+    """Return confirmed non-fan component sizes for Frelidon's Airgoo hub."""
+
+    defaults: dict[str, dict[str, int]] = {}
+    for raw_name in zone_names:
+        name = str(raw_name)
+        if re.sub(r"\s+", "", name).casefold() == "channelb6":
+            defaults[name] = {"units": 1, "leds_per_unit": 24}
+    return defaults
 
 RGB_LAYOUT_DEFAULT_POINTS: dict[str, tuple[tuple[float, float], ...]] = {
     "top": ((0.50, 0.12), (0.37, 0.18)),
@@ -496,11 +507,33 @@ def reorder_layout_device_ids(
     return tuple(mutable)
 
 
-def flori_rgb_layout_profile() -> tuple[list[RGBGroup], list[RGBLayoutSlot]]:
-    """Frelidon's Thermaltake 360 mm layout and recorded wiring."""
+def flori_rgb_layout_profile(aio_kind: object = "nzxt") -> tuple[list[RGBGroup], list[RGBLayoutSlot]]:
+    """Frelidon's Thermaltake 360 mm layout and recorded wiring.
+
+    Stable group and slot IDs intentionally survive an AIO replacement.  Only
+    the visible component description and known controller bindings change.
+    """
+
+    thermalright = str(aio_kind or "").strip().casefold() == "thermalright"
+    radiator_group_name = "Thermalright-Radiator" if thermalright else "Kraken-Radiator"
+    pump_group_name = "Thermalright-Pumpenkopf" if thermalright else "Kraken-Pumpenkopf"
+    radiator_name = (
+        "Thermalright Levita Vision 360 · 3× 120 mm"
+        if thermalright else "Kraken 360 · 3× 120 mm"
+    )
+    radiator_connection = (
+        "Thermalright Levita Vision 360 · Radiator oben"
+        if thermalright else "NZXT RGB led1–led3 · Radiator oben"
+    )
+    radiator_device_ids = () if thermalright else ("nzxt:led2", "nzxt:led3", "nzxt:led1")
+    pump_name = "Thermalright Levita Vision 360" if thermalright else "NZXT Kraken Pumpenkopf"
+    pump_connection = (
+        "Levita Vision 360 · Display separat"
+        if thermalright else "Kraken 2023 · LCD separat"
+    )
 
     groups = [
-        RGBGroup("kraken-radiator", "Kraken-Radiator"),
+        RGBGroup("kraken-radiator", radiator_group_name),
         RGBGroup("front", "Frontlüfter"),
         RGBGroup("seite-intake", "Rückwand/Seite Intake"),
         RGBGroup("heck", "Hecklüfter"),
@@ -508,16 +541,16 @@ def flori_rgb_layout_profile() -> tuple[list[RGBGroup], list[RGBLayoutSlot]]:
         RGBGroup("grafikkarte", "Grafikkarte"),
         RGBGroup("gpu-halterung", "Grafikkartenhalterung"),
         RGBGroup("arbeitsspeicher", "Arbeitsspeicher"),
-        RGBGroup("pumpenkopf", "Kraken-Pumpenkopf"),
+        RGBGroup("pumpenkopf", pump_group_name),
     ]
     slots = [
         # The diagram is drawn from case rear (left) to case front (right).
         # Frelidon's physical controller order is channel 2 rear, channel 3
         # centre and channel 1 front.
         RGBLayoutSlot(
-            "top", "Kraken 360 · 3× 120 mm", 3, "kraken-radiator",
-            "NZXT RGB led1–led3 · Radiator oben",
-            ("nzxt:led2", "nzxt:led3", "nzxt:led1"),
+            "top", radiator_name, 3, "kraken-radiator",
+            radiator_connection,
+            radiator_device_ids,
             "radiator-top", 0.50, 0.12, "exhaust", 120,
         ),
         RGBLayoutSlot("front", "Front · 2× 120 mm normal", 2, "front", "RGB-Hub A1 · PWM SYS-FAN4", (), "fans-front", 0.87, 0.40, "intake", 120),
@@ -525,9 +558,9 @@ def flori_rgb_layout_profile() -> tuple[list[RGBGroup], list[RGBLayoutSlot]]:
         RGBLayoutSlot("bottom", "Netzteilabdeckung vorne · 3× 120 mm Reverse", 3, "boden-intake", "RGB-Hub B7 · PWM SYS-FAN6", (), "fans-psu-shroud", 0.57, 0.84, "intake", 120),
         RGBLayoutSlot("rear", "Heck · 1× 120 mm Abluft", 1, "heck", "RGB-Hub A2 · PWM SYS-FAN1", (), "fan-rear", 0.13, 0.31, "exhaust", 120),
         RGBLayoutSlot("gpu", "Sapphire RX 9070 XT", 1, "grafikkarte", "Grafikkartenbeleuchtung", (), "gpu", 0.47, 0.59, "component", 0),
-        RGBLayoutSlot("gpu-support", "Grafikkartenhalterung", 1, "gpu-halterung", "RGB-Hub B6", (), "gpu-support", 0.48, 0.70, "component", 0),
+        RGBLayoutSlot("gpu-support", "Jungle Leopard GPU-Halterung · 24 LEDs", 1, "gpu-halterung", "RGB-Hub B6 · 1× 24 LEDs", (), "gpu-support", 0.48, 0.70, "component", 0),
         RGBLayoutSlot("ram", "Arbeitsspeicher · 2 Riegel", 2, "arbeitsspeicher", "2× 16 GB · DDR5-6000", (), "ram", 0.56, 0.32, "component", 0),
-        RGBLayoutSlot("pump", "NZXT Kraken Pumpenkopf", 1, "pumpenkopf", "Kraken 2023 · LCD separat", (), "pump", 0.38, 0.36, "component", 0),
+        RGBLayoutSlot("pump", pump_name, 1, "pumpenkopf", pump_connection, (), "pump", 0.38, 0.36, "component", 0),
     ]
     return groups, slots
 

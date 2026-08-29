@@ -47,7 +47,7 @@ spec=importlib.util.spec_from_file_location('kraken_v29',str(ROOT / 'kraken_cont
 mod=importlib.util.module_from_spec(spec)
 sys.modules[spec.name]=mod
 spec.loader.exec_module(mod)
-assert mod.APP_VERSION=='3.4.29.1'
+assert mod.APP_VERSION=='3.4.29.2'
 assert mod.BUILD_CHANNEL=='INTERN'
 assert mod.APP_NAME=='Open Hardware Control'
 assert len(mod.AM5_CPU_PROFILES)>=20
@@ -389,6 +389,27 @@ assert switch_state.calls == [
     ('refresh',), ('manual', 'pump', 61),
     ('refresh',), ('curve', 'fan', 'fan-table'),
 ]
+
+class CurveTargetWidgetFake:
+    def __init__(self):
+        self.value = 100
+        self.text = "100 %"
+        self.blocked = []
+    def blockSignals(self, blocked): self.blocked.append(blocked)
+    def setValue(self, value): self.value = value
+    def setText(self, text): self.text = text
+
+curve_target_state = types.SimpleNamespace(
+    pump_slider=CurveTargetWidgetFake(),
+    fan_slider=CurveTargetWidgetFake(),
+    pump_percent=CurveTargetWidgetFake(),
+    fan_percent=CurveTargetWidgetFake(),
+)
+mod.KrakenControl.sync_manual_control_to_curve_target(curve_target_state, 'fan', 39)
+assert curve_target_state.fan_slider.value == 39
+assert curve_target_state.fan_slider.blocked == [True, False]
+assert curve_target_state.fan_percent.text == '39 %'
+assert curve_target_state.pump_slider.value == 100
 
 assert mod.UI_TRANSLATIONS['en']['LCD-Transport'] == 'LCD transport'
 assert mod.UI_TRANSLATIONS['en']['Kurve & Details bearbeiten'] == 'Edit curve & details'

@@ -31,6 +31,7 @@ This file records decisions that future agents must preserve unless the project 
 - **3.4.29:** Thermalright Levita display USB and pump/radiator motherboard PWM are separate ownership paths. USB presence may select the display/editor but never authorizes a PWM write. Both cooling headers require individual physical confirmation, CoolerControl remains mutually exclusive, and OHC must restore owned headers to firmware control on exit.
 - **3.4.29:** The current Levita path exposes no coolant sensor. OHC may show CPU/GPU measurements and use CPU-based software curves, but must never label a derived value as coolant temperature.
 - **3.4.29:** The reference ENE-DRAM controller requires two ordered Direct reclaim passes at saved-profile cold start. A successful OpenRGB command remains protocol evidence only, not proof that LEDs changed visibly.
+- **3.4.29.2:** In Frelidon's confirmed personal Airgoo wiring, Channel B6 is the separate Jungle Leopard GPU support with 24 LEDs. It must remain a component zone independent from both ENE-DRAM controllers; this reference default must not be generalized to unrelated layouts or hubs.
 
 ## Assets and licensing
 

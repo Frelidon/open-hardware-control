@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.4.29.2 INTERN
+
+- Prevented `desktop_shell.py --quit` from loading the graphical Qt platform integration during logout or cleanup; the stop path now uses `QCoreApplication`, avoiding the observed SIGABRT and empty KDE helper window.
+- Suppressed stale Kraken LCD profile writes when Thermalright Levita cooling is active, so startup no longer opens an error dialog for a removed Kraken.
+- Made a successfully activated CPU-temperature curve replace stale manual slider values, preventing a previous 100-percent manual value from being reapplied accidentally.
+- Migrated the personal PC layout from Kraken to the selected Thermalright Levita Vision 360 while retaining stable saved layout IDs.
+- Added a dedicated Jungle Leopard GPU-support block and corrected its confirmed Airgoo Channel B6 configuration from 30 to 24 LEDs, separate from both ENE-DRAM modules.
+
 ## 3.4.29.1 INTERN
 
 - Fixed the immediate 3.4.29 startup crash caused by missing explicit imports for the localized LCD GIF safety and About-page source strings after modularization.

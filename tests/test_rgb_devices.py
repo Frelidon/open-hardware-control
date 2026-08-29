@@ -17,6 +17,7 @@ from rgb_devices import (
     canonical_device_name,
     configured_zone_sizes,
     fan_zone_plausibility_warning,
+    flori_component_zone_defaults,
     flori_rgb_layout_profile,
     infer_layout_position,
     normalize_device_aliases,
@@ -101,6 +102,10 @@ class RGBDeviceInventoryTests(unittest.TestCase):
         self.assertEqual(rgb_fan_model("tzmrit-interstellar-v2-reverse").airflow, "reverse")
         self.assertIn("ungewöhnlich hoch", fan_zone_plausibility_warning(3, 90))
         self.assertEqual(fan_zone_plausibility_warning(3, 24), "")
+        self.assertEqual(
+            flori_component_zone_defaults(("Channel A1", "Channel B6", "Channel B7")),
+            {"Channel B6": {"units": 1, "leds_per_unit": 24}},
+        )
 
     def test_session_lock_blocks_second_writer(self):
         with tempfile.TemporaryDirectory() as temp_name:
@@ -138,6 +143,15 @@ class RGBDeviceInventoryTests(unittest.TestCase):
         self.assertTrue(any("Netzteilabdeckung vorne" in slot.name and slot.count == 3 for slot in slots))
         radiator = next(slot for slot in slots if slot.slot_id == "radiator-top")
         self.assertEqual(radiator.device_ids, ("nzxt:led2", "nzxt:led3", "nzxt:led1"))
+        support = next(slot for slot in slots if slot.slot_id == "gpu-support")
+        self.assertIn("24 LEDs", support.name)
+        self.assertIn("B6", support.connection)
+        _thermalright_groups, thermalright_slots = flori_rgb_layout_profile("thermalright")
+        thermalright_radiator = next(slot for slot in thermalright_slots if slot.slot_id == "radiator-top")
+        thermalright_pump = next(slot for slot in thermalright_slots if slot.slot_id == "pump")
+        self.assertIn("Thermalright Levita Vision 360", thermalright_radiator.name)
+        self.assertEqual(thermalright_radiator.device_ids, ())
+        self.assertIn("Thermalright Levita Vision 360", thermalright_pump.name)
         self.assertEqual(
             reorder_layout_device_ids(("nzxt:led1", "nzxt:led2", "nzxt:led3"), 0, 2),
             ("nzxt:led2", "nzxt:led3", "nzxt:led1"),

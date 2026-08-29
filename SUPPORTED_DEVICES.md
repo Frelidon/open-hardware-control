@@ -1,4 +1,4 @@
-# Unterstützte Geräte – Open Hardware Control 3.4.29.1 INTERN
+# Unterstützte Geräte – Open Hardware Control 3.4.29.2 INTERN
 
 ## Direkt getestetes NZXT-Modul
 
@@ -52,7 +52,8 @@ ARGB-Controller können Zonen melden, ohne die Zahl der elektrisch angeschlossen
 - ENE-DRAM erhält vor einem gespeicherten automatischen RGB-Start zwei geordnete OpenRGB-Direct-Durchläufe. Ein erfolgreicher Prozessabschluss wird weiterhin nicht als optisch rückgelesene LED-Bestätigung ausgegeben.
 - NZXT `led1` bis `led3` erscheinen als eigene Kacheln und können mit anderen Geräten gruppiert werden.
 - Gleichnamige GPU-/Controller-Einträge bleiben getrennt, werden nummeriert und können benannt sowie einer PC-Position zugeordnet werden.
-- Frelidons mitgelieferte verschiebbare PC-Ansicht bildet zwölf Lüfter ab: Kraken 360 oben, zwei Frontlüfter, drei Reverse-Intakes an Rückwand/Seite, drei Reverse-Intakes auf der Netzteilabdeckung vorne und einen Hecklüfter. Anschlussnotizen wie A1/A2, B6/B7 und die SYS-FAN-Kanäle bleiben editierbare Dokumentation und sind keine automatische elektrische Port-Erkennung.
+- Frelidons mitgelieferte verschiebbare PC-Ansicht bildet zwölf Lüfter ab: je nach gewählter Kühlhardware NZXT Kraken 360 oder Thermalright Levita Vision 360 oben, zwei Frontlüfter, drei Reverse-Intakes an Rückwand/Seite, drei Reverse-Intakes auf der Netzteilabdeckung vorne und einen Hecklüfter.
+- Die Jungle-Leopard-GPU-Halterung ist in dieser bestätigten Referenzverkabelung eine eigene 24-LED-Komponente an Airgoo Channel B6. Sie wird nicht als ENE-DRAM-Gerät behandelt. Andere Anschlussnotizen wie A1/A2/B7 und die SYS-FAN-Kanäle bleiben editierbare Dokumentation und sind keine allgemeine automatische elektrische Port-Erkennung.
 
 Die indirekte OpenRGB-Kompatibilität ist keine reale Bestätigung jedes einzelnen Gerätemodells. Neue Controller sollten zuerst mit einer statischen Farbe und geringer Helligkeit getestet werden.
 

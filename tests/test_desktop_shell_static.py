@@ -19,5 +19,9 @@ assert "registerScreenEdge(KWin.ElectricBottomRight" in kwin
 assert '"Meta+C"' in kwin
 assert '"Meta+Space"' in kwin
 assert "callDBus" in kwin
+assert "if args.quit:" in source
+assert "QCoreApplication(sys.argv[:1])" in source
+assert "QLocalServer.removeServer(SOCKET_NAME)" in source
+assert source.index("if args.quit:") < source.index("app = QApplication(sys.argv[:1])")
 
 print("Desktop shell static safety checks passed.")

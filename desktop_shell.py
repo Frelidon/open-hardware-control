@@ -19,7 +19,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from PySide6.QtCore import QObject, QPoint, QRect, QSize, Qt, QTimer, Slot
+from PySide6.QtCore import QCoreApplication, QObject, QPoint, QRect, QSize, Qt, QTimer, Slot
 from PySide6.QtGui import QColor, QFont, QIcon, QKeySequence, QShortcut
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtWidgets import (
@@ -451,9 +451,21 @@ def _parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     os.environ.setdefault("QT_AUTO_SCREEN_SCALE_FACTOR", "1")
+    # Stopping the companion must also work during logout and in headless
+    # systemd cleanup.  Creating QApplication here would load the graphical
+    # Qt platform plugin and could abort before the request reaches an already
+    # running shell.  QLocalSocket only needs the lightweight core event loop.
+    if args.quit:
+        core_app = QCoreApplication(sys.argv[:1])
+        core_app.setApplicationName("Open Hardware Control Desktop Shell Stopper")
+        if send_action("quit"):
+            return 0
+        QLocalServer.removeServer(SOCKET_NAME)
+        return 0
+
     app = QApplication(sys.argv[:1])
     app.setApplicationName("Open Hardware Control Desktop Shell")
-    action = "quit" if args.quit else "start" if args.show_start else "charms" if args.show_charms else ""
+    action = "start" if args.show_start else "charms" if args.show_charms else ""
     if action and send_action(action):
         return 0
 

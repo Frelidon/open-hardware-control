@@ -80,4 +80,6 @@ def test_application_requires_mapping_calibration_and_restores_firmware() -> Non
     assert "restore_thermalright_cooling_on_quit" in main
     assert "restore_mainboard_firmware_control(channel)" in main
     assert "Levita meldet keinen Kühlmittelsensor" in main
+    assert "Kraken-LCD-Anteil des Profils" in main
+    assert "sync_manual_control_to_curve_target(channel, duty)" in main
     assert '"thermalright_cooling.py"' in build

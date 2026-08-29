@@ -34,11 +34,11 @@ labels = [label.text() for label in window.findChildren(QLabel)]
 assert window.tabs.count() == 11
 assert application._GIF_SAFETY_TEXT in labels
 assert application._ABOUT_SUMMARY_TEXT in labels
-assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.1 INTERN")
+assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.2 INTERN")
 
 window.backend.shutdown()
 window.deleteLater()
 qt_app.processEvents()
 temporary.cleanup()
 
-print("3.4.29.1 full offscreen UI construction passed without hardware initialization.")
+print("3.4.29.2 full offscreen UI construction passed without hardware initialization.")

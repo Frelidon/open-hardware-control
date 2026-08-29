@@ -54,7 +54,7 @@ Antworte nach diesem Start zunächst nur mit:
 
 ## Aktueller Einstiegspunkt
 
-Der aktuelle Entwicklungsstand ist in `PROJECT_STATUS.md` beschrieben. Version 3.4.29.1 INTERN behebt zusätzlich den Startabbruch der 3.4.29 und umfasst unter anderem das Thermalright-Levita-Display-Studio, die sicher bestätigungspflichtige Levita-Pumpen-/Radiatorsteuerung, den zweistufigen ENE-DRAM-Kaltstart, die CoolerControl-Dienstverwaltung und den ersten kompatiblen Schnitt der historischen Hauptdatei in fokussierte Module.
+Der aktuelle Entwicklungsstand ist in `PROJECT_STATUS.md` beschrieben. Version 3.4.29.2 INTERN behebt zusätzlich den Startabbruch der 3.4.29 und umfasst unter anderem das Thermalright-Levita-Display-Studio, die sicher bestätigungspflichtige Levita-Pumpen-/Radiatorsteuerung, den zweistufigen ENE-DRAM-Kaltstart, die CoolerControl-Dienstverwaltung und den ersten kompatiblen Schnitt der historischen Hauptdatei in fokussierte Module.
 
 ## GitHub-Ziel
 

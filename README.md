@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.1 INTERN
+# Open Hardware Control by Frelidon 3.4.29.2 INTERN
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -260,7 +260,7 @@ Open Hardware Control und NZXT-ESC sind voneinander unabhängige Projekte. Open 
 - eigener Geräte-Testmodus mit Testfarbe, „nur dieses Gerät an“, „nächstes Gerät“ und sicherem Ausschalten aller von OHC steuerbaren Komponenten
 - PC-Skizze für Oben, Vorne, Seite, Unten, Hinten, GPU, GPU-Halterung, RAM und Pumpenkopf
 - pro Position: eigener Name, Anzahl, Anschlussnotiz, RGB-Gruppe und zugeordnete Gerätekacheln
-- mitgelieferte Vorlage „Frelidon PC“ mit Kraken-Radiator, A1, A2, B6, B7 und SYS-FAN6
+- mitgelieferte Vorlage „Frelidon PC“ mit dynamischer Kraken-/Thermalright-Levita-Ansicht, A1, A2, B7, SYS-FAN6 und eigener Jungle-Leopard-GPU-Halterung an B6 (24 LEDs)
 - die separate sichtbare NZXT-RGB-Box entfällt; `led1` bis `led3` liegen im gemeinsamen Arbeitsbereich
 - Profile speichern zusätzlich Gerätenamen und die komplette PC-Skizze, starten aber weiterhin keine Hardwareanimation automatisch
 - der große Komplett-Zurücksetzen-Knopf bleibt erhalten
@@ -433,30 +433,30 @@ Die Animation kann dabei kurz stehen bleiben, muss aber weder neu eingelesen noc
 
 ### Fedora und Nobara – RPM
 
-Lade `open-hardware-control-3.4.29.1-0.intern2.noarch.rpm` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control-3.4.29.2-0.intern2.noarch.rpm` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.1-0.intern2.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.2-0.intern2.noarch.rpm
 ```
 
 ### Debian, Ubuntu und Linux Mint – DEB
 
-Lade `open-hardware-control_3.4.29.1~intern2_all.deb` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control_3.4.29.2~intern2_all.deb` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.1~intern2_all.deb'
+sudo apt install './open-hardware-control_3.4.29.2~intern2_all.deb'
 ```
 
 ### Universelles Installationspaket
 
-Das ZIP funktioniert auf Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_1_INTERN.zip` herunter und führe aus:
+Das ZIP funktioniert auf Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_2_INTERN.zip` herunter und führe aus:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_1_INTERN.zip
-cd open-hardware-control-3.4.29.1-INTERN
+unzip open_hardware_control_v3_4_29_2_INTERN.zip
+cd open-hardware-control-3.4.29.2-INTERN
 chmod +x install.sh
 ./install.sh
 ```

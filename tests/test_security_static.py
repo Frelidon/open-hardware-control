@@ -17,7 +17,7 @@ installer = (ROOT / "install.sh").read_text(encoding="utf-8")
 helper = (ROOT / "install-udev-rule.sh").read_text(encoding="utf-8")
 diagnostics = (ROOT / "collect-diagnostics.sh").read_text(encoding="utf-8")
 
-assert 'APP_VERSION = "3.4.29.1"' in code
+assert 'APP_VERSION = "3.4.29.2"' in code
 assert 'BUILD_CHANNEL = "INTERN"' in code
 assert 'APP_NAME = "Open Hardware Control"' in code
 assert "from command_backend import Backend" in main_code
@@ -36,7 +36,8 @@ assert '"experimental/desktop_designs_enabled", False' in code
 assert "Experimentelle Desktop-Designs im Menü anzeigen" in code
 assert "if not self.experimental_desktop_designs_enabled" in code
 assert "make_rgb_tab" in code and "RGB-Studio" in code
-assert '"Frelidon PC · Thermaltake / 360-mm-Aufbau / Kraken 360"' in code
+assert 'f"Frelidon PC · Thermaltake / 360-mm-Aufbau / {layout_aio_name}"' in code
+assert 'LEVITA_DISPLAY_NAME if self.is_thermalright_cooling() else "Kraken 360"' in code
 assert '"Floris PC · Thermaltake / 360-mm-Aufbau / Kraken 360"' not in code
 assert "fan_order_changed" in code and "reorder_rgb_layout_slot_devices" in code
 assert "Kraken-Kanäle räumlich neu geordnet" in code
@@ -319,7 +320,7 @@ assert "maybe_offer_desktop_design_dependencies" in code
 assert "Fehlende Pakete &installieren" in code
 
 readme = (ROOT / "README.md").read_text(encoding="utf-8")
-assert "# Open Hardware Control by Frelidon 3.4.29.1 INTERN" in readme
+assert "# Open Hardware Control by Frelidon 3.4.29.2 INTERN" in readme
 assert "Inoffizielles unabhängiges Community-Projekt" in readme
 assert "Corsair · OpenLinkHub" in readme
 assert "| NZXT 2023 RGB Controller | `1e71:2012`" in readme

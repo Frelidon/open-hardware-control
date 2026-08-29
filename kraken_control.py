@@ -133,6 +133,7 @@ from rgb_devices import (
     canonical_device_name,
     configured_zone_sizes,
     fan_zone_plausibility_warning,
+    flori_component_zone_defaults,
     flori_rgb_layout_profile,
     infer_layout_position,
     normalize_device_aliases,
@@ -2614,7 +2615,10 @@ class KrakenControl(QMainWindow):
             str(self.settings.value("rgb_studio/layout_profile", "")) == "flori"
             and stored_layout_version < THERMALTAKE_LAYOUT_VERSION
         ):
-            preset_groups, preset_slots = flori_rgb_layout_profile()
+            thermalright_layout = self.is_thermalright_cooling()
+            preset_groups, preset_slots = flori_rgb_layout_profile(
+                "thermalright" if thermalright_layout else "nzxt"
+            )
             preset_group_ids = {group.group_id for group in preset_groups}
             self.rgb_groups = [
                 *preset_groups,
@@ -2625,6 +2629,10 @@ class KrakenControl(QMainWindow):
             for slot in preset_slots:
                 previous = old_by_group.get(slot.group_id)
                 device_ids = previous.device_ids if previous is not None else slot.device_ids
+                if thermalright_layout and slot.group_id == "kraken-radiator":
+                    device_ids = tuple(
+                        item for item in device_ids if not item.startswith("nzxt:led")
+                    )
                 if slot.group_id == "kraken-radiator" and stored_layout_version < 4:
                     known_channels = {"nzxt:led1", "nzxt:led2", "nzxt:led3"}
                     old_channels = tuple(item for item in device_ids if item in known_channels)
@@ -7990,7 +7998,10 @@ class KrakenControl(QMainWindow):
         layout_actions = QHBoxLayout()
         self.rgb_layout_profile_combo = QComboBox()
         # Keep the internal ``flori`` key for compatibility with already saved profiles.
-        self.rgb_layout_profile_combo.addItem("Frelidon PC · Thermaltake / 360-mm-Aufbau / Kraken 360", "flori")
+        layout_aio_name = LEVITA_DISPLAY_NAME if self.is_thermalright_cooling() else "Kraken 360"
+        self.rgb_layout_profile_combo.addItem(
+            f"Frelidon PC · Thermaltake / 360-mm-Aufbau / {layout_aio_name}", "flori"
+        )
         load_layout_profile = QPushButton("Thermaltake-Profil neu laden")
         load_layout_profile.clicked.connect(self.load_builtin_rgb_layout_profile)
         layout_actions.addWidget(self.rgb_layout_profile_combo, 1)
@@ -8026,8 +8037,12 @@ class KrakenControl(QMainWindow):
             "ein Doppelklick wählt dessen "
             "zugeordnete RGB-Geräte aus. Cyan = Ansaugung, Orange = Abluft. Meldet ein Hub nur eine logische LED, "
             "kann OHC alle daran gespiegelten Lüfter gemeinsam, aber nicht als getrennte Hardwarekanäle färben. "
-            "Am Kraken-Radiator zeigt jede Lüftermitte ihre echte NZXT-Kanalnummer; diese Nummern lassen sich "
-            "zwischen Heck, Mitte und Front ziehen und werden in Einstellungen sowie Profilen gespeichert."
+            + (
+                "Die Thermalright Levita Vision 360 wird als aktuelle Wasserkühlung mit eigenem Pumpen-/Displayblock angezeigt."
+                if self.is_thermalright_cooling()
+                else "Am Kraken-Radiator zeigt jede Lüftermitte ihre echte NZXT-Kanalnummer; diese Nummern lassen sich "
+                     "zwischen Heck, Mitte und Front ziehen und werden in Einstellungen sowie Profilen gespeichert."
+            )
         )
         layout_note.setWordWrap(True)
         layout_note.setObjectName("muted")
@@ -8540,9 +8555,10 @@ class KrakenControl(QMainWindow):
 
         layout_page = QWizardPage()
         layout_page.setTitle("4 · Thermaltake-PC-Aufbau und Gruppen")
+        wizard_aio_name = LEVITA_DISPLAY_NAME if self.is_thermalright_cooling() else "Kraken 360"
         layout_page.setSubTitle(
-            "Das Grundprofil enthält Kraken 360 oben, 2 Frontlüfter, 3 Reverse-Lüfter an der Rückwand/Seite, "
-            "3 Reverse-Lüfter unten und einen Heck-Abluftlüfter."
+            f"Das Grundprofil enthält {wizard_aio_name} oben, 2 Frontlüfter, 3 Reverse-Lüfter an der Rückwand/Seite, "
+            "3 Reverse-Lüfter unten, einen Heck-Abluftlüfter und die Jungle-Leopard-GPU-Halterung mit 24 LEDs."
         )
         case_layout = QVBoxLayout(layout_page)
         case_tree = QTreeWidget()
@@ -12452,6 +12468,12 @@ class KrakenControl(QMainWindow):
             if file_value and Path(file_value).exists():
                 self.load_lcd_file(Path(file_value), quiet=True)
             requested_mode = self.resolve_profile_lcd_mode(lcd)
+            if self.is_thermalright_cooling():
+                self.log_message(
+                    f"LCD-START: Kraken-LCD-Anteil des Profils „{name}“ übersprungen · "
+                    f"{LEVITA_DISPLAY_NAME} verwendet das getrennte Levita-Display-Studio"
+                )
+                requested_mode = ""
             experimental_modes = {"gif", "hardware_animation", "layers", "hardware", "clock", "image_keepalive"}
             if self.experimental_autostart_blocked and requested_mode in experimental_modes:
                 self.log_message(
@@ -14199,9 +14221,17 @@ class KrakenControl(QMainWindow):
                 if fallback:
                     detail = f"{duty} % · sicherer Sensorfehler-Fallback"
                 self.set_cooling_mode(channel, "CPU-Temperaturkurve", detail)
+                self.sync_manual_control_to_curve_target(channel, duty)
             self.update_cooling_quick_profile_state("")
             self.cpu_curve_force_update = False
             self.cpu_curve_fallback_active = fallback
+            values = " · ".join(
+                f"{'Pumpe' if channel == 'pump' else 'Lüfter'} {duty} %"
+                for channel, duty in ordered_targets.items()
+            )
+            temperature_text = "CPU-Sensor nicht verfügbar" if cpu_temp is None else f"CPU {self.format_temperature(cpu_temp)}"
+            self.footer_status.setText(f"CPU-Kurve aktiv: {temperature_text} · {values}")
+            self.log_message(f"CPU-KURVE: aktiviert · {temperature_text} · {values}")
             self.refresh_thermalright_cooling_status()
             return
         if self.kraken_write_busy:
@@ -14225,6 +14255,7 @@ class KrakenControl(QMainWindow):
                     if fallback:
                         detail = f"{duty} % · sicherer Sensorfehler-Fallback"
                     self.set_cooling_mode(channel, "CPU-Temperaturkurve", detail)
+                    self.sync_manual_control_to_curve_target(channel, duty)
                 self.update_cooling_quick_profile_state("")
                 self.cpu_curve_force_update = False
                 self.cpu_curve_fallback_active = fallback
@@ -14379,6 +14410,15 @@ class KrakenControl(QMainWindow):
         self.settings.setValue(f"cooling/{channel}_mode", mode)
         self.settings.setValue(f"cooling/{channel}_mode_detail", detail)
         self.update_cooling_mode_label()
+
+    def sync_manual_control_to_curve_target(self, channel: str, duty: int) -> None:
+        """Replace a stale manual value with the confirmed active curve target."""
+        slider = self.pump_slider if channel == "pump" else self.fan_slider
+        label = self.pump_percent if channel == "pump" else self.fan_percent
+        slider.blockSignals(True)
+        slider.setValue(int(duty))
+        slider.blockSignals(False)
+        label.setText(f"{int(duty)} %")
 
     @staticmethod
     def cooling_mode_kind(mode: str) -> str | None:
@@ -15680,18 +15720,23 @@ class KrakenControl(QMainWindow):
     def load_builtin_rgb_layout_profile(self) -> None:
         if str(self.rgb_layout_profile_combo.currentData() or "") != "flori":
             return
+        thermalright_layout = self.is_thermalright_cooling()
+        aio_name = LEVITA_DISPLAY_NAME if thermalright_layout else "Kraken 360"
         answer = QMessageBox.question(
             self,
             "PC- und Gruppenprofil laden",
-            "Frelidon Thermaltake-Ansicht mit 360-mm-Aufbau, Kraken 360 oben, 2 Frontlüftern, "
+            f"Frelidon Thermaltake-Ansicht mit 360-mm-Aufbau, {aio_name} oben, 2 Frontlüftern, "
             "3 Reverse-Lüftern an der Rückwand/Seite, 3 Reverse-Lüftern unten und einem Heck-Abluftlüfter laden? "
+            "Die Jungle-Leopard-GPU-Halterung wird als Airgoo Channel B6 mit 24 LEDs eingerichtet. "
             "Eigene Gruppen- und Positionszuordnungen werden ersetzt; es wird noch keine Hardwarefarbe geschrieben.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.Yes,
         )
         if answer != QMessageBox.StandardButton.Yes:
             return
-        groups, slots = flori_rgb_layout_profile()
+        groups, slots = flori_rgb_layout_profile(
+            "thermalright" if thermalright_layout else "nzxt"
+        )
         self.rgb_groups = groups
         self.rgb_layout_slots = slots
         self.rgb_group_assignments = {}
@@ -15704,9 +15749,11 @@ class KrakenControl(QMainWindow):
         self.save_rgb_workspace()
         self.rebuild_rgb_workspace()
         self.refresh_rgb_layout_editor()
+        aio_name = LEVITA_DISPLAY_NAME if thermalright_layout else "NZXT Kraken 360"
         self.log_message(
-            "RGB-STUDIO: Thermaltake-360-mm-Profil geladen · "
-            "3× Radiator, 2× Front, 3× Seite Reverse, 3× Boden Reverse, 1× Heck · noch keine Hardwarefarbe geschrieben"
+            f"RGB-STUDIO: Thermaltake-360-mm-Profil geladen · {aio_name} · "
+            "3× Radiator, 2× Front, 3× Seite Reverse, 3× Boden Reverse, 1× Heck, "
+            "Jungle-Leopard-GPU-Halterung 24 LEDs · noch keine Hardwarefarbe geschrieben"
         )
 
     def map_flori_rgb_devices(self, *, select_all: bool = False) -> None:
@@ -15718,11 +15765,12 @@ class KrakenControl(QMainWindow):
         if self.settings.value("rgb_studio/flori_select_pending", False, type=bool) and self.openrgb_devices:
             select_all = True
             self.settings.setValue("rgb_studio/flori_select_pending", False)
-        nzxt_ids = [f"nzxt:led{index}" for index in range(1, 4)]
-        for index, device_id in enumerate(nzxt_ids, 1):
-            if any(str(item["id"]) == device_id for item in logical):
-                self.rgb_group_assignments.setdefault(device_id, "kraken-radiator")
-                self.rgb_device_aliases.setdefault(device_id, f"Kraken-Radiatorlüfter {index}")
+        if not self.is_thermalright_cooling():
+            nzxt_ids = [f"nzxt:led{index}" for index in range(1, 4)]
+            for index, device_id in enumerate(nzxt_ids, 1):
+                if any(str(item["id"]) == device_id for item in logical):
+                    self.rgb_group_assignments.setdefault(device_id, "kraken-radiator")
+                    self.rgb_device_aliases.setdefault(device_id, f"Kraken-Radiatorlüfter {index}")
 
         dram_items: list[dict[str, object]] = []
         gpu_items: list[dict[str, object]] = []
@@ -15748,7 +15796,35 @@ class KrakenControl(QMainWindow):
         if support_device is not None:
             device_id = str(support_device["id"])
             self.rgb_group_assignments.setdefault(device_id, "gpu-halterung")
-            self.rgb_device_aliases.setdefault(device_id, "Grafikkartenhalterung · Hub B6")
+            self.rgb_device_aliases.setdefault(device_id, "Jungle Leopard GPU-Halterung · 24 LEDs")
+
+        # The GPU support is not a separate OpenRGB controller on this build;
+        # it is Channel B6 of the Airgoo hub.  Keep that component zone at its
+        # real 24 LEDs so a legacy 30-LED value cannot stretch frames and
+        # interfere with later controller writes (including ENE DRAM).
+        zone_profile_changed = False
+        for device in self.openrgb_devices:
+            identity = f"{device.name} {device.description}".casefold()
+            if "airgoo" not in identity:
+                continue
+            component_defaults = flori_component_zone_defaults(device.zones)
+            if not component_defaults:
+                continue
+            stable_id = self.openrgb_stable_ids.get(device.index, f"openrgb:index-{device.index}")
+            configuration = self.rgb_zone_configurations.setdefault(stable_id, {})
+            for zone_name, expected in component_defaults.items():
+                if configuration.get(zone_name) != expected:
+                    configuration[zone_name] = expected
+                    zone_profile_changed = True
+                    self.log_message(
+                        "RGB-STUDIO: Airgoo Channel B6 fest der Jungle-Leopard-GPU-Halterung zugeordnet · 1× 24 LEDs"
+                    )
+        if zone_profile_changed:
+            self.settings.setValue(
+                "rgb_studio/zone_configurations",
+                json.dumps(self.rgb_zone_configurations, ensure_ascii=False, sort_keys=True),
+            )
+            self.settings.sync()
 
         # Bind the diagram to all devices assigned by the preset without
         # destroying the user's physical left-to-right channel order.
@@ -15832,6 +15908,8 @@ class KrakenControl(QMainWindow):
         available = {group.group_id for group in self.rgb_groups}
         if any(token in identity for token in ("dram", "memory", "dimm", "arbeitsspeicher", "ram")):
             return "arbeitsspeicher" if "arbeitsspeicher" in available else ""
+        if any(token in identity for token in ("holder", "bracket", "support", "halterung")):
+            return "gpu-halterung" if "gpu-halterung" in available else ""
         if any(token in identity for token in ("gpu", "graphics", "grafik", "radeon", "geforce")):
             return "grafikkarte" if "grafikkarte" in available else ""
         if str(item.get("id", "")).startswith("nzxt:") or any(

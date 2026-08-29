@@ -1,6 +1,6 @@
 # Open Hardware Control – zentrale Projektdokumentation
 
-Stand: **3.4.29.1 INTERN**, 29. August 2026
+Stand: **3.4.29.2 INTERN**, 29. August 2026
 
 ## Zielbild
 
@@ -11,6 +11,8 @@ Open Radeon Control Center bleibt ein eigenständiges Projekt. Es wird weder tec
 ## Version 3.4.29 INTERN
 
 Hotfix 3.4.29.1 ergänzt die beim ersten Modulschnitt fehlenden expliziten Importe für LCD- und Über-Seitentexte. Ein echter Offscreen-Test baut nun alle elf Hauptseiten vollständig auf, ohne Hardwareerkennung zu starten.
+
+Hotfix 3.4.29.2 verhindert beim Desktop-Shell-Stopp den beobachteten Qt/KDE-Abbruch samt leerem Fenster, unterdrückt alte Kraken-LCD-Startbefehle bei aktiver Levita und ersetzt nach einer aktivierten Temperaturkurve den veralteten manuellen Reglerwert. Die persönliche PC-Ansicht zeigt die Thermalright Levita Vision 360 und führt die Jungle-Leopard-GPU-Halterung getrennt vom ENE-RAM als Airgoo-Kanal B6 mit 24 LEDs.
 
 Die LCD-Seite enthält ein lokales Thermalright-Levita-Studio mit echter 1600×720-Arbeitsfläche, geschützter rechter 80-Pixel-Aussparung, lokalen Medien-/TRCC-Imports und frei positionierbaren CPU-, GPU-, RAM- und Uhrzeitwerten. Der Testmodus schreibt standardmäßig nicht auf USB; reale Übertragung wird ausschließlich an das separat installierte GPL-Backend TRCC Linux delegiert.
 
