@@ -272,10 +272,11 @@ class ThermalrightDisplayStudio(QGroupBox):
         options_row.addWidget(QLabel("Notch / Dynamic Island"))
         self.split_mode = QComboBox()
         self.split_mode.addItem("Aus · nur physische rechte Aussparung", 0)
-        self.split_mode.addItem("Stil A", 1)
-        self.split_mode.addItem("Stil B · empfohlen", 2)
-        self.split_mode.addItem("Stil C", 3)
-        saved_split = max(0, min(3, int(self.settings.value("thermalright/split_mode", 2) or 2)))
+        self.split_mode.addItem("Stil A · derzeit nur Vorschau", 1)
+        self.split_mode.addItem("Stil B · derzeit nur Vorschau", 2)
+        self.split_mode.addItem("Stil C · derzeit nur Vorschau", 3)
+        saved_split_value = self.settings.value("thermalright/split_mode", 0)
+        saved_split = max(0, min(3, int(saved_split_value or 0)))
         self.split_mode.setCurrentIndex(saved_split)
         self.split_mode.currentIndexChanged.connect(self._split_mode_changed)
         options_row.addWidget(self.split_mode)
@@ -284,6 +285,15 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.preview_status.setObjectName("muted")
         options_row.addWidget(self.preview_status)
         outer.addLayout(options_row)
+
+        split_notice = QLabel(
+            "Stile A–C bleiben vorerst auf die Vorschau beschränkt: TRCC Linux 9.9.11 bricht sie mit "
+            "aktuellen PySide6-Versionen beim Spiegeln ab. Auf dem Display wird sicher auf „Aus“ zurückgesetzt; "
+            "die physische rechte Aussparung bleibt geschützt."
+        )
+        split_notice.setWordWrap(True)
+        split_notice.setObjectName("muted")
+        outer.addWidget(split_notice)
 
         overlays_box = QGroupBox("Verschiebbare Hardware-Infos")
         grid = QGridLayout(overlays_box)
@@ -586,7 +596,10 @@ class ThermalrightDisplayStudio(QGroupBox):
             return
         self._stop_play_process()
         self._start_queue(sequence, self._apply_finished)
-        self._status("Design, Notch-Modus und Hardware-Infos werden übertragen …")
+        if int(self.split_mode.currentData() or 0):
+            self._status("Design und Hardware-Infos werden übertragen · Notch-Stil bleibt aus Kompatibilitätsgründen nur in der Vorschau …")
+        else:
+            self._status("Design und Hardware-Infos werden übertragen …")
 
     def _apply_finished(self, ok: bool, output: str) -> None:
         if not ok:

@@ -1,4 +1,4 @@
-# Unterstützte Geräte – Open Hardware Control 3.4.29.4 INTERN
+# Unterstützte Geräte – Open Hardware Control 3.4.29.5 INTERN
 
 ## Direkt getestetes NZXT-Modul
 
@@ -20,6 +20,8 @@ Der Schwerpunkt bleibt die NZXT Kraken RGB 360 (2023, Standard / Non-Elite) mit 
 OHC zeigt den exakten Namen **Thermalright Levita Vision 360 ARGB Black** an. USB-Display und PWM-Kühlung sind technisch getrennt. Die Linux-Headernamen dienen nur als Vorschlag; der Benutzer muss Pumpe und Radiatorlüfter einzeln physisch bestätigen. Danach stehen feste Werte, Leise/Ausbalanciert/Leistung/Sicherheit und CPU-Temperaturkurven zur Verfügung. Bei aktivem CoolerControl bleiben PWM-Schreibzugriffe gesperrt, und beim geordneten Programmende werden von OHC übernommene Header an BIOS/Firmware zurückgegeben.
 
 Die kurze allgemeine TRCC-Geräteliste meldete zunächst eine generische 480×480-Zuordnung. Der anschließende vollständige Geräte-Handshake ist für die Geometrie maßgeblich und bestätigte `(1600, 720)`, Modell-ID 64 und Sub-Byte 3. Der offizielle TRCC-Farbzyklus wurde auf dem physischen Display sichtbar abgeschlossen. OHC behält deshalb die 1600×720-Arbeitsfläche und die dazugehörige rechte Aussparung bei.
+
+TRCC Linux 9.9.11 verwendet für die dekorativen Split-Modi A–C unter PySide6 6.11 einen nicht kompatiblen Schlüsselwortaufruf von `QImage.mirrored()` und bricht dadurch beim Rendern ab. OHC 3.4.29.5 setzt einen eventuell gespeicherten Split-Modus deshalb zwingend vor dem Laden eines Mediums auf null. A–C bleiben klar als lokale Vorschau markiert; die physische rechte 80-Pixel-Aussparung wird weiterhin unabhängig vom TRCC-Split-Modus ausgespart.
 
 Nach einer ausdrücklichen Polkit-Administratorfreigabe verwendet OHC für wiederholte Kurvenwerte eine einzige prozessgebundene Helfersitzung. Deren Protokoll akzeptiert weiterhin ausschließlich begrenzte, validierte NCT6687-Aktionen; beim Programmende wird zuerst die Firmwaresteuerung wiederhergestellt und danach die Sitzung geschlossen. Dadurch entsteht nach Ablauf des kurzfristigen Polkit-Caches kein neuer Hintergrunddialog für jeden Kurvenwert.
 

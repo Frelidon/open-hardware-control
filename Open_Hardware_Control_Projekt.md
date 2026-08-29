@@ -1,6 +1,6 @@
 # Open Hardware Control – zentrale Projektdokumentation
 
-Stand: **3.4.29.4 INTERN**, 29. August 2026
+Stand: **3.4.29.5 INTERN**, 29. August 2026
 
 ## Zielbild
 
@@ -17,6 +17,8 @@ Hotfix 3.4.29.2 verhindert beim Desktop-Shell-Stopp den beobachteten Qt/KDE-Abbr
 Hotfix 3.4.29.3 hält nach einer ausdrücklichen Administratorfreigabe eine eng begrenzte, an den OHC-Prozess gebundene Lüfter-Helfersitzung offen. Dadurch läuft die Levita-CPU-Kurve auch nach Ablauf des kurzfristigen Polkit-Caches weiter, ohne alle paar Minuten einen neuen Hintergrunddialog zu erzeugen. Auf reinen Thermalright-Systemen entfallen unnötige liquidctl-/Kraken-Starts, die alte Kraken-Uhr wird ausgeblendet, und ein stabil von sieben auf sechs Geräte geschrumpfter OpenRGB-Bestand wird als Hardwareänderung gespeichert.
 
 Hotfix 3.4.29.4 verhindert den Startabbruch, wenn das Display-Studio bereits beim Seitenaufbau den gespeicherten TRCC-Designordner und dessen erste Vorschau wiederherstellt, bevor die eigentliche Log-Seite existiert. Der reale TRCC-Linux-9.9.11-Test bestätigt außerdem für USB `87ad:70db` den sichtbaren Farbzyklus sowie den vollständigen Handshake mit Modell-ID 64, Sub-Byte 3 und 1600×720.
+
+Hotfix 3.4.29.5 setzt den von TRCC dauerhaft gespeicherten dekorativen Split-Modus vor jedem Medienladen zuerst sicher auf null. Damit erreicht der bestätigte Absturz von TRCC Linux 9.9.11 mit PySide6 6.11 beim Aufruf von `QImage.mirrored()` den Video-Start nicht mehr. Die Stile A–C bleiben als gekennzeichnete lokale Vorschau erhalten; die echte rechte 80-Pixel-Aussparung bleibt unabhängig davon für Hardwarewerte gesperrt.
 
 Die LCD-Seite enthält ein lokales Thermalright-Levita-Studio mit echter 1600×720-Arbeitsfläche, geschützter rechter 80-Pixel-Aussparung, lokalen Medien-/TRCC-Imports und frei positionierbaren CPU-, GPU-, RAM- und Uhrzeitwerten. Der Testmodus schreibt standardmäßig nicht auf USB; reale Übertragung wird ausschließlich an das separat installierte GPL-Backend TRCC Linux delegiert.
 

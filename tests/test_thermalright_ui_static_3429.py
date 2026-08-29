@@ -24,6 +24,12 @@ def test_cutout_and_drag_editor_are_visible() -> None:
     assert 'cutout_label = self._scene.addSimpleText("NOTCH")' in UI
 
 
+def test_broken_trcc_split_modes_are_clearly_preview_only() -> None:
+    assert "Stil A · derzeit nur Vorschau" in UI
+    assert "TRCC Linux 9.9.11 bricht sie" in UI
+    assert 'self.settings.value("thermalright/split_mode", 0)' in UI
+
+
 def test_runtime_package_contains_all_thermalright_modules() -> None:
     assert '"thermalright_cooling.py"' in BUILD
     assert '"thermalright_display.py"' in BUILD

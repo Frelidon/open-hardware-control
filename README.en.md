@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.4 INTERNAL
+# Open Hardware Control by Frelidon 3.4.29.5 INTERNAL
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -301,22 +301,22 @@ Fedora/Nobara RPM:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.4-0.intern2.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.5-0.intern2.noarch.rpm
 ```
 
 Debian/Ubuntu/Linux Mint DEB:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.4~intern2_all.deb'
+sudo apt install './open-hardware-control_3.4.29.5~intern2_all.deb'
 ```
 
 Universal ZIP for the supported distro families:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_4_INTERN.zip
-cd open-hardware-control-3.4.29.4-INTERN
+unzip open_hardware_control_v3_4_29_5_INTERN.zip
+cd open-hardware-control-3.4.29.5-INTERN
 chmod +x install.sh
 ./install.sh
 ```

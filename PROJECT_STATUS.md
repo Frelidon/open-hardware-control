@@ -1,6 +1,6 @@
 # Open Hardware Control — Project Status
 
-**Current development version:** 3.4.29.4 INTERN
+**Current development version:** 3.4.29.5 INTERN
 
 **Status date:** 29 August 2026
 
@@ -23,13 +23,14 @@ The 3.4.29 codebase has also begun an incremental local-AI-oriented split of the
 - The personal Thermaltake PC view now migrates its AIO labels to Thermalright Levita Vision 360 and records the Jungle Leopard GPU support as Airgoo Channel B6 with 24 LEDs, independently from both ENE-DRAM modules.
 - Hotfix 3.4.29.3 keeps one narrowly validated Polkit fan-helper session alive after explicit authorization, so a running CPU curve no longer times out after the authorization cache expires. It also skips unnecessary liquidctl initialization on Thermalright-only systems, hides obsolete Kraken clock controls and learns a stable 7-to-6 OpenRGB inventory change without weakening the large-drop cold-start safeguard.
 - Hotfix 3.4.29.4 fixes startup when the LCD studio restores a saved TRCC media directory before the main Log page exists. The regression now starts the complete UI with a persisted real image. TRCC Linux 9.9.11 has also physically completed the red/green/blue/black cycle on the reference `87ad:70db` display; its full handshake confirms model ID 64, sub-byte 3 and 1600×720.
+- Hotfix 3.4.29.5 resets TRCC's persisted decorative split mode to zero before loading media. This avoids the confirmed TRCC 9.9.11/PySide6 6.11 `QImage.mirrored()` crash; styles A–C stay available as clearly marked local previews, while the physical 80-pixel right cutout remains protected.
 
 - Full-width Thermalright Levita Vision studio inside the existing LCD page.
 - Local-only import for images, videos, `.zt` media and complete TRCC layout directories containing `config1.dc`; imported manufacturer assets are neither copied nor packaged.
 - A true 1600×720 editor with the verified right-hand 80-pixel Levita panel cutout (`x=1520…1599`) shown as a protected zone.
 - Movable, hideable, resizable and recolorable CPU temperature/load, GPU temperature/load, memory and clock overlays.
 - Test mode enabled by default: previews and the local color-cycle test perform no USB writes.
-- Hardware detection, color test, media/theme loading, split modes and the live metric render loop use bounded shell-free commands through the separately installed TRCC Linux backend.
+- Hardware detection, color test, media/theme loading and the live metric render loop use bounded shell-free commands through the separately installed TRCC Linux backend. Decorative split modes remain preview-only until the confirmed TRCC Qt compatibility defect is fixed.
 - Exact Thermalright Levita Vision 360 ARGB Black cooling identity with separate, user-confirmed motherboard mappings for its 4-pin PWM pump and radiator fans.
 - Conservative cooling profiles and CPU-temperature curves become writable only after both relevant headers have passed the existing 70-percent/10-second physical test. CoolerControl ownership remains exclusive and OHC restores firmware control on exit.
 - ENE-DRAM cold-start reclaim now runs two ordered Direct passes before profile animation, because the latest real log confirmed that one successful protocol pass can still leave the physical LEDs asleep.

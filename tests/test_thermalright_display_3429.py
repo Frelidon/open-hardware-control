@@ -79,9 +79,16 @@ def test_cli_builds_bounded_shell_free_commands(tmp_path: Path) -> None:
     sequence = build_apply_sequence(cli, media, DEFAULT_OVERLAYS, split_mode=9)
 
     assert sequence[0][0] == (
+        "/usr/bin/trcc", "display", "split-mode", "87ad:70db", "0",
+    )
+    assert sequence[1][0] == (
         "/usr/bin/trcc", "display", "load-video", "87ad:70db", str(media.resolve()),
     )
-    assert sequence[1][0][-1] == "3"
+    assert not any(
+        command[-1] != "0"
+        for command, _tolerated in sequence
+        if "split-mode" in command
+    )
     assert all(isinstance(command, tuple) for command, _tolerated in sequence)
     assert not any("sh" == part for command, _tolerated in sequence for part in command)
     gpu = next(command for command, _tolerated in sequence if "ohc-gpu-temp" in command and "overlay-add" in command)

@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.4.29.5 INTERN
+
+- Neutralise TRCC Linux's persisted decorative split mode before loading display media. This prevents its Qt renderer from crashing on PySide6 6.11 when TRCC 9.9.11 calls `QImage.mirrored()` with unsupported keyword arguments.
+- Keep the real 80-pixel Levita cutout protected while decorative split styles A–C remain explicitly preview-only until the external backend is compatible.
+- Default new split-mode settings to off and add a regression that requires the safe reset to be the first hardware command, before every media load.
+
 ## 3.4.29.4 INTERN
 
 - Fixed startup with a previously saved Thermalright/TRCC media directory. Its first preview no longer calls the main log widget while the LCD page is still being constructed.

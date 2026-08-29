@@ -31,7 +31,7 @@ application.KrakenControl.check_dependencies = lambda self: ["ui-build-no-hardwa
 
 qt_app = QApplication.instance() or QApplication([])
 
-# Reproduce the real 3.4.29.4 startup: a persisted TRCC media directory
+# Reproduce the real 3.4.29.5 startup: a persisted TRCC media directory
 # renders its first preview while the LCD page is built, before log_view exists.
 saved_designs = temporary_root / "saved-thermalright-designs"
 saved_designs.mkdir()
@@ -48,7 +48,7 @@ labels = [label.text() for label in window.findChildren(QLabel)]
 assert window.tabs.count() == 11
 assert application._GIF_SAFETY_TEXT in labels
 assert application._ABOUT_SUMMARY_TEXT in labels
-assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.4 INTERN")
+assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.5 INTERN")
 assert window.thermalright_display_studio.current_media_path() == (saved_designs / "saved-preview.png")
 
 window.backend.shutdown()
@@ -56,4 +56,4 @@ window.deleteLater()
 qt_app.processEvents()
 temporary.cleanup()
 
-print("3.4.29.4 full offscreen UI construction restored a saved TRCC directory before the Log page.")
+print("3.4.29.5 full offscreen UI construction restored a saved TRCC directory before the Log page.")

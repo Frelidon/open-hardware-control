@@ -276,11 +276,21 @@ def build_apply_sequence(
     *,
     split_mode: int,
 ) -> list[tuple[tuple[str, ...], bool]]:
-    """Build the deterministic apply sequence; bool marks tolerated failures."""
+    """Build the deterministic apply sequence; bool marks tolerated failures.
+
+    TRCC Linux 9.9.11 and its current Qt renderer crash when a persisted
+    decorative split mode is active with newer PySide6 releases. Always
+    neutralise that external state *before* loading media. The real 80 px
+    Levita cutout is physical and remains protected by our overlay bounds.
+    ``split_mode`` is retained for preview/settings compatibility, but is not
+    sent to the affected backend.
+    """
     items = [item.bounded() for item in overlays]
+    # Keep settings input bounded even while hardware split modes are disabled.
+    _requested_split_mode = max(0, min(3, int(split_mode)))
     commands: list[tuple[tuple[str, ...], bool]] = [
+        (cli.split_mode_args(0), False),
         (cli.load_media_args(media), False),
-        (cli.split_mode_args(split_mode), False),
     ]
     for item in items:
         commands.append((cli.overlay_delete_args(item.ident), True))
