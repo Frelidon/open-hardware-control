@@ -20,6 +20,7 @@ from rgb_devices import (
     flori_component_zone_defaults,
     flori_rgb_layout_profile,
     infer_layout_position,
+    migrate_flori_component_zones,
     normalize_device_aliases,
     normalize_group_assignments,
     normalize_layout_slots,
@@ -106,6 +107,16 @@ class RGBDeviceInventoryTests(unittest.TestCase):
             flori_component_zone_defaults(("Channel A1", "Channel B6", "Channel B7")),
             {"Channel B6": {"units": 1, "leds_per_unit": 24}},
         )
+        empty: dict[str, dict[str, int]] = {}
+        self.assertFalse(migrate_flori_component_zones(("Channel B6",), empty))
+        self.assertEqual(empty, {})
+        configured = {
+            "Channel A1": {"units": 2, "leds_per_unit": 24},
+            "Channel B6": {"units": 1, "leds_per_unit": 30},
+        }
+        self.assertTrue(migrate_flori_component_zones(("Channel A1", "Channel B6"), configured))
+        self.assertEqual(configured["Channel A1"], {"units": 2, "leds_per_unit": 24})
+        self.assertEqual(configured["Channel B6"], {"units": 1, "leds_per_unit": 24})
 
     def test_session_lock_blocks_second_writer(self):
         with tempfile.TemporaryDirectory() as temp_name:

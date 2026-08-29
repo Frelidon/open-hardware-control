@@ -93,6 +93,20 @@ def flori_component_zone_defaults(zone_names: Iterable[str]) -> dict[str, dict[s
             defaults[name] = {"units": 1, "leds_per_unit": 24}
     return defaults
 
+
+def migrate_flori_component_zones(
+    zone_names: Iterable[str],
+    configuration: dict[str, dict[str, int]],
+) -> bool:
+    """Correct known saved component zones without creating a partial hub shape."""
+
+    changed = False
+    for name, expected in flori_component_zone_defaults(zone_names).items():
+        if name in configuration and configuration.get(name) != expected:
+            configuration[name] = dict(expected)
+            changed = True
+    return changed
+
 RGB_LAYOUT_DEFAULT_POINTS: dict[str, tuple[tuple[float, float], ...]] = {
     "top": ((0.50, 0.12), (0.37, 0.18)),
     "front": ((0.87, 0.40), (0.82, 0.56)),

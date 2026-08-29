@@ -136,6 +136,7 @@ from rgb_devices import (
     flori_component_zone_defaults,
     flori_rgb_layout_profile,
     infer_layout_position,
+    migrate_flori_component_zones,
     normalize_device_aliases,
     normalize_group_assignments,
     normalize_layout_slots,
@@ -15811,14 +15812,16 @@ class KrakenControl(QMainWindow):
             if not component_defaults:
                 continue
             stable_id = self.openrgb_stable_ids.get(device.index, f"openrgb:index-{device.index}")
-            configuration = self.rgb_zone_configurations.setdefault(stable_id, {})
-            for zone_name, expected in component_defaults.items():
-                if configuration.get(zone_name) != expected:
-                    configuration[zone_name] = expected
-                    zone_profile_changed = True
-                    self.log_message(
-                        "RGB-STUDIO: Airgoo Channel B6 fest der Jungle-Leopard-GPU-Halterung zugeordnet · 1× 24 LEDs"
-                    )
+            configuration = self.rgb_zone_configurations.get(stable_id, {})
+            # Never create a partial hub configuration here: missing entries
+            # intentionally fall back to OpenRGB's complete reported shape.
+            # Only migrate an already saved legacy B6 value; a fresh setup
+            # receives the same default in the full zone dialog below.
+            if migrate_flori_component_zones(device.zones, configuration):
+                zone_profile_changed = True
+                self.log_message(
+                    "RGB-STUDIO: Airgoo Channel B6 fest der Jungle-Leopard-GPU-Halterung zugeordnet · 1× 24 LEDs"
+                )
         if zone_profile_changed:
             self.settings.setValue(
                 "rgb_studio/zone_configurations",
@@ -16562,9 +16565,13 @@ class KrakenControl(QMainWindow):
             suggested_units = self.suggested_units_for_openrgb_zone(name)
             suggested_fan_units = self.suggested_fan_units_for_openrgb_zone(name)
             suggested_component_units = max(0, suggested_units - suggested_fan_units)
+            component_default = flori_component_zone_defaults((name,)).get(name, {})
             units = max(0, min(64, int(values.get("units", 0))))
             leds_per_unit = max(0, min(512, int(values.get("leds_per_unit", 0))))
-            if not values and current:
+            if not values and component_default:
+                units = int(component_default["units"])
+                leds_per_unit = int(component_default["leds_per_unit"])
+            elif not values and current:
                 units = suggested_units if suggested_units and current % suggested_units == 0 else 1
                 leds_per_unit = current // units
             elif not values and suggested_units:
