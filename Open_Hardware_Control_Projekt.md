@@ -1,6 +1,6 @@
 # Open Hardware Control – zentrale Projektdokumentation
 
-Stand: **3.4.29.3 INTERN**, 29. August 2026
+Stand: **3.4.29.4 INTERN**, 29. August 2026
 
 ## Zielbild
 
@@ -15,6 +15,8 @@ Hotfix 3.4.29.1 ergänzt die beim ersten Modulschnitt fehlenden expliziten Impor
 Hotfix 3.4.29.2 verhindert beim Desktop-Shell-Stopp den beobachteten Qt/KDE-Abbruch samt leerem Fenster, unterdrückt alte Kraken-LCD-Startbefehle bei aktiver Levita und ersetzt nach einer aktivierten Temperaturkurve den veralteten manuellen Reglerwert. Die persönliche PC-Ansicht zeigt die Thermalright Levita Vision 360 und führt die Jungle-Leopard-GPU-Halterung getrennt vom ENE-RAM als Airgoo-Kanal B6 mit 24 LEDs.
 
 Hotfix 3.4.29.3 hält nach einer ausdrücklichen Administratorfreigabe eine eng begrenzte, an den OHC-Prozess gebundene Lüfter-Helfersitzung offen. Dadurch läuft die Levita-CPU-Kurve auch nach Ablauf des kurzfristigen Polkit-Caches weiter, ohne alle paar Minuten einen neuen Hintergrunddialog zu erzeugen. Auf reinen Thermalright-Systemen entfallen unnötige liquidctl-/Kraken-Starts, die alte Kraken-Uhr wird ausgeblendet, und ein stabil von sieben auf sechs Geräte geschrumpfter OpenRGB-Bestand wird als Hardwareänderung gespeichert.
+
+Hotfix 3.4.29.4 verhindert den Startabbruch, wenn das Display-Studio bereits beim Seitenaufbau den gespeicherten TRCC-Designordner und dessen erste Vorschau wiederherstellt, bevor die eigentliche Log-Seite existiert. Der reale TRCC-Linux-9.9.11-Test bestätigt außerdem für USB `87ad:70db` den sichtbaren Farbzyklus sowie den vollständigen Handshake mit Modell-ID 64, Sub-Byte 3 und 1600×720.
 
 Die LCD-Seite enthält ein lokales Thermalright-Levita-Studio mit echter 1600×720-Arbeitsfläche, geschützter rechter 80-Pixel-Aussparung, lokalen Medien-/TRCC-Imports und frei positionierbaren CPU-, GPU-, RAM- und Uhrzeitwerten. Der Testmodus schreibt standardmäßig nicht auf USB; reale Übertragung wird ausschließlich an das separat installierte GPL-Backend TRCC Linux delegiert.
 

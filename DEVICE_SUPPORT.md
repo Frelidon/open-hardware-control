@@ -12,7 +12,7 @@ Do not promote other detected Kraken capability entries to “tested” without 
 ## Thermalright Levita Vision 360 ARGB Black
 
 - Exact product identity: `Thermalright Levita Vision 360 ARGB Black`.
-- Display: USB `87ad:70db`; OHC's 1600×720 editor and safe local test mode are verified. Real writes are delegated to the separately installed TRCC Linux backend and are not yet promoted to fully hardware-tested status.
+- Display: USB `87ad:70db`; OHC's 1600×720 editor and safe local test mode are verified. TRCC Linux 9.9.11 completed a visually confirmed hardware color cycle, and its authoritative handshake reported model ID 64/sub-byte 3 at 1600×720. OHC design/video/overlay longevity still requires an in-app real-hardware test.
 - Cooling: pump and radiator fans connect to motherboard 4-pin PWM headers. Driver labels may suggest `Pump Fan` and `CPU Fan`, but both mappings require independent physical 70-percent/10-second confirmation.
 - Read-only evidence on the reference system found pump and CPU-fan RPM through NCT6687. PWM response still requires user confirmation in OHC.
 - CoolerControl ownership blocks concurrent writes. Owned headers are restored to firmware/BIOS control on exit.

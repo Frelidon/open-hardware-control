@@ -54,7 +54,7 @@ Antworte nach diesem Start zunächst nur mit:
 
 ## Aktueller Einstiegspunkt
 
-Der aktuelle Entwicklungsstand ist in `PROJECT_STATUS.md` beschrieben. Version 3.4.29.3 INTERN umfasst unter anderem das Thermalright-Levita-Display-Studio, die sicher bestätigungspflichtige Levita-Pumpen-/Radiatorsteuerung mit prozessgebundener Polkit-Helfersitzung, den zweistufigen ENE-DRAM-Kaltstart, die CoolerControl-Dienstverwaltung, die bereinigte Thermalright-/NZXT-Startauswahl und den ersten kompatiblen Schnitt der historischen Hauptdatei in fokussierte Module.
+Der aktuelle Entwicklungsstand ist in `PROJECT_STATUS.md` beschrieben. Version 3.4.29.4 INTERN umfasst unter anderem das Thermalright-Levita-Display-Studio, die sicher bestätigungspflichtige Levita-Pumpen-/Radiatorsteuerung mit prozessgebundener Polkit-Helfersitzung, den zweistufigen ENE-DRAM-Kaltstart, die CoolerControl-Dienstverwaltung, die bereinigte Thermalright-/NZXT-Startauswahl und den ersten kompatiblen Schnitt der historischen Hauptdatei in fokussierte Module.
 
 ## GitHub-Ziel
 

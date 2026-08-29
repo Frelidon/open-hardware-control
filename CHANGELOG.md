@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.4.29.4 INTERN
+
+- Fixed startup with a previously saved Thermalright/TRCC media directory. Its first preview no longer calls the main log widget while the LCD page is still being constructed.
+- Extended the real PySide6 startup regression to persist and restore an actual local display image before the Log page exists.
+- Recorded the real TRCC Linux 9.9.11 hardware result for USB `87ad:70db`: the safe color cycle was visible and the authoritative handshake reported model ID 64, sub-byte 3 and 1600×720.
+
 ## 3.4.29.3 INTERN
 
 - Replaced one `pkexec` launch per automatic fan-curve write with one authenticated, pipe-bound and strictly validated helper session. This prevents the Polkit authorization cache from expiring underneath a running Thermalright/Mainboard CPU curve after several minutes.

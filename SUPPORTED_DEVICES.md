@@ -1,4 +1,4 @@
-# Unterstützte Geräte – Open Hardware Control 3.4.29.3 INTERN
+# Unterstützte Geräte – Open Hardware Control 3.4.29.4 INTERN
 
 ## Direkt getestetes NZXT-Modul
 
@@ -13,11 +13,13 @@ Der Schwerpunkt bleibt die NZXT Kraken RGB 360 (2023, Standard / Non-Elite) mit 
 
 | Teilpfad | Erkennung/Anschluss | Backend | Umfang und Status |
 |---|---|---|---|
-| Display | USB `87ad:70db` (`USBDISPLAY`) | separat installiertes GPL-Backend TRCC Linux | lokale Vorschau/Import/Testmodus verifiziert; physische Übertragung noch als realer Hardwaretest offen |
+| Display | USB `87ad:70db` (`USBDISPLAY`) | separat installiertes GPL-Backend TRCC Linux 9.9.11 | Handshake Modell-ID 64/Sub 3 mit 1600×720 und sichtbarer Rot-/Grün-/Blau-/Schwarz-Übertragung bestätigt; vollständiger OHC-Design-/Overlay-Dauertest noch offen |
 | Pumpe | 4-Pin PWM, vom Linux-Treiber typischerweise als `Pump Fan` gemeldet | Linux hwmon/NCT6687 | RPM read-only erkannt; Schreiben erst nach separatem 70-%-/10-s-Test |
 | Radiatorlüfter | 4-Pin PWM, vom Linux-Treiber typischerweise als `CPU Fan` gemeldet | Linux hwmon/NCT6687 | RPM read-only erkannt; Schreiben erst nach separatem 70-%-/10-s-Test |
 
 OHC zeigt den exakten Namen **Thermalright Levita Vision 360 ARGB Black** an. USB-Display und PWM-Kühlung sind technisch getrennt. Die Linux-Headernamen dienen nur als Vorschlag; der Benutzer muss Pumpe und Radiatorlüfter einzeln physisch bestätigen. Danach stehen feste Werte, Leise/Ausbalanciert/Leistung/Sicherheit und CPU-Temperaturkurven zur Verfügung. Bei aktivem CoolerControl bleiben PWM-Schreibzugriffe gesperrt, und beim geordneten Programmende werden von OHC übernommene Header an BIOS/Firmware zurückgegeben.
+
+Die kurze allgemeine TRCC-Geräteliste meldete zunächst eine generische 480×480-Zuordnung. Der anschließende vollständige Geräte-Handshake ist für die Geometrie maßgeblich und bestätigte `(1600, 720)`, Modell-ID 64 und Sub-Byte 3. Der offizielle TRCC-Farbzyklus wurde auf dem physischen Display sichtbar abgeschlossen. OHC behält deshalb die 1600×720-Arbeitsfläche und die dazugehörige rechte Aussparung bei.
 
 Nach einer ausdrücklichen Polkit-Administratorfreigabe verwendet OHC für wiederholte Kurvenwerte eine einzige prozessgebundene Helfersitzung. Deren Protokoll akzeptiert weiterhin ausschließlich begrenzte, validierte NCT6687-Aktionen; beim Programmende wird zuerst die Firmwaresteuerung wiederhergestellt und danach die Sitzung geschlossen. Dadurch entsteht nach Ablauf des kurzfristigen Polkit-Caches kein neuer Hintergrunddialog für jeden Kurvenwert.
 

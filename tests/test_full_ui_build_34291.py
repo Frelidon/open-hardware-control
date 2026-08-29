@@ -19,6 +19,8 @@ os.environ["OHC_DESKTOP_DESIGN_STATE_DIR"] = str(temporary_root / "desktop-state
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from PySide6.QtCore import QSettings  # noqa: E402
+from PySide6.QtGui import QColor, QImage  # noqa: E402
 from PySide6.QtWidgets import QApplication, QLabel  # noqa: E402
 import kraken_control as application  # noqa: E402
 
@@ -28,17 +30,30 @@ import kraken_control as application  # noqa: E402
 application.KrakenControl.check_dependencies = lambda self: ["ui-build-no-hardware"]
 
 qt_app = QApplication.instance() or QApplication([])
+
+# Reproduce the real 3.4.29.4 startup: a persisted TRCC media directory
+# renders its first preview while the LCD page is built, before log_view exists.
+saved_designs = temporary_root / "saved-thermalright-designs"
+saved_designs.mkdir()
+preview = QImage(32, 32, QImage.Format.Format_RGB32)
+preview.fill(QColor("#163452"))
+assert preview.save(str(saved_designs / "saved-preview.png"))
+settings = QSettings(application.ORG_NAME, application.APP_NAME)
+settings.setValue("thermalright/media_directory", str(saved_designs))
+settings.sync()
+
 window = application.KrakenControl()
 labels = [label.text() for label in window.findChildren(QLabel)]
 
 assert window.tabs.count() == 11
 assert application._GIF_SAFETY_TEXT in labels
 assert application._ABOUT_SUMMARY_TEXT in labels
-assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.3 INTERN")
+assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.4 INTERN")
+assert window.thermalright_display_studio.current_media_path() == (saved_designs / "saved-preview.png")
 
 window.backend.shutdown()
 window.deleteLater()
 qt_app.processEvents()
 temporary.cleanup()
 
-print("3.4.29.3 full offscreen UI construction passed without hardware initialization.")
+print("3.4.29.4 full offscreen UI construction restored a saved TRCC directory before the Log page.")

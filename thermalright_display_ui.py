@@ -191,6 +191,10 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.cache_dir = cache_dir / "thermalright-preview"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.log_callback = log_callback
+        # The LCD page is built before the main Log page. Restoring a saved
+        # media directory renders its first preview synchronously, so logging
+        # must stay muted until this widget has finished constructing.
+        self.log_ready = False
         self.cli = ThermalrightCli()
         self.media_entries: list[MediaEntry] = []
         self.overlay_specs = self._load_overlays()
@@ -215,6 +219,7 @@ class ThermalrightDisplayStudio(QGroupBox):
         if saved_dir and Path(saved_dir).is_dir():
             self.load_media_directory(Path(saved_dir), quiet=True)
         self.refresh_backend_status()
+        self.log_ready = True
 
     def _build_ui(self) -> None:
         outer = QVBoxLayout(self)
@@ -369,7 +374,7 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.settings.setValue("thermalright/overlays", json.dumps([asdict(item) for item in self.overlay_specs]))
 
     def _log(self, message: str) -> None:
-        if self.log_callback:
+        if self.log_ready and self.log_callback:
             self.log_callback(f"THERMALRIGHT: {message}")
 
     def _status(self, message: str, *, error: bool = False) -> None:
