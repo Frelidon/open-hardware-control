@@ -4,7 +4,7 @@ Diese Anleitung beschreibt die sichere Übergabe des vollständigen Open-Hardwar
 
 ## Empfohlene Variante: Bionic-Projekt mit direktem Ordnerzugriff
 
-1. Verwende auf diesem Rechner am einfachsten direkt den vorhandenen Git-Repository-Ordner. Für eine Übertragung auf einen anderen Rechner oder in einen neuen Ordner verwende das mitgelieferte `Open_Hardware_Control_3.4.28_INTERN_LOCAL_AI.gitbundle` wie im nächsten Abschnitt beschrieben. Das Entwickler-ZIP ist eine vollständige Quelldatei-Sicherung, enthält aber absichtlich keinen `.git`-Ordner.
+1. Verwende auf diesem Rechner am einfachsten direkt den vorhandenen Git-Repository-Ordner. Für eine Übertragung auf einen anderen Rechner oder in einen neuen Ordner verwende das mitgelieferte `Open_Hardware_Control_3.4.29_INTERN_LOCAL_AI.gitbundle` wie im nächsten Abschnitt beschrieben. Das Entwickler-ZIP ist eine vollständige Quelldatei-Sicherung, enthält aber absichtlich keinen `.git`-Ordner.
 2. Öffne LM Studio und erstelle ein neues **Project**.
 3. Aktiviere **Allow coding / Coding erlauben**.
 4. Wähle über **Choose a folder** genau den Ordner, in dem `AGENTS.md`, `START_HIER_LOKALE_KI.md`, `kraken_control.py` und `.git` liegen. Wähle nicht nur `dist` und nicht einen übergeordneten Sammelordner.
@@ -21,8 +21,8 @@ LM Studio beschreibt dieses Vorgehen offiziell so: Ein Bionic-Projekt mit aktivi
 Das lokale-KI-Git-Bundle enthält den aktuellen Branch und seine vollständige benötigte Historie, jedoch keine Passwörter oder Tokens. Ersetze den ersten Pfad durch den tatsächlichen Downloadpfad:
 
 ```bash
-git clone --branch codex/3.4.28-intern \
-  /vollstaendiger/pfad/Open_Hardware_Control_3.4.28_INTERN_LOCAL_AI.gitbundle \
+git clone --branch codex/3.4.29-intern \
+  /vollstaendiger/pfad/Open_Hardware_Control_3.4.29_INTERN_LOCAL_AI.gitbundle \
   open-hardware-control-local-ai
 cd open-hardware-control-local-ai
 git remote set-url origin https://github.com/Frelidon/open-hardware-control.git

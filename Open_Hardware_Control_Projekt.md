@@ -1,6 +1,6 @@
 # Open Hardware Control – zentrale Projektdokumentation
 
-Stand: **3.4.28 INTERN**, 28. August 2026
+Stand: **3.4.29 INTERN**, 29. August 2026
 
 ## Zielbild
 
@@ -8,7 +8,13 @@ Open Hardware Control by Frelidon ist die gemeinsame, modular erweiterbare Linux
 
 Open Radeon Control Center bleibt ein eigenständiges Projekt. Es wird weder technisch noch organisatorisch in Open Hardware Control verschmolzen.
 
-## Version 3.4.28 INTERN
+## Version 3.4.29 INTERN
+
+Die LCD-Seite enthält ein lokales Thermalright-Levita-Studio mit echter 1600×720-Arbeitsfläche, geschützter rechter 80-Pixel-Aussparung, lokalen Medien-/TRCC-Imports und frei positionierbaren CPU-, GPU-, RAM- und Uhrzeitwerten. Der Testmodus schreibt standardmäßig nicht auf USB; reale Übertragung wird ausschließlich an das separat installierte GPL-Backend TRCC Linux delegiert.
+
+Für die Thermalright Levita Vision 360 ARGB Black sind Display und Kühlung bewusst getrennt. Das USB-Gerät identifiziert das Display, während Pumpe und Radiatorlüfter über einzeln ausgewählte und physisch bestätigte Mainboard-PWM-Header laufen. Leise, Ausbalanciert, Leistung, Sicherheit und CPU-Temperaturkurven werden erst nach dem 70-%-/10-s-Test freigegeben. CoolerControl blockiert parallele Zugriffe, verwendete Header gehen beim Beenden an BIOS/Firmware zurück, und ein nicht vorhandener Kühlmittelsensor wird nicht simuliert.
+
+Der reale ENE-DRAM-Log zeigte außerdem, dass ein erster erfolgreich beendeter OpenRGB-Direct-Befehl die physischen LEDs noch nicht zwingend weckt. Der automatische Profilstart führt deshalb jetzt zwei geordnete Reclaim-Durchläufe für alle erkannten ENE-Riegel aus, wartet kurz und startet erst danach den dauerhaften RGB-Frame-Worker.
 
 Die Kühlungszentrale unterscheidet nun zwischen dem geschlossenen CoolerControl-Fenster, einem weiterhin laufenden `coolercontrold`-Hintergrunddienst und dessen Autostartzustand. Nach ausdrücklicher Bestätigung kann OHC CoolerControl nur für die aktuelle Sitzung beenden, den Systemdienst dauerhaft deaktivieren oder ihn wieder dauerhaft aktivieren und sofort starten. Die Übergabe bleibt exklusiv: Beim Deaktivieren startet OHC keine Regelung automatisch; beim Aktivieren gibt OHC seine Mainboard-Kanäle zuerst an Firmware/BIOS zurück.
 

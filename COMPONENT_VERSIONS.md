@@ -1,12 +1,13 @@
-# Komponenten- und Versionsübersicht – Version 3.4.28 INTERN
+# Komponenten- und Versionsübersicht – Version 3.4.29 INTERN
 
 ## Getestete Referenzkonfiguration
 
 | Komponente | Version / Stand |
 |---|---|
-| Open Hardware Control by Frelidon | 3.4.28 INTERN |
+| Open Hardware Control by Frelidon | 3.4.29 INTERN |
 | OHC RGB-Effekt-Engine | Schema/Engine 1 · 10 eigene Effekte |
 | OHC Mainboard-Fan-Modul | 3.4.25 · Linux hwmon/NCT6687 · kalibrierungspflichtige PWM-Kanäle · CPU/GPU/Kühlmittel/max/gewichtet · Hysterese/Delay · Leise/Ausbalanciert/Leistung · Fallback/Firmware-Rückgabe |
+| OHC Thermalright-Levita-Modul | 3.4.29 · Display USB `87ad:70db` · 1600×720 logisch · TRCC-Backend optional · Pumpe/Radiator über getrennt bestätigte Mainboard-PWM-Header |
 | OpenRGB | optional installiert · von OHC verwalteter fensterloser Kindprozess auf `127.0.0.1:6742`; Fedora-44-Test mit `1.0~rc2`; Direct-Farben über eigenen OHC-SDK-Helfer statt CLI-ApplyOptions |
 | OHC OpenRGB-SDK-Helfer | Protokoll 4–5 · validiertes `RESIZEZONE` · Controller-/Zonensynchronisation · Modus-/Farbrücklesung · Loopback-only · begrenzte Geräte-/LED-/Paketwerte |
 | OHC Desktop Shell | 1.0 (lokal, ohne Hardwarezugriff) |
@@ -25,6 +26,7 @@
 | NZXT Kraken 2023 Firmware | 2.0.0 |
 | Kraken USB-ID | `1e71:300e` |
 | NZXT 2023 RGB Controller USB-ID | `1e71:2012` |
+| Thermalright Levita Vision Display USB-ID | `87ad:70db` |
 
 Die Über-Seite zeigt zusätzlich die tatsächlich installierten Laufzeitversionen dynamisch an. Andere Versionen können funktionieren, gelten aber erst nach einem Hardwaretest als geprüft.
 

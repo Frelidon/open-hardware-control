@@ -1,10 +1,10 @@
-# Open Hardware Control by Frelidon 3.4.28 INTERNAL
+# Open Hardware Control by Frelidon 3.4.29 INTERNAL
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
 <!-- /project-badges -->
 
-Open Hardware Control is a free Linux GUI for the **NZXT Kraken LCD**, pump, radiator fans and RGB, for **calibrated motherboard/case fans through Linux hwmon/NCT6687**, with **Corsair integration through OpenLinkHub** and additional RGB devices through an automatically managed local hardware engine. It targets Fedora, Nobara, Debian, Ubuntu, Linux Mint, Arch Linux, Manjaro, EndeavourOS and openSUSE.
+Open Hardware Control is a free Linux GUI for the **NZXT Kraken LCD**, pump, radiator fans and RGB, for the **Thermalright Levita Vision display and safely mapped cooling headers**, for **calibrated motherboard/case fans through Linux hwmon/NCT6687**, with **Corsair integration through OpenLinkHub** and additional RGB devices through an automatically managed local hardware engine. It targets Fedora, Nobara, Debian, Ubuntu, Linux Mint, Arch Linux, Manjaro, EndeavourOS and openSUSE.
 
 ![Open Hardware Control dashboard](docs/images/screenshots/01-dashboard-overview.png)
 
@@ -14,10 +14,15 @@ Project repository: <https://github.com/Frelidon/open-hardware-control>
 
 > **Unofficial independent community project:** Open Hardware Control is not supported, approved, endorsed, operated by, or affiliated with NZXT, Corsair, be quiet!, OpenLinkHub, OpenRGB, or any other named manufacturer or project. Product and brand names are used only to describe compatibility. Manufacturers and rights holders can contact Frelidon through the public contact address in the GitHub profile or the Steam username **Frelidon**.
 
-Version 3.4.28 INTERNAL combines clearer CoolerControl management with consistent blue-tinted cards and honest Kraken-profile feedback. OHC distinguishes a closed graphical client from the still-running `coolercontrold` service and only marks a Kraken quick profile after successful hardware transmission.
+Version 3.4.29 INTERNAL adds a local-first Thermalright Levita display studio and the exact Thermalright Levita Vision 360 ARGB Black cooling path. It also strengthens ENE-DRAM cold-start recovery with two ordered Direct transitions before the saved RGB design starts.
 
-## New in 3.4.28 INTERNAL
+## New in 3.4.29 INTERNAL
 
+- Thermalright Levita studio with a 1600×720 canvas, protected right cutout, local image/video/TRCC import, movable CPU/GPU/RAM/clock overlays and a safe preview-only test mode by default.
+- Exact Levita Vision 360 ARGB Black cooling selection: display via USB, pump and radiator fans via separately selected motherboard PWM headers.
+- Driver labels may suggest `PUMP_FAN` and `CPU_FAN`, but both require a physical 70-percent/10-second confirmation. CoolerControl blocks concurrent writes and OHC returns used headers to firmware/BIOS on exit.
+- Conservative Silent, Balanced, Performance and Safety profiles plus CPU-temperature curves; no fabricated coolant reading where the device path exposes no coolant sensor.
+- Two ordered ENE-DRAM Direct passes before saved-profile startup, covering controllers that acknowledge the first transition before their physical LEDs wake.
 - Chassis-fan cards remain compact initially, open only the explicitly selected curve and close through the same action.
 - The further split module structure and `MODULE_MAP.md` reduce context requirements for local coding models.
 - Separate status for the active CoolerControl background daemon and system autostart.
@@ -296,21 +301,21 @@ Fedora/Nobara RPM:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.28-0.intern2.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29-0.intern2.noarch.rpm
 ```
 
 Debian/Ubuntu/Linux Mint DEB:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.28~intern2_all.deb'
+sudo apt install './open-hardware-control_3.4.29~intern2_all.deb'
 ```
 
 Universal ZIP for the supported distro families:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_23_INTERN.zip
+unzip open_hardware_control_v3_4_29_INTERN.zip
 cd open-hardware-control-3.4.23-INTERN
 chmod +x install.sh
 ./install.sh

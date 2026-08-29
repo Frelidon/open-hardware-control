@@ -1,4 +1,4 @@
-# Unterstützte Geräte – Open Hardware Control 3.4.28 INTERN
+# Unterstützte Geräte – Open Hardware Control 3.4.29 INTERN
 
 ## Direkt getestetes NZXT-Modul
 
@@ -8,6 +8,18 @@
 | NZXT 2023 RGB Controller | `1e71:2012` | liquidctl | drei RGB-Kanäle |
 
 Der Schwerpunkt bleibt die NZXT Kraken RGB 360 (2023, Standard / Non-Elite) mit Firmware 2.0.0. Andere Kraken-Varianten gelten erst nach realem Hardwaretest als bestätigt.
+
+## Thermalright Levita Vision 360 ARGB Black
+
+| Teilpfad | Erkennung/Anschluss | Backend | Umfang und Status |
+|---|---|---|---|
+| Display | USB `87ad:70db` (`USBDISPLAY`) | separat installiertes GPL-Backend TRCC Linux | lokale Vorschau/Import/Testmodus verifiziert; physische Übertragung noch als realer Hardwaretest offen |
+| Pumpe | 4-Pin PWM, vom Linux-Treiber typischerweise als `Pump Fan` gemeldet | Linux hwmon/NCT6687 | RPM read-only erkannt; Schreiben erst nach separatem 70-%-/10-s-Test |
+| Radiatorlüfter | 4-Pin PWM, vom Linux-Treiber typischerweise als `CPU Fan` gemeldet | Linux hwmon/NCT6687 | RPM read-only erkannt; Schreiben erst nach separatem 70-%-/10-s-Test |
+
+OHC zeigt den exakten Namen **Thermalright Levita Vision 360 ARGB Black** an. USB-Display und PWM-Kühlung sind technisch getrennt. Die Linux-Headernamen dienen nur als Vorschlag; der Benutzer muss Pumpe und Radiatorlüfter einzeln physisch bestätigen. Danach stehen feste Werte, Leise/Ausbalanciert/Leistung/Sicherheit und CPU-Temperaturkurven zur Verfügung. Bei aktivem CoolerControl bleiben PWM-Schreibzugriffe gesperrt, und beim geordneten Programmende werden von OHC übernommene Header an BIOS/Firmware zurückgegeben.
+
+Der derzeitige Gerätepfad meldet keinen Kühlmittelsensor. OHC zeigt deshalb keinen künstlich aus CPU-/GPU-Temperatur abgeleiteten Wasserwert an. CPU-/GPU-Temperaturen können unabhängig davon für Anzeige und Softwarekurven verwendet werden.
 
 ## Corsair über OpenLinkHub
 
@@ -37,6 +49,7 @@ ARGB-Controller können Zonen melden, ohne die Zahl der elektrisch angeschlossen
 - Externe SDK-Server: nicht unterstützt; nur `127.0.0.1:6742`.
 - Veränderliche ARGB-Zonen: sichere Größenkonfiguration pro Zone mit Lüfterzahl × LEDs je Lüfter; eine gespeicherte PC-Position dient nur als Vorschlag, nicht als elektrische Erkennung.
 - ENE-DRAM-Aliaspaare werden dedupliziert; ein vollständig gespiegeltes Gesamtinventar wird auf die erste reale Hälfte reduziert. Mehrere reale Module mit identischem Namen bleiben erhalten.
+- ENE-DRAM erhält vor einem gespeicherten automatischen RGB-Start zwei geordnete OpenRGB-Direct-Durchläufe. Ein erfolgreicher Prozessabschluss wird weiterhin nicht als optisch rückgelesene LED-Bestätigung ausgegeben.
 - NZXT `led1` bis `led3` erscheinen als eigene Kacheln und können mit anderen Geräten gruppiert werden.
 - Gleichnamige GPU-/Controller-Einträge bleiben getrennt, werden nummeriert und können benannt sowie einer PC-Position zugeordnet werden.
 - Frelidons mitgelieferte verschiebbare PC-Ansicht bildet zwölf Lüfter ab: Kraken 360 oben, zwei Frontlüfter, drei Reverse-Intakes an Rückwand/Seite, drei Reverse-Intakes auf der Netzteilabdeckung vorne und einen Hecklüfter. Anschlussnotizen wie A1/A2, B6/B7 und die SYS-FAN-Kanäle bleiben editierbare Dokumentation und sind keine automatische elektrische Port-Erkennung.

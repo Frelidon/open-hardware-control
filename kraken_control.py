@@ -251,6 +251,13 @@ from temperature_utils import (
     normalize_temperature_unit,
     temperature_symbol,
 )
+from thermalright_cooling import (
+    LEVITA_COOLER_KEY,
+    LEVITA_DISPLAY_NAME,
+    profile_duties as thermalright_profile_duties,
+    suggest_aio_channels,
+    thermalright_display_present,
+)
 
 # Sidebar customization. Overview, the customization entry itself and Help are
 # intentionally fixed safety anchors; only the functional module rows between
@@ -332,6 +339,11 @@ CPU_CURVE_RISE_DELTA = 3
 CPU_CURVE_FALL_DELTA = 5
 CPU_CURVE_DUTY_QUANTUM = 2
 CPU_CURVE_SENSOR_FAILURE_LIMIT = 5
+# The affected ENE DRAM controller can acknowledge its first Direct transition
+# while its physical LED engine is still latched after a complete power loss.
+# Two ordered controller transitions reproduce the manual double-click that
+# reliably woke the user's two modules, before OHC starts its SDK stream.
+ENE_DRAM_RECLAIM_PASSES = 2
 
 @dataclass(frozen=True)
 class CPUProfile:
@@ -2406,6 +2418,16 @@ class KrakenControl(QMainWindow):
         self.mainboard_last_inventory_signature: tuple[str, ...] = ()
         self.mainboard_selected_channel_id = ""
         self.mainboard_expanded_channel_id = ""
+        self.cooling_hardware_kind = str(
+            self.settings.value("cooling/hardware_kind", "auto") or "auto"
+        )
+        self.thermalright_pump_channel_id = str(
+            self.settings.value("thermalright_cooling/pump_channel", "") or ""
+        )
+        self.thermalright_radiator_channel_id = str(
+            self.settings.value("thermalright_cooling/radiator_channel", "") or ""
+        )
+        self.thermalright_owned_channel_ids: set[str] = set()
         self.cooling_owner_status = detect_cooling_owner()
         self.coolercontrol_stopped_by_ohc = False
         self.cooling_layout_selected_slot_id = ""
@@ -2506,9 +2528,9 @@ class KrakenControl(QMainWindow):
         self.openrgb_sdk_ready_devices: set[str] = set()
         # Some ENE DRAM controllers report Direct immediately after a cold boot
         # even though their physical LED engine is still latched in firmware
-        # state.  OHC therefore performs one controller-specific wake through
-        # OpenRGB's own CLI/driver path per managed-engine lifetime before the
-        # saved RGB profile starts.
+        # state.  OHC therefore performs two ordered controller-specific wakes
+        # through OpenRGB's own CLI/driver path per managed-engine lifetime
+        # before the saved RGB profile starts.
         self.ene_dram_cli_prime_done: set[str] = set()
         self.ene_dram_cli_prime_in_progress = False
         self.openrgb_effect_assignments: dict[str, RGBEffectConfig] = {}
@@ -3697,7 +3719,7 @@ class KrakenControl(QMainWindow):
     def update_cooling_navigation_icon(self) -> None:
         if not hasattr(self, "nav_nzxt"):
             return
-        has_aio = bool(getattr(self, "devices_ready", False))
+        has_aio = bool(getattr(self, "devices_ready", False)) or self.is_thermalright_cooling()
         try:
             has_case_fans = bool(self.chassis_mainboard_channels())
         except Exception:
@@ -3736,7 +3758,7 @@ class KrakenControl(QMainWindow):
         hardware_visible = {
             "cooling": True,
             "rgb_studio": True,
-            "lcd": show_all or bool(getattr(self, "devices_ready", False)),
+            "lcd": show_all or bool(getattr(self, "devices_ready", False)) or thermalright_display_present(),
             "profiles": True,
             "log": True,
             "openlinkhub": show_all or bool(getattr(self, "openlinkhub_detected", False)),
@@ -3762,7 +3784,9 @@ class KrakenControl(QMainWindow):
         if hasattr(self, "openlinkhub_overview_box"):
             self.openlinkhub_overview_box.setVisible(show_all or self.openlinkhub_detected)
         for page, action in getattr(self, "module_view_actions", {}).items():
-            detected = (self.devices_ready or page == 1) if page in {1, 2, 3} else self.openlinkhub_detected
+            detected = (
+                self.devices_ready or page == 1 or (page == 3 and thermalright_display_present())
+            ) if page in {1, 2, 3} else self.openlinkhub_detected
             action.setVisible(show_all or detected)
         for action in getattr(self, "kraken_menu_actions", []):
             action.setVisible(show_all or self.devices_ready)
@@ -3781,6 +3805,8 @@ class KrakenControl(QMainWindow):
         modules: list[str] = []
         if self.devices_ready:
             modules.append("NZXT")
+        elif self.is_thermalright_cooling():
+            modules.append("Thermalright Levita Vision")
         if self.openlinkhub_detected:
             modules.append("OpenLinkHub")
         if self.openrgb_detected:
@@ -5400,6 +5426,39 @@ class KrakenControl(QMainWindow):
         fan_apply.clicked.connect(lambda: self.set_fixed_speed("fan", self.fan_slider.value()))
         mg.addWidget(fan_apply, 1, 3)
 
+        aio_box = QGroupBox("Wasserkühlung und PWM-Zuordnung")
+        aio_form = QFormLayout(aio_box)
+        self.cooling_hardware_combo = QComboBox()
+        self.cooling_hardware_combo.addItem("Automatisch erkennen", "auto")
+        self.cooling_hardware_combo.addItem("NZXT Kraken über liquidctl", "nzxt")
+        self.cooling_hardware_combo.addItem(LEVITA_DISPLAY_NAME, LEVITA_COOLER_KEY)
+        saved_hardware = self.cooling_hardware_combo.findData(self.cooling_hardware_kind)
+        self.cooling_hardware_combo.setCurrentIndex(max(0, saved_hardware))
+        self.cooling_hardware_combo.currentIndexChanged.connect(self.apply_cooling_hardware_selection)
+        self.cooling_hardware_status = QLabel("Kühlhardware wird erkannt …")
+        self.cooling_hardware_status.setWordWrap(True)
+        self.cooling_hardware_status.setObjectName("muted")
+        self.thermalright_pump_channel_combo = QComboBox()
+        self.thermalright_radiator_channel_combo = QComboBox()
+        self.thermalright_pump_channel_combo.currentIndexChanged.connect(self.save_thermalright_channel_mapping)
+        self.thermalright_radiator_channel_combo.currentIndexChanged.connect(self.save_thermalright_channel_mapping)
+        pump_test = QPushButton("Pumpenkanal sicher testen · 70 % / 10 s")
+        pump_test.clicked.connect(lambda: self.start_thermalright_channel_test("pump"))
+        radiator_test = QPushButton("Radiatorkanal sicher testen · 70 % / 10 s")
+        radiator_test.clicked.connect(lambda: self.start_thermalright_channel_test("fan"))
+        aio_form.addRow("Kühlsystem", self.cooling_hardware_combo)
+        aio_form.addRow(self.cooling_hardware_status)
+        aio_form.addRow("Pumpe (4-Pin PWM)", self.thermalright_pump_channel_combo)
+        aio_form.addRow(pump_test)
+        aio_form.addRow("Radiatorlüfter (4-Pin PWM)", self.thermalright_radiator_channel_combo)
+        aio_form.addRow(radiator_test)
+        self.thermalright_channel_controls = (
+            self.thermalright_pump_channel_combo,
+            self.thermalright_radiator_channel_combo,
+            pump_test,
+            radiator_test,
+        )
+
         mode_box = QGroupBox("Aktiver Kühlmodus")
         mode_layout = QVBoxLayout(mode_box)
         self.cooling_mode_label = QLabel(
@@ -5704,6 +5763,7 @@ class KrakenControl(QMainWindow):
         mb_layout.addWidget(self.mainboard_runtime_status)
 
         safety = QGroupBox("Kraken-Wassertemperatur – Sicherheitsgrenzen")
+        self.cooling_liquid_safety_box = safety
         sf = QFormLayout(safety)
         self.warning_temp = QSpinBox()
         self.warning_temp.setRange(35, 48)
@@ -5752,7 +5812,8 @@ class KrakenControl(QMainWindow):
         cpu_layout.setContentsMargins(16, 13, 16, 13)
         cpu_layout.setSpacing(8)
         cpu_title = QHBoxLayout()
-        cpu_title.addWidget(QLabel("●  CPU / Kraken", objectName="coolingCardTitle"))
+        self.cooling_cpu_title_label = QLabel("●  CPU / Kraken", objectName="coolingCardTitle")
+        cpu_title.addWidget(self.cooling_cpu_title_label)
         cpu_title.addStretch()
         self.cooling_cpu_active_profile = QLabel("Noch nicht gesetzt")
         self.cooling_cpu_active_profile.setObjectName("accentText")
@@ -5820,7 +5881,7 @@ class KrakenControl(QMainWindow):
         cpu_details_layout = QVBoxLayout(cpu_details)
         cpu_details_layout.setContentsMargins(0, 2, 0, 0)
         cpu_details_layout.setSpacing(10)
-        for widget in (mode_box, manual, curves_box, cpu_box, safety):
+        for widget in (aio_box, mode_box, manual, curves_box, cpu_box, safety):
             cpu_details_layout.addWidget(widget)
         cpu_details_layout.addStretch()
         case_details = QWidget()
@@ -5950,7 +6011,9 @@ class KrakenControl(QMainWindow):
         self.mainboard_master_enable.setChecked(not self.mainboard_master_enable.isChecked())
 
     def refresh_cooling_dashboard_summary(self) -> None:
-        liquid = self.format_temperature(self.current_liquid_temp) if self.current_liquid_temp is not None else "—"
+        liquid = self.format_temperature(self.current_liquid_temp) if self.current_liquid_temp is not None else (
+            "nicht vorhanden" if self.is_thermalright_cooling() else "—"
+        )
         cpu = self.format_temperature(self.current_cpu_temp) if self.current_cpu_temp is not None else "—"
         pump = f"{int(self.current_pump_rpm)} rpm" if self.current_pump_rpm is not None else "—"
         radiator = f"{int(self.current_fan_rpm)} rpm" if self.current_fan_rpm is not None else "—"
@@ -6408,6 +6471,178 @@ class KrakenControl(QMainWindow):
             profile.setdefault(key, value)
         return profile
 
+    def is_thermalright_cooling(self) -> bool:
+        selected = str(getattr(self, "cooling_hardware_kind", "auto") or "auto")
+        if selected == LEVITA_COOLER_KEY:
+            return True
+        if selected == "nzxt":
+            return False
+        return thermalright_display_present() and not bool(getattr(self, "devices_ready", False))
+
+    def cooling_device_ready(self) -> bool:
+        if not self.is_thermalright_cooling():
+            return bool(getattr(self, "devices_ready", False))
+        return all(
+            channel is not None
+            and mainboard_channel_can_control(channel)
+            and bool(self.mainboard_profile_for(channel).get("calibrated", False))
+            for channel in (self.thermalright_channel("pump"), self.thermalright_channel("fan"))
+        )
+
+    def thermalright_channel(self, role: str) -> MainboardFanChannel | None:
+        channel_id = (
+            self.thermalright_pump_channel_id
+            if role == "pump"
+            else self.thermalright_radiator_channel_id
+        )
+        return self.mainboard_channels.get(str(channel_id))
+
+    def apply_cooling_hardware_selection(self, _index: int = -1) -> None:
+        if not hasattr(self, "cooling_hardware_combo"):
+            return
+        self.cooling_hardware_kind = str(self.cooling_hardware_combo.currentData() or "auto")
+        self.settings.setValue("cooling/hardware_kind", self.cooling_hardware_kind)
+        self.settings.sync()
+        self.discover_mainboard_fans(show_dialog=False)
+        self.update_thermalright_cooling_ui()
+        self.update_cooling_quick_profile_state("")
+
+    def update_thermalright_cooling_ui(self) -> None:
+        if not hasattr(self, "cooling_hardware_status"):
+            return
+        active = self.is_thermalright_cooling()
+        if hasattr(self, "cooling_cpu_title_label"):
+            self.cooling_cpu_title_label.setText(
+                f"●  CPU / {LEVITA_DISPLAY_NAME}" if active else "●  CPU / Kraken"
+            )
+        if hasattr(self, "cooling_liquid_safety_box"):
+            self.cooling_liquid_safety_box.setVisible(not active)
+        for widget in getattr(self, "thermalright_channel_controls", ()):
+            widget.setVisible(active)
+        if not active:
+            self.cooling_hardware_status.setText("NZXT-Kühlung wird über den validierten liquidctl-Gerätepfad gesteuert.")
+            return
+        self.populate_thermalright_channel_combos()
+        pump = self.thermalright_channel("pump")
+        radiator = self.thermalright_channel("fan")
+        pump_ok = bool(pump and self.mainboard_profile_for(pump).get("calibrated", False))
+        radiator_ok = bool(radiator and self.mainboard_profile_for(radiator).get("calibrated", False))
+        usb = "Display erkannt" if thermalright_display_present() else "Display-USB nicht erkannt"
+        self.cooling_hardware_status.setText(
+            f"{LEVITA_DISPLAY_NAME} · {usb} · Pumpe {'bestätigt' if pump_ok else 'noch testen'} · "
+            f"Radiator {'bestätigt' if radiator_ok else 'noch testen'} · kein Kühlmittelsensor gemeldet"
+        )
+        self.cooling_hardware_status.setObjectName("healthGood" if pump_ok and radiator_ok else "warningText")
+        self.cooling_hardware_status.style().unpolish(self.cooling_hardware_status)
+        self.cooling_hardware_status.style().polish(self.cooling_hardware_status)
+
+    def populate_thermalright_channel_combos(self) -> None:
+        if not hasattr(self, "thermalright_pump_channel_combo"):
+            return
+        channels = list(self.mainboard_channels.values())
+        suggestion = suggest_aio_channels(channels)
+        if self.thermalright_pump_channel_id not in self.mainboard_channels:
+            self.thermalright_pump_channel_id = suggestion.pump_channel_id
+        if self.thermalright_radiator_channel_id not in self.mainboard_channels:
+            self.thermalright_radiator_channel_id = suggestion.radiator_channel_id
+        for combo, selected in (
+            (self.thermalright_pump_channel_combo, self.thermalright_pump_channel_id),
+            (self.thermalright_radiator_channel_combo, self.thermalright_radiator_channel_id),
+        ):
+            combo.blockSignals(True)
+            combo.clear()
+            combo.addItem("Bitte PWM-Kanal auswählen", "")
+            for channel in channels:
+                rpm = self._mainboard_channel_rpm(channel)
+                combo.addItem(
+                    f"{channel.display_name} · {rpm if rpm is not None else '—'} rpm",
+                    channel.stable_id,
+                )
+            combo.setCurrentIndex(max(0, combo.findData(selected)))
+            combo.blockSignals(False)
+        self.save_thermalright_channel_mapping()
+
+    @staticmethod
+    def _mainboard_channel_rpm(channel: MainboardFanChannel) -> int | None:
+        if channel.rpm_path is None:
+            return None
+        try:
+            return int(channel.rpm_path.read_text(encoding="ascii").strip())
+        except (OSError, ValueError):
+            return None
+
+    def save_thermalright_channel_mapping(self, _index: int = -1) -> None:
+        if not hasattr(self, "thermalright_pump_channel_combo"):
+            return
+        self.thermalright_pump_channel_id = str(self.thermalright_pump_channel_combo.currentData() or "")
+        self.thermalright_radiator_channel_id = str(self.thermalright_radiator_channel_combo.currentData() or "")
+        if self.thermalright_pump_channel_id == self.thermalright_radiator_channel_id:
+            self.thermalright_radiator_channel_id = ""
+        self.settings.setValue("thermalright_cooling/pump_channel", self.thermalright_pump_channel_id)
+        self.settings.setValue("thermalright_cooling/radiator_channel", self.thermalright_radiator_channel_id)
+        self.settings.sync()
+
+    def start_thermalright_channel_test(self, role: str) -> None:
+        self.save_thermalright_channel_mapping()
+        channel = self.thermalright_channel(role)
+        if channel is None:
+            self.show_error("Bitte zuerst den tatsächlich angeschlossenen PWM-Kanal auswählen.")
+            return
+        self.mainboard_selected_channel_id = channel.stable_id
+        self.mainboard_assistant_contrast_requested = False
+        self.start_mainboard_fan_calibration()
+
+    def write_thermalright_cooling(self, role: str, duty: int) -> None:
+        channel = self.thermalright_channel(role)
+        if channel is None:
+            raise MainboardFanWriteError("Für diesen Levita-Kanal ist noch kein PWM-Header ausgewählt")
+        if not bool(self.mainboard_profile_for(channel).get("calibrated", False)):
+            raise MainboardFanWriteError(
+                f"{channel.display_name} wurde noch nicht mit dem sicheren 70-%-/10-s-Test bestätigt"
+            )
+        self.refresh_cooling_ownership_status()
+        if self.cooling_owner_status.coolercontrol_active:
+            raise MainboardFanWriteError("CoolerControl besitzt aktuell die Mainboard-PWM-Steuerung")
+        set_mainboard_channel_percent(channel, int(duty))
+        self.thermalright_owned_channel_ids.add(channel.stable_id)
+
+    def restore_thermalright_cooling_on_quit(self) -> None:
+        for channel_id in tuple(self.thermalright_owned_channel_ids):
+            channel = self.mainboard_channels.get(channel_id)
+            if channel is None:
+                continue
+            try:
+                restore_mainboard_firmware_control(channel)
+            except MainboardFanWriteError as exc:
+                self.log_message(f"THERMALRIGHT-KÜHLUNG: Firmware-Rückgabe fehlgeschlagen · {channel_id} · {exc}")
+        self.thermalright_owned_channel_ids.clear()
+
+    def refresh_thermalright_cooling_status(self) -> None:
+        if not self.is_thermalright_cooling():
+            return
+        cpu_temp, sensor_label = self.read_amd_cpu_temperature()
+        gpu_temp, gpu_label = self.read_amd_gpu_temperature()
+        self.current_cpu_temp = cpu_temp
+        self.current_gpu_temp = gpu_temp
+        self.current_liquid_temp = None
+        pump = self.thermalright_channel("pump")
+        radiator = self.thermalright_channel("fan")
+        pump_rpm = self._mainboard_channel_rpm(pump) if pump else None
+        fan_rpm = self._mainboard_channel_rpm(radiator) if radiator else None
+        self.current_pump_rpm = pump_rpm
+        self.current_fan_rpm = fan_rpm
+        if cpu_temp is not None:
+            self.cpu_temp_card.set_value(self.format_temperature(cpu_temp), sensor_label)
+            self.cpu_current_label.setText(f"CPU-Sensor: {sensor_label} · aktuell {self.format_temperature(cpu_temp)}")
+        if gpu_temp is not None:
+            self.gpu_temp_card.set_value(self.format_temperature(gpu_temp), gpu_label)
+        self.temp_card.set_value("—", "Levita meldet keinen Kühlmittelsensor")
+        self.pump_card.set_value(f"{pump_rpm} rpm" if pump_rpm is not None else "— rpm", "Mainboard Pump Fan")
+        self.fan_card.set_value(f"{fan_rpm} rpm" if fan_rpm is not None else "— rpm", "Mainboard CPU Fan")
+        self.firmware_card.set_value("Levita Vision", "Display 1600 × 720 logisch")
+        self.refresh_cooling_dashboard_summary()
+        self.update_thermalright_cooling_ui()
+
     def discover_mainboard_fans(self, _checked: bool = False, *, show_dialog: bool = False) -> None:
         self.mainboard_dmi = detect_mainboard_dmi()
         controllers = discover_hwmon_controllers()
@@ -6449,6 +6684,7 @@ class KrakenControl(QMainWindow):
         self.mainboard_detection_label.style().unpolish(self.mainboard_detection_label)
         self.mainboard_detection_label.style().polish(self.mainboard_detection_label)
         self.refresh_mainboard_fan_table()
+        self.update_thermalright_cooling_ui()
         if show_dialog:
             if controller is None:
                 QMessageBox.information(
@@ -7105,9 +7341,16 @@ class KrakenControl(QMainWindow):
             self.mainboard_assistant_contrast_requested = False
             self.show_error("Bitte zuerst einen PWM-Kanal auswählen.")
             return
-        if not mainboard_channel_is_chassis_fan(channel):
+        is_selected_levita_channel = self.is_thermalright_cooling() and channel.stable_id in {
+            self.thermalright_pump_channel_id,
+            self.thermalright_radiator_channel_id,
+        }
+        if not mainboard_channel_is_chassis_fan(channel) and not is_selected_levita_channel:
             self.mainboard_assistant_contrast_requested = False
-            self.show_error("CPU_FAN und PUMP_FAN bleiben im separaten CPU-/Kraken-Bereich und werden vom Gehäuselüfter-Test nicht verändert.")
+            self.show_error(
+                "CPU_FAN und PUMP_FAN dürfen nur nach ausdrücklicher Auswahl als Levita-Pumpe beziehungsweise "
+                "Levita-Radiator getestet werden."
+            )
             return
         channel.writable = os.access(channel.pwm_path, os.W_OK)
         method = mainboard_channel_control_method(channel)
@@ -7282,6 +7525,7 @@ class KrakenControl(QMainWindow):
                 self.log_message(f"MAINBOARD-FAN-WATCHDOG: Deaktivieren nach Kalibrierung fehlgeschlagen · {exc}")
         self.save_mainboard_fan_settings()
         self.refresh_mainboard_fan_table()
+        self.update_thermalright_cooling_ui()
 
     def restore_selected_mainboard_fan_firmware(self) -> None:
         channel = self.selected_mainboard_channel()
@@ -7680,8 +7924,9 @@ class KrakenControl(QMainWindow):
         ene_notice_layout = QVBoxLayout(self.ene_dram_notice_box)
         self.ene_dram_notice_label = QLabel(
             "ENE-DRAM wurde erkannt. Manche Module benötigen nach vollständigem Ausschalten des PCs eine zusätzliche "
-            "Initialisierung über den OpenRGB-Treiber. Dadurch kann es einige Sekunden dauern, bis das gespeicherte "
-            "RGB-Profil vollständig aktiv ist. Open Hardware Control erledigt diesen Vorgang automatisch."
+            "Initialisierung über den OpenRGB-Treiber. Open Hardware Control führt deshalb automatisch zwei geordnete "
+            "Direct-Durchläufe aus. Dadurch kann es einige Sekunden dauern, bis das gespeicherte RGB-Profil vollständig "
+            "aktiv ist."
         )
         self.ene_dram_notice_label.setWordWrap(True)
         self.ene_dram_notice_label.setObjectName("infoText")
@@ -9085,6 +9330,17 @@ class KrakenControl(QMainWindow):
 
         imported_profiles_box = self.make_nzxt_esc_profiles_box()
 
+        # Imported only while the real LCD page is built so headless logic
+        # tests and non-GUI tooling do not need the complete QGraphics stack.
+        from thermalright_display_ui import ThermalrightDisplayStudio
+
+        self.thermalright_display_studio = ThermalrightDisplayStudio(
+            self.settings,
+            self.app_config_dir,
+            log_callback=self.log_message,
+            parent=content,
+        )
+
         startup_box = QGroupBox("Automatisches Wiederherstellen")
         sl = QVBoxLayout(startup_box)
         self.restore_lcd_checkbox = QCheckBox("Gewähltes Bild beim Programmstart wieder anzeigen")
@@ -9103,6 +9359,7 @@ class KrakenControl(QMainWindow):
         self.lcd_tile_area = ReorderableTileArea(
             "lcd-tiles",
             [
+                ("thermalright", self.thermalright_display_studio, 3),
                 ("preview", preview_box, 1),
                 ("display", display_box, 1),
                 ("clock", clock_box, 1),
@@ -12226,7 +12483,7 @@ class KrakenControl(QMainWindow):
         cooling = payload.get("cooling")
         if isinstance(cooling, dict):
             self.load_profile_cooling_controls(cooling)
-            if self.devices_ready:
+            if self.cooling_device_ready():
                 self.transmit_profile_cooling(cooling, name)
         self.save_settings()
         self.profile_status_label.setText(f"Aktiv: {name}")
@@ -12281,6 +12538,36 @@ class KrakenControl(QMainWindow):
                 "Das Profil enthält eine CPU-Temperaturkurve, aber der CPU-Sensor ist nicht verfügbar.\n\n"
                 + sensor_label
             )
+            return
+        if getattr(self, "is_thermalright_cooling", lambda: False)():
+            applied: list[tuple[str, int, str, str, bool]] = []
+            try:
+                for channel, label in (("pump", "Pumpe"), ("fan", "Radiatorlüfter")):
+                    mode = requested_modes[channel]
+                    curve_controlled = self.cooling_mode_kind(mode) == "curve"
+                    if curve_controlled:
+                        editor = self.pump_curve_table[2] if channel == "pump" else self.fan_curve_table[2]
+                        duty = self.quantize_curve_duty(self.interpolate_curve(editor.points(), float(cpu_temp)))
+                        duty = max(20 if channel == "pump" else 0, duty)
+                        mode_label = "CPU-Temperaturkurve"
+                        detail = f"{duty} % · CPU {self.format_temperature(float(cpu_temp))} · Software-Regelung"
+                    else:
+                        duty = int(cooling.get(channel, 55))
+                        mode_label = "Feste Drehzahl"
+                        detail = f"{duty} %"
+                    self.write_thermalright_cooling(channel, duty)
+                    applied.append((channel, duty, mode_label, detail, curve_controlled))
+            except MainboardFanWriteError as exc:
+                self.show_error(f"Levita-Profil „{name}“ konnte nicht vollständig angewendet werden: {exc}")
+                return
+            for channel, duty, mode_label, detail, curve_controlled in applied:
+                self.set_cooling_mode(channel, mode_label, detail)
+                self.cpu_curve_last_duties[channel] = duty if curve_controlled else None
+            self.cpu_curve_last_write = time.monotonic()
+            self.cpu_curve_force_update = False
+            self.update_cooling_quick_profile_state("")
+            self.footer_status.setText(f"Levita-Kühlung aus Profil „{name}“ aktiv")
+            self.refresh_thermalright_cooling_status()
             return
         commands: list[tuple[str, list[str], str, str, int, bool]] = []
         for channel, label in (("pump", "Pumpe"), ("fan", "Radiatorlüfter")):
@@ -13045,6 +13332,9 @@ class KrakenControl(QMainWindow):
         if self.exit_hardware_cleanup_done:
             return
         self.exit_hardware_cleanup_done = True
+        thermalright_studio = getattr(self, "thermalright_display_studio", None)
+        if thermalright_studio is not None:
+            thermalright_studio.shutdown()
         request = self.usb_coordinator.request(
             "Shutdown",
             "LCD-Sicherheitszustand Flüssigkeitstemperatur",
@@ -13079,6 +13369,7 @@ class KrakenControl(QMainWindow):
             self.restore_all_mainboard_fans_to_firmware(quiet=True)
             self.mainboard_control_active = False
             self.log_message("MAINBOARD-FAN: Programmende · aktivierte Kanäle an Firmware/BIOS zurückgegeben")
+        self.restore_thermalright_cooling_on_quit()
         self.shutdown_gif_stream_sync()
         self.restore_original_lcd_sync_on_quit()
         self.usb_coordinator.complete(request.request_id, "Flüssigkeitstemperatur-Fallback gesendet")
@@ -13245,7 +13536,8 @@ class KrakenControl(QMainWindow):
 
     def on_initialized(self, result: CommandResult) -> None:
         self.refresh_button.setEnabled(True)
-        if not result.ok:
+        thermalright_present = thermalright_display_present()
+        if not result.ok and not thermalright_present:
             self.set_disconnected(result.combined or "Initialisierung fehlgeschlagen")
             return
         global KRAKEN_MATCH, KRAKEN_PRODUCT_ID, KRAKEN_DISPLAY_NAME, KRAKEN_LCD_RESOLUTION, KRAKEN_SUPPORT_LEVEL
@@ -13314,6 +13606,30 @@ class KrakenControl(QMainWindow):
                     QTimer.singleShot(startup_lcd_delay, lambda: self.toggle_lcd_keepalive(True))
                 else:
                     QTimer.singleShot(startup_lcd_delay, self.send_lcd_now)
+        elif thermalright_present and self.cooling_hardware_kind != "nzxt":
+            self.devices_ready = False
+            self.nzxt_rgb_ready = has_rgb
+            self.discover_mainboard_fans(show_dialog=False)
+            self.connection_label.setText(f"● Verbunden · {LEVITA_DISPLAY_NAME}")
+            self.connection_label.setObjectName("connectionOk")
+            self.connection_label.style().unpolish(self.connection_label)
+            self.connection_label.style().polish(self.connection_label)
+            self.footer_status.setText(f"{LEVITA_DISPLAY_NAME} erkannt")
+            self.health_label.setText(
+                "Levita erkannt · Pumpe und Radiator werden erst nach zwei bestätigten PWM-Tests steuerbar"
+            )
+            self.health_label.setObjectName("healthGood" if self.cooling_device_ready() else "healthWarn")
+            self.status_timer.start(self.refresh_interval.value() * 1000)
+            self.cpu_curve_timer.start(CPU_CURVE_SAMPLE_MS)
+            self.refresh_thermalright_cooling_status()
+            self.update_thermalright_cooling_ui()
+            QTimer.singleShot(250, self.update_cpu_curve_control)
+            QTimer.singleShot(900, self.apply_pending_setup_profile)
+            QTimer.singleShot(1700, self.apply_startup_profile)
+            self.log_message(
+                f"THERMALRIGHT-KÜHLUNG: {LEVITA_DISPLAY_NAME} über USB 87ad:70db erkannt · "
+                "Pumpe/Radiator getrennt über bestätigungspflichtige Mainboard-PWM-Kanäle"
+            )
         else:
             self.set_disconnected("Keine unterstützte NZXT Kraken wurde gefunden")
         self.update_navigation_visibility()
@@ -13578,6 +13894,10 @@ class KrakenControl(QMainWindow):
 
     # ---------- status ----------
     def refresh_status(self) -> None:
+        if self.is_thermalright_cooling():
+            if not self.status_busy and not self.kraken_write_busy:
+                self.refresh_thermalright_cooling_status()
+            return
         if (
             self.gif_kraken_io_paused
             or self.gif_start_pending
@@ -13763,7 +14083,7 @@ class KrakenControl(QMainWindow):
             self.cpu_curve_sensor_failures += 1
             if (
                 active_channels
-                and self.devices_ready
+                and self.cooling_device_ready()
                 and self.cpu_curve_sensor_failures == CPU_CURVE_SENSOR_FAILURE_LIMIT
             ):
                 fallback_targets = {channel: 75 for channel in active_channels}
@@ -13794,7 +14114,7 @@ class KrakenControl(QMainWindow):
             self.cpu_curve_filtered_temp = 0.35 * float(cpu_temp) + 0.65 * self.cpu_curve_filtered_temp
         self.cpu_curve_fallback_active = False
 
-        if not active_channels or not self.devices_ready or time.monotonic() < self.permission_retry_after:
+        if not active_channels or not self.cooling_device_ready() or time.monotonic() < self.permission_retry_after:
             return
 
         targets: dict[str, int] = {}
@@ -13857,6 +14177,26 @@ class KrakenControl(QMainWindow):
                 fallback=fallback,
             ),
         ):
+            return
+        if self.is_thermalright_cooling():
+            try:
+                for channel, duty in ordered_targets.items():
+                    self.write_thermalright_cooling(channel, duty)
+            except MainboardFanWriteError as exc:
+                self.show_error(f"{action}: {exc}")
+                return
+            self.cpu_curve_last_write = time.monotonic()
+            for channel, duty in ordered_targets.items():
+                self.cpu_curve_last_duties[channel] = duty
+                temperature_text = "Sensorfehler" if cpu_temp is None else f"CPU {self.format_temperature(cpu_temp)}"
+                detail = f"{duty} % · {temperature_text} · Software-Regelung"
+                if fallback:
+                    detail = f"{duty} % · sicherer Sensorfehler-Fallback"
+                self.set_cooling_mode(channel, "CPU-Temperaturkurve", detail)
+            self.update_cooling_quick_profile_state("")
+            self.cpu_curve_force_update = False
+            self.cpu_curve_fallback_active = fallback
+            self.refresh_thermalright_cooling_status()
             return
         if self.kraken_write_busy:
             return
@@ -13922,6 +14262,8 @@ class KrakenControl(QMainWindow):
         real application exit or an orderly desktop logout/shutdown, after a
         possible raw GIF streamer has released the Kraken USB interface.
         """
+        if hasattr(self, "thermalright_owned_channel_ids") and self.is_thermalright_cooling():
+            return
         try:
             result = subprocess.run(
                 Backend.kraken_args() + ["set", "lcd", "screen", "liquid"],
@@ -13949,6 +14291,8 @@ class KrakenControl(QMainWindow):
 
     def restore_safe_hardware_fallback_sync_on_quit(self) -> None:
         """Leave autonomous liquid-temperature protection after a real exit."""
+        if hasattr(self, "thermalright_owned_channel_ids") and self.is_thermalright_cooling():
+            return
         fallbacks = {
             "pump": list(SAFE_HARDWARE_PUMP_CURVE),
             "fan": list(SAFE_HARDWARE_FAN_CURVE),
@@ -14155,7 +14499,27 @@ class KrakenControl(QMainWindow):
             lambda: self.set_fixed_speed(channel, duty),
         ):
             return
-        access = self.has_kraken_write_access()
+        if self.is_thermalright_cooling():
+            minimum = 20 if channel == "pump" else 0
+            if not minimum <= duty <= 100:
+                self.show_error(f"Ungültiger Wert für {channel}: {duty} %")
+                return
+            label = "Pumpe" if channel == "pump" else "Radiatorlüfter"
+            warning_limit = LOW_PUMP_WARNING if channel == "pump" else LOW_FAN_WARNING
+            if duty < warning_limit and not self.confirm_low_cooling_value(label, duty, warning_limit):
+                return
+            try:
+                self.write_thermalright_cooling(channel, duty)
+            except MainboardFanWriteError as exc:
+                self.show_error(f"{LEVITA_DISPLAY_NAME}: {exc}")
+                return
+            self.footer_status.setText(f"{label} auf {duty} % gesetzt")
+            self.set_cooling_mode(channel, "Feste Drehzahl", f"{duty} %")
+            self.update_cooling_quick_profile_state("")
+            self.cpu_curve_last_duties[channel] = None
+            self.refresh_thermalright_cooling_status()
+            return
+        access = None if self.is_thermalright_cooling() else self.has_kraken_write_access()
         if access is False:
             self.show_permission_error("/dev/hidraw für USB 1e71:300e ist nicht les- und schreibbar.")
             return
@@ -14196,6 +14560,25 @@ class KrakenControl(QMainWindow):
             "Kühlprofil",
             lambda: self.apply_quick_profile(name, pump, fan, notify),
         ):
+            return
+        if getattr(self, "is_thermalright_cooling", lambda: False)():
+            pump, fan = thermalright_profile_duties(name)
+            self.pump_slider.setValue(pump)
+            self.fan_slider.setValue(fan)
+            try:
+                self.write_thermalright_cooling("pump", pump)
+                self.write_thermalright_cooling("fan", fan)
+            except MainboardFanWriteError as exc:
+                self.show_error(f"Profil {name} konnte nicht vollständig angewendet werden: {exc}")
+                return
+            self.set_cooling_mode("pump", "Feste Drehzahl", f"{pump} % · Profil {name}")
+            self.set_cooling_mode("fan", "Feste Drehzahl", f"{fan} % · Profil {name}")
+            self.update_cooling_quick_profile_state(name)
+            self.cpu_curve_last_duties = {"pump": None, "fan": None}
+            self.footer_status.setText(f"Levita-Profil „{name}“ aktiv")
+            if notify:
+                self.tray.showMessage(APP_NAME, f"Levita-Profil „{name}“ wurde angewendet.")
+            self.refresh_thermalright_cooling_status()
             return
         if self.has_kraken_write_access() is False:
             self.show_permission_error("/dev/hidraw für USB 1e71:300e ist nicht les- und schreibbar.")
@@ -14244,7 +14627,7 @@ class KrakenControl(QMainWindow):
             lambda: self.apply_curve(channel, table),
         ):
             return
-        access = self.has_kraken_write_access()
+        access = None if self.is_thermalright_cooling() else self.has_kraken_write_access()
         if access is False:
             self.show_permission_error("/dev/hidraw für USB 1e71:300e ist nicht les- und schreibbar.")
             return
@@ -16633,7 +17016,7 @@ class KrakenControl(QMainWindow):
         self.prime_ene_dram_cold_start(finished, force_all=True)
 
     def prime_ene_dram_cold_start(self, continuation: Callable[[], None], *, force_all: bool = False) -> None:
-        """Wake stubborn ENE DRAM once through OpenRGB's own driver path.
+        """Wake stubborn ENE DRAM twice through OpenRGB's own driver path.
 
         The SDK server can report an ENE module as already being in Direct mode
         while the physical LEDs still ignore direct frames after complete power
@@ -16665,17 +17048,18 @@ class KrakenControl(QMainWindow):
         primary = self.current_rgb_studio_config().primary
         commands: list[list[str]] = []
         try:
-            for device, _stable_id in targets:
-                # Deliberately use OpenRGB's CLI client here instead of OHC's
-                # SDK helper.  --mode direct asks the running OpenRGB server to
-                # execute its controller-specific mode transition, then sends a
-                # harmless first color.  The normal persistent worker takes over
-                # immediately afterwards.
-                commands.append(
-                    self.openrgb_client.color_command(
-                        device.index, [primary], direct=True
+            for _pass_index in range(ENE_DRAM_RECLAIM_PASSES):
+                for device, _stable_id in targets:
+                    # Deliberately use OpenRGB's CLI client here instead of
+                    # OHC's SDK helper. --mode direct asks the running OpenRGB
+                    # server to execute its controller-specific transition,
+                    # then sends a harmless first colour. Devices stay grouped
+                    # by pass: all DIMMs receive pass one before pass two.
+                    commands.append(
+                        self.openrgb_client.color_command(
+                            device.index, [primary], direct=True
+                        )
                     )
-                )
         except (OpenRGBError, OSError, ValueError) as exc:
             self.log_message(
                 f"RGB-ENE-WAKE: Vorbereitung fehlgeschlagen · {exc} · normaler SDK-Start folgt"
@@ -16688,7 +17072,7 @@ class KrakenControl(QMainWindow):
         self.update_ene_dram_notice()
         self.log_message(
             f"RGB-ENE-WAKE: Kaltstart-Reclaim über OpenRGB-Treiber · {len(targets)} ENE-DRAM-Gerät(e) · "
-            f"{names} · Direct wird einmal explizit neu angewendet"
+            f"{names} · Direct wird in {ENE_DRAM_RECLAIM_PASSES} geordneten Durchläufen neu angewendet"
         )
 
         def prime_finished(ok: bool) -> None:
@@ -16697,7 +17081,8 @@ class KrakenControl(QMainWindow):
                 for _device, stable_id in targets:
                     self.ene_dram_cli_prime_done.add(stable_id)
                 self.log_message(
-                    "RGB-ENE-WAKE: OpenRGB-Direct-Reclaim abgeschlossen · erster OHC-Frame folgt"
+                    f"RGB-ENE-WAKE: OpenRGB-Direct-Reclaim mit {ENE_DRAM_RECLAIM_PASSES} Durchläufen "
+                    "abgeschlossen · erster OHC-Frame folgt"
                 )
             else:
                 self.log_message(
@@ -16705,7 +17090,9 @@ class KrakenControl(QMainWindow):
                     "normaler Direct-SDK-Pfad wird trotzdem versucht"
                 )
             self.update_ene_dram_notice(failed=not ok)
-            QTimer.singleShot(140, continuation)
+            # Let the second Direct transition settle before the persistent SDK
+            # stream sends its first animated frame.
+            QTimer.singleShot(320, continuation)
 
         self.run_rgb_command_sequence(
             commands,

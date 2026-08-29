@@ -46,6 +46,14 @@ Open Hardware Control is a single Linux desktop application with modular hardwar
 
 Safety invariant: unconfirmed channels are not automatically written, and firmware/BIOS ownership is restored when OHC control ends where supported.
 
+### 4a. Thermalright Levita display and cooling
+
+- `thermalright_display.py` — local media/TRCC discovery, display geometry, protected cutout and rendering model.
+- `thermalright_display_ui.py` — Levita editor, test mode and optional bounded calls to the separately installed TRCC Linux backend.
+- `thermalright_cooling.py` — read-only USB identity, driver-label-based PWM role suggestions and conservative profile duties.
+
+The display USB path and motherboard PWM cooling path remain independent. A suggested header is never authorization to write: pump and radiator mappings require separate physical confirmation, CoolerControl ownership blocks writes, and firmware control is restored on exit. No coolant value is inferred from CPU temperature or RPM.
+
 ### 5. Corsair via OpenLinkHub
 
 - `openlinkhub_integration.py` — validated local API integration.

@@ -28,7 +28,11 @@ assert "new Panel" in designs._panel_script("windows11", Path("/tmp/wall.svg"))
 assert 'location = "top"' in designs._panel_script("macos", Path("/tmp/wall.svg"))
 assert 'location = "bottom"' in designs._panel_script("macos", Path("/tmp/wall.svg"))
 
-with tempfile.TemporaryDirectory(prefix="ohc-desktop-design-test-") as temporary:
+# Backup/restore logic is tested in an isolated directory. Do not let a locally
+# installed OHC desktop-shell instance participate in this unit test.
+with tempfile.TemporaryDirectory(prefix="ohc-desktop-design-test-") as temporary, patch(
+    "desktop_designs._stop_shell_integration"
+):
     root = Path(temporary)
     config = root / "config"
     state = root / "state"

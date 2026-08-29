@@ -28,6 +28,9 @@ This file records decisions that future agents must preserve unless the project 
 - CPU_FAN/PUMP_FAN ownership must not conflict with Kraken cooling ownership.
 - **3.4.27:** CoolerControl service autostart may be changed from OHC only through an explicit confirmation and Polkit authorization. Disabling the service must not start OHC fan control automatically; enabling it must first stop OHC mainboard control and restore firmware/BIOS ownership.
 - Firmware update/flashing features require a separate explicit design/review; no agent may infer or invent firmware-write protocols.
+- **3.4.29:** Thermalright Levita display USB and pump/radiator motherboard PWM are separate ownership paths. USB presence may select the display/editor but never authorizes a PWM write. Both cooling headers require individual physical confirmation, CoolerControl remains mutually exclusive, and OHC must restore owned headers to firmware control on exit.
+- **3.4.29:** The current Levita path exposes no coolant sensor. OHC may show CPU/GPU measurements and use CPU-based software curves, but must never label a derived value as coolant temperature.
+- **3.4.29:** The reference ENE-DRAM controller requires two ordered Direct reclaim passes at saved-profile cold start. A successful OpenRGB command remains protocol evidence only, not proof that LEDs changed visibly.
 
 ## Assets and licensing
 

@@ -1,10 +1,10 @@
-# Open Hardware Control by Frelidon 3.4.28 INTERN
+# Open Hardware Control by Frelidon 3.4.29 INTERN
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
 <!-- /project-badges -->
 
-Open Hardware Control ist eine freie Linux-Oberfläche für **NZXT-Kraken-LCD**, Pumpe, Radiatorlüfter und RGB, für **kalibrierte Mainboard-/Gehäuselüfter über Linux hwmon/NCT6687**, für **Corsair-Geräte über OpenLinkHub** sowie für zusätzliche RGB-Geräte über eine von OHC automatisch verwaltete lokale Hardware-Engine. Das Projekt richtet sich an Fedora, Nobara, Debian, Ubuntu, Linux Mint, Arch Linux, Manjaro, EndeavourOS und openSUSE.
+Open Hardware Control ist eine freie Linux-Oberfläche für **NZXT-Kraken-LCD**, Pumpe, Radiatorlüfter und RGB, für das **Thermalright Levita Vision Display**, für **kalibrierte Mainboard-/Gehäuselüfter über Linux hwmon/NCT6687**, für **Corsair-Geräte über OpenLinkHub** sowie für zusätzliche RGB-Geräte über eine von OHC automatisch verwaltete lokale Hardware-Engine. Das Projekt richtet sich an Fedora, Nobara, Debian, Ubuntu, Linux Mint, Arch Linux, Manjaro, EndeavourOS und openSUSE.
 
 ![Open Hardware Control – Übersicht](docs/images/screenshots/01-dashboard-overview.png)
 
@@ -14,18 +14,21 @@ Projekt-Repository: <https://github.com/Frelidon/open-hardware-control>
 
 > **Inoffizielles unabhängiges Community-Projekt:** Bisher besteht keine offizielle Unterstützung, Kooperation, Freigabe oder Verbindung zu NZXT, Corsair, be quiet!, OpenLinkHub, OpenRGB oder anderen genannten Herstellern und Projekten. Produkt- und Markennamen dienen nur der Kompatibilitätsbeschreibung. Hersteller und Rechteinhaber erreichen Frelidon über die öffentliche Kontaktadresse im GitHub-Profil oder über den Steam-Benutzernamen **Frelidon**.
 
-Version 3.4.28 INTERN verbindet die verständlichere CoolerControl-Verwaltung mit einem einheitlichen blau getönten Kartendesign und ehrlicher Kraken-Profilanzeige. OHC unterscheidet das geschlossene Programmfenster vom weiterlaufenden `coolercontrold`-Hintergrunddienst und markiert ein Kraken-Schnellprofil erst nach erfolgreicher Hardwareübertragung.
+Version 3.4.29 INTERN erweitert die LCD-Seite um ein lokales Thermalright-Levita-Display-Studio. Eigene beziehungsweise bereits vorhandene Designs lassen sich ohne Kopie einlesen, auf einer echten 1600×720-Fläche ansehen und mit frei verschiebbaren Hardwarewerten ergänzen. Der sichere Testmodus ist standardmäßig aktiv; echte USB-Übertragung erfolgt nur über das separat installierte GPL-Backend TRCC Linux.
 
-## Neu in 3.4.28 INTERN
+## Neu in 3.4.29 INTERN
 
-- Gehäuselüfterkarten bleiben zunächst kompakt, öffnen nur die ausdrücklich gewählte Kurve und lassen sich über dieselbe Aktion wieder schließen.
-- Die weiter aufgeteilte Modulstruktur und `MODULE_MAP.md` reduzieren den Kontextbedarf lokaler Coding-KIs.
-- Getrennte Anzeige von laufendem CoolerControl-Hintergrunddienst und aktiviertem Systemstart.
-- Bestätigte Polkit-Aktionen für vorübergehende OHC-Übernahme, dauerhaftes Deaktivieren sowie erneutes Aktivieren und Starten von CoolerControl.
-- Sichere Übergabe: OHC startet seine Lüfterregelung beim Deaktivieren nicht ungefragt; vor dem Aktivieren von CoolerControl gehen Mainboard-Kanäle an Firmware/BIOS zurück.
-- Einheitliches blau getöntes Design für RGB-Studio, LCD, Profile, Log, Corsair/OpenLinkHub, Einstellungen, Über, Hilfe und Kraken-Details.
-- Leise, Ausbalanciert und Leistung werden erst nach erfolgreicher Pumpen- und Lüfterübertragung vollständig blau markiert.
-- Vollständige lokale-KI-Übergabe für LM Studio/Qwen2.5-Coder mit Startprompt, Projektregeln und abgesichertem GitHub-Ablauf.
+- Neues Thermalright-Levita-Studio als breite Karte auf der LCD-Seite.
+- Lokaler Import von Bildern, Videos, `.zt`-Dateien und vollständigen TRCC-Layoutordnern mit `config1.dc`; keine Herstellerdesigns werden kopiert, heruntergeladen oder mit OHC ausgeliefert.
+- 1600×720-Vorschau mit der rechten physischen 80-Pixel-Aussparung als gesperrter Bereich sowie Dynamic-Island-Stil Aus/A/B/C.
+- CPU-Temperatur, CPU-Auslastung, GPU-Temperatur, GPU-Auslastung, RAM und Uhrzeit sind einzeln ein-/ausblendbar, verschiebbar, skalierbar und einfärbbar.
+- Standardmäßig aktiver Testmodus inklusive lokalem Rot-/Grün-/Blau-/Schwarz-Test ohne USB-Zugriff.
+- Optionaler Hardwaremodus über das separat installierte TRCC-Linux-Backend für Erkennung, Displaytest, Designübertragung und laufende Sensoraktualisierung.
+- Exakte Kühlungsintegration für **Thermalright Levita Vision 360 ARGB Black**: Display über USB, Pumpe und Radiatorlüfter getrennt über ausgewählte Mainboard-PWM-Header.
+- `PUMP_FAN` und `CPU_FAN` werden anhand ihrer Linux-Treiberbezeichnung vorgeschlagen, müssen aber jeweils mit dem sicheren 70-%-/10-s-Test physisch bestätigt werden. CoolerControl blockiert parallele Schreibzugriffe; beim Beenden gehen verwendete Header zurück an BIOS/Firmware.
+- Leise, Ausbalanciert, Leistung, Sicherheit und CPU-Temperaturkurven stehen nach der Bestätigung zur Verfügung. Da die Levita über diesen Pfad keinen Kühlmittelsensor meldet, zeigt OHC hierfür bewusst keinen erfundenen Wert an.
+- ENE-DRAM erhält beim automatischen RGB-Profilstart zwei geordnete OpenRGB-Direct-Durchläufe. Damit wird auch der beobachtete Kaltstartfall abgedeckt, bei dem der erste erfolgreiche Befehl die physischen LEDs noch nicht aufweckt.
+- Die Verbesserungen aus 3.4.28 an Gehäuselüfterkarten, Modulstruktur, CoolerControl, Design und Kraken-Profilen bleiben erhalten.
 
 ## Neu in 3.4.26 INTERN
 
@@ -430,30 +433,30 @@ Die Animation kann dabei kurz stehen bleiben, muss aber weder neu eingelesen noc
 
 ### Fedora und Nobara – RPM
 
-Lade `open-hardware-control-3.4.28-0.intern2.noarch.rpm` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control-3.4.29-0.intern2.noarch.rpm` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.28-0.intern2.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29-0.intern2.noarch.rpm
 ```
 
 ### Debian, Ubuntu und Linux Mint – DEB
 
-Lade `open-hardware-control_3.4.28~intern2_all.deb` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control_3.4.29~intern2_all.deb` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.28~intern2_all.deb'
+sudo apt install './open-hardware-control_3.4.29~intern2_all.deb'
 ```
 
 ### Universelles Installationspaket
 
-Das ZIP funktioniert auf Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_28_INTERN.zip` herunter und führe aus:
+Das ZIP funktioniert auf Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_INTERN.zip` herunter und führe aus:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_28_INTERN.zip
-cd open-hardware-control-3.4.28-INTERN
+unzip open_hardware_control_v3_4_29_INTERN.zip
+cd open-hardware-control-3.4.29-INTERN
 chmod +x install.sh
 ./install.sh
 ```

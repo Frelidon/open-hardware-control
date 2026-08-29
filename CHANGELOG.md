@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.4.29 INTERN
+
+- Added a local-first Thermalright Levita Vision display studio with a 1600×720 canvas, protected 80-pixel right cutout, local TRCC/image/video import, movable CPU/GPU/RAM/clock overlays and a USB-safe test mode enabled by default.
+- Added exact `Thermalright Levita Vision 360 ARGB Black` cooling selection. The display remains on USB while pump and radiator control use separately mapped motherboard `PUMP_FAN`/`CPU_FAN` PWM headers.
+- Kept Levita PWM writes behind the existing physical 70-percent/10-second confirmation, CoolerControl ownership block and firmware/BIOS restoration on exit. OHC reports that this device path exposes no coolant-temperature sensor instead of fabricating one.
+- Added conservative Levita Silent, Balanced, Performance and Safety duties plus CPU-temperature software curves after both channels are confirmed.
+- Changed ENE-DRAM cold-start recovery from one acknowledged Direct transition to two ordered full-device passes before the saved RGB design starts. This reflects the observed controller behavior where the first successful command may not yet wake the physical LEDs.
+- Added focused Thermalright cooling/display and ENE cold-start regression coverage and included all new modules in runtime/RPM packages.
+
 ## 3.4.28 INTERN
 
 - Made chassis-fan cards start collapsed, expand only one explicit selection and close together with their embedded curve editor.

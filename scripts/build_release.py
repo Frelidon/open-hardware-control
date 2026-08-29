@@ -80,6 +80,9 @@ RUNTIME_FILES = {
     "rgb_effects.py",
     "ui_layout.py",
     "temperature_utils.py",
+    "thermalright_cooling.py",
+    "thermalright_display.py",
+    "thermalright_display_ui.py",
     "nzxt_rgb.py",
     "nzxt_esc_profiles.py",
     "SECURITY_SCAN_REPORT.json",
@@ -239,8 +242,8 @@ def build_deb(temp: Path) -> Path:
                 "Maintainer: Frelidon <noreply@github.com>",
                 "Depends: python3, liquidctl, python3-pil, python3-pyside6.qtwidgets, python3-pyside6.qtnetwork, python3-pyside6.qtdbus, python3-pyside6.qtsvg, policykit-1",
                 "Homepage: https://github.com/Frelidon/open-hardware-control",
-                "Description: NZXT Kraken, Corsair/OpenLinkHub and RGB Studio for Linux",
-                " Open-source Linux GUI for Kraken LCD, pump, fan and RGB control",
+                "Description: NZXT Kraken, Thermalright Levita, OpenLinkHub and RGB for Linux",
+                " Open-source Linux GUI for NZXT Kraken and Thermalright Levita display/cooling",
                 " with local OpenLinkHub and optional loopback-only OpenRGB SDK integration.",
                 "",
             ]
@@ -308,7 +311,7 @@ def build_rpm(temp: Path) -> Path:
         f"""Name:           open-hardware-control
 Version:        {VERSION}
 Release:        {"0.intern2" if INTERNAL else "1"}%{{?dist}}
-Summary:        NZXT Kraken, Corsair/OpenLinkHub and RGB Studio for Linux
+Summary:        NZXT Kraken, Thermalright Levita, OpenLinkHub and RGB for Linux
 License:        GPL-3.0-or-later
 URL:            https://github.com/Frelidon/open-hardware-control
 Source0:        %{{name}}-%{{version}}.tar.gz
@@ -321,8 +324,8 @@ Requires:       qt6-qtsvg
 Requires:       polkit
 
 %description
-Open-source Linux GUI for NZXT Kraken LCD, pump, fan and RGB control with
-local OpenLinkHub and optional loopback-only OpenRGB SDK integration.
+Open-source Linux GUI for NZXT Kraken and Thermalright Levita display/cooling
+with local OpenLinkHub and optional loopback-only OpenRGB SDK integration.
 
 %prep
 %setup -q

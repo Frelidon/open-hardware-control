@@ -1,6 +1,6 @@
 # Open Hardware Control — Project Status
 
-**Current development version:** 3.4.28 INTERN
+**Current development version:** 3.4.29 INTERN
 
 **Status date:** 29 August 2026
 
@@ -12,20 +12,22 @@ Continue Open Hardware Control as a modular Linux hardware-control application w
 
 Version 3.4.26 adds a repository-native AI development layer so Cursor, Codex, Claude Code and future coding agents can recover project context from files rather than depending on one long chat.
 
-Version 3.4.28 now combines clearer CoolerControl ownership and persistent service controls with the application-wide blue dashboard design and confirmed Kraken quick-profile feedback. The remaining cooling interaction work is tracked in `ROADMAP.md`.
+Version 3.4.29 adds a local-first Thermalright Levita Vision display studio to the LCD page. It imports user-selected local media and TRCC layout folders, provides a safe preview/test mode and delegates real USB communication to the separately installed GPL TRCC Linux backend.
 
-The 3.4.28 codebase has also begun an incremental local-AI-oriented split of the historical `kraken_control.py` monolith. The executable remains compatible, while independent constants, temperature helpers, privacy logging, the serial command backend, cooling widgets and localization/help data now live in focused modules documented by `MODULE_MAP.md`.
+The 3.4.29 codebase has also begun an incremental local-AI-oriented split of the historical `kraken_control.py` monolith. The executable remains compatible, while independent constants, temperature helpers, privacy logging, the serial command backend, cooling widgets and localization/help data now live in focused modules documented by `MODULE_MAP.md`.
 
-## What 3.4.28 adds so far
+## What 3.4.29 adds so far
 
-- Separate reporting for the CoolerControl graphical client, active `coolercontrold` background service and service-autostart state.
-- Confirmed Polkit actions to stop CoolerControl temporarily, disable it permanently or enable and start it again.
-- Safe ownership transitions: disabling CoolerControl never starts OHC fan control automatically; enabling CoolerControl first returns mainboard channels to firmware/BIOS ownership.
-- Blue-tinted cards, editors, tables and inputs across RGB Studio, LCD, Profiles, Log, Corsair/OpenLinkHub, Settings, About, Help and Kraken detail areas.
-- Kraken Leise/Ausbalanciert/Leistung buttons become fully blue only after both requested hardware writes succeed and are cleared by individual/manual control.
-- Local AI handoff files and a credential-free Git bundle provide LM Studio/Qwen2.5-Coder setup, full branch history, a mandatory repository startup sequence and a permission-gated GitHub branch workflow without storing credentials.
-- First compatibility-preserving monolith split: seven focused modules reduce the main file by roughly 1,600 lines, avoid circular imports and are included in installation and release packaging.
-- Chassis-fan cards now start collapsed, expose `Kurve & Details bearbeiten` on every card, expand only one explicit selection and collapse again when the action or embedded editor is closed.
+- Full-width Thermalright Levita Vision studio inside the existing LCD page.
+- Local-only import for images, videos, `.zt` media and complete TRCC layout directories containing `config1.dc`; imported manufacturer assets are neither copied nor packaged.
+- A true 1600×720 editor with the verified right-hand 80-pixel Levita panel cutout (`x=1520…1599`) shown as a protected zone.
+- Movable, hideable, resizable and recolorable CPU temperature/load, GPU temperature/load, memory and clock overlays.
+- Test mode enabled by default: previews and the local color-cycle test perform no USB writes.
+- Hardware detection, color test, media/theme loading, split modes and the live metric render loop use bounded shell-free commands through the separately installed TRCC Linux backend.
+- Exact Thermalright Levita Vision 360 ARGB Black cooling identity with separate, user-confirmed motherboard mappings for its 4-pin PWM pump and radiator fans.
+- Conservative cooling profiles and CPU-temperature curves become writable only after both relevant headers have passed the existing 70-percent/10-second physical test. CoolerControl ownership remains exclusive and OHC restores firmware control on exit.
+- ENE-DRAM cold-start reclaim now runs two ordered Direct passes before profile animation, because the latest real log confirmed that one successful protocol pass can still leave the physical LEDs asleep.
+- The previous 3.4.28 chassis-card behavior, modularization, CoolerControl ownership, application-wide blue design and confirmed Kraken profiles remain intact.
 
 ## What 3.4.26 adds
 
@@ -43,6 +45,7 @@ The 3.4.28 codebase has also begun an incremental local-AI-oriented split of the
 - Shared application infrastructure: `app_constants.py`, `temperature_utils.py`, `privacy_logging.py`, `command_backend.py`.
 - Hardware request coordination: `hardware_request_coordinator.py`, `cooling_ownership.py`.
 - Mainboard fan control: `mainboard_fan_control.py`, `ohc_fan_helper.py` plus Polkit policy.
+- Thermalright display/cooling: `thermalright_display.py`, `thermalright_display_ui.py`, `thermalright_cooling.py`.
 - Corsair/OpenLinkHub: `openlinkhub_integration.py`, `openlinkhub_mouse_visuals.py`.
 - RGB/OpenRGB: `openrgb_integration.py`, `openrgb_sdk.py`, `rgb_devices.py`, `rgb_effects.py`.
 - Desktop customization: `desktop_shell.py`, `desktop_designs.py`, `desktop_assets.py`.
@@ -58,7 +61,7 @@ The 3.4.28 codebase has also begun an incremental local-AI-oriented split of the
 - Corsair remains mediated through local OpenLinkHub rather than direct, guessed Corsair USB writes.
 - LCD/GIF and Kraken hardware requests remain coordinated so simultaneous subsystems do not fight for the same device.
 
-## Confirmed next work and 3.4.28 progress
+## Confirmed next work and 3.4.29 progress
 
 - RGB Studio, LCD, Profiles, Log, Corsair/OpenLinkHub, Settings, About and Help now share the current blue-tinted dashboard surface design.
 - Kraken quick-profile buttons now track the last fully successful Leise, Ausbalanciert or Leistung write instead of displaying a static default.
@@ -68,6 +71,7 @@ The 3.4.28 codebase has also begun an incremental local-AI-oriented split of the
 ## Known boundaries / not automatically claimed
 
 - Hardware support beyond explicitly tested devices remains provisional until real-hardware verification.
+- Thermalright Levita hardware support remains provisional: local editor/import/test mode, USB detection and read-only PWM/RPM discovery are verified. The physical display write via `trcc` and actual PWM response still require an in-app user confirmation; OHC therefore keeps every write behind explicit calibration.
 - Firmware flashing/version switching is not a supported feature in this repository.
 - GPU fan control is not part of the mainboard PWM subsystem.
 - Open Radeon Control Center remains separate.

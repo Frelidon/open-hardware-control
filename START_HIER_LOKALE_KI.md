@@ -54,7 +54,7 @@ Antworte nach diesem Start zunächst nur mit:
 
 ## Aktueller Einstiegspunkt
 
-Der aktuelle Entwicklungsstand ist in `PROJECT_STATUS.md` beschrieben. Version 3.4.28 INTERN umfasst unter anderem die CoolerControl-Dienstverwaltung, die vereinheitlichten blau getönten Detailflächen, die bestätigungsbasierte Markierung der Kraken-Schnellprofile, den ersten kompatiblen Schnitt der historischen Hauptdatei in fokussierte Module und die standardmäßig eingeklappten, jeweils nur einzeln geöffneten Gehäuselüfterkarten.
+Der aktuelle Entwicklungsstand ist in `PROJECT_STATUS.md` beschrieben. Version 3.4.29 INTERN umfasst unter anderem das Thermalright-Levita-Display-Studio, die sicher bestätigungspflichtige Levita-Pumpen-/Radiatorsteuerung, den zweistufigen ENE-DRAM-Kaltstart, die CoolerControl-Dienstverwaltung, die vereinheitlichten blau getönten Detailflächen, den ersten kompatiblen Schnitt der historischen Hauptdatei in fokussierte Module und die standardmäßig eingeklappten, jeweils nur einzeln geöffneten Gehäuselüfterkarten.
 
 ## GitHub-Ziel
 

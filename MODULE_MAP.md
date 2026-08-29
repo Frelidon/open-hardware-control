@@ -20,6 +20,9 @@ Die Zerlegung erfolgt in kleinen, testbaren Schritten. Hardware-Schreiblogik, Be
 | `cooling_widgets.py` | Hardwareunabhängiger Kurveneditor und Mini-Vorschau | Nein |
 | `localization_catalog.py` | Übersetzungen und integrierte Hilfethemen | Nein |
 | `ui_layout.py` | Gespeicherte Navigations- und Layoutmodelle | Nein |
+| `thermalright_display.py` | Levita-Geometrie, lokaler Medien-/TRCC-Import und Renderdaten | Nein |
+| `thermalright_display_ui.py` | Levita-Editor, Testmodus und begrenzte optionale TRCC-Aufrufe | Nur nach ausgeschaltetem Testmodus |
+| `thermalright_cooling.py` | Read-only USB-Erkennung, PWM-Rollenvorschläge und sichere Profilwerte | Nein |
 | `kraken_control.py` | PySide6-Hauptfenster, Seitenaufbau und noch nicht ausgelagerte Orchestrierung | Teilweise; bestehende Grenzen bewahren |
 
 ## Wichtige Abhängigkeiten
@@ -67,6 +70,17 @@ Zuerst lesen:
 - `DEVICE_SUPPORT.md`, `SUPPORTED_DEVICES.md` und passende Tests.
 
 CPU_FAN, PUMP_FAN, Kraken und CoolerControl dürfen keine konkurrierenden Besitzer erhalten.
+
+### Thermalright Levita
+
+Zuerst lesen:
+
+- `thermalright_display.py` und `thermalright_display_ui.py` für Import, Vorschau, Notch, Overlays und TRCC;
+- `thermalright_cooling.py` sowie die gezielt gefundenen Levita-Methoden in `kraken_control.py` für Pumpe/Radiator;
+- `mainboard_fan_control.py` und `cooling_ownership.py` für Schreibsicherheit;
+- `tests/test_thermalright_*.py`, `DEVICE_SUPPORT.md` und `SUPPORTED_DEVICES.md`.
+
+USB-Display und PWM-Kühlung sind getrennte Transportwege. Niemals aus der USB-ID einen unbestätigten PWM-Schreibzugriff oder einen Kühlmittelwert ableiten.
 
 ### RGB Studio
 
