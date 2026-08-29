@@ -114,6 +114,7 @@ KRAKEN_DEVICES: tuple[KrakenDeviceProfile, ...] = (
 )
 
 BY_PRODUCT_ID = {profile.product_id: profile for profile in KRAKEN_DEVICES}
+NZXT_LIQUIDCTL_PRODUCT_IDS = frozenset((*BY_PRODUCT_ID, "2012"))
 
 
 def detect_profile_from_liquidctl_output(output: str) -> KrakenDeviceProfile | None:
@@ -145,6 +146,24 @@ def detect_profile_from_sysfs(root: Path = Path("/sys/bus/usb/devices")) -> Krak
         if vendor == NZXT_USB_VENDOR_ID and product in BY_PRODUCT_ID:
             return BY_PRODUCT_ID[product]
     return None
+
+
+def nzxt_liquidctl_device_present(root: Path = Path("/sys/bus/usb/devices")) -> bool:
+    """Return whether a known Kraken or NZXT 2023 RGB controller is present."""
+
+    try:
+        entries = sorted(root.iterdir())
+    except OSError:
+        return False
+    for entry in entries:
+        try:
+            vendor = (entry / "idVendor").read_text(encoding="ascii").strip().lower()
+            product = (entry / "idProduct").read_text(encoding="ascii").strip().lower()
+        except OSError:
+            continue
+        if vendor == NZXT_USB_VENDOR_ID and product in NZXT_LIQUIDCTL_PRODUCT_IDS:
+            return True
+    return False
 
 
 def detected_profile(output: str = "") -> KrakenDeviceProfile | None:

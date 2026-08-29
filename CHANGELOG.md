@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.4.29.3 INTERN
+
+- Replaced one `pkexec` launch per automatic fan-curve write with one authenticated, pipe-bound and strictly validated helper session. This prevents the Polkit authorization cache from expiring underneath a running Thermalright/Mainboard CPU curve after several minutes.
+- Skip the unnecessary `liquidctl initialize all` call on confirmed Thermalright-only systems when no supported NZXT USB device is present. Mixed systems with a Kraken or NZXT RGB controller retain the existing initialization path.
+- Hide the round Kraken clock controls while Thermalright Levita is selected and redirect any late/stale clock action to the movable Levita Display Studio clock instead of reporting a missing Kraken.
+- Accept a stable removal of one or two OpenRGB devices after 2.5 seconds and persist the new expected count, while retaining the stricter cold-start safeguard for large temporary inventory drops.
+- Pause an automatic Thermalright CPU curve for five minutes after a privileged-helper failure instead of repeatedly opening authentication/error dialogs from the background control timer.
+
 ## 3.4.29.2 INTERN
 
 - Prevented `desktop_shell.py --quit` from loading the graphical Qt platform integration during logout or cleanup; the stop path now uses `QCoreApplication`, avoiding the observed SIGABRT and empty KDE helper window.

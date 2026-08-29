@@ -11,8 +11,11 @@ from __future__ import annotations
 
 import os
 import re
+import json
+import selectors
 import shutil
 import subprocess
+import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -357,6 +360,124 @@ class FanWriteError(RuntimeError):
     pass
 
 
+class PrivilegedFanHelperSession:
+    """One authenticated, pipe-bound helper for the lifetime of OHC.
+
+    Polkit's ``auth_admin_keep`` cache expires after a few minutes. Starting a
+    new pkexec process for every temperature-curve adjustment would therefore
+    eventually open another authentication request from a background timer.
+    This session authenticates once, keeps the narrowly validated helper as a
+    child process, and disappears automatically when OHC closes its stdin.
+    """
+
+    def __init__(self) -> None:
+        self.process: subprocess.Popen[str] | None = None
+        self.lock = threading.RLock()
+
+    def active(self) -> bool:
+        return self.process is not None and self.process.poll() is None
+
+    def stop(self) -> None:
+        process = self.process
+        self.process = None
+        if process is None:
+            return
+        try:
+            if process.stdin is not None:
+                process.stdin.close()
+        except OSError:
+            pass
+        if process.poll() is None:
+            process.terminate()
+            try:
+                process.wait(timeout=1.0)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(timeout=1.0)
+
+    def _reply(self, timeout: float) -> dict[str, object]:
+        process = self.process
+        if process is None or process.stdout is None:
+            raise FanWriteError("privilegierte Lüfter-Helfersitzung ist nicht verfügbar")
+        selector = selectors.DefaultSelector()
+        try:
+            selector.register(process.stdout, selectors.EVENT_READ)
+            if not selector.select(max(0.1, float(timeout))):
+                self.stop()
+                raise FanWriteError(
+                    "Administratorfreigabe für die Lüftersteuerung hat nicht rechtzeitig geantwortet; "
+                    "die Kurvenregelung wurde sicher pausiert"
+                )
+            line = process.stdout.readline()
+        finally:
+            selector.close()
+        if not line:
+            detail = ""
+            if process.poll() is not None and process.stderr is not None:
+                try:
+                    detail = process.stderr.read().strip()
+                except OSError:
+                    detail = ""
+            self.stop()
+            raise FanWriteError(
+                detail or "Authentifizierung für Mainboard-Lüftersteuerung abgebrochen oder verweigert"
+            )
+        try:
+            payload = json.loads(line)
+        except (TypeError, ValueError, json.JSONDecodeError) as exc:
+            self.stop()
+            raise FanWriteError("ungültige Antwort der privilegierten Lüfter-Helfersitzung") from exc
+        if not isinstance(payload, dict) or payload.get("ok") is not True:
+            self.stop()
+            raise FanWriteError(
+                str(payload.get("error", "Lüfter-Helfer meldete keinen Erfolg"))
+                if isinstance(payload, dict) else "Lüfter-Helfer meldete keinen Erfolg"
+            )
+        return payload
+
+    def start(self, timeout: float = 120.0) -> None:
+        with self.lock:
+            if self.active():
+                return
+            self.stop()
+            if not privileged_fan_helper_available():
+                raise FanWriteError("privilegierter NCT6687-Helfer ist nicht installiert")
+            try:
+                self.process = subprocess.Popen(
+                    [str(DEFAULT_PKEXEC), str(DEFAULT_FAN_HELPER), "session"],
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    bufsize=1,
+                )
+            except OSError as exc:
+                self.process = None
+                raise FanWriteError(f"privilegierter Lüfter-Helfer konnte nicht gestartet werden: {exc}") from exc
+            self._reply(timeout)
+
+    def request(self, args: tuple[str, ...], timeout: float = 15.0) -> dict[str, object]:
+        with self.lock:
+            self.start()
+            process = self.process
+            if process is None or process.stdin is None:
+                raise FanWriteError("privilegierte Lüfter-Helfersitzung ist nicht verfügbar")
+            try:
+                process.stdin.write(json.dumps(list(args), ensure_ascii=True) + "\n")
+                process.stdin.flush()
+            except (BrokenPipeError, OSError) as exc:
+                self.stop()
+                raise FanWriteError("Verbindung zur privilegierten Lüfter-Helfersitzung wurde beendet") from exc
+            return self._reply(timeout)
+
+
+_PRIVILEGED_FAN_SESSION = PrivilegedFanHelperSession()
+
+
+def stop_privileged_fan_helper_session() -> None:
+    _PRIVILEGED_FAN_SESSION.stop()
+
+
 def privileged_fan_helper_available() -> bool:
     return DEFAULT_FAN_HELPER.is_file() and os.access(DEFAULT_FAN_HELPER, os.X_OK) and DEFAULT_PKEXEC.is_file()
 
@@ -374,25 +495,7 @@ def channel_can_control(channel: FanChannel) -> bool:
 
 
 def _run_privileged_helper(*args: str, timeout: float = 15.0) -> dict[str, object]:
-    if not privileged_fan_helper_available():
-        raise FanWriteError("privilegierter NCT6687-Helfer ist nicht installiert")
-    command = [str(DEFAULT_PKEXEC), str(DEFAULT_FAN_HELPER), *map(str, args)]
-    try:
-        result = subprocess.run(command, capture_output=True, text=True, timeout=timeout, check=False)
-    except (OSError, subprocess.SubprocessError) as exc:
-        raise FanWriteError(f"privilegierter Lüfter-Helfer konnte nicht gestartet werden: {exc}") from exc
-    output = (result.stdout or result.stderr or "").strip()
-    if result.returncode != 0:
-        if result.returncode in {126, 127}:
-            raise FanWriteError("Authentifizierung für Mainboard-Lüftersteuerung abgebrochen oder verweigert")
-        raise FanWriteError(output or f"privilegierter Lüfter-Helfer fehlgeschlagen ({result.returncode})")
-    try:
-        payload = __import__("json").loads(result.stdout or "{}")
-    except ValueError as exc:
-        raise FanWriteError("ungültige Antwort des privilegierten Lüfter-Helfers") from exc
-    if not isinstance(payload, dict) or payload.get("ok") is not True:
-        raise FanWriteError(str(payload.get("error", "Lüfter-Helfer meldete keinen Erfolg")) if isinstance(payload, dict) else "Lüfter-Helfer meldete keinen Erfolg")
-    return payload
+    return _PRIVILEGED_FAN_SESSION.request(tuple(map(str, args)), timeout=timeout)
 
 
 def _write_sysfs(path: Path, value: str) -> None:

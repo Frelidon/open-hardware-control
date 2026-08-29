@@ -32,6 +32,7 @@ This file records decisions that future agents must preserve unless the project 
 - **3.4.29:** The current Levita path exposes no coolant sensor. OHC may show CPU/GPU measurements and use CPU-based software curves, but must never label a derived value as coolant temperature.
 - **3.4.29:** The reference ENE-DRAM controller requires two ordered Direct reclaim passes at saved-profile cold start. A successful OpenRGB command remains protocol evidence only, not proof that LEDs changed visibly.
 - **3.4.29.2:** In Frelidon's confirmed personal Airgoo wiring, Channel B6 is the separate Jungle Leopard GPU support with 24 LEDs. It must remain a component zone independent from both ENE-DRAM controllers; this reference default must not be generalized to unrelated layouts or hubs.
+- **3.4.29.3:** Mainboard PWM curve writes may reuse one explicitly authorized, fixed-path Polkit helper child for the OHC process lifetime. The helper protocol must remain pipe-bound, length-limited and restricted to validated NCT6687 probe/percent/restore/watchdog operations; OHC restores firmware ownership before ending the session on orderly exit.
 
 ## Assets and licensing
 

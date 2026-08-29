@@ -1,4 +1,4 @@
-# Unterstützte Geräte – Open Hardware Control 3.4.29.2 INTERN
+# Unterstützte Geräte – Open Hardware Control 3.4.29.3 INTERN
 
 ## Direkt getestetes NZXT-Modul
 
@@ -18,6 +18,8 @@ Der Schwerpunkt bleibt die NZXT Kraken RGB 360 (2023, Standard / Non-Elite) mit 
 | Radiatorlüfter | 4-Pin PWM, vom Linux-Treiber typischerweise als `CPU Fan` gemeldet | Linux hwmon/NCT6687 | RPM read-only erkannt; Schreiben erst nach separatem 70-%-/10-s-Test |
 
 OHC zeigt den exakten Namen **Thermalright Levita Vision 360 ARGB Black** an. USB-Display und PWM-Kühlung sind technisch getrennt. Die Linux-Headernamen dienen nur als Vorschlag; der Benutzer muss Pumpe und Radiatorlüfter einzeln physisch bestätigen. Danach stehen feste Werte, Leise/Ausbalanciert/Leistung/Sicherheit und CPU-Temperaturkurven zur Verfügung. Bei aktivem CoolerControl bleiben PWM-Schreibzugriffe gesperrt, und beim geordneten Programmende werden von OHC übernommene Header an BIOS/Firmware zurückgegeben.
+
+Nach einer ausdrücklichen Polkit-Administratorfreigabe verwendet OHC für wiederholte Kurvenwerte eine einzige prozessgebundene Helfersitzung. Deren Protokoll akzeptiert weiterhin ausschließlich begrenzte, validierte NCT6687-Aktionen; beim Programmende wird zuerst die Firmwaresteuerung wiederhergestellt und danach die Sitzung geschlossen. Dadurch entsteht nach Ablauf des kurzfristigen Polkit-Caches kein neuer Hintergrunddialog für jeden Kurvenwert.
 
 Der derzeitige Gerätepfad meldet keinen Kühlmittelsensor. OHC zeigt deshalb keinen künstlich aus CPU-/GPU-Temperatur abgeleiteten Wasserwert an. CPU-/GPU-Temperaturen können unabhängig davon für Anzeige und Softwarekurven verwendet werden.
 
@@ -50,6 +52,7 @@ ARGB-Controller können Zonen melden, ohne die Zahl der elektrisch angeschlossen
 - Veränderliche ARGB-Zonen: sichere Größenkonfiguration pro Zone mit Lüfterzahl × LEDs je Lüfter; eine gespeicherte PC-Position dient nur als Vorschlag, nicht als elektrische Erkennung.
 - ENE-DRAM-Aliaspaare werden dedupliziert; ein vollständig gespiegeltes Gesamtinventar wird auf die erste reale Hälfte reduziert. Mehrere reale Module mit identischem Namen bleiben erhalten.
 - ENE-DRAM erhält vor einem gespeicherten automatischen RGB-Start zwei geordnete OpenRGB-Direct-Durchläufe. Ein erfolgreicher Prozessabschluss wird weiterhin nicht als optisch rückgelesene LED-Bestätigung ausgegeben.
+- Ein über mindestens 2,5 Sekunden stabiler Rückgang um ein oder zwei Geräte wird als dauerhafte Hardwareänderung übernommen (beispielsweise nach Ausbau des NZXT-Controllers von sieben auf sechs Geräte). Große Einbrüche bleiben weiterhin durch die strengere Kaltstart-Wiederholungslogik geschützt.
 - NZXT `led1` bis `led3` erscheinen als eigene Kacheln und können mit anderen Geräten gruppiert werden.
 - Gleichnamige GPU-/Controller-Einträge bleiben getrennt, werden nummeriert und können benannt sowie einer PC-Position zugeordnet werden.
 - Frelidons mitgelieferte verschiebbare PC-Ansicht bildet zwölf Lüfter ab: je nach gewählter Kühlhardware NZXT Kraken 360 oder Thermalright Levita Vision 360 oben, zwei Frontlüfter, drei Reverse-Intakes an Rückwand/Seite, drei Reverse-Intakes auf der Netzteilabdeckung vorne und einen Hecklüfter.

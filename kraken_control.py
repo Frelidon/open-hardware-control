@@ -94,7 +94,7 @@ from kraken_lcd_designs import (
     render_layered_hardware_animation,
 )
 from kraken_sensors import SystemMetricSampler, read_amd_cpu_temperature, read_amd_gpu_temperature
-from nzxt_backend import SupportLevel, detected_profile
+from nzxt_backend import SupportLevel, detected_profile, nzxt_liquidctl_device_present
 from openlinkhub_mouse_visuals import mouse_schema, visual_button_rows
 from desktop_assets import CURSOR_THEMES, ICON_THEMES
 from desktop_designs import STYLE_TITLES, design_plan, desktop_status, recover_pending_transaction
@@ -103,6 +103,7 @@ from openrgb_integration import (
     OpenRGBDevice,
     OpenRGBError,
     best_native_mode_for_effect,
+    is_confirmed_small_inventory_shrink,
     is_openrgb_apply_options_crash,
     is_openrgb_configuration_error,
     is_suspicious_inventory_drop,
@@ -185,6 +186,7 @@ from mainboard_fan_control import (
     set_channel_percent as set_mainboard_channel_percent,
     set_fan_control_watchdog as set_mainboard_fan_watchdog,
     snapshot_channel as snapshot_mainboard_channel,
+    stop_privileged_fan_helper_session as stop_mainboard_fan_helper_session,
     update_curve_state as update_mainboard_curve_state,
     validate_curve as validate_mainboard_curve,
 )
@@ -6532,6 +6534,8 @@ class KrakenControl(QMainWindow):
             )
         if hasattr(self, "cooling_liquid_safety_box"):
             self.cooling_liquid_safety_box.setVisible(not active)
+        if hasattr(self, "kraken_clock_box"):
+            self.kraken_clock_box.setVisible(not active)
         for widget in getattr(self, "thermalright_channel_controls", ()):
             widget.setVisible(active)
         if not active:
@@ -9363,6 +9367,7 @@ class KrakenControl(QMainWindow):
             log_callback=self.log_message,
             parent=content,
         )
+        self.kraken_clock_box = clock_box
 
         startup_box = QGroupBox("Automatisches Wiederherstellen")
         sl = QVBoxLayout(startup_box)
@@ -13399,6 +13404,7 @@ class KrakenControl(QMainWindow):
             self.mainboard_control_active = False
             self.log_message("MAINBOARD-FAN: Programmende · aktivierte Kanäle an Firmware/BIOS zurückgegeben")
         self.restore_thermalright_cooling_on_quit()
+        stop_mainboard_fan_helper_session()
         self.shutdown_gif_stream_sync()
         self.restore_original_lcd_sync_on_quit()
         self.usb_coordinator.complete(request.request_id, "Flüssigkeitstemperatur-Fallback gesendet")
@@ -13556,6 +13562,17 @@ class KrakenControl(QMainWindow):
         self.connection_label.style().unpolish(self.connection_label)
         self.connection_label.style().polish(self.connection_label)
         self.footer_status.setText("Geräte werden initialisiert …")
+        if (
+            self.is_thermalright_cooling()
+            and thermalright_display_present()
+            and not nzxt_liquidctl_device_present()
+        ):
+            self.log_message(
+                "THERMALRIGHT-START: kein NZXT-liquidctl-Gerät vorhanden · "
+                "unnötige liquidctl-Initialisierung übersprungen"
+            )
+            self.on_initialized(CommandResult([], 0, "", "", 0.0))
+            return
         self.backend.run_async(
             [LIQUIDCTL, "initialize", "all"],
             callback=self.on_initialized,
@@ -14212,8 +14229,26 @@ class KrakenControl(QMainWindow):
                 for channel, duty in ordered_targets.items():
                     self.write_thermalright_cooling(channel, duty)
             except MainboardFanWriteError as exc:
-                self.show_error(f"{action}: {exc}")
+                self.permission_retry_after = max(
+                    self.permission_retry_after,
+                    time.monotonic() + 300.0,
+                )
+                self.cpu_curve_force_update = False
+                detail = f"{action}: {exc}"
+                self.footer_status.setText(
+                    "Levita-CPU-Kurve sicher pausiert · Administratorfreigabe oder Lüfter-Helfer prüfen"
+                )
+                self.log_message(f"THERMALRIGHT-KÜHLUNG: {detail} · automatische Wiederholung 5 Minuten pausiert")
+                if self.isVisible() and self.isActiveWindow():
+                    self.show_error(detail)
+                elif hasattr(self, "tray") and self.tray.isVisible():
+                    self.tray.showMessage(
+                        APP_NAME,
+                        "Die Levita-CPU-Kurve wurde nach einem Helferfehler sicher pausiert. "
+                        "Öffne die Kühlungsseite, um die Administratorfreigabe zu erneuern.",
+                    )
                 return
+            self.permission_retry_after = 0.0
             self.cpu_curve_last_write = time.monotonic()
             for channel, duty in ordered_targets.items():
                 self.cpu_curve_last_duties[channel] = duty
@@ -17199,6 +17234,16 @@ class KrakenControl(QMainWindow):
         current_count = len(self.openrgb_devices)
         expected = max(self.openrgb_expected_device_count, current_count)
         stable_for = time.monotonic() - self.rgb_profile_inventory_stable_since if self.rgb_profile_inventory_stable_since else 0.0
+        if is_confirmed_small_inventory_shrink(expected, current_count, stable_for):
+            previous_expected = expected
+            self.openrgb_expected_device_count = current_count
+            self.settings.setValue("rgb_studio/expected_device_count", current_count)
+            self.settings.sync()
+            expected = current_count
+            self.log_message(
+                f"RGB-PROFILSTART: dauerhaft kleinerer Gerätebestand bestätigt · "
+                f"Erwartung {previous_expected} → {current_count} Gerät(e)"
+            )
         # OpenRGB commonly exposes only a subset of controllers during its first
         # few hundred milliseconds.  Never burn the saved profile into that
         # temporary inventory.  Wait for the known count and one stable window;
@@ -20891,6 +20936,14 @@ class KrakenControl(QMainWindow):
     def start_clock_mode(self) -> None:
         if self.is_gif_stream_running():
             self.stop_gif_stream(lambda: self.start_clock_mode())
+            return
+        if self.is_thermalright_cooling():
+            QMessageBox.information(
+                self,
+                "Uhr für Thermalright Levita",
+                "Diese Schaltfläche gehört zum runden NZXT-Kraken-LCD. Für die Thermalright Levita Vision "
+                "steht die verschiebbare Uhr direkt im Levita-Display-Studio zur Verfügung.",
+            )
             return
         if not self.devices_ready:
             self.show_error("Die Kraken ist noch nicht verbunden.")

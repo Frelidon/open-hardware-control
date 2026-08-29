@@ -17,7 +17,7 @@ installer = (ROOT / "install.sh").read_text(encoding="utf-8")
 helper = (ROOT / "install-udev-rule.sh").read_text(encoding="utf-8")
 diagnostics = (ROOT / "collect-diagnostics.sh").read_text(encoding="utf-8")
 
-assert 'APP_VERSION = "3.4.29.2"' in code
+assert 'APP_VERSION = "3.4.29.3"' in code
 assert 'BUILD_CHANNEL = "INTERN"' in code
 assert 'APP_NAME = "Open Hardware Control"' in code
 assert "from command_backend import Backend" in main_code
@@ -320,7 +320,7 @@ assert "maybe_offer_desktop_design_dependencies" in code
 assert "Fehlende Pakete &installieren" in code
 
 readme = (ROOT / "README.md").read_text(encoding="utf-8")
-assert "# Open Hardware Control by Frelidon 3.4.29.2 INTERN" in readme
+assert "# Open Hardware Control by Frelidon 3.4.29.3 INTERN" in readme
 assert "Inoffizielles unabhängiges Community-Projekt" in readme
 assert "Corsair · OpenLinkHub" in readme
 assert "| NZXT 2023 RGB Controller | `1e71:2012`" in readme
@@ -352,6 +352,13 @@ assert 'os.system' not in fan_helper
 assert 'shell=True' not in fan_helper
 assert 'org.freedesktop.policykit.exec.path' in fan_policy
 assert '/usr/libexec/open-hardware-control-fan-helper' in fan_policy
+assert 'op == "session"' in fan_helper
+assert "len(raw_line) > 512" in fan_helper
+assert "dispatch(controller(), request)" in fan_helper
+assert "PrivilegedFanHelperSession" in mainboard_code
+assert '[str(DEFAULT_PKEXEC), str(DEFAULT_FAN_HELPER), "session"]' in mainboard_code
+assert "stop_privileged_fan_helper_session" in mainboard_code
+assert "allow_active" in fan_policy and "auth_admin_keep" in fan_policy
 
 print("Static release checks passed.")
 

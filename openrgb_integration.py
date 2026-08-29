@@ -105,6 +105,24 @@ def is_suspicious_inventory_drop(
     return candidate <= max(2, reference // 2) and missing >= max(2, reference // 2)
 
 
+def is_confirmed_small_inventory_shrink(
+    expected_count: int,
+    current_count: int,
+    stable_for_seconds: float,
+) -> bool:
+    """Accept a stable one/two-device removal without weakening cold-start protection."""
+
+    expected = max(0, int(expected_count))
+    current = max(0, int(current_count))
+    missing = expected - current
+    return (
+        expected >= 4
+        and current >= 3
+        and 1 <= missing <= 2
+        and float(stable_for_seconds) >= 2.5
+    )
+
+
 def is_openrgb_configuration_error(output: str) -> bool:
     """Recognize safe configuration/state errors that must not quarantine hardware."""
 

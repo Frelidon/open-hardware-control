@@ -17,6 +17,7 @@ from mainboard_fan_control import (
     detect_dmi,
     fan_preset,
     MAINBOARD_FAN_PRESETS,
+    PrivilegedFanHelperSession,
     recommend_fan_preset,
     discover_hwmon_controllers,
     interpolate_curve,
@@ -240,6 +241,43 @@ def test_polkit_helper_path_is_used_for_unprivileged_nct6687(tmp_path: Path, mon
     mfc.set_channel_percent(channel, 70)
     mfc.restore_firmware_control(channel)
     assert calls == [("set-percent", "3", "70"), ("restore-firmware", "3")]
+
+
+def test_privileged_helper_session_reuses_one_authenticated_child(monkeypatch: pytest.MonkeyPatch) -> None:
+    import mainboard_fan_control as mfc
+
+    class FakeInput:
+        def __init__(self) -> None:
+            self.writes: list[str] = []
+        def write(self, value: str) -> int:
+            self.writes.append(value)
+            return len(value)
+        def flush(self) -> None:
+            return None
+
+    class FakeProcess:
+        def __init__(self) -> None:
+            self.stdin = FakeInput()
+            self.stdout = object()
+            self.stderr = object()
+        def poll(self):
+            return None
+
+    process = FakeProcess()
+    launches: list[list[str]] = []
+    monkeypatch.setattr(mfc, "privileged_fan_helper_available", lambda: True)
+    monkeypatch.setattr(
+        mfc.subprocess,
+        "Popen",
+        lambda command, **_kwargs: launches.append(command) or process,
+    )
+    session = PrivilegedFanHelperSession()
+    monkeypatch.setattr(session, "_reply", lambda _timeout: {"ok": True})
+    session.request(("set-percent", "2", "52"))
+    session.request(("set-percent", "2", "54"))
+    assert len(launches) == 1
+    assert launches[0][-1] == "session"
+    assert len(process.stdin.writes) == 2
 
 
 def test_polkit_snapshot_auto_uses_firmware_restore(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

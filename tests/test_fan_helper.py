@@ -1,4 +1,5 @@
 from pathlib import Path
+import io
 import sys
 
 import pytest
@@ -45,6 +46,24 @@ def test_helper_snapshot_auto_does_not_replay_cached_pwm(tmp_path: Path, monkeyp
     helper.main(["helper", "restore-snapshot", "3", "94", "2"])
     assert (hw / "pwm3_enable").read_text().strip() == "2"
     assert (hw / "pwm3").read_text().strip() == "178"
+
+
+def test_authenticated_session_handles_multiple_bounded_writes_without_reauth(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    hw = setup_hwmon(tmp_path)
+    monkeypatch.setattr(helper, "HWMON_ROOT", tmp_path)
+    monkeypatch.setattr(helper.os, "geteuid", lambda: 0)
+    monkeypatch.setattr(
+        helper.sys,
+        "stdin",
+        io.StringIO('["set-percent", "3", "70"]\n["restore-firmware", "3"]\n'),
+    )
+    assert helper.main(["helper", "session"]) == 0
+    output = capsys.readouterr().out
+    assert '"session": "ready"' in output
+    assert output.count('"ok": true') == 3
+    assert (hw / "pwm3_enable").read_text().strip() == "2"
 
 
 def test_helper_rejects_arbitrary_channel_and_percent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

@@ -15,6 +15,7 @@ from openrgb_integration import (
     OpenRGBDevice,
     best_native_mode_for_effect,
     is_suspicious_inventory_drop,
+    is_confirmed_small_inventory_shrink,
     is_openrgb_apply_options_crash,
     is_openrgb_configuration_error,
     parse_device_listing,
@@ -166,6 +167,10 @@ class OpenRGBIntegrationTests(unittest.TestCase):
         self.assertFalse(is_suspicious_inventory_drop(7, 7, 5))
         self.assertFalse(is_suspicious_inventory_drop(2, 2, 1))
         self.assertFalse(is_suspicious_inventory_drop(7, 7, 7))
+        self.assertFalse(is_confirmed_small_inventory_shrink(7, 6, 2.49))
+        self.assertTrue(is_confirmed_small_inventory_shrink(7, 6, 2.5))
+        self.assertTrue(is_confirmed_small_inventory_shrink(7, 5, 4.0))
+        self.assertFalse(is_confirmed_small_inventory_shrink(7, 2, 10.0))
 
 
 if __name__ == "__main__":
