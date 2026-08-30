@@ -1,6 +1,6 @@
 # Open Hardware Control – zentrale Projektdokumentation
 
-Stand: **3.4.29.8 INTERN**, 30. August 2026
+Stand: **3.4.29.9 INTERN**, 30. August 2026
 
 ## Zielbild
 
@@ -23,6 +23,8 @@ Hotfix 3.4.29.5 setzt den von TRCC dauerhaft gespeicherten dekorativen Split-Mod
 Version 3.4.29.6 ersetzt die schmale Vorschau-Markierung durch eine tatsächlich an TRCC übertragene transparente Maske mit schwarzem rechten Balken. Die Referenzeinstellung ist 320 Pixel breit und verschiebt das Bild 160 Pixel nach links; Balkenbreite sowie Hintergrund-X/Y bleiben frei einstellbar. Bilder und gewöhnliche Videos werden dafür nur als lokale Arbeitskopien vorbereitet, nie im Importordner verändert. Zwei feste Abstandsvorlagen ergänzen die weiterhin einzeln verstellbaren Hardwarewerte, und doppelte `C`-/Prozent-Einheiten werden nicht mehr an bereits vollständig formatierte Texte angehängt.
 
 Hotfix 3.4.29.8 ergänzt sichere PWM/DC-Umschaltung, globale/einzelne Lüftervorlagen und Kurven-Reset. Die Polkit-Dauerfreigabe wird über einen unprivilegiert lesbaren Statusmarker zuverlässig erkannt. Levita-Medien werden unverzerrt auf 1600×720 skaliert; Balken-Drag, Element-Undo, lokale Kategorien, sichtbare Prozentzeichen und geräteabhängige LCD-Kacheln verbessern den Editor. UI-Tests dürfen keine Hardwareprozesse starten, und ein abgestürzter OpenRGB-Server wird bis zum bewussten manuellen Neuversuch gesperrt.
+
+Hotfix 3.4.29.9 übernimmt den aktuellen TRCC-Linux-Katalog exakt: Gallery `a001–a082`, Tech `b001–b025`, HUD `c001–c072`, Light `d001–d055`, Nature `e001–e054` und Aesthetic `y001–y010`. Lokale Medien und Layoutordner werden nur bei einer gültigen originalen ID automatisch einsortiert und numerisch geordnet; alle anderen Dateien bleiben unter „Eigene Dateien“. Dafür werden weder Herstellerdateien heruntergeladen noch mit OHC ausgeliefert.
 
 Hotfix 3.4.29.7 unterdrückt die native OHC-Fensteroberfläche bereits vor dem Aufbau eines minimierten KDE-/Wayland-Tray-Autostarts und verhindert damit das fotografierte schwarze Zwischenfenster. Zusätzlich laufen auch alle kurzlebigen OpenRGB-Qt-Clients offscreen. Für den fest installierten, eng begrenzten NCT6687-Helfer stehen „Dauerhafte Berechtigung erteilen“ und „Dauerhafte Berechtigung entfernen“ bereit; die benutzerspezifische Polkit-Regel speichert kein Passwort und ändert nichts an Kalibrierung, Besitzschutz, Watchdog oder Firmware-Rückgabe.
 

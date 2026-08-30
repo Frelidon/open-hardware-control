@@ -42,6 +42,7 @@ This file records decisions that future agents must preserve unless the project 
 - **3.4.29.8:** A persistent fan-helper rule may have a root-owned, world-readable status marker so the unprivileged UI can report grant state on Fedora systems where the Polkit rule directory is intentionally non-traversable. The marker is not authority; Polkit remains authoritative, and grant/revoke must update rule and marker together.
 - **3.4.29.8:** Automated/offscreen UI construction tests must not launch hardware-owning helper processes. An unexpectedly crashed OHC-managed OpenRGB engine is quarantined for the current session to prevent restart/coredump loops; only an explicit manual retry clears that quarantine.
 - **3.4.29.8:** Levita images and ordinary videos are prepared into aspect-preserving 1600×720 cache copies; imported originals remain immutable. The photographed reference default is a centered background with an 80-pixel right mask, while saved user geometry remains adjustable. Manufacturer assets are grouped locally by stable filename prefix and are never fetched or packaged by OHC.
+- **3.4.29.9:** Levita theme categories mirror TRCC Linux's current `CzhordeCatalog` exactly: Gallery `a001–a082`, Tech `b001–b025`, HUD `c001–c072`, Light `d001–d055`, Nature `e001–e054` and Aesthetic `y001–y010`. OHC classifies only a validated, in-range original ID and otherwise uses custom files; it may not guess from media contents, download the catalog or package manufacturer assets.
 
 ## Assets and licensing
 

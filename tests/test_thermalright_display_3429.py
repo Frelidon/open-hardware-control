@@ -18,6 +18,8 @@ from thermalright_display import (
     LEVITA_HEIGHT,
     LEVITA_WIDTH,
     MEDIA_SCALE_CONTAIN,
+    MEDIA_CATEGORY_LABELS,
+    TRCC_CLOUD_CATEGORIES,
     MediaEntry,
     OverlaySpec,
     ThermalrightCli,
@@ -25,6 +27,7 @@ from thermalright_display import (
     clamp_overlay_outside_cutout,
     create_black_notch_mask,
     media_category_key,
+    media_catalog_sort_key,
     notch_safe_right_x,
     parse_detect_output,
     prepare_shifted_media,
@@ -122,10 +125,39 @@ def test_media_is_always_scaled_to_levita_without_distortion(tmp_path: Path) -> 
 
 @pytest.mark.parametrize(
     ("name", "category"),
-    [("A001.mp4", "a"), ("d-019.zt", "d"), ("my-video.mp4", "own")],
+    [
+        ("A001.mp4", "a"),
+        ("d019.zt", "d"),
+        ("Y010-extra.mp4", "y"),
+        ("a083.mp4", "own"),
+        ("d-019.zt", "own"),
+        ("my-video.mp4", "own"),
+    ],
 )
 def test_local_theme_prefixes_are_grouped(name: str, category: str, tmp_path: Path) -> None:
     assert media_category_key(MediaEntry(tmp_path / name, name, "video")) == category
+
+
+def test_trcc_categories_match_the_upstream_catalog_exactly(tmp_path: Path) -> None:
+    assert TRCC_CLOUD_CATEGORIES == (
+        ("a", "Gallery", 82),
+        ("b", "Tech", 25),
+        ("c", "HUD", 72),
+        ("d", "Light", 55),
+        ("e", "Nature", 54),
+        ("y", "Aesthetic", 10),
+    )
+    assert [MEDIA_CATEGORY_LABELS[key] for key in "abcdey"] == [
+        "Gallery", "Tech", "HUD", "Light", "Nature", "Aesthetic",
+    ]
+    entries = [
+        MediaEntry(tmp_path / "b010.mp4", "b010.mp4", "video"),
+        MediaEntry(tmp_path / "a082.mp4", "a082.mp4", "video"),
+        MediaEntry(tmp_path / "a002.mp4", "a002.mp4", "video"),
+    ]
+    assert [entry.relative_name for entry in sorted(entries, key=media_catalog_sort_key)] == [
+        "a002.mp4", "a082.mp4", "b010.mp4",
+    ]
 
 
 def test_cli_builds_bounded_shell_free_commands(tmp_path: Path) -> None:

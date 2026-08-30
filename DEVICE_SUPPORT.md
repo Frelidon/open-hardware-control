@@ -19,6 +19,7 @@ Do not promote other detected Kraken capability entries to “tested” without 
 - After explicit Polkit authorization, repeated curve writes reuse one narrowly validated helper child bound to the OHC process. This avoids background reauthorization after several minutes without weakening the required calibration or fixed-path helper validation.
 - An optional user-installed exact-account Polkit rule can retain that authorization across reboots. OHC exposes separate grant/remove controls, stores no password and continues to require physical PWM-channel confirmation.
 - Since 3.4.29.8 the helper mirrors grant state into a root-owned readable marker because Fedora's Polkit rule directory is intentionally not traversable by the desktop user. The marker is status only; Polkit remains authoritative.
+- Since 3.4.29.9 existing local Levita media follows TRCC Linux's exact Gallery/Tech/HUD/Light/Nature/Aesthetic catalog when its filename or layout-directory name begins with a validated in-range original theme ID. Unknown names remain custom; OHC performs no catalog download.
 - DC/PWM selection is available only for a channel whose Linux driver exposes `pwmN_mode`. Changing it invalidates calibration and activation and requires the physical test again.
 - No coolant sensor is exposed through this path; never synthesize one from CPU/GPU temperatures or RPM.
 

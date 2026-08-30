@@ -1,6 +1,6 @@
 # Open Hardware Control — Project Status
 
-**Current development version:** 3.4.29.8 INTERN
+**Current development version:** 3.4.29.9 INTERN
 
 **Status date:** 30 August 2026
 
@@ -18,6 +18,8 @@ Version 3.4.29.7 suppresses the OHC native window surface before a KDE/Wayland t
 
 Version 3.4.29.8 makes the persistent-fan grant observable through a root-owned readable status marker, adds driver-gated PWM/DC selection and per-fan/global curve presets without weakening calibration, and brings the Levita editor in line with the photographed 80-pixel centered layout. Media is prepared aspect-correct at 1600×720, the mask is directly draggable, overlays have one-step history, local themes are grouped, metric units survive TRCC rendering, and rectangular hardware hides the round Kraken preview. Offscreen UI tests are now explicitly hardware-free; an unexpected managed OpenRGB crash is quarantined until a manual retry.
 
+Version 3.4.29.9 replaces the provisional local theme groups with TRCC Linux's exact current cloud catalog: Gallery `a001–a082`, Tech `b001–b025`, HUD `c001–c072`, Light `d001–d055`, Nature `e001–e054` and Aesthetic `y001–y010`. Local media and layout folders are classified only from a validated in-range original ID and sorted numerically; unrelated names remain custom files. This stays entirely local and neither downloads nor packages manufacturer media.
+
 The 3.4.29 codebase has also begun an incremental local-AI-oriented split of the historical `kraken_control.py` monolith. The executable remains compatible, while independent constants, temperature helpers, privacy logging, the serial command backend, cooling widgets and localization/help data now live in focused modules documented by `MODULE_MAP.md`.
 
 ## What 3.4.29 adds so far
@@ -31,6 +33,7 @@ The 3.4.29 codebase has also begun an incremental local-AI-oriented split of the
 - Version 3.4.29.6 applies a real adjustable black TRCC mask over the camera/notch area instead of merely drawing a preview guide. Its wider 320-pixel reference default, persistent background X/Y shift and two overlay spacing presets remain user-adjustable; locally prepared image/video copies never overwrite imported originals. Formats that already include `°C` or `%` now suppress TRCC's second unit suffix.
 - Hotfix 3.4.29.7 prevents the photographed black OHC surface during minimized KDE/Wayland autostart, keeps every OpenRGB CLI process offscreen and offers explicit persistent-fan-authorization grant/remove controls without storing a password or weakening PWM calibration.
 - Hotfix 3.4.29.8 adds kernel-reported PWM/DC selection, individual/global fan presets and curve reset; reliable persistent-authorization state; aspect-correct Levita media, direct mask drag, overlay undo, categorized local themes and visible metric units; device-aware LCD tiles; hardware-free UI tests; and session quarantine after an unexpected managed OpenRGB crash.
+- Hotfix 3.4.29.9 mirrors TRCC Linux's exact Gallery/Tech/HUD/Light/Nature/Aesthetic catalog and ID ranges, numerically orders recognized local themes and leaves every unrecognized file under custom media without any runtime download.
 
 - Full-width Thermalright Levita Vision studio inside the existing LCD page.
 - Local-only import for images, videos, `.zt` media and complete TRCC layout directories containing `config1.dc`; imported manufacturer assets are neither copied nor packaged.

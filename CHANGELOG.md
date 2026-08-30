@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.4.29.9 INTERN
+
+- Replace the provisional local Levita theme groups with the exact current TRCC Linux cloud catalog: Gallery (`a001–a082`), Tech (`b001–b025`), HUD (`c001–c072`), Light (`d001–d055`), Nature (`e001–e054`) and Aesthetic (`y001–y010`).
+- Classify existing local videos, images and layout directories only from a validated in-range original TRCC theme ID, including common filename suffixes, and sort recognized entries by catalog category and numeric theme index.
+- Keep unrelated, malformed and out-of-range names under “Eigene Dateien”. Classification is deterministic and entirely local; OHC neither downloads nor redistributes manufacturer media.
+
 ## 3.4.29.8 INTERN
 
 - Add safe per-channel PWM/DC selection only when Linux hwmon exposes the fixed `pwmN_mode` node. A confirmed change stops automation, invalidates calibration and requires the physical channel test again.

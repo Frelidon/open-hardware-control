@@ -43,16 +43,23 @@ MEDIA_SCALE_CONTAIN = "contain"
 MEDIA_SCALE_COVER = "cover"
 MEDIA_SCALE_MODES = frozenset({MEDIA_SCALE_CONTAIN, MEDIA_SCALE_COVER})
 
-# TRCC's cloud API exposes the stable A/B/C/D/E/Y prefix groups but no public
-# semantic names.  These local labels describe the bundled user's existing
-# files without downloading or redistributing manufacturer artwork.
+# Exact static catalog metadata from TRCC Linux's CzhordeCatalog.  The category
+# is encoded in each cloud theme ID; no network access or media-content
+# guessing is required to classify an already downloaded local file.
+TRCC_CLOUD_CATEGORIES: tuple[tuple[str, str, int], ...] = (
+    ("a", "Gallery", 82),
+    ("b", "Tech", 25),
+    ("c", "HUD", 72),
+    ("d", "Light", 55),
+    ("e", "Nature", 54),
+    ("y", "Aesthetic", 10),
+)
+TRCC_CLOUD_CATEGORY_LIMITS = {
+    prefix: count for prefix, _name, count in TRCC_CLOUD_CATEGORIES
+}
 MEDIA_CATEGORY_LABELS: dict[str, str] = {
-    "a": "Technik & Digital",
-    "b": "HUD & Anzeigen",
-    "c": "Neon & Abstrakt",
-    "d": "Weltall & Natur",
-    "e": "Hell & Illustrativ",
-    "y": "Weitere TRCC-Designs",
+    prefix: name for prefix, name, _count in TRCC_CLOUD_CATEGORIES
+} | {
     "own": "Eigene Dateien",
 }
 
@@ -192,11 +199,35 @@ def media_is_supported(path: Path) -> bool:
     return path.is_file() and path.suffix.casefold() in SUPPORTED_MEDIA_SUFFIXES
 
 
+def trcc_cloud_theme_id(entry: MediaEntry) -> str | None:
+    """Return an exact, in-range TRCC cloud ID encoded by a local filename."""
+
+    name = entry.path.stem if entry.path.is_file() else entry.path.name
+    match = re.match(r"(?i)^([abcdey])(\d{3})(?:$|[^0-9])", name)
+    if not match:
+        return None
+    prefix = match.group(1).casefold()
+    index = int(match.group(2))
+    if not 1 <= index <= TRCC_CLOUD_CATEGORY_LIMITS[prefix]:
+        return None
+    return f"{prefix}{index:03d}"
+
+
 def media_category_key(entry: MediaEntry) -> str:
-    """Map an existing local theme filename to one stable chooser group."""
-    name = entry.path.name if entry.path.is_file() else entry.path.name
-    match = re.match(r"(?i)^([abcdey])(?:[-_ ]?\d|\d)", name)
-    return match.group(1).casefold() if match else "own"
+    """Classify local media exactly as TRCC does, using its cloud theme ID."""
+
+    theme_id = trcc_cloud_theme_id(entry)
+    return theme_id[0] if theme_id else "own"
+
+
+def media_catalog_sort_key(entry: MediaEntry) -> tuple[int, int, str]:
+    """Sort by TRCC category order and numeric theme index, then own files."""
+
+    theme_id = trcc_cloud_theme_id(entry)
+    if theme_id:
+        prefixes = [prefix for prefix, _name, _count in TRCC_CLOUD_CATEGORIES]
+        return prefixes.index(theme_id[0]), int(theme_id[1:]), entry.relative_name.casefold()
+    return len(TRCC_CLOUD_CATEGORIES), 0, entry.relative_name.casefold()
 
 
 def bounded_notch_width(width: int) -> int:

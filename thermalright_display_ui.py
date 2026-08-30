@@ -59,6 +59,7 @@ from thermalright_display import (
     clamp_overlay_outside_cutout,
     create_black_notch_mask,
     media_category_key,
+    media_catalog_sort_key,
     notch_safe_right_x,
     parse_detect_output,
     prepare_shifted_media,
@@ -347,6 +348,9 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.media_category = QComboBox()
         self.media_category.setMinimumContentsLength(19)
         self.media_category.addItem("Alle Kategorien", "all")
+        self.media_category.setToolTip(
+            "Originale TRCC-Kategorien nach Cloud-ID: Gallery, Tech, HUD, Light, Nature und Aesthetic"
+        )
         self.media_category.currentIndexChanged.connect(self._apply_media_filter)
         self.media_filter = QLineEdit()
         self.media_filter.setPlaceholderText("Designs filtern …")
@@ -594,7 +598,13 @@ class ThermalrightDisplayStudio(QGroupBox):
             self._status(str(exc), error=True)
             return
         self.settings.setValue("thermalright/media_directory", str(directory.resolve()))
-        self.media_directory_label.setText(f"{directory.resolve()} · {len(self.media_entries)} lokale Designs")
+        catalog_count = sum(
+            1 for entry in self.media_entries if media_category_key(entry) != "own"
+        )
+        self.media_directory_label.setText(
+            f"{directory.resolve()} · {len(self.media_entries)} lokale Designs · "
+            f"{catalog_count} anhand ihrer originalen TRCC-ID kategorisiert"
+        )
         self._populate_media_categories()
         self._populate_media_combo(self.media_entries)
         if not quiet:
@@ -604,10 +614,7 @@ class ThermalrightDisplayStudio(QGroupBox):
         current_path = self.current_media_path()
         ordered = sorted(
             entries,
-            key=lambda entry: (
-                list(MEDIA_CATEGORY_LABELS).index(media_category_key(entry)),
-                entry.relative_name.casefold(),
-            ),
+            key=media_catalog_sort_key,
         )
         self.media_combo.blockSignals(True)
         self.media_combo.clear()

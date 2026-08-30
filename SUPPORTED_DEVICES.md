@@ -1,4 +1,4 @@
-# Unterstützte Geräte – Open Hardware Control 3.4.29.8 INTERN
+# Unterstützte Geräte – Open Hardware Control 3.4.29.9 INTERN
 
 ## Direkt getestetes NZXT-Modul
 
@@ -24,6 +24,8 @@ Die kurze allgemeine TRCC-Geräteliste meldete zunächst eine generische 480×48
 TRCC Linux 9.9.11 verwendet für die dekorativen Split-Modi A–C unter PySide6 6.11 einen nicht kompatiblen Schlüsselwortaufruf von `QImage.mirrored()` und bricht dadurch beim Rendern ab. OHC 3.4.29.5 setzt einen eventuell gespeicherten Split-Modus deshalb zwingend vor dem Laden eines Mediums auf null. A–C bleiben klar als lokale Vorschau markiert; die physische rechte 80-Pixel-Aussparung wird weiterhin unabhängig vom TRCC-Split-Modus ausgespart.
 
 OHC 3.4.29.8 richtet die eigene transparente Vollbildmaske nach der aktuellen Referenzaufnahme standardmäßig auf 80 Pixel und den Hintergrund auf X/Y 0 aus; die Breite bleibt zwischen 80 und 800 Pixeln einstellbar und kann direkt in der Vorschau gezogen werden. Bilder und übliche Videos werden immer seitenrichtig in eine lokale 1600×720-Cache-Arbeitskopie eingepasst oder optional unverzerrt beschnitten; komplette TRCC-Layouts und `.zt`-Dateien bleiben unverändert. Elementpositionen besitzen eine lokale Rückgängig-Historie, und `%`/Temperaturzeichen werden über den passenden TRCC-Einheitenpfad erhalten.
+
+OHC 3.4.29.9 übernimmt die originalen TRCC-Kategorien samt gültigen ID-Bereichen: Gallery `a001–a082`, Tech `b001–b025`, HUD `c001–c072`, Light `d001–d055`, Nature `e001–e054` und Aesthetic `y001–y010`. Bereits vorhandene lokale Medien und Layoutordner werden anhand dieser ID einsortiert und numerisch geordnet. Unbekannte, fehlerhafte oder außerhalb des Bereichs liegende Namen bleiben unter „Eigene Dateien“; es werden keine Herstellerdateien geladen oder ausgeliefert.
 
 Nach einer ausdrücklichen Polkit-Administratorfreigabe verwendet OHC für wiederholte Kurvenwerte eine einzige prozessgebundene Helfersitzung. Deren Protokoll akzeptiert weiterhin ausschließlich begrenzte, validierte NCT6687-Aktionen; beim Programmende wird zuerst die Firmwaresteuerung wiederhergestellt und danach die Sitzung geschlossen. Dadurch entsteht nach Ablauf des kurzfristigen Polkit-Caches kein neuer Hintergrunddialog für jeden Kurvenwert.
 
