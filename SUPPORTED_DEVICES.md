@@ -1,4 +1,4 @@
-# Unterstützte Geräte – Open Hardware Control 3.4.29.6 INTERN
+# Unterstützte Geräte – Open Hardware Control 3.4.29.7 INTERN
 
 ## Direkt getestetes NZXT-Modul
 
@@ -27,6 +27,8 @@ OHC 3.4.29.6 ergänzt darüber eine eigene transparente Vollbildmaske mit frei e
 
 Nach einer ausdrücklichen Polkit-Administratorfreigabe verwendet OHC für wiederholte Kurvenwerte eine einzige prozessgebundene Helfersitzung. Deren Protokoll akzeptiert weiterhin ausschließlich begrenzte, validierte NCT6687-Aktionen; beim Programmende wird zuerst die Firmwaresteuerung wiederhergestellt und danach die Sitzung geschlossen. Dadurch entsteht nach Ablauf des kurzfristigen Polkit-Caches kein neuer Hintergrunddialog für jeden Kurvenwert.
 
+Optional kann dieselbe eng begrenzte Helferaktion über „Dauerhafte Berechtigung erteilen“ einmalig für das aktuelle Benutzerkonto freigegeben werden. Die benutzerspezifische Polkit-Regel bleibt nach Neustarts erhalten, speichert kein Passwort und kann über „Dauerhafte Berechtigung entfernen“ wieder gelöscht werden. Kalibrierung, Besitzerprüfung, Watchdog und Firmware-Rückgabe werden dadurch nicht gelockert.
+
 Der derzeitige Gerätepfad meldet keinen Kühlmittelsensor. OHC zeigt deshalb keinen künstlich aus CPU-/GPU-Temperatur abgeleiteten Wasserwert an. CPU-/GPU-Temperaturen können unabhängig davon für Anzeige und Softwarekurven verwendet werden.
 
 ## Corsair über OpenLinkHub
@@ -42,6 +44,8 @@ Eine Maustaste ist direkt belegbar, wenn OpenLinkHub für sie einen eindeutigen 
 ## Zusätzliche RGB-Geräte über OpenRGB
 
 Version 3.4.23 besitzt bewusst keine kopierte OpenRGB-USB-Geräteliste. OHC startet das installierte Backend selbst als privaten, fensterlosen Kindprozess und zeigt ausschließlich die von ihm gemeldeten Geräte, Zonen, LEDs und Modi an. Damit entspricht die Hardwareabdeckung der installierten OpenRGB-Version und deren aktivierten Treibern/udev-Regeln.
+
+Auch die kurzlebigen OpenRGB-Clientprozesse für Geräteinventar und native Moduswechsel werden ausdrücklich mit einer Offscreen-Qt-Plattform gestartet. Damit können GUI-basierte OpenRGB-Builds beim OHC-Start kein leeres Hilfsfenster mehr öffnen.
 
 Direct-Geräte werden seit 3.4.5 für Farbe und OHC-Effekte über den lokalen SDK-Helfer geschrieben und erreichen den bestätigten CLI-`ApplyOptions`-/`stl_vector`-Absturzpfad nicht mehr. 3.4.7 handelt die auf Fedora gemeldeten SDK-Protokollrevisionen 4 und 5 kompatibel aus. 3.4.9 richtet variable Zonen ein und bestätigt Servermodus sowie Farbpuffer durch Rücklesung. 3.4.10 sendet zusätzlich immer den vollständigen Geräteframe und beim ersten Direct-Wechsel einmal vollständige Zonenframes als Treiber-Fallback. Bei nativen Nicht-Direct-Modi sperrt OHC weiterhin nur das tatsächlich abstürzende Gerät bis zum nächsten Programmstart.
 

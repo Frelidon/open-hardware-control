@@ -10,10 +10,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
-from PySide6.QtCore import QObject, QProcess, QTimer, Signal
+from PySide6.QtCore import QObject, QProcess, QProcessEnvironment, QTimer, Signal
 
 from app_constants import KRAKEN_MATCH, LIQUIDCTL, RGB_MATCH
 from privacy_logging import redact_private_text
+
+
+def needs_headless_qt_platform(args: list[str]) -> bool:
+    """Return whether a validated CLI command is backed by the OpenRGB GUI binary."""
+
+    return bool(args and Path(args[0]).name.casefold().startswith("openrgb"))
 
 
 @dataclass
@@ -147,6 +153,14 @@ class Backend(QObject):
 
         process = QProcess(self)
         process.setProcessChannelMode(QProcess.ProcessChannelMode.SeparateChannels)
+        # OpenRGB is a Qt GUI application even when it is used only as a
+        # short-lived CLI client.  Some builds briefly create an empty native
+        # window unless every invocation (not only the long-lived server) is
+        # given an explicitly headless Qt platform.
+        if needs_headless_qt_platform(command.args):
+            environment = QProcessEnvironment.systemEnvironment()
+            environment.insert("QT_QPA_PLATFORM", "offscreen")
+            process.setProcessEnvironment(environment)
         process.finished.connect(self._on_finished)
         process.errorOccurred.connect(self._on_process_error)
         self._process = process

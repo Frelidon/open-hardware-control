@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "created_utc": "2026-08-28T23:46:22.017349+00:00",
+  "created_utc": "2026-08-30T11:36:42.832238+00:00",
   "root": "open-hardware-control-git",
   "result": "passed",
-  "source_files": 264,
-  "python_files_parsed": 72,
+  "source_files": 280,
+  "python_files_parsed": 80,
   "svg_files_parsed": 10,
   "raster_files_verified": 49,
   "unexpected_executables": 0,
@@ -13,18 +13,18 @@
   "desktop_modules": {
     "desktop_assets.py": "b6613eeeff06ae1bdfa6fb4a1f25a6959372e67eb5fff0c14c7d32858694a2e5",
     "desktop_designs.py": "fcd9e299b5d9e6af6b9804fea1b8924ced0e32f4f8d0139c591ed7587c03ad91",
-    "desktop_shell.py": "14e53a063ee06950282b217d352b181d245cfc623e7c6b1190f10f41791b8b12"
+    "desktop_shell.py": "d0a9c5e42ae0c278941d06a8e83aa72b9de8ae5abf375ea8b98eb59307969584"
   },
   "rgb_modules": {
-    "openrgb_integration.py": "aa318a3217946ed7a5ee722445b11a2c81f5fa4f593e5cca5d5500fff2b60ee1",
+    "openrgb_integration.py": "95258f87141ca7caf7deb140f6b975c92cd04310eb92563e0065d5d6d95431fc",
     "openrgb_sdk.py": "20be30ec0b5c8925f65ae5faf3c5c5f5334876d51d99639dd27acc0b5dd0b422",
-    "rgb_devices.py": "9d16715bfaf43d66323f5e399b91b9b4396139f2039f60a2dd3c58571aad9c71",
+    "rgb_devices.py": "23994c884604429b409aa3bc4bd8105d64d11ea746f568a5b613434bd36a97d3",
     "rgb_effects.py": "6111950a9382c1a4bf14213dccfd770303511e3e6cb5b80a502aced6224feed5",
     "nzxt_rgb.py": "2c9e0efca7dbe51f27750fb7415d32301e009a3b9951c3ed4b0a00b706dd8b51"
   },
   "openrgb_remote_hosts": 0,
   "openrgb_shell_execution": 0,
-  "privacy_text_files_checked": 191,
+  "privacy_text_files_checked": 207,
   "personal_identity_tokens": 0,
   "personal_network_identifiers": 0,
   "virus_total_upload": false,

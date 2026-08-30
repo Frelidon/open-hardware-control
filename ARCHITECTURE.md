@@ -44,7 +44,7 @@ Open Hardware Control is a single Linux desktop application with modular hardwar
 - `io.github.Frelidon.OpenHardwareControl.fan.policy` — Polkit authorization policy.
 - `install-fan-helper.sh` — helper installation.
 
-Safety invariant: unconfirmed channels are not automatically written, and firmware/BIOS ownership is restored when OHC control ends where supported.
+Safety invariant: unconfirmed channels are not automatically written, and firmware/BIOS ownership is restored when OHC control ends where supported. The optional persistent authorization is one exact-account Polkit rule for the same fixed helper action; it changes only whether Polkit asks again and does not widen the helper protocol or bypass calibration.
 
 ### 4a. Thermalright Levita display and cooling
 
@@ -69,6 +69,7 @@ Safety invariant: OpenLinkHub communication remains on validated loopback endpoi
 - `rgb_effects.py` — OHC software effects.
 
 Safety invariant: only the private local engine is writable; external OpenRGB ownership blocks OHC writes. Device-reported capabilities and validated zone sizes are authoritative.
+All launches of the Qt-based OpenRGB executable use the offscreen platform, including inventory and native-mode CLI clients, so a backend-only operation cannot create a desktop window.
 
 ### 7. Release, diagnostics and security
 

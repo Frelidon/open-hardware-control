@@ -30,3 +30,10 @@ def test_341231_calibration_uses_polkit_and_ten_second_rpm_observation() -> None
     assert 'mainboard_calibration_sample_timer' in CODE
     assert 'RPM vor Test' in CODE
     assert 'self.mainboard_calibration_timer.start(10000)' in CODE
+
+
+def test_persistent_fan_authorization_has_grant_and_revoke_controls() -> None:
+    assert 'Dauerhafte Berechtigung erteilen' in CODE
+    assert 'Dauerhafte Berechtigung entfernen' in CODE
+    assert 'persistent_fan_authorization_command(enabled)' in CODE
+    assert 'kein Passwort gespeichert' in CODE

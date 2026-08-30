@@ -25,6 +25,8 @@ DEFAULT_HWMON_ROOT = Path("/sys/class/hwmon")
 DEFAULT_DMI_ROOT = Path("/sys/class/dmi/id")
 DEFAULT_FAN_HELPER = Path("/usr/libexec/open-hardware-control-fan-helper")
 DEFAULT_PKEXEC = Path("/usr/bin/pkexec")
+PERSISTENT_FAN_RULES_DIR = Path("/etc/polkit-1/rules.d")
+PERSISTENT_FAN_RULE_PREFIX = "49-open-hardware-control-fan"
 
 
 def _read_text(path: Path, default: str = "") -> str:
@@ -480,6 +482,28 @@ def stop_privileged_fan_helper_session() -> None:
 
 def privileged_fan_helper_available() -> bool:
     return DEFAULT_FAN_HELPER.is_file() and os.access(DEFAULT_FAN_HELPER, os.X_OK) and DEFAULT_PKEXEC.is_file()
+
+
+def persistent_fan_authorization_path(uid: int | None = None) -> Path:
+    """Return the fixed per-user Polkit rule path without accepting input paths."""
+
+    user_id = os.getuid() if uid is None else int(uid)
+    if user_id < 0:
+        raise ValueError("ungültige Benutzer-ID")
+    return PERSISTENT_FAN_RULES_DIR / f"{PERSISTENT_FAN_RULE_PREFIX}-{user_id}.rules"
+
+
+def persistent_fan_authorization_enabled(uid: int | None = None) -> bool:
+    return persistent_fan_authorization_path(uid).is_file()
+
+
+def persistent_fan_authorization_command(enabled: bool) -> list[str]:
+    """Build the fixed pkexec command that grants or revokes the local rule."""
+
+    if not privileged_fan_helper_available():
+        raise FanWriteError("privilegierter NCT6687-Helfer ist nicht installiert")
+    operation = "grant-persistent" if enabled else "revoke-persistent"
+    return [str(DEFAULT_PKEXEC), str(DEFAULT_FAN_HELPER), operation]
 
 
 def channel_control_method(channel: FanChannel) -> str:

@@ -1,5 +1,7 @@
 from pathlib import Path
 import io
+import os
+import pwd
 import sys
 
 import pytest
@@ -93,3 +95,35 @@ def test_helper_refuses_non_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     with pytest.raises(SystemExit) as exc:
         helper.main(["helper", "probe"])
     assert exc.value.code == 77
+
+
+def test_helper_grants_and_revokes_exact_pkexec_user_rule(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    uid = os.getuid()
+    if uid == 0:
+        pytest.skip("test requires a non-root account identity")
+    username = pwd.getpwuid(uid).pw_name
+    monkeypatch.setattr(helper, "PERSISTENT_RULES_DIR", tmp_path)
+    monkeypatch.setattr(helper.os, "geteuid", lambda: 0)
+    monkeypatch.setenv("PKEXEC_UID", str(uid))
+    assert helper.main(["helper", "grant-persistent"]) == 0
+    rule = helper.persistent_rule_path(uid)
+    content = rule.read_text(encoding="ascii")
+    assert helper.POLKIT_ACTION_ID in content
+    assert username in content
+    assert "polkit.Result.YES" in content
+    assert rule.stat().st_mode & 0o777 == 0o644
+    assert helper.main(["helper", "revoke-persistent"]) == 0
+    assert not rule.exists()
+    assert capsys.readouterr().out.count('"ok": true') == 2
+
+
+def test_helper_rejects_persistent_rule_change_without_pkexec_caller(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(helper, "PERSISTENT_RULES_DIR", tmp_path)
+    monkeypatch.setattr(helper.os, "geteuid", lambda: 0)
+    monkeypatch.delenv("PKEXEC_UID", raising=False)
+    with pytest.raises(SystemExit):
+        helper.main(["helper", "grant-persistent"])

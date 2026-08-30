@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.4.29.7 INTERN
+
+- Suppress creation of the OHC native window surface from the beginning of a minimized KDE/Wayland tray autostart. This removes the photographed black, unpainted OHC window instead of hiding it only after the complete UI constructor; the surface is enabled when the user explicitly opens OHC from the tray.
+- Force every OpenRGB Qt invocation, including short-lived `--client` inventory and ENE-DRAM commands, onto the offscreen platform. Previously only the persistent private server was headless, allowing some OpenRGB builds to create an empty startup window for CLI clients.
+- Add explicit controls to grant or remove a persistent per-user Polkit authorization for the fixed-path NCT6687 fan helper. Granting requires one final administrator confirmation, stores no password and survives reboots; removal deletes the exact generated rule.
+- Keep all existing fan safeguards unchanged: the helper remains limited to validated channels 1–8, firmware restore and the bounded watchdog, while physical 70-percent/10-second channel confirmation remains mandatory.
+
 ## 3.4.29.6 INTERN
 
 - Replace the preview-only 80-pixel cutout marker with a real transparent TRCC mask whose opaque black right-hand bar is adjustable from 80 to 800 pixels and defaults to a wider 320 pixels on the reference Levita.

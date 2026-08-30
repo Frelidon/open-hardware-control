@@ -177,6 +177,9 @@ from mainboard_fan_control import (
     fan_preset as mainboard_fan_preset,
     MAINBOARD_FAN_PRESETS,
     preferred_nct6687_controller,
+    persistent_fan_authorization_command,
+    persistent_fan_authorization_enabled,
+    privileged_fan_helper_available as mainboard_fan_helper_available,
     recommend_fan_preset as recommend_mainboard_fan_preset,
     pwm_to_percent as mainboard_pwm_to_percent,
     restore_firmware_control as restore_mainboard_firmware_control,
@@ -2343,6 +2346,17 @@ class KrakenControl(QMainWindow):
             self.settings.sync()
         self.launched_from_autostart = "--autostart" in sys.argv
         self.autostart_launch_monotonic = time.monotonic()
+        # Hiding the window only after the complete UI has been constructed is
+        # too late on some KDE/Wayland + HiDPI combinations: the compositor can
+        # map an unpainted black surface during construction.  Prevent creation
+        # of an on-screen surface from the beginning of a tray autostart.  The
+        # attribute is removed only when the user explicitly opens OHC.
+        self.autostart_window_surface_suppressed = bool(
+            self.launched_from_autostart
+            and self.settings.value("app/autostart_minimized", True, type=bool)
+        )
+        if self.autostart_window_surface_suppressed:
+            self.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen, True)
         self.session_shutdown_requested = False
         self.exit_hardware_cleanup_done = False
         self.ui_language = str(self.settings.value("ui/language", "de"))
@@ -5638,6 +5652,25 @@ class KrakenControl(QMainWindow):
         mb_status_row.addWidget(setup_mb)
         mb_layout.addLayout(mb_status_row)
 
+        fan_auth_box = QGroupBox("Mainboard-Lüfter · dauerhafte Systemberechtigung")
+        fan_auth_layout = QHBoxLayout(fan_auth_box)
+        self.mainboard_persistent_auth_label = QLabel()
+        self.mainboard_persistent_auth_label.setWordWrap(True)
+        self.mainboard_persistent_auth_label.setObjectName("muted")
+        self.mainboard_grant_auth_button = QPushButton("Dauerhafte Berechtigung erteilen")
+        self.mainboard_grant_auth_button.clicked.connect(
+            lambda: self.set_persistent_mainboard_fan_authorization(True)
+        )
+        self.mainboard_revoke_auth_button = QPushButton("Dauerhafte Berechtigung entfernen")
+        self.mainboard_revoke_auth_button.clicked.connect(
+            lambda: self.set_persistent_mainboard_fan_authorization(False)
+        )
+        fan_auth_layout.addWidget(self.mainboard_persistent_auth_label, 1)
+        fan_auth_layout.addWidget(self.mainboard_grant_auth_button)
+        fan_auth_layout.addWidget(self.mainboard_revoke_auth_button)
+        mb_layout.addWidget(fan_auth_box)
+        self.refresh_persistent_mainboard_fan_authorization_ui()
+
         # 3.4.23.2: keep a hidden compatibility table for older code/tests, while
         # the visible UI uses full-width fan cards without a nested scrollbar.
         self.mainboard_fan_table = QTableWidget(0, 8)
@@ -6704,6 +6737,7 @@ class KrakenControl(QMainWindow):
         self.mainboard_detection_label.style().polish(self.mainboard_detection_label)
         self.refresh_mainboard_fan_table()
         self.update_thermalright_cooling_ui()
+        self.refresh_persistent_mainboard_fan_authorization_ui()
         if show_dialog:
             if controller is None:
                 QMessageBox.information(
@@ -7775,6 +7809,98 @@ class KrakenControl(QMainWindow):
             "Bei aktiviertem Secure Boot muss ein extern gebautes DKMS-Modul korrekt signiert und der zugehörige MOK-Schlüssel in UEFI bestätigt sein. "
             "OHC umgeht Secure Boot nicht.",
         )
+
+    def refresh_persistent_mainboard_fan_authorization_ui(self) -> None:
+        if not hasattr(self, "mainboard_persistent_auth_label"):
+            return
+        try:
+            enabled = persistent_fan_authorization_enabled()
+        except (OSError, ValueError):
+            enabled = False
+        helper_available = mainboard_fan_helper_available()
+        if enabled:
+            self.mainboard_persistent_auth_label.setText(
+                "✓ Dauerfreigabe aktiv · gilt für dieses Benutzerkonto auch nach Ab- und Neustarts; "
+                "kein Passwort wird gespeichert."
+            )
+            self.mainboard_persistent_auth_label.setObjectName("healthGood")
+        elif helper_available:
+            self.mainboard_persistent_auth_label.setText(
+                "Dauerfreigabe aus · beim ersten geschützten Lüfterzugriff jeder Programmsitzung ist eine "
+                "Systemauthentifizierung nötig."
+            )
+            self.mainboard_persistent_auth_label.setObjectName("muted")
+        else:
+            self.mainboard_persistent_auth_label.setText(
+                "Dauerfreigabe nicht verfügbar · der installierte Polkit-Lüfterhelfer wurde noch nicht erkannt."
+            )
+            self.mainboard_persistent_auth_label.setObjectName("warningText")
+        self.mainboard_persistent_auth_label.style().unpolish(self.mainboard_persistent_auth_label)
+        self.mainboard_persistent_auth_label.style().polish(self.mainboard_persistent_auth_label)
+        self.mainboard_grant_auth_button.setEnabled(helper_available and not enabled)
+        self.mainboard_revoke_auth_button.setEnabled(enabled)
+
+    def set_persistent_mainboard_fan_authorization(self, enabled: bool) -> None:
+        if enabled:
+            title = "Dauerhafte Lüfterberechtigung erteilen"
+            prompt = (
+                "Open Hardware Control darf den fest installierten, eng begrenzten NCT6687-Helfer für dieses "
+                "Benutzerkonto künftig ohne erneute Passwortabfrage starten. Die Freigabe gilt auch nach einem "
+                "Neustart. Es wird kein Passwort gespeichert.\n\n"
+                "Der Helfer kann ausschließlich validierte PWM-Kanäle 1–8, Firmware-Rückgabe und den begrenzten "
+                "Treiber-Watchdog bedienen. Die physische Kanalbestätigung bleibt weiterhin Pflicht.\n\n"
+                "Dauerhafte Berechtigung jetzt mit einer letzten Systemauthentifizierung erteilen?"
+            )
+        else:
+            title = "Dauerhafte Lüfterberechtigung entfernen"
+            prompt = (
+                "Die benutzerspezifische Polkit-Freigabe wird entfernt. Beim nächsten Start einer privilegierten "
+                "Helfersitzung ist wieder eine Systemauthentifizierung nötig. Eine bereits bestätigte, laufende "
+                "OHC-Helfersitzung endet weiterhin regulär zusammen mit OHC.\n\n"
+                "Dauerhafte Berechtigung entfernen?"
+            )
+        answer = QMessageBox.warning(
+            self,
+            title,
+            prompt,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            command = persistent_fan_authorization_command(enabled)
+        except MainboardFanWriteError as exc:
+            self.show_error(str(exc))
+            return
+        self.mainboard_grant_auth_button.setEnabled(False)
+        self.mainboard_revoke_auth_button.setEnabled(False)
+        self.mainboard_persistent_auth_label.setObjectName("muted")
+        self.mainboard_persistent_auth_label.setText(
+            "Dauerfreigabe wird eingerichtet · Systemauthentifizierung abwarten …"
+            if enabled else "Dauerfreigabe wird entfernt …"
+        )
+
+        def done(result: CommandResult) -> None:
+            self.refresh_persistent_mainboard_fan_authorization_ui()
+            if not result.ok:
+                detail = result.combined or "Systemauthentifizierung abgebrochen oder Änderung fehlgeschlagen"
+                self.show_error(f"Dauerhafte Lüfterberechtigung konnte nicht geändert werden: {detail}")
+                return
+            expected_state = persistent_fan_authorization_enabled()
+            if expected_state != enabled:
+                self.show_error(
+                    "Die Polkit-Änderung wurde nicht im erwarteten Zustand gefunden. Bitte Installation und "
+                    "Systemprotokoll prüfen."
+                )
+                return
+            state = "erteilt" if enabled else "entfernt"
+            self.footer_status.setText(f"Dauerhafte Mainboard-Lüfterberechtigung {state}")
+            self.log_message(
+                f"MAINBOARD-FAN-BERECHTIGUNG: benutzerspezifische Dauerfreigabe {state} · kein Passwort gespeichert"
+            )
+
+        self.backend.run_async(command, callback=done, timeout=180, log_output=False)
 
     def show_nct6687_setup_help(self) -> None:
         commands = fedora_nct6687_setup_commands()
@@ -13348,6 +13474,7 @@ class KrakenControl(QMainWindow):
             event.accept()
 
     def show_from_tray(self) -> None:
+        self.release_autostart_window_surface()
         self.show()
         self.raise_()
         self.activateWindow()
@@ -21239,14 +21366,22 @@ class KrakenControl(QMainWindow):
             and self.settings.value("app/autostart_minimized", True, type=bool)
         )
 
+    def release_autostart_window_surface(self) -> None:
+        if not getattr(self, "autostart_window_surface_suppressed", False):
+            return
+        self.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen, False)
+        self.autostart_window_surface_suppressed = False
+
     def apply_initial_window_state(self) -> None:
         if not self.should_start_minimized_from_autostart():
+            self.release_autostart_window_surface()
             self.show()
             return
         if QSystemTrayIcon.isSystemTrayAvailable():
             self.hide()
             self.log_message("AUTOSTART: Hauptfenster bleibt minimiert/im Tray · Einstellungen werden im Hintergrund angewendet.")
         else:
+            self.release_autostart_window_surface()
             self.showMinimized()
             self.log_message("AUTOSTART: Kein Tray verfügbar · Hauptfenster minimiert gestartet.")
 

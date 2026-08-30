@@ -4,7 +4,8 @@
 
 This program is intentionally tiny and accepts no arbitrary filesystem paths.
 It resolves the first Linux hwmon controller whose name starts with nct6687 and
-only permits bounded writes to pwmN, pwmN_enable and fan_control_watchdog.
+only permits bounded writes to pwmN, pwmN_enable and fan_control_watchdog. It
+may also install/remove one fixed per-caller Polkit rule for this helper action.
 It is designed to be invoked through pkexec/polkit while the GUI stays
 unprivileged.
 """
@@ -12,11 +13,15 @@ from __future__ import annotations
 
 import json
 import os
+import pwd
 import sys
 from pathlib import Path
 
 HWMON_ROOT = Path("/sys/class/hwmon")
 MAX_CHANNEL = 8
+POLKIT_ACTION_ID = "io.github.Frelidon.OpenHardwareControl.fan-control"
+PERSISTENT_RULES_DIR = Path("/etc/polkit-1/rules.d")
+PERSISTENT_RULE_PREFIX = "49-open-hardware-control-fan"
 
 
 def fail(message: str, code: int = 2) -> "NoReturn":
@@ -43,6 +48,83 @@ def write_value(path: Path, value: int) -> None:
         path.write_text(f"{int(value)}\n", encoding="ascii")
     except OSError as exc:
         fail(f"cannot write {path.name}: {exc}")
+
+
+def invoking_desktop_user() -> tuple[int, str]:
+    """Resolve the original pkexec caller; never trust an arbitrary username."""
+
+    raw_uid = os.environ.get("PKEXEC_UID", "")
+    try:
+        uid = int(raw_uid, 10)
+    except ValueError:
+        fail("persistent authorization must be changed through pkexec")
+    if uid <= 0:
+        fail("persistent authorization is available only for a desktop user")
+    try:
+        account = pwd.getpwuid(uid)
+    except KeyError:
+        fail("pkexec caller account does not exist")
+    if not account.pw_name or account.pw_uid != uid:
+        fail("pkexec caller account is invalid")
+    return uid, account.pw_name
+
+
+def persistent_rule_path(uid: int) -> Path:
+    return PERSISTENT_RULES_DIR / f"{PERSISTENT_RULE_PREFIX}-{int(uid)}.rules"
+
+
+def set_persistent_authorization(enabled: bool) -> None:
+    """Install/remove one exact-user rule for this helper's fixed action."""
+
+    uid, username = invoking_desktop_user()
+    rule_path = persistent_rule_path(uid)
+    if enabled:
+        # JSON string escaping is valid JavaScript string escaping too.  This
+        # keeps even unusual account names from changing the rule program.
+        user_literal = json.dumps(username, ensure_ascii=True)
+        action_literal = json.dumps(POLKIT_ACTION_ID, ensure_ascii=True)
+        content = (
+            "// Managed by Open Hardware Control; remove from the app or delete this file as root.\n"
+            "polkit.addRule(function(action, subject) {\n"
+            f"    if (action.id == {action_literal} && subject.user == {user_literal}) {{\n"
+            "        return polkit.Result.YES;\n"
+            "    }\n"
+            "});\n"
+        )
+        try:
+            PERSISTENT_RULES_DIR.mkdir(parents=True, exist_ok=True, mode=0o755)
+            temporary = PERSISTENT_RULES_DIR / f".{rule_path.name}.tmp-{os.getpid()}"
+            flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+            if hasattr(os, "O_NOFOLLOW"):
+                flags |= os.O_NOFOLLOW
+            descriptor = os.open(temporary, flags, 0o644)
+            try:
+                with os.fdopen(descriptor, "w", encoding="ascii") as handle:
+                    handle.write(content)
+                    handle.flush()
+                    os.fsync(handle.fileno())
+                os.replace(temporary, rule_path)
+                os.chmod(rule_path, 0o644)
+            finally:
+                try:
+                    temporary.unlink()
+                except FileNotFoundError:
+                    pass
+        except OSError as exc:
+            fail(f"cannot install persistent authorization: {exc}")
+    else:
+        try:
+            rule_path.unlink(missing_ok=True)
+        except OSError as exc:
+            fail(f"cannot remove persistent authorization: {exc}")
+    print(
+        json.dumps(
+            {"ok": True, "persistent_authorization": bool(enabled), "uid": uid},
+            ensure_ascii=False,
+            sort_keys=True,
+        ),
+        flush=True,
+    )
 
 
 def controller() -> Path:
@@ -178,6 +260,9 @@ def main(argv: list[str]) -> int:
     if len(argv) < 2:
         fail("missing operation")
     op = argv[1]
+    if op in {"grant-persistent", "revoke-persistent"} and len(argv) == 2:
+        set_persistent_authorization(op == "grant-persistent")
+        return 0
     root = controller()
 
     if op == "session" and len(argv) == 2:

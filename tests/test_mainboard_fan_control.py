@@ -22,6 +22,9 @@ from mainboard_fan_control import (
     discover_hwmon_controllers,
     interpolate_curve,
     percent_to_pwm,
+    persistent_fan_authorization_command,
+    persistent_fan_authorization_enabled,
+    persistent_fan_authorization_path,
     preferred_nct6687_controller,
     pwm_to_percent,
     disarm_fan_control_watchdog,
@@ -278,6 +281,20 @@ def test_privileged_helper_session_reuses_one_authenticated_child(monkeypatch: p
     assert len(launches) == 1
     assert launches[0][-1] == "session"
     assert len(process.stdin.writes) == 2
+
+
+def test_persistent_authorization_uses_fixed_per_user_rule_and_helper_command(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import mainboard_fan_control as mfc
+
+    monkeypatch.setattr(mfc, "PERSISTENT_FAN_RULES_DIR", tmp_path)
+    monkeypatch.setattr(mfc, "privileged_fan_helper_available", lambda: True)
+    uid = os.getuid()
+    assert persistent_fan_authorization_path(uid) == tmp_path / f"49-open-hardware-control-fan-{uid}.rules"
+    assert not persistent_fan_authorization_enabled(uid)
+    assert persistent_fan_authorization_command(True)[-1] == "grant-persistent"
+    assert persistent_fan_authorization_command(False)[-1] == "revoke-persistent"
 
 
 def test_polkit_snapshot_auto_uses_firmware_restore(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

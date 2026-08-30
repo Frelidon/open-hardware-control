@@ -31,7 +31,7 @@ application.KrakenControl.check_dependencies = lambda self: ["ui-build-no-hardwa
 
 qt_app = QApplication.instance() or QApplication([])
 
-# Reproduce the real 3.4.29.6 startup: a persisted TRCC media directory
+# Reproduce the real 3.4.29.7 startup: a persisted TRCC media directory
 # renders its first preview while the LCD page is built, before log_view exists.
 saved_designs = temporary_root / "saved-thermalright-designs"
 saved_designs.mkdir()
@@ -48,12 +48,38 @@ labels = [label.text() for label in window.findChildren(QLabel)]
 assert window.tabs.count() == 11
 assert application._GIF_SAFETY_TEXT in labels
 assert application._ABOUT_SUMMARY_TEXT in labels
-assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.6 INTERN")
+assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.7 INTERN")
 assert window.thermalright_display_studio.current_media_path() == (saved_designs / "saved-preview.png")
 
 window.backend.shutdown()
 window.deleteLater()
 qt_app.processEvents()
+
+# A KDE/Wayland tray autostart must suppress the native window surface before
+# the large UI constructor can expose an unpainted black frame.  Opening from
+# the tray explicitly releases that suppression.
+original_argv = list(sys.argv)
+sys.argv.append("--autostart")
+settings.setValue("setup/completed", True)
+settings.setValue("app/autostart_minimized", True)
+settings.sync()
+autostart_window = application.KrakenControl()
+assert autostart_window.testAttribute(application.Qt.WidgetAttribute.WA_DontShowOnScreen)
+assert autostart_window.autostart_window_surface_suppressed
+original_tray_available = application.QSystemTrayIcon.isSystemTrayAvailable
+application.QSystemTrayIcon.isSystemTrayAvailable = staticmethod(lambda: True)
+try:
+    autostart_window.apply_initial_window_state()
+    assert not autostart_window.isVisible()
+    assert autostart_window.testAttribute(application.Qt.WidgetAttribute.WA_DontShowOnScreen)
+finally:
+    application.QSystemTrayIcon.isSystemTrayAvailable = original_tray_available
+autostart_window.release_autostart_window_surface()
+assert not autostart_window.testAttribute(application.Qt.WidgetAttribute.WA_DontShowOnScreen)
+autostart_window.backend.shutdown()
+autostart_window.deleteLater()
+sys.argv[:] = original_argv
+qt_app.processEvents()
 temporary.cleanup()
 
-print("3.4.29.6 full offscreen UI construction restored a saved TRCC directory before the Log page.")
+print("3.4.29.7 full offscreen UI construction restored a saved TRCC directory before the Log page.")
