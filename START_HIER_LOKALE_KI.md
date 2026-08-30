@@ -54,7 +54,7 @@ Antworte nach diesem Start zunächst nur mit:
 
 ## Aktueller Einstiegspunkt
 
-Der aktuelle Entwicklungsstand ist in `PROJECT_STATUS.md` beschrieben. Version 3.4.29.7 INTERN umfasst unter anderem das Thermalright-Levita-Display-Studio mit echtem verstellbarem Notch-Balken, Hintergrund-X/Y und Abstandsvorlagen, die sicher bestätigungspflichtige Levita-Pumpen-/Radiatorsteuerung mit optionaler benutzerspezifischer Polkit-Dauerfreigabe, den schwarzen KDE-/Wayland-Autostartfenster-Fix, vollständig offscreen gestartete OpenRGB-Qt-Prozesse, den zweistufigen ENE-DRAM-Kaltstart, die CoolerControl-Dienstverwaltung und den kompatiblen Modulschnitt der historischen Hauptdatei.
+Der aktuelle Entwicklungsstand ist in `PROJECT_STATUS.md` beschrieben. Version 3.4.29.8 INTERN umfasst unter anderem das Thermalright-Levita-Display-Studio mit unverzerrter 1600×720-Skalierung, direkt ziehbarem Notch-Balken, Element-Undo und Kategorien, die sicher bestätigungspflichtige Levita-Pumpen-/Radiatorsteuerung mit robuster benutzerspezifischer Polkit-Dauerfreigabe, sichere PWM/DC-Umschaltung, den schwarzen KDE-/Wayland-Autostartfenster-Fix, hardwarefreie UI-Tests und OpenRGB-Absturzquarantäne, den zweistufigen ENE-DRAM-Kaltstart, die CoolerControl-Dienstverwaltung und den kompatiblen Modulschnitt der historischen Hauptdatei.
 
 ## GitHub-Ziel
 

@@ -170,6 +170,8 @@ from mainboard_fan_control import (
     channel_can_control as mainboard_channel_can_control,
     channel_is_chassis_fan as mainboard_channel_is_chassis_fan,
     channel_control_method as mainboard_channel_control_method,
+    channel_control_mode as mainboard_channel_control_mode,
+    channel_control_mode_supported as mainboard_channel_control_mode_supported,
     detect_dmi as detect_mainboard_dmi,
     disarm_fan_control_watchdog as disarm_mainboard_fan_watchdog,
     discover_hwmon_controllers,
@@ -187,6 +189,7 @@ from mainboard_fan_control import (
     secure_boot_diagnostics as mainboard_secure_boot_diagnostics,
     select_temperature as select_mainboard_temperature,
     set_channel_percent as set_mainboard_channel_percent,
+    set_channel_control_mode as set_mainboard_channel_control_mode,
     set_fan_control_watchdog as set_mainboard_fan_watchdog,
     snapshot_channel as snapshot_mainboard_channel,
     stop_privileged_fan_helper_session as stop_mainboard_fan_helper_session,
@@ -657,6 +660,7 @@ class ReorderableTileArea(QWidget):
         self._order.extend(key for key in self._default_order if key not in self._order)
         self._frames: dict[str, QFrame] = {}
         self._spans: dict[str, int] = {}
+        self._visible: dict[str, bool] = {}
         self._grid = QGridLayout(self)
         self._grid.setContentsMargins(0, 0, 0, 0)
         self._grid.setHorizontalSpacing(16)
@@ -689,6 +693,7 @@ class ReorderableTileArea(QWidget):
             v.addWidget(box)
             self._frames[key] = frame
             self._spans[key] = 3 if int(span) >= 3 else 1
+            self._visible[key] = True
         self._rebuild()
 
     def order(self) -> list[str]:
@@ -711,12 +716,26 @@ class ReorderableTileArea(QWidget):
         self._rebuild()
         self.orderChanged.emit(self.order())
 
+    def prioritize(self, keys: list[str]) -> None:
+        requested = [key for key in keys if key in self._order]
+        self._order = requested + [key for key in self._order if key not in requested]
+        self._rebuild()
+
+    def set_key_visible(self, key: str, visible: bool) -> None:
+        if key not in self._frames:
+            return
+        self._visible[key] = bool(visible)
+        self._frames[key].setVisible(bool(visible))
+        self._rebuild()
+
     def _rebuild(self) -> None:
         while self._grid.count():
             self._grid.takeAt(0)
         row = 0
         column = 0
         for key in self._order:
+            if not self._visible.get(key, True):
+                continue
             span = self._spans.get(key, 1)
             if span == 3:
                 if column:
@@ -2524,6 +2543,8 @@ class KrakenControl(QMainWindow):
         self.ckb_next_process_ids: tuple[int, ...] = ()
         self.openrgb_process_check_at = 0.0
         self.rgb_engine_disabled_by_reset = False
+        self.openrgb_engine_crash_quarantined = False
+        self.hardware_io_disabled = os.environ.get("OHC_DISABLE_HARDWARE_IO") == "1"
         self.rgb_reset_in_progress = False
         self.rgb_engine_restart_pending = False
         self.openrgb_write_enabled = False
@@ -2894,7 +2915,8 @@ class KrakenControl(QMainWindow):
             self.footer_status.setText("Bitte fehlende Abhängigkeiten installieren")
         QTimer.singleShot(0, self.refresh_display_info)
         QTimer.singleShot(0, self.refresh_openlinkhub_status)
-        QTimer.singleShot(0, self.refresh_rgb_studio)
+        if not self.hardware_io_disabled:
+            QTimer.singleShot(0, self.refresh_rgb_studio)
         QTimer.singleShot(250, self.maybe_show_setup_wizard)
         QTimer.singleShot(1500, self.maybe_offer_desktop_design_dependencies)
 
@@ -5682,10 +5704,23 @@ class KrakenControl(QMainWindow):
         cards_header = QHBoxLayout()
         cards_title = QLabel("Gehäuselüfter · physisch bestätigte System-Fan-Kanäle")
         cards_title.setObjectName("sectionTitle")
+        global_profile_label = QLabel("Alle Gehäuselüfter:")
+        global_profile_label.setObjectName("muted")
         assistant_button = QPushButton("Geführten Lüfter-Assistenten starten")
         assistant_button.clicked.connect(self.start_chassis_fan_assistant)
         cards_header.addWidget(cards_title)
         cards_header.addStretch()
+        cards_header.addWidget(global_profile_label)
+        for preset_key in ("quiet", "balanced", "performance"):
+            preset = MAINBOARD_FAN_PRESETS[preset_key]
+            button = QPushButton(preset.name)
+            button.setToolTip(
+                f"Vorlage {preset.name} auf alle erkannten Gehäuselüfter übernehmen; Kalibrierung und Aktivierung bleiben unverändert."
+            )
+            button.clicked.connect(
+                lambda _checked=False, key=preset_key: self.apply_mainboard_fan_preset_to_all_channels(key)
+            )
+            cards_header.addWidget(button)
         cards_header.addWidget(assistant_button)
         mb_layout.addLayout(cards_header)
 
@@ -6290,7 +6325,14 @@ class KrakenControl(QMainWindow):
             return
         commands = self.build_chassis_white_rgb_commands()
         if not commands:
-            self.show_error("Im gemeinsamen RGB-/Gehäuselayout ist noch kein einzeln ansprechbares Gehäuselüfter-RGB zugeordnet.")
+            message = (
+                "Im gemeinsamen RGB-/Gehäuselayout ist noch kein einzeln ansprechbares Gehäuselüfter-RGB "
+                "zugeordnet. Der PWM-Test kann trotzdem sicher ohne weiße RGB-Testhilfe fortgesetzt werden."
+            )
+            if hasattr(self, "assistant_rgb_status"):
+                self.assistant_rgb_status.setText(message)
+            self.log_message("MAINBOARD-FAN-ASSISTENT: RGB-Weißtest übersprungen · keine passende RGB-Zuordnung")
+            QMessageBox.information(self, "Optionale RGB-Testhilfe nicht eingerichtet", message)
             return
         self.stop_openrgb_effect("Lüfter-Assistent · Gehäuselüfter werden zur Identifikation statisch weiß gesetzt")
         self.run_rgb_command_sequence(
@@ -6508,6 +6550,7 @@ class KrakenControl(QMainWindow):
             "minimum": preset.minimum_percent,
             "hysteresis": preset.hysteresis_c,
             "delay": preset.response_delay_s,
+            "control_mode": mainboard_channel_control_mode(channel),
             "curve": [list(point) for point in preset.points],
         }
 
@@ -6913,6 +6956,38 @@ class KrakenControl(QMainWindow):
                 footer.addWidget(enable_btn)
                 card.addLayout(footer)
 
+                quick_profiles = QHBoxLayout()
+                quick_profiles.addWidget(QLabel("Kurvenprofil:"))
+                for preset_key in ("quiet", "balanced", "performance"):
+                    preset = MAINBOARD_FAN_PRESETS[preset_key]
+                    profile_button = QPushButton(preset.name)
+                    if str(profile.get("preset", "balanced")) == preset_key:
+                        profile_button.setObjectName("mainboardFanPresetButton")
+                    profile_button.clicked.connect(
+                        lambda _checked=False, cid=channel.stable_id, key=preset_key: self.apply_mainboard_fan_preset_to_channel(cid, key)
+                    )
+                    quick_profiles.addWidget(profile_button)
+                quick_profiles.addStretch()
+                mode_combo = QComboBox()
+                actual_mode = mainboard_channel_control_mode(channel)
+                if mainboard_channel_control_mode_supported(channel):
+                    mode_combo.addItem("PWM · 4-Pin", "pwm")
+                    mode_combo.addItem("DC · 3-Pin", "dc")
+                    mode_combo.setCurrentIndex(max(0, mode_combo.findData(actual_mode)))
+                    mode_combo.setToolTip("Elektrischen Lüftermodus dieses vom Kernel angebotenen pwmN_mode-Kanals umstellen")
+                    mode_combo.currentIndexChanged.connect(
+                        lambda _index, cid=channel.stable_id, combo=mode_combo: self.change_mainboard_control_mode_from_card(
+                            cid, str(combo.currentData() or "")
+                        )
+                    )
+                else:
+                    mode_combo.addItem("PWM/DC · vom Treiber nicht umschaltbar", "unsupported")
+                    mode_combo.setEnabled(False)
+                    mode_combo.setToolTip("Der Kernel stellt für diesen Kanal kein pwmN_mode bereit; OHC rät keinen elektrischen Modus.")
+                quick_profiles.addWidget(QLabel("Anschlussmodus:"))
+                quick_profiles.addWidget(mode_combo)
+                card.addLayout(quick_profiles)
+
                 if expanded:
                     detail = QFrame()
                     detail.setObjectName("fanInlineDetail")
@@ -7044,6 +7119,7 @@ class KrakenControl(QMainWindow):
         self.mainboard_curve_overlay_delay = QSpinBox()
         self.mainboard_curve_overlay_delay.setRange(1, 30)
         self.mainboard_curve_overlay_delay.setSuffix(" s")
+        self.mainboard_curve_overlay_control_mode = QComboBox()
         self.mainboard_curve_overlay_enabled = QCheckBox("Diesen bestätigten Kanal automatisch regeln")
 
         fields = (
@@ -7053,14 +7129,29 @@ class KrakenControl(QMainWindow):
             ("Mindestleistung", self.mainboard_curve_overlay_minimum),
             ("Hysterese", self.mainboard_curve_overlay_hysteresis),
             ("Reaktionsverzögerung", self.mainboard_curve_overlay_delay),
+            ("Anschlussmodus", self.mainboard_curve_overlay_control_mode),
         )
         for index, (label, widget) in enumerate(fields):
             row, pair = divmod(index, 3)
             col = pair * 2
             form.addWidget(QLabel(label), row, col)
             form.addWidget(widget, row, col + 1)
-        form.addWidget(self.mainboard_curve_overlay_enabled, 2, 0, 1, 6)
+        form.addWidget(self.mainboard_curve_overlay_enabled, 3, 0, 1, 6)
         root.addWidget(form_frame)
+
+        quick_presets = QHBoxLayout()
+        quick_presets.addWidget(QLabel("Kurve direkt laden:"))
+        for preset_key in ("quiet", "balanced", "performance"):
+            preset_button = QPushButton(MAINBOARD_FAN_PRESETS[preset_key].name)
+            preset_button.clicked.connect(
+                lambda _checked=False, key=preset_key: self.select_mainboard_curve_overlay_preset(key)
+            )
+            quick_presets.addWidget(preset_button)
+        reset_curve = QPushButton("Kurve auf Standardeinstellungen zurücksetzen")
+        reset_curve.clicked.connect(self.reset_mainboard_curve_overlay_to_standard)
+        quick_presets.addStretch()
+        quick_presets.addWidget(reset_curve)
+        root.addLayout(quick_presets)
 
         table_title = QLabel("Exakte Kurvenwerte")
         table_title.setObjectName("sectionTitle")
@@ -7140,6 +7231,19 @@ class KrakenControl(QMainWindow):
             self.mainboard_curve_overlay_sync = False
         self.update_mainboard_curve_overlay_table(list(preset.points))
 
+    def select_mainboard_curve_overlay_preset(self, key: str) -> None:
+        index = self.mainboard_curve_overlay_preset.findData(str(key))
+        if index < 0:
+            return
+        if index == self.mainboard_curve_overlay_preset.currentIndex():
+            self.apply_mainboard_curve_overlay_preset(index)
+        else:
+            self.mainboard_curve_overlay_preset.setCurrentIndex(index)
+
+    def reset_mainboard_curve_overlay_to_standard(self) -> None:
+        self.select_mainboard_curve_overlay_preset("balanced")
+        self.footer_status.setText("Lüfterkurve auf Standard „Ausbalanciert“ zurückgesetzt · noch speichern")
+
     def open_mainboard_curve_dialog(self, channel_id: str) -> None:
         """Open the embedded 3.4.25 fan-curve card; no separate window is created."""
         channel = next((item for item in self.chassis_mainboard_channels() if item.stable_id == str(channel_id)), None)
@@ -7159,6 +7263,26 @@ class KrakenControl(QMainWindow):
             self.mainboard_curve_overlay_hysteresis.setValue(int(profile.get("hysteresis", 2)))
             self.mainboard_curve_overlay_delay.setValue(int(profile.get("delay", 3)))
             self.mainboard_curve_overlay_enabled.setChecked(bool(profile.get("enabled")))
+            self.mainboard_curve_overlay_control_mode.clear()
+            actual_mode = mainboard_channel_control_mode(channel)
+            if mainboard_channel_control_mode_supported(channel):
+                self.mainboard_curve_overlay_control_mode.addItem("PWM · 4-Pin", "pwm")
+                self.mainboard_curve_overlay_control_mode.addItem("DC · 3-Pin", "dc")
+                self.mainboard_curve_overlay_control_mode.setCurrentIndex(
+                    max(0, self.mainboard_curve_overlay_control_mode.findData(actual_mode))
+                )
+                self.mainboard_curve_overlay_control_mode.setEnabled(True)
+                self.mainboard_curve_overlay_control_mode.setToolTip(
+                    "Ein Wechsel wird erst beim Speichern nach ausdrücklicher Bestätigung geschrieben und setzt die Kalibrierung zurück."
+                )
+            else:
+                self.mainboard_curve_overlay_control_mode.addItem(
+                    "PWM/DC · vom Treiber nicht umschaltbar", "unsupported"
+                )
+                self.mainboard_curve_overlay_control_mode.setEnabled(False)
+                self.mainboard_curve_overlay_control_mode.setToolTip(
+                    "Der Kernel stellt kein pwmN_mode bereit; OHC rät keinen elektrischen Modus."
+                )
             try:
                 points = validate_mainboard_curve([(int(x[0]), int(x[1])) for x in profile.get("curve", self._mainboard_default_curve())], 0)
             except (TypeError, ValueError, IndexError):
@@ -7204,6 +7328,11 @@ class KrakenControl(QMainWindow):
         except (AttributeError, TypeError, ValueError) as exc:
             self.show_error(f"Ungültige Lüfterkurve: {exc}")
             return
+        requested_mode = str(self.mainboard_curve_overlay_control_mode.currentData() or "unsupported")
+        if requested_mode in {"pwm", "dc"} and requested_mode != mainboard_channel_control_mode(channel):
+            self.mainboard_curve_overlay_enabled.setChecked(False)
+            if not self.apply_mainboard_channel_control_mode(channel, requested_mode):
+                return
         if self.mainboard_curve_overlay_enabled.isChecked() and not bool(profile.get("calibrated")):
             self.show_error("Automatische Regelung darf erst nach bestätigter physischer Zuordnung aktiviert werden.")
             return
@@ -7215,11 +7344,110 @@ class KrakenControl(QMainWindow):
             "hysteresis": int(self.mainboard_curve_overlay_hysteresis.value()),
             "delay": int(self.mainboard_curve_overlay_delay.value()),
             "enabled": bool(self.mainboard_curve_overlay_enabled.isChecked()),
+            "control_mode": mainboard_channel_control_mode(channel),
             "curve": [list(point) for point in curve_points],
         })
         self.save_mainboard_fan_settings()
         self.refresh_mainboard_fan_table()
         self.close_mainboard_curve_overlay()
+
+    @staticmethod
+    def update_mainboard_profile_from_preset(profile: dict[str, object], preset_key: str) -> None:
+        preset = mainboard_fan_preset(preset_key)
+        profile.update({
+            "preset": preset.key,
+            "source": preset.source,
+            "cpu_weight": preset.cpu_weight,
+            "minimum": preset.minimum_percent,
+            "hysteresis": preset.hysteresis_c,
+            "delay": preset.response_delay_s,
+            "curve": [list(point) for point in preset.points],
+        })
+
+    def apply_mainboard_fan_preset_to_channel(self, channel_id: str, preset_key: str) -> None:
+        channel = self.mainboard_channels.get(str(channel_id))
+        if channel is None or not mainboard_channel_is_chassis_fan(channel):
+            return
+        profile = self.mainboard_profile_for(channel)
+        self.update_mainboard_profile_from_preset(profile, preset_key)
+        self.mainboard_curve_states[channel.stable_id] = MainboardCurveState()
+        self.save_mainboard_fan_settings()
+        self.refresh_mainboard_fan_table()
+        preset = mainboard_fan_preset(preset_key)
+        self.footer_status.setText(f"{profile.get('name') or channel.display_name}: Profil {preset.name} übernommen")
+        self.log_message(
+            f"MAINBOARD-FAN-PROFIL: {channel.stable_id} · {preset.name} gespeichert · "
+            "Kalibrierung und Aktivierung unverändert"
+        )
+
+    def apply_mainboard_fan_preset_to_all_channels(self, preset_key: str) -> None:
+        channels = self.chassis_mainboard_channels()
+        if not channels:
+            self.show_error("Es wurden keine Gehäuselüfterkanäle erkannt.")
+            return
+        for channel in channels:
+            self.update_mainboard_profile_from_preset(self.mainboard_profile_for(channel), preset_key)
+            self.mainboard_curve_states[channel.stable_id] = MainboardCurveState()
+        self.save_mainboard_fan_settings()
+        self.refresh_mainboard_fan_table()
+        preset = mainboard_fan_preset(preset_key)
+        self.footer_status.setText(f"Profil {preset.name} auf {len(channels)} Gehäuselüfter übernommen")
+        self.log_message(
+            f"MAINBOARD-FAN-PROFIL: {preset.name} auf alle {len(channels)} Gehäuselüfter übernommen · "
+            "keine Kalibrierung oder Aktivierung geändert"
+        )
+
+    def apply_mainboard_channel_control_mode(self, channel: MainboardFanChannel, mode: str) -> bool:
+        requested = str(mode).strip().casefold()
+        actual = mainboard_channel_control_mode(channel)
+        if requested == actual:
+            return True
+        if not mainboard_channel_control_mode_supported(channel):
+            self.show_error(
+                "Der installierte hwmon-Treiber bietet für diesen Kanal kein pwmN_mode an. "
+                "OHC kann deshalb nicht sicher zwischen PWM und DC umschalten."
+            )
+            return False
+        answer = QMessageBox.warning(
+            self,
+            "Elektrischen Lüftermodus ändern",
+            f"{channel.display_name} wird von {actual.upper()} auf {requested.upper()} umgestellt. "
+            "Das kann die Drehzahl unmittelbar verändern. Eine laufende OHC-Automatik wird vorher beendet und "
+            "die bisherige physische Kalibrierung wird ungültig.\n\n"
+            "Bitte prüfe, ob am Header ein passender 4-Pin-PWM- beziehungsweise 3-Pin-DC-Lüfter angeschlossen ist. "
+            "Nach dem Wechsel ist der sichere 70-%-/10-s-Test erneut erforderlich.\n\n"
+            "Modus jetzt umstellen?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return False
+        if self.mainboard_control_active:
+            self.toggle_mainboard_master_control(False, silent=True)
+        try:
+            set_mainboard_channel_control_mode(channel, requested)
+        except MainboardFanWriteError as exc:
+            self.show_error(f"PWM/DC-Modus konnte nicht geändert werden: {exc}")
+            return False
+        profile = self.mainboard_profile_for(channel)
+        profile["control_mode"] = requested
+        profile["calibrated"] = False
+        profile["enabled"] = False
+        self.mainboard_curve_states[channel.stable_id] = MainboardCurveState()
+        self.save_mainboard_fan_settings()
+        self.log_message(
+            f"MAINBOARD-FAN-MODUS: {channel.stable_id} · {actual.upper()} → {requested.upper()} · "
+            "Kalibrierung zurückgesetzt"
+        )
+        self.footer_status.setText(f"{channel.display_name}: {requested.upper()} aktiv · Kanal bitte neu testen")
+        return True
+
+    def change_mainboard_control_mode_from_card(self, channel_id: str, mode: str) -> None:
+        channel = self.mainboard_channels.get(str(channel_id))
+        if channel is None:
+            return
+        self.apply_mainboard_channel_control_mode(channel, mode)
+        self.refresh_mainboard_fan_table()
 
     @staticmethod
     def mainboard_source_label(source: str) -> str:
@@ -7814,7 +8042,9 @@ class KrakenControl(QMainWindow):
         if not hasattr(self, "mainboard_persistent_auth_label"):
             return
         try:
-            enabled = persistent_fan_authorization_enabled()
+            enabled = persistent_fan_authorization_enabled() or self.settings.value(
+                "mainboard_fans/persistent_authorization_expected", False, type=bool
+            )
         except (OSError, ValueError):
             enabled = False
         helper_available = mainboard_fan_helper_available()
@@ -7882,18 +8112,35 @@ class KrakenControl(QMainWindow):
         )
 
         def done(result: CommandResult) -> None:
-            self.refresh_persistent_mainboard_fan_authorization_ui()
             if not result.ok:
+                self.refresh_persistent_mainboard_fan_authorization_ui()
                 detail = result.combined or "Systemauthentifizierung abgebrochen oder Änderung fehlgeschlagen"
                 self.show_error(f"Dauerhafte Lüfterberechtigung konnte nicht geändert werden: {detail}")
                 return
-            expected_state = persistent_fan_authorization_enabled()
-            if expected_state != enabled:
+            payload: dict[str, object] = {}
+            for line in reversed((result.stdout or "").splitlines()):
+                try:
+                    candidate = json.loads(line)
+                except (TypeError, ValueError, json.JSONDecodeError):
+                    continue
+                if isinstance(candidate, dict):
+                    payload = candidate
+                    break
+            helper_confirmed = (
+                payload.get("ok") is True
+                and payload.get("persistent_authorization") == bool(enabled)
+            )
+            marker_confirmed = persistent_fan_authorization_enabled() == enabled
+            if not helper_confirmed and not marker_confirmed:
+                self.refresh_persistent_mainboard_fan_authorization_ui()
                 self.show_error(
-                    "Die Polkit-Änderung wurde nicht im erwarteten Zustand gefunden. Bitte Installation und "
+                    "Der Lüfterhelfer hat die Polkit-Änderung nicht eindeutig bestätigt. Bitte Installation und "
                     "Systemprotokoll prüfen."
                 )
                 return
+            self.settings.setValue("mainboard_fans/persistent_authorization_expected", bool(enabled))
+            self.settings.sync()
+            self.refresh_persistent_mainboard_fan_authorization_ui()
             state = "erteilt" if enabled else "entfernt"
             self.footer_status.setText(f"Dauerhafte Mainboard-Lüfterberechtigung {state}")
             self.log_message(
@@ -9545,6 +9792,7 @@ class KrakenControl(QMainWindow):
         self.lcd_middle_scroll_timer = QTimer(self)
         self.lcd_middle_scroll_timer.setInterval(16)
         self.lcd_middle_scroll_timer.timeout.connect(self.lcd_middle_scroll_tick)
+        self.update_lcd_hardware_layout(False, thermalright_display_present())
         QTimer.singleShot(0, self.update_lcd_sticky_preview_visibility)
         return page
 
@@ -9664,8 +9912,48 @@ class KrakenControl(QMainWindow):
         self.imported_lcd_status_label.setWordWrap(True)
         self.imported_lcd_status_label.setObjectName("infoText")
         layout.addWidget(self.imported_lcd_status_label)
+        self.kraken_importer_box = box
+        self.kraken_importer_content_widgets = tuple(
+            widget for widget in box.findChildren(
+                QWidget, "", Qt.FindChildOption.FindDirectChildrenOnly,
+            )
+        )
+        box.setCheckable(True)
+        box.setChecked(False)
+        box.toggled.connect(self.set_kraken_importer_expanded)
+        self.set_kraken_importer_expanded(False)
         self.refresh_imported_lcd_profiles_table()
         return box
+
+    def set_kraken_importer_expanded(self, expanded: bool) -> None:
+        box = getattr(self, "kraken_importer_box", None)
+        if box is None:
+            return
+        if box.isChecked() != bool(expanded):
+            box.blockSignals(True)
+            box.setChecked(bool(expanded))
+            box.blockSignals(False)
+        for widget in getattr(self, "kraken_importer_content_widgets", ()):
+            widget.setVisible(bool(expanded))
+        suffix = "geöffnet" if expanded else "eingeklappt · zum Aktivieren anklicken"
+        box.setTitle(f"Komplexe LCD-Designs · NZXT-ESC-Import · {suffix}")
+
+    def update_lcd_hardware_layout(self, has_kraken: bool, thermalright_present: bool) -> None:
+        area = getattr(self, "lcd_tile_area", None)
+        if area is None:
+            return
+        area.set_key_visible("thermalright", thermalright_present)
+        area.set_key_visible("preview", has_kraken)
+        self.lcd_round_preview_available = bool(has_kraken)
+        if thermalright_present:
+            area.prioritize(["thermalright", "display"] + (["preview"] if has_kraken else []))
+        elif has_kraken:
+            area.prioritize(["preview", "display"])
+        self.set_kraken_importer_expanded(has_kraken)
+        if not has_kraken:
+            sticky = getattr(self, "lcd_sticky_preview", None)
+            if sticky is not None:
+                sticky.hide()
 
     def sync_imported_lcd_scale_ui(self) -> None:
         profile = self.selected_imported_lcd_profile()
@@ -13711,11 +13999,13 @@ class KrakenControl(QMainWindow):
         self.refresh_button.setEnabled(True)
         thermalright_present = thermalright_display_present()
         if not result.ok and not thermalright_present:
+            self.update_lcd_hardware_layout(False, False)
             self.set_disconnected(result.combined or "Initialisierung fehlgeschlagen")
             return
         global KRAKEN_MATCH, KRAKEN_PRODUCT_ID, KRAKEN_DISPLAY_NAME, KRAKEN_LCD_RESOLUTION, KRAKEN_SUPPORT_LEVEL
         profile = detected_profile(result.stdout)
         has_kraken = profile is not None
+        self.update_lcd_hardware_layout(has_kraken, thermalright_present)
         has_rgb = "NZXT 2023 RGB Controller" in result.stdout
         if profile is not None:
             KRAKEN_MATCH = profile.liquidctl_name
@@ -14906,6 +15196,7 @@ class KrakenControl(QMainWindow):
             self.log_message("RGB-ENGINE: Neuerkennung während Reset vorgemerkt · Neustart folgt nach Gerätefreigabe")
             return
         self.rgb_engine_disabled_by_reset = False
+        self.openrgb_engine_crash_quarantined = False
         self.rgb_engine_restart_pending = False
         self.refresh_rgb_studio()
 
@@ -14987,6 +15278,9 @@ class KrakenControl(QMainWindow):
 
     def reinitialize_rgb_control(self, _checked: bool = False, *, automatic: bool = False) -> None:
         """Rebuild OHC's local write path without terminating another RGB program."""
+
+        if not automatic:
+            self.openrgb_engine_crash_quarantined = False
 
         conflicts = self.conflicting_openrgb_process_ids()
         if conflicts:
@@ -15099,6 +15393,14 @@ class KrakenControl(QMainWindow):
             self.rgb_direct_apply_timer.start()
 
     def ensure_managed_rgb_engine(self) -> None:
+        if self.hardware_io_disabled:
+            return
+        if self.openrgb_engine_crash_quarantined:
+            if hasattr(self, "openrgb_server_label"):
+                self.openrgb_server_label.setText(
+                    "Engine: nach OpenRGB-Absturz für diese Sitzung pausiert · manuell neu erkennen"
+                )
+            return
         if self.rgb_reset_in_progress or self.rgb_engine_disabled_by_reset:
             if hasattr(self, "openrgb_server_label"):
                 self.openrgb_server_label.setText(
@@ -15168,7 +15470,7 @@ class KrakenControl(QMainWindow):
         self.openrgb_server_label.setText("Engine: von Open Hardware Control gestartet · Geräteerkennung läuft …")
         QTimer.singleShot(1400, self.refresh_rgb_studio)
 
-    def on_managed_rgb_engine_finished(self, exit_code: int, _status) -> None:
+    def on_managed_rgb_engine_finished(self, exit_code: int, status) -> None:
         stderr = bytes(self.openrgb_server_process.readAllStandardError()).decode("utf-8", "replace").strip()
         stdout = bytes(self.openrgb_server_process.readAllStandardOutput()).decode("utf-8", "replace").strip()
         requested = self.openrgb_engine_stop_requested
@@ -15183,10 +15485,17 @@ class KrakenControl(QMainWindow):
             self.log_message("RGB-ENGINE: von Open Hardware Control beendet · Geräte freigegeben")
         else:
             detail = stderr or stdout or f"Exit-Code {exit_code}"
+            self.openrgb_engine_crash_quarantined = True
             self.stop_openrgb_effect("RGB-Animation angehalten · verwaltete Engine wurde beendet")
-            self.log_message(f"RGB-ENGINE: unerwartet beendet · {detail[:240]}")
+            crash_note = (
+                " · Prozessabsturz erkannt; automatischer Neustart gesperrt"
+                if status == QProcess.ExitStatus.CrashExit else " · automatischer Neustart gesperrt"
+            )
+            self.log_message(f"RGB-ENGINE: unerwartet beendet{crash_note} · {detail[:240]}")
             if hasattr(self, "openrgb_server_label"):
-                self.openrgb_server_label.setText(f"Engine: unerwartet beendet · {detail[:160]}")
+                self.openrgb_server_label.setText(
+                    f"Engine: unerwartet beendet · Neustart nur manuell · {detail[:120]}"
+                )
             if self.openrgb_write_enable_pending:
                 self.openrgb_write_enable_pending = False
                 self.rgb_profile_autostart_pending = False
@@ -15291,6 +15600,8 @@ class KrakenControl(QMainWindow):
         self.refresh_rgb_studio(background=True)
 
     def refresh_rgb_studio(self, *, background: bool = False) -> None:
+        if self.hardware_io_disabled:
+            return
         if self.openrgb_status_busy:
             return
         self.openrgb_discovery_generation += 1
@@ -19602,6 +19913,9 @@ class KrakenControl(QMainWindow):
         page = getattr(self, "lcd_scroll_page", None)
         box = getattr(self, "lcd_preview_box", None)
         if sticky is None or page is None or box is None:
+            return
+        if not bool(getattr(self, "lcd_round_preview_available", True)):
+            sticky.hide()
             return
         enabled = bool(getattr(self, "lcd_sticky_preview_checkbox", None) is not None and self.lcd_sticky_preview_checkbox.isChecked())
         if not enabled:

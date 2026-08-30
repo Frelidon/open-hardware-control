@@ -27,6 +27,7 @@ DEFAULT_FAN_HELPER = Path("/usr/libexec/open-hardware-control-fan-helper")
 DEFAULT_PKEXEC = Path("/usr/bin/pkexec")
 PERSISTENT_FAN_RULES_DIR = Path("/etc/polkit-1/rules.d")
 PERSISTENT_FAN_RULE_PREFIX = "49-open-hardware-control-fan"
+PERSISTENT_FAN_STATE_DIR = Path("/var/lib/open-hardware-control/polkit-grants")
 
 
 def _read_text(path: Path, default: str = "") -> str:
@@ -82,10 +83,12 @@ class FanChannel:
     pwm_path: Path
     enable_path: Path | None
     rpm_path: Path | None
+    mode_path: Path | None = None
     label_path: Path | None = None
     writable: bool = False
     pwm_value: int | None = None
     enable_value: int | None = None
+    mode_value: int | None = None
     rpm: int | None = None
 
     @property
@@ -134,6 +137,7 @@ def discover_hwmon_controllers(root: Path = DEFAULT_HWMON_ROOT) -> list[HwmonCon
         for index in sorted(channel_indices):
             pwm_path = entry / f"pwm{index}"
             enable_path = entry / f"pwm{index}_enable"
+            mode_path = entry / f"pwm{index}_mode"
             rpm_path = entry / f"fan{index}_input"
             label_path = entry / f"fan{index}_label"
             channels.append(
@@ -143,11 +147,13 @@ def discover_hwmon_controllers(root: Path = DEFAULT_HWMON_ROOT) -> list[HwmonCon
                     name=name,
                     pwm_path=pwm_path,
                     enable_path=enable_path if enable_path.exists() else None,
+                    mode_path=mode_path if mode_path.exists() else None,
                     rpm_path=rpm_path if rpm_path.exists() else None,
                     label_path=label_path if label_path.exists() else None,
                     writable=os.access(pwm_path, os.W_OK),
                     pwm_value=_read_int(pwm_path),
                     enable_value=_read_int(enable_path) if enable_path.exists() else None,
+                    mode_value=_read_int(mode_path) if mode_path.exists() else None,
                     rpm=_read_int(rpm_path) if rpm_path.exists() else None,
                 )
             )
@@ -494,7 +500,13 @@ def persistent_fan_authorization_path(uid: int | None = None) -> Path:
 
 
 def persistent_fan_authorization_enabled(uid: int | None = None) -> bool:
-    return persistent_fan_authorization_path(uid).is_file()
+    user_id = os.getuid() if uid is None else int(uid)
+    # Fedora intentionally prevents ordinary users from traversing the Polkit
+    # rules directory.  The helper therefore mirrors grant state into a
+    # root-owned, world-readable marker directory.  The marker is status only;
+    # Polkit still decides whether the helper may start.
+    marker = PERSISTENT_FAN_STATE_DIR / str(user_id)
+    return persistent_fan_authorization_path(user_id).is_file() or marker.is_file()
 
 
 def persistent_fan_authorization_command(enabled: bool) -> list[str]:
@@ -516,6 +528,23 @@ def channel_control_method(channel: FanChannel) -> str:
 
 def channel_can_control(channel: FanChannel) -> bool:
     return channel_control_method(channel) != "none"
+
+
+def channel_control_mode(channel: FanChannel) -> str:
+    """Return the driver-reported electrical mode without guessing support."""
+
+    if channel.mode_path is None:
+        return "unsupported"
+    value = _read_int(channel.mode_path)
+    if value == 0:
+        return "dc"
+    if value == 1:
+        return "pwm"
+    return "unknown"
+
+
+def channel_control_mode_supported(channel: FanChannel) -> bool:
+    return channel.mode_path is not None and channel_control_mode(channel) in {"dc", "pwm"}
 
 
 def _run_privileged_helper(*args: str, timeout: float = 15.0) -> dict[str, object]:
@@ -540,6 +569,25 @@ def set_channel_percent(channel: FanChannel, percent: int) -> None:
     if channel.enable_path is not None and os.access(channel.enable_path, os.W_OK):
         _write_sysfs(channel.enable_path, "1\n")
     _write_sysfs(channel.pwm_path, f"{percent_to_pwm(percent)}\n")
+
+
+def set_channel_control_mode(channel: FanChannel, mode: str) -> None:
+    """Set DC/PWM only through the documented, driver-exposed pwmN_mode node."""
+
+    normalized = str(mode).strip().casefold()
+    values = {"dc": 0, "pwm": 1}
+    if normalized not in values:
+        raise FanWriteError("Lüftermodus muss DC oder PWM sein")
+    if channel.mode_path is None or not channel.mode_path.is_file():
+        raise FanWriteError("der installierte hwmon-Treiber bietet für diesen Kanal keine PWM/DC-Umschaltung an")
+    value = values[normalized]
+    if os.access(channel.mode_path, os.W_OK):
+        _write_sysfs(channel.mode_path, f"{value}\n")
+    elif channel_control_method(channel) == "polkit":
+        _run_privileged_helper("set-mode", str(channel.index), str(value))
+    else:
+        raise FanWriteError("pwm_mode ist weder direkt noch über den privilegierten Helfer schreibbar")
+    channel.mode_value = value
 
 
 def restore_firmware_control(channel: FanChannel) -> None:

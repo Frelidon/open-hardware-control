@@ -1,4 +1,4 @@
-# Software and links – Open Hardware Control 3.4.29.7 INTERNAL
+# Software and links – Open Hardware Control 3.4.29.8 INTERNAL
 
 | Component | Purpose | Project | License |
 |---|---|---|---|

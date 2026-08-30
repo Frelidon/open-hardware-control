@@ -7,7 +7,7 @@ code = (ROOT / "kraken_control.py").read_text(encoding="utf-8")
 constants = (ROOT / "app_constants.py").read_text(encoding="utf-8")
 integration = (ROOT / "openrgb_integration.py").read_text(encoding="utf-8")
 
-assert 'APP_VERSION = "3.4.29.7"' in constants
+assert 'APP_VERSION = "3.4.29.8"' in constants
 assert "def prime_ene_dram_cold_start" in code
 assert "def is_ene_dram_device" in code
 assert "ENE_DRAM_RECLAIM_PASSES = 2" in code

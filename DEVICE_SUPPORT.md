@@ -18,6 +18,8 @@ Do not promote other detected Kraken capability entries to “tested” without 
 - CoolerControl ownership blocks concurrent writes. Owned headers are restored to firmware/BIOS control on exit.
 - After explicit Polkit authorization, repeated curve writes reuse one narrowly validated helper child bound to the OHC process. This avoids background reauthorization after several minutes without weakening the required calibration or fixed-path helper validation.
 - An optional user-installed exact-account Polkit rule can retain that authorization across reboots. OHC exposes separate grant/remove controls, stores no password and continues to require physical PWM-channel confirmation.
+- Since 3.4.29.8 the helper mirrors grant state into a root-owned readable marker because Fedora's Polkit rule directory is intentionally not traversable by the desktop user. The marker is status only; Polkit remains authoritative.
+- DC/PWM selection is available only for a channel whose Linux driver exposes `pwmN_mode`. Changing it invalidates calibration and activation and requires the physical test again.
 - No coolant sensor is exposed through this path; never synthesize one from CPU/GPU temperatures or RPM.
 
 ## Corsair
@@ -30,13 +32,15 @@ RGB coverage follows the user's separately installed OpenRGB backend. OHC uses i
 
 The private server and every short-lived OpenRGB CLI client are launched through Qt's offscreen platform. This is a window-suppression property only and does not change device compatibility or ownership.
 
+If the private OpenRGB process crashes during backend discovery, OHC quarantines automatic restart for the rest of the session. A deliberate manual re-detection is required before another backend launch, preventing repeated driver coredumps.
+
 For Frelidon's versioned personal PC layout only, the Jungle Leopard GPU support is confirmed as one 24-LED component on Airgoo Channel B6. OpenRGB exposes it as a hub zone rather than a separate controller, so it must not be grouped with either ENE-DRAM module. This fixed reference mapping is not a general claim about other Airgoo installations.
 
 A stable removal of one or two devices from an expected inventory of at least four may update the saved expected count after 2.5 seconds. Large inventory drops remain protected by the stricter cold-start retry logic and must not be accepted as a permanent hardware change automatically.
 
 ## Mainboard/chassis fans
 
-The current backend targets Linux hwmon PWM control with a focus on NCT6687/NCT6687D. Electrical channel mapping must be calibrated and physically confirmed. Board name alone is diagnostic metadata, not a safe mapping source.
+The current backend targets Linux hwmon fan control with a focus on NCT6687/NCT6687D. Electrical channel mapping must be calibrated and physically confirmed. Board name alone is diagnostic metadata, not a safe mapping source. Individual/global presets modify only the stored bounded curves and preserve activation/calibration state; electrical DC/PWM switching is permitted only through a driver-exposed fixed channel node and always resets confirmation state.
 
 ## Explicitly outside current support claims
 

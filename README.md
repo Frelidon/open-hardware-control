@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.7 INTERN
+# Open Hardware Control by Frelidon 3.4.29.8 INTERN
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -15,6 +15,8 @@ Projekt-Repository: <https://github.com/Frelidon/open-hardware-control>
 > **Inoffizielles unabhängiges Community-Projekt:** Bisher besteht keine offizielle Unterstützung, Kooperation, Freigabe oder Verbindung zu NZXT, Corsair, be quiet!, OpenLinkHub, OpenRGB oder anderen genannten Herstellern und Projekten. Produkt- und Markennamen dienen nur der Kompatibilitätsbeschreibung. Hersteller und Rechteinhaber erreichen Frelidon über die öffentliche Kontaktadresse im GitHub-Profil oder über den Steam-Benutzernamen **Frelidon**.
 
 Version 3.4.29 INTERN erweitert die LCD-Seite um ein lokales Thermalright-Levita-Display-Studio. Eigene beziehungsweise bereits vorhandene Designs lassen sich ohne Kopie einlesen, auf einer echten 1600×720-Fläche ansehen und mit frei verschiebbaren Hardwarewerten ergänzen. Der sichere Testmodus ist standardmäßig aktiv; echte USB-Übertragung erfolgt nur über das separat installierte GPL-Backend TRCC Linux.
+
+Hotfix 3.4.29.8 ergänzt sichere PWM/DC-Umschaltung nur für vom Kernel angebotene `pwmN_mode`-Kanäle, globale und einzelne Lüfterprofile sowie Kurven-Reset. Die Polkit-Dauerfreigabe erhält einen unprivilegiert lesbaren Statusmarker, ohne die Regel oder ein Passwort offenzulegen. Das Levita-Studio skaliert Bilder/Videos unverzerrt auf 1600×720, startet mit 80-px-Maske und zentriertem Hintergrund, bietet direkten Balken-Drag, Element-Undo, Kategorien und zuverlässig sichtbare Prozentzeichen. Geräteabhängige LCD-Kacheln blenden die runde Kraken-Vorschau bei einem rechteckigen Levita aus. UI-Tests dürfen keine Hardwareprozesse mehr starten; ein abgestürzter OpenRGB-Server wird bis zu einem bewussten manuellen Neuversuch gesperrt.
 
 Hotfix 3.4.29.7 verhindert das fotografierte schwarze OHC-Zwischenfenster beim minimierten KDE-/Wayland-Autostart, startet auch alle OpenRGB-Qt-Clients ausdrücklich offscreen und ergänzt eine freiwillige, benutzerspezifische Dauerfreigabe für den eng begrenzten NCT6687-Helfer einschließlich eigener Entfernen-Schaltfläche. Es wird kein Passwort gespeichert; die physische PWM-Kalibrierung bleibt Pflicht.
 
@@ -435,30 +437,30 @@ Die Animation kann dabei kurz stehen bleiben, muss aber weder neu eingelesen noc
 
 ### Fedora und Nobara – RPM
 
-Lade `open-hardware-control-3.4.29.7-0.intern2.noarch.rpm` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control-3.4.29.8-0.intern2.noarch.rpm` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.7-0.intern2.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.8-0.intern2.noarch.rpm
 ```
 
 ### Debian, Ubuntu und Linux Mint – DEB
 
-Lade `open-hardware-control_3.4.29.7~intern2_all.deb` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control_3.4.29.8~intern2_all.deb` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.7~intern2_all.deb'
+sudo apt install './open-hardware-control_3.4.29.8~intern2_all.deb'
 ```
 
 ### Universelles Installationspaket
 
-Das ZIP funktioniert auf Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_7_INTERN.zip` herunter und führe aus:
+Das ZIP funktioniert auf Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_8_INTERN.zip` herunter und führe aus:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_7_INTERN.zip
-cd open-hardware-control-3.4.29.7-INTERN
+unzip open_hardware_control_v3_4_29_8_INTERN.zip
+cd open-hardware-control-3.4.29.8-INTERN
 chmod +x install.sh
 ./install.sh
 ```

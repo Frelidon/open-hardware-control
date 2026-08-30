@@ -1,6 +1,6 @@
 # Open Hardware Control — Project Status
 
-**Current development version:** 3.4.29.7 INTERN
+**Current development version:** 3.4.29.8 INTERN
 
 **Status date:** 30 August 2026
 
@@ -16,6 +16,8 @@ Version 3.4.29 adds a local-first Thermalright Levita Vision display studio to t
 
 Version 3.4.29.7 suppresses the OHC native window surface before a KDE/Wayland tray-autostart UI is constructed, closing the photographed black-window flash, and makes every OpenRGB Qt client invocation headless as a second window-suppression boundary. It also adds user-facing grant/remove controls for an optional exact-user Polkit rule so the fixed, bounded NCT6687 helper can be authorized once across reboots without storing a password.
 
+Version 3.4.29.8 makes the persistent-fan grant observable through a root-owned readable status marker, adds driver-gated PWM/DC selection and per-fan/global curve presets without weakening calibration, and brings the Levita editor in line with the photographed 80-pixel centered layout. Media is prepared aspect-correct at 1600×720, the mask is directly draggable, overlays have one-step history, local themes are grouped, metric units survive TRCC rendering, and rectangular hardware hides the round Kraken preview. Offscreen UI tests are now explicitly hardware-free; an unexpected managed OpenRGB crash is quarantined until a manual retry.
+
 The 3.4.29 codebase has also begun an incremental local-AI-oriented split of the historical `kraken_control.py` monolith. The executable remains compatible, while independent constants, temperature helpers, privacy logging, the serial command backend, cooling widgets and localization/help data now live in focused modules documented by `MODULE_MAP.md`.
 
 ## What 3.4.29 adds so far
@@ -28,10 +30,11 @@ The 3.4.29 codebase has also begun an incremental local-AI-oriented split of the
 - Hotfix 3.4.29.5 resets TRCC's persisted decorative split mode to zero before loading media. This avoids the confirmed TRCC 9.9.11/PySide6 6.11 `QImage.mirrored()` crash; styles A–C stay available as clearly marked local previews, while the physical 80-pixel right cutout remains protected.
 - Version 3.4.29.6 applies a real adjustable black TRCC mask over the camera/notch area instead of merely drawing a preview guide. Its wider 320-pixel reference default, persistent background X/Y shift and two overlay spacing presets remain user-adjustable; locally prepared image/video copies never overwrite imported originals. Formats that already include `°C` or `%` now suppress TRCC's second unit suffix.
 - Hotfix 3.4.29.7 prevents the photographed black OHC surface during minimized KDE/Wayland autostart, keeps every OpenRGB CLI process offscreen and offers explicit persistent-fan-authorization grant/remove controls without storing a password or weakening PWM calibration.
+- Hotfix 3.4.29.8 adds kernel-reported PWM/DC selection, individual/global fan presets and curve reset; reliable persistent-authorization state; aspect-correct Levita media, direct mask drag, overlay undo, categorized local themes and visible metric units; device-aware LCD tiles; hardware-free UI tests; and session quarantine after an unexpected managed OpenRGB crash.
 
 - Full-width Thermalright Levita Vision studio inside the existing LCD page.
 - Local-only import for images, videos, `.zt` media and complete TRCC layout directories containing `config1.dc`; imported manufacturer assets are neither copied nor packaged.
-- A true 1600×720 editor with a real adjustable 80–800-pixel black right-hand mask (320-pixel reference default), background X/Y movement and matching dynamic protection for movable hardware values.
+- A true 1600×720 editor with aspect-preserving contain/cover modes, a real directly draggable 80–800-pixel black right-hand mask (80-pixel photographed reference default), background X/Y movement and matching dynamic protection for movable hardware values.
 - Movable, hideable, resizable and recolorable CPU temperature/load, GPU temperature/load, memory and clock overlays.
 - Test mode enabled by default: previews and the local color-cycle test perform no USB writes.
 - Hardware detection, color test, media/theme loading and the live metric render loop use bounded shell-free commands through the separately installed TRCC Linux backend. Decorative split modes remain preview-only until the confirmed TRCC Qt compatibility defect is fixed.

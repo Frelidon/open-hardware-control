@@ -32,14 +32,29 @@ LEVITA_CUTOUT_Y = 0
 LEVITA_CUTOUT_WIDTH = 80
 LEVITA_CUTOUT_HEIGHT = 720
 
-# The camera housing on the reference Levita visibly covers more than the
-# protocol table's narrow physical edge marker.  OHC therefore ships a wider,
-# user-adjustable black render mask while retaining the 80 px value above as
-# the lowest safe limit.
-DEFAULT_NOTCH_MASK_WIDTH = 320
+# The photographed Levita setup aligns with the protocol table's 80 px right
+# edge.  The render mask remains user-adjustable for panel revisions.
+DEFAULT_NOTCH_MASK_WIDTH = 80
 MAX_NOTCH_MASK_WIDTH = 800
-DEFAULT_BACKGROUND_OFFSET_X = -160
+DEFAULT_BACKGROUND_OFFSET_X = 0
 DEFAULT_BACKGROUND_OFFSET_Y = 0
+
+MEDIA_SCALE_CONTAIN = "contain"
+MEDIA_SCALE_COVER = "cover"
+MEDIA_SCALE_MODES = frozenset({MEDIA_SCALE_CONTAIN, MEDIA_SCALE_COVER})
+
+# TRCC's cloud API exposes the stable A/B/C/D/E/Y prefix groups but no public
+# semantic names.  These local labels describe the bundled user's existing
+# files without downloading or redistributing manufacturer artwork.
+MEDIA_CATEGORY_LABELS: dict[str, str] = {
+    "a": "Technik & Digital",
+    "b": "HUD & Anzeigen",
+    "c": "Neon & Abstrakt",
+    "d": "Weltall & Natur",
+    "e": "Hell & Illustrativ",
+    "y": "Weitere TRCC-Designs",
+    "own": "Eigene Dateien",
+}
 
 SUPPORTED_IMAGE_SUFFIXES = frozenset({".png", ".jpg", ".jpeg", ".bmp", ".webp"})
 SUPPORTED_VIDEO_SUFFIXES = frozenset({".mp4", ".mov", ".webm", ".mkv", ".avi", ".zt"})
@@ -90,11 +105,11 @@ class OverlaySpec:
 
 
 DEFAULT_OVERLAYS: tuple[OverlaySpec, ...] = (
-    OverlaySpec("ohc-cpu-temp", "CPU-Temperatur", "metric", "cpu:temp", format="CPU {value:.0f}°C", sample="CPU 51 °C", x=200, y=540, size=38, color="#32c5ff", show_unit=False),
-    OverlaySpec("ohc-cpu-load", "CPU-Auslastung", "metric", "cpu:usage", format="CPU {value:.0f}%", sample="CPU 18 %", x=200, y=630, size=38, color="#32c5ff", show_unit=False),
-    OverlaySpec("ohc-gpu-temp", "GPU-Temperatur", "metric", "gpu:primary:temp", format="GPU {value:.0f}°C", sample="GPU 47 °C", x=600, y=540, size=38, color="#44d7b6", show_unit=False),
-    OverlaySpec("ohc-gpu-load", "GPU-Auslastung", "metric", "gpu:primary:usage", format="GPU {value:.0f}%", sample="GPU 32 %", x=600, y=630, size=38, color="#44d7b6", show_unit=False),
-    OverlaySpec("ohc-memory", "Arbeitsspeicher", "metric", "memory:percent", format="RAM {value:.0f}%", sample="RAM 41 %", x=1000, y=540, size=38, color="#6dd401", show_unit=False),
+    OverlaySpec("ohc-cpu-temp", "CPU-Temperatur", "metric", "cpu:temp", format="CPU {value:.0f}°C", sample="CPU 51 °C", x=200, y=540, size=38, color="#32c5ff", show_unit=True),
+    OverlaySpec("ohc-cpu-load", "CPU-Auslastung", "metric", "cpu:usage", format="CPU {value:.0f}%", sample="CPU 18 %", x=200, y=630, size=38, color="#32c5ff", show_unit=True),
+    OverlaySpec("ohc-gpu-temp", "GPU-Temperatur", "metric", "gpu:primary:temp", format="GPU {value:.0f}°C", sample="GPU 47 °C", x=600, y=540, size=38, color="#44d7b6", show_unit=True),
+    OverlaySpec("ohc-gpu-load", "GPU-Auslastung", "metric", "gpu:primary:usage", format="GPU {value:.0f}%", sample="GPU 32 %", x=600, y=630, size=38, color="#44d7b6", show_unit=True),
+    OverlaySpec("ohc-memory", "Arbeitsspeicher", "metric", "memory:percent", format="RAM {value:.0f}%", sample="RAM 41 %", x=1000, y=540, size=38, color="#6dd401", show_unit=True),
     OverlaySpec("ohc-clock", "Uhrzeit", "clock", source="time", format="{value}", sample="13:38", x=1000, y=630, size=38, color="#ffffff"),
 )
 
@@ -177,6 +192,13 @@ def media_is_supported(path: Path) -> bool:
     return path.is_file() and path.suffix.casefold() in SUPPORTED_MEDIA_SUFFIXES
 
 
+def media_category_key(entry: MediaEntry) -> str:
+    """Map an existing local theme filename to one stable chooser group."""
+    name = entry.path.name if entry.path.is_file() else entry.path.name
+    match = re.match(r"(?i)^([abcdey])(?:[-_ ]?\d|\d)", name)
+    return match.group(1).casefold() if match else "own"
+
+
 def bounded_notch_width(width: int) -> int:
     return max(LEVITA_CUTOUT_WIDTH, min(MAX_NOTCH_MASK_WIDTH, int(width)))
 
@@ -211,18 +233,22 @@ def prepare_shifted_media(
     *,
     offset_x: int = 0,
     offset_y: int = 0,
+    scale_mode: str = MEDIA_SCALE_CONTAIN,
     ffmpeg: str | None = None,
 ) -> PreparedMedia:
-    """Render a shifted copy for OHC without modifying imported source media."""
+    """Render a 1600×720 aspect-correct copy without modifying the source."""
     source = media.expanduser().resolve()
     x = max(-600, min(600, int(offset_x)))
     y = max(-300, min(300, int(offset_y)))
-    if x == 0 and y == 0:
-        return PreparedMedia(source)
+    mode = str(scale_mode).casefold()
+    if mode not in MEDIA_SCALE_MODES:
+        raise ValueError(f"Unbekannter Skalierungsmodus: {scale_mode}")
     if source.is_dir() or source.suffix.casefold() == ".zt":
+        if x == 0 and y == 0 and mode == MEDIA_SCALE_CONTAIN:
+            return PreparedMedia(source)
         return PreparedMedia(
             source,
-            warning="Hintergrundverschiebung ist bei kompletten TRCC-Layouts und .zt-Dateien noch nicht möglich.",
+            warning="Skalierung und Hintergrundverschiebung sind bei kompletten TRCC-Layouts und .zt-Dateien noch nicht möglich.",
         )
     if not media_is_supported(source):
         raise ValueError(f"Nicht unterstützte oder fehlende Mediendatei: {source}")
@@ -231,7 +257,7 @@ def prepare_shifted_media(
     directory.mkdir(parents=True, exist_ok=True)
     stat = source.stat()
     fingerprint = hashlib.sha256(
-        f"{source}:{stat.st_size}:{stat.st_mtime_ns}:{x}:{y}:v1".encode("utf-8")
+        f"{source}:{stat.st_size}:{stat.st_mtime_ns}:{x}:{y}:{mode}:v2".encode("utf-8")
     ).hexdigest()[:24]
 
     if source.suffix.casefold() in SUPPORTED_IMAGE_SUFFIXES:
@@ -241,30 +267,30 @@ def prepare_shifted_media(
         if not target.is_file():
             with Image.open(source) as opened:
                 image = opened.convert("RGB")
-                scale = max(LEVITA_WIDTH / image.width, LEVITA_HEIGHT / image.height)
+                factors = (LEVITA_WIDTH / image.width, LEVITA_HEIGHT / image.height)
+                scale = min(factors) if mode == MEDIA_SCALE_CONTAIN else max(factors)
                 fitted = image.resize(
                     (max(1, round(image.width * scale)), max(1, round(image.height * scale))),
                     Image.Resampling.LANCZOS,
                 )
-                left = max(0, (fitted.width - LEVITA_WIDTH) // 2)
-                top = max(0, (fitted.height - LEVITA_HEIGHT) // 2)
-                fitted = fitted.crop((left, top, left + LEVITA_WIDTH, top + LEVITA_HEIGHT))
                 canvas = Image.new("RGB", (LEVITA_WIDTH, LEVITA_HEIGHT), (0, 0, 0))
-                canvas.paste(fitted, (x, y))
+                left = (LEVITA_WIDTH - fitted.width) // 2 + x
+                top = (LEVITA_HEIGHT - fitted.height) // 2 + y
+                canvas.paste(fitted, (left, top))
                 canvas.save(target, format="PNG")
         return PreparedMedia(target, transformed=True)
 
     executable = ffmpeg or shutil.which("ffmpeg")
     if not executable:
-        return PreparedMedia(source, warning="Für die Verschiebung eines Videos wird ffmpeg benötigt.")
+        return PreparedMedia(source, warning="Für die unverzerrte Video-Skalierung wird ffmpeg benötigt.")
     target = directory / f"shifted-{fingerprint}.mp4"
     if not target.is_file():
-        pad_x, pad_y = abs(x), abs(y)
+        aspect = "decrease" if mode == MEDIA_SCALE_CONTAIN else "increase"
         filter_graph = (
-            f"scale={LEVITA_WIDTH}:{LEVITA_HEIGHT}:force_original_aspect_ratio=increase,"
-            f"crop={LEVITA_WIDTH}:{LEVITA_HEIGHT},"
-            f"pad={LEVITA_WIDTH + 2 * pad_x}:{LEVITA_HEIGHT + 2 * pad_y}:{pad_x}:{pad_y}:black,"
-            f"crop={LEVITA_WIDTH}:{LEVITA_HEIGHT}:{pad_x - x}:{pad_y - y},format=yuv420p"
+            f"scale={LEVITA_WIDTH}:{LEVITA_HEIGHT}:force_original_aspect_ratio={aspect},"
+            f"pad=iw+1200:ih+600:600+{x}:300+{y}:black,"
+            f"crop={LEVITA_WIDTH}:{LEVITA_HEIGHT}:(iw-{LEVITA_WIDTH})/2:(ih-{LEVITA_HEIGHT})/2,"
+            "setsar=1,format=yuv420p"
         )
         try:
             completed = subprocess.run(

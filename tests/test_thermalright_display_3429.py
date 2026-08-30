@@ -17,11 +17,14 @@ from thermalright_display import (
     LEVITA_CUTOUT_X,
     LEVITA_HEIGHT,
     LEVITA_WIDTH,
+    MEDIA_SCALE_CONTAIN,
+    MediaEntry,
     OverlaySpec,
     ThermalrightCli,
     build_apply_sequence,
     clamp_overlay_outside_cutout,
     create_black_notch_mask,
+    media_category_key,
     notch_safe_right_x,
     parse_detect_output,
     prepare_shifted_media,
@@ -76,7 +79,7 @@ def test_overlay_is_clamped_outside_physical_cutout() -> None:
     assert safe.y == LEVITA_HEIGHT - 1
 
 
-def test_wide_notch_mask_is_real_black_transparent_png(tmp_path: Path) -> None:
+def test_default_notch_mask_matches_the_80_px_levita_edge(tmp_path: Path) -> None:
     from PIL import Image
 
     mask = create_black_notch_mask(tmp_path, DEFAULT_NOTCH_MASK_WIDTH)
@@ -84,7 +87,7 @@ def test_wide_notch_mask_is_real_black_transparent_png(tmp_path: Path) -> None:
         assert image.size == (LEVITA_WIDTH, LEVITA_HEIGHT)
         assert image.getpixel((0, 0)) == (0, 0, 0, 0)
         assert image.getpixel((LEVITA_WIDTH - 1, LEVITA_HEIGHT // 2)) == (0, 0, 0, 255)
-    assert notch_safe_right_x(DEFAULT_NOTCH_MASK_WIDTH) == 1280
+    assert notch_safe_right_x(DEFAULT_NOTCH_MASK_WIDTH) == 1520
 
 
 def test_shifted_image_is_a_cached_copy_and_keeps_original(tmp_path: Path) -> None:
@@ -100,6 +103,29 @@ def test_shifted_image_is_a_cached_copy_and_keeps_original(tmp_path: Path) -> No
         assert image.getpixel((1599, 100)) == (0, 0, 0)
     with Image.open(source) as original:
         assert original.getpixel((1599, 100)) == (255, 0, 0)
+
+
+def test_media_is_always_scaled_to_levita_without_distortion(tmp_path: Path) -> None:
+    from PIL import Image
+
+    source = tmp_path / "square.png"
+    Image.new("RGB", (100, 100), (255, 20, 30)).save(source)
+    prepared = prepare_shifted_media(
+        source, tmp_path / "cache", scale_mode=MEDIA_SCALE_CONTAIN,
+    )
+    assert prepared.transformed
+    with Image.open(prepared.path) as image:
+        assert image.size == (1600, 720)
+        assert image.getpixel((800, 360)) == (255, 20, 30)
+        assert image.getpixel((10, 360)) == (0, 0, 0)
+
+
+@pytest.mark.parametrize(
+    ("name", "category"),
+    [("A001.mp4", "a"), ("d-019.zt", "d"), ("my-video.mp4", "own")],
+)
+def test_local_theme_prefixes_are_grouped(name: str, category: str, tmp_path: Path) -> None:
+    assert media_category_key(MediaEntry(tmp_path / name, name, "video")) == category
 
 
 def test_cli_builds_bounded_shell_free_commands(tmp_path: Path) -> None:
@@ -119,7 +145,8 @@ def test_cli_builds_bounded_shell_free_commands(tmp_path: Path) -> None:
         for command, _tolerated in sequence
         if "split-mode" in command
     )
-    assert any("--hide-unit" in command for command, _tolerated in sequence)
+    assert any("--show-unit" in command for command, _tolerated in sequence)
+    assert not any("--hide-unit" in command for command, _tolerated in sequence)
     assert all(isinstance(command, tuple) for command, _tolerated in sequence)
     assert not any("sh" == part for command, _tolerated in sequence for part in command)
     gpu = next(command for command, _tolerated in sequence if "ohc-gpu-temp" in command and "overlay-add" in command)

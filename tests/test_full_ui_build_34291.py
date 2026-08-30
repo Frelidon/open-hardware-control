@@ -15,6 +15,7 @@ os.environ["XDG_CONFIG_HOME"] = str(temporary_root / "config")
 os.environ["XDG_STATE_HOME"] = str(temporary_root / "state")
 os.environ["OHC_DESKTOP_DESIGN_CONFIG_DIR"] = str(temporary_root / "desktop-config")
 os.environ["OHC_DESKTOP_DESIGN_STATE_DIR"] = str(temporary_root / "desktop-state")
+os.environ["OHC_DISABLE_HARDWARE_IO"] = "1"
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -31,7 +32,7 @@ application.KrakenControl.check_dependencies = lambda self: ["ui-build-no-hardwa
 
 qt_app = QApplication.instance() or QApplication([])
 
-# Reproduce the real 3.4.29.7 startup: a persisted TRCC media directory
+# Reproduce the real 3.4.29.8 startup: a persisted TRCC media directory
 # renders its first preview while the LCD page is built, before log_view exists.
 saved_designs = temporary_root / "saved-thermalright-designs"
 saved_designs.mkdir()
@@ -48,8 +49,10 @@ labels = [label.text() for label in window.findChildren(QLabel)]
 assert window.tabs.count() == 11
 assert application._GIF_SAFETY_TEXT in labels
 assert application._ABOUT_SUMMARY_TEXT in labels
-assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.7 INTERN")
+assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.8 INTERN")
 assert window.thermalright_display_studio.current_media_path() == (saved_designs / "saved-preview.png")
+assert window.hardware_io_disabled
+assert window.openrgb_server_process.state() == application.QProcess.ProcessState.NotRunning
 
 window.backend.shutdown()
 window.deleteLater()
@@ -82,4 +85,4 @@ sys.argv[:] = original_argv
 qt_app.processEvents()
 temporary.cleanup()
 
-print("3.4.29.7 full offscreen UI construction restored a saved TRCC directory before the Log page.")
+print("3.4.29.8 full offscreen UI construction restored a saved TRCC directory without hardware I/O.")

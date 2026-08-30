@@ -1,4 +1,4 @@
-# Unterstützte Geräte – Open Hardware Control 3.4.29.7 INTERN
+# Unterstützte Geräte – Open Hardware Control 3.4.29.8 INTERN
 
 ## Direkt getestetes NZXT-Modul
 
@@ -23,11 +23,13 @@ Die kurze allgemeine TRCC-Geräteliste meldete zunächst eine generische 480×48
 
 TRCC Linux 9.9.11 verwendet für die dekorativen Split-Modi A–C unter PySide6 6.11 einen nicht kompatiblen Schlüsselwortaufruf von `QImage.mirrored()` und bricht dadurch beim Rendern ab. OHC 3.4.29.5 setzt einen eventuell gespeicherten Split-Modus deshalb zwingend vor dem Laden eines Mediums auf null. A–C bleiben klar als lokale Vorschau markiert; die physische rechte 80-Pixel-Aussparung wird weiterhin unabhängig vom TRCC-Split-Modus ausgespart.
 
-OHC 3.4.29.6 ergänzt darüber eine eigene transparente Vollbildmaske mit frei einstellbarem schwarzem rechten Balken. Der 320-Pixel-Standard beruht auf der sichtbaren Referenzhardware und kann zwischen 80 und 800 Pixeln angepasst werden. Hintergrundverschiebungen werden bei Bildern und üblichen Videos ausschließlich in einer lokalen Cache-Arbeitskopie vorgenommen; komplette TRCC-Layouts und `.zt`-Dateien bleiben unverändert und werden bei einer angeforderten Verschiebung mit einem klaren Hinweis ohne Transformation geladen.
+OHC 3.4.29.8 richtet die eigene transparente Vollbildmaske nach der aktuellen Referenzaufnahme standardmäßig auf 80 Pixel und den Hintergrund auf X/Y 0 aus; die Breite bleibt zwischen 80 und 800 Pixeln einstellbar und kann direkt in der Vorschau gezogen werden. Bilder und übliche Videos werden immer seitenrichtig in eine lokale 1600×720-Cache-Arbeitskopie eingepasst oder optional unverzerrt beschnitten; komplette TRCC-Layouts und `.zt`-Dateien bleiben unverändert. Elementpositionen besitzen eine lokale Rückgängig-Historie, und `%`/Temperaturzeichen werden über den passenden TRCC-Einheitenpfad erhalten.
 
 Nach einer ausdrücklichen Polkit-Administratorfreigabe verwendet OHC für wiederholte Kurvenwerte eine einzige prozessgebundene Helfersitzung. Deren Protokoll akzeptiert weiterhin ausschließlich begrenzte, validierte NCT6687-Aktionen; beim Programmende wird zuerst die Firmwaresteuerung wiederhergestellt und danach die Sitzung geschlossen. Dadurch entsteht nach Ablauf des kurzfristigen Polkit-Caches kein neuer Hintergrunddialog für jeden Kurvenwert.
 
 Optional kann dieselbe eng begrenzte Helferaktion über „Dauerhafte Berechtigung erteilen“ einmalig für das aktuelle Benutzerkonto freigegeben werden. Die benutzerspezifische Polkit-Regel bleibt nach Neustarts erhalten, speichert kein Passwort und kann über „Dauerhafte Berechtigung entfernen“ wieder gelöscht werden. Kalibrierung, Besitzerprüfung, Watchdog und Firmware-Rückgabe werden dadurch nicht gelockert.
+
+Seit 3.4.29.8 spiegelt der Root-Helfer diesen Zustand zusätzlich in einem lesbaren Statusmarker, weil normale Fedora-Benutzer das Polkit-Regelverzeichnis nicht durchsuchen dürfen. Der Marker erteilt selbst keinerlei Recht; Polkit bleibt maßgeblich, und Regel/Marker werden gemeinsam angelegt oder entfernt.
 
 Der derzeitige Gerätepfad meldet keinen Kühlmittelsensor. OHC zeigt deshalb keinen künstlich aus CPU-/GPU-Temperatur abgeleiteten Wasserwert an. CPU-/GPU-Temperaturen können unabhängig davon für Anzeige und Softwarekurven verwendet werden.
 
@@ -46,6 +48,8 @@ Eine Maustaste ist direkt belegbar, wenn OpenLinkHub für sie einen eindeutigen 
 Version 3.4.23 besitzt bewusst keine kopierte OpenRGB-USB-Geräteliste. OHC startet das installierte Backend selbst als privaten, fensterlosen Kindprozess und zeigt ausschließlich die von ihm gemeldeten Geräte, Zonen, LEDs und Modi an. Damit entspricht die Hardwareabdeckung der installierten OpenRGB-Version und deren aktivierten Treibern/udev-Regeln.
 
 Auch die kurzlebigen OpenRGB-Clientprozesse für Geräteinventar und native Moduswechsel werden ausdrücklich mit einer Offscreen-Qt-Plattform gestartet. Damit können GUI-basierte OpenRGB-Builds beim OHC-Start kein leeres Hilfsfenster mehr öffnen.
+
+Ein unerwartet abgestürzter privater OpenRGB-Prozess wird seit 3.4.29.8 für den Rest der laufenden OHC-Sitzung nicht automatisch neu gestartet. Erst „RGB-Geräte neu erkennen“ hebt diese Sperre bewusst auf; dadurch entstehen bei einem fehlerhaften OpenRGB-Gerätetreiber keine wiederholten Coredumps.
 
 Direct-Geräte werden seit 3.4.5 für Farbe und OHC-Effekte über den lokalen SDK-Helfer geschrieben und erreichen den bestätigten CLI-`ApplyOptions`-/`stl_vector`-Absturzpfad nicht mehr. 3.4.7 handelt die auf Fedora gemeldeten SDK-Protokollrevisionen 4 und 5 kompatibel aus. 3.4.9 richtet variable Zonen ein und bestätigt Servermodus sowie Farbpuffer durch Rücklesung. 3.4.10 sendet zusätzlich immer den vollständigen Geräteframe und beim ersten Direct-Wechsel einmal vollständige Zonenframes als Treiber-Fallback. Bei nativen Nicht-Direct-Modi sperrt OHC weiterhin nur das tatsächlich abstürzende Gerät bis zum nächsten Programmstart.
 
@@ -78,6 +82,8 @@ Version 3.4.23 kann PWM-Kanäle steuern, die Linux über `/sys/class/hwmon` bere
 - Erst bestätigte und ausdrücklich aktivierte Kanäle dürfen von der 1-s-Regelschleife geschrieben werden.
 - Sensorquellen: CPU, GPU, Kraken-Kühlmittel, Maximum oder gewichtete CPU/GPU-Temperatur.
 - Pro Kanal: eigene Kurve, Mindestleistung, Hysterese und Reaktionsverzögerung.
+- Leise/Ausbalanciert/Leistung können pro Kanal oder gemeinsam als Kurvenvorlage gewählt werden; die bestehende Kalibrierung und Aktivierung werden dabei nicht eigenmächtig geändert. Ein eigener Reset lädt den ausbalancierten Standard.
+- PWM/DC kann nur umgeschaltet werden, wenn der Kernel für genau diesen Kanal `pwmN_mode` meldet. Der bestätigte Wechsel stoppt die OHC-Automatik, verwirft Kalibrierung/Aktivierung und verlangt anschließend den physischen 70-%-/10-s-Test erneut.
 - Bei drei aufeinanderfolgenden fehlenden Sensorwerten fordert OHC 70 % als sicheren Laufzeit-Fallback an; ab 90 °C werden 100 % angefordert.
 - Beim Deaktivieren der OHC-Regelung und beim geordneten Programmende wird die Firmware-/BIOS-Steuerung über `pwmN_enable` wiederhergestellt, soweit der Treiber dies schreibbar anbietet. Ein vorhandenes nct6687d-`fan_control_watchdog` wird während aktiver Regelung als zusätzliche 10-s-Absturzsicherung aufgefrischt.
 - Wenn die PWM-sysfs-Dateien für den angemeldeten Benutzer nicht schreibbar sind, führt OHC **keinen** Schreibversuch aus. Der Treiber-/Secure-Boot-Dialog zeigt Diagnose und Einrichtungshinweise; Secure Boot/MOK wird nicht umgangen.

@@ -47,6 +47,9 @@ from thermalright_display import (
     LEVITA_CUTOUT_Y,
     LEVITA_HEIGHT,
     LEVITA_WIDTH,
+    MEDIA_CATEGORY_LABELS,
+    MEDIA_SCALE_CONTAIN,
+    MEDIA_SCALE_COVER,
     MediaEntry,
     OverlaySpec,
     SUPPORTED_IMAGE_SUFFIXES,
@@ -55,6 +58,7 @@ from thermalright_display import (
     build_apply_sequence,
     clamp_overlay_outside_cutout,
     create_black_notch_mask,
+    media_category_key,
     notch_safe_right_x,
     parse_detect_output,
     prepare_shifted_media,
@@ -66,11 +70,13 @@ class _MovableOverlayItem(QGraphicsSimpleTextItem):
     def __init__(
         self,
         spec: OverlaySpec,
+        move_started: Callable[[], None],
         moved: Callable[[str, int, int], None],
         safe_right_x: int,
     ) -> None:
         super().__init__(spec.sample or spec.label)
         self.ident = spec.ident
+        self._move_started = move_started
         self._moved = moved
         self._safe_right_x = safe_right_x
         font = QFont()
@@ -87,6 +93,7 @@ class _MovableOverlayItem(QGraphicsSimpleTextItem):
         rect = self.boundingRect()
         self.setPos(spec.x - rect.width() / 2, spec.y - rect.height() / 2)
         self.setToolTip(f"{spec.label} · mit der Maus verschieben")
+        self.setCursor(Qt.CursorShape.OpenHandCursor)
 
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: object) -> object:
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange and isinstance(value, QPointF):
@@ -94,22 +101,70 @@ class _MovableOverlayItem(QGraphicsSimpleTextItem):
             x = max(0.0, min(float(self._safe_right_x) - rect.width() - 8.0, value.x()))
             y = max(0.0, min(float(LEVITA_HEIGHT) - rect.height(), value.y()))
             return QPointF(x, y)
-        if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
-            rect = self.boundingRect()
-            center_x = round(self.pos().x() + rect.width() / 2)
-            center_y = round(self.pos().y() + rect.height() / 2)
-            self._moved(self.ident, center_x, center_y)
         return super().itemChange(change, value)
+
+    def mousePressEvent(self, event) -> None:  # type: ignore[no-untyped-def]
+        self._move_started()
+        self.setCursor(Qt.CursorShape.ClosedHandCursor)
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event) -> None:  # type: ignore[no-untyped-def]
+        super().mouseReleaseEvent(event)
+        self.setCursor(Qt.CursorShape.OpenHandCursor)
+        rect = self.boundingRect()
+        self._moved(
+            self.ident,
+            round(self.pos().x() + rect.width() / 2),
+            round(self.pos().y() + rect.height() / 2),
+        )
+
+
+class _MovableNotchItem(QGraphicsRectItem):
+    """Right-anchored mask whose left edge can be dragged horizontally."""
+
+    def __init__(self, width: int, resized: Callable[[int], None]) -> None:
+        bounded = bounded_notch_width(width)
+        super().__init__(0, 0, bounded, LEVITA_HEIGHT)
+        self._resized = resized
+        self.setPos(LEVITA_WIDTH - bounded, 0)
+        self.setFlags(
+            QGraphicsItem.GraphicsItemFlag.ItemIsMovable
+            | QGraphicsItem.GraphicsItemFlag.ItemIsSelectable
+            | QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges
+        )
+        self.setCursor(Qt.CursorShape.SizeHorCursor)
+
+    def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: object) -> object:
+        if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange and isinstance(value, QPointF):
+            x = max(
+                float(LEVITA_WIDTH - 800),
+                min(float(LEVITA_WIDTH - LEVITA_CUTOUT_WIDTH), value.x()),
+            )
+            self.setRect(0, 0, LEVITA_WIDTH - x, LEVITA_HEIGHT)
+            return QPointF(x, 0)
+        return super().itemChange(change, value)
+
+    def mouseReleaseEvent(self, event) -> None:  # type: ignore[no-untyped-def]
+        super().mouseReleaseEvent(event)
+        self._resized(bounded_notch_width(LEVITA_WIDTH - round(self.pos().x())))
 
 
 class ThermalrightCanvas(QGraphicsView):
     """1600×720 design surface with an exact Levita cutout guide."""
 
-    def __init__(self, moved: Callable[[str, int, int], None], parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        moved: Callable[[str, int, int], None],
+        move_started: Callable[[], None],
+        notch_resized: Callable[[int], None],
+        parent: QWidget | None = None,
+    ) -> None:
         super().__init__(parent)
         self._scene = QGraphicsScene(0, 0, LEVITA_WIDTH, LEVITA_HEIGHT, self)
         self.setScene(self._scene)
         self._moved = moved
+        self._move_started = move_started
+        self._notch_resized = notch_resized
         self._background = QPixmap()
         self._specs: tuple[OverlaySpec, ...] = tuple(DEFAULT_OVERLAYS)
         self._split_mode = 0
@@ -181,7 +236,9 @@ class ThermalrightCanvas(QGraphicsView):
 
         cutout_width = self._notch_width if self._notch_visible else LEVITA_CUTOUT_WIDTH
         cutout_x = LEVITA_WIDTH - cutout_width
-        cutout = QGraphicsRectItem(cutout_x, LEVITA_CUTOUT_Y, cutout_width, LEVITA_CUTOUT_HEIGHT)
+        cutout = _MovableNotchItem(cutout_width, self._notch_resized)
+        cutout.setPos(cutout_x, LEVITA_CUTOUT_Y)
+        cutout.setEnabled(self._notch_visible)
         cutout.setBrush(QColor(0, 0, 0, 235))
         cutout.setPen(QPen(QColor("#00c8ff" if self._notch_visible else "#ff526f"), 4))
         cutout.setZValue(30)
@@ -197,7 +254,9 @@ class ThermalrightCanvas(QGraphicsView):
         for spec in self._specs:
             if spec.visible:
                 safe = clamp_overlay_outside_cutout(spec, safe_right_x=safe_right_x)
-                self._scene.addItem(_MovableOverlayItem(safe, self._moved, safe_right_x))
+                self._scene.addItem(_MovableOverlayItem(
+                    safe, self._move_started, self._moved, safe_right_x,
+                ))
         self.fitInView(self._scene.sceneRect(), Qt.AspectRatioMode.KeepAspectRatio)
 
     def resizeEvent(self, event) -> None:  # type: ignore[no-untyped-def]
@@ -228,6 +287,7 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.cli = ThermalrightCli()
         self.media_entries: list[MediaEntry] = []
         self.overlay_specs = self._load_overlays()
+        self.overlay_undo_stack: list[tuple[OverlaySpec, ...]] = []
         self.overlay_controls: dict[str, dict[str, QWidget]] = {}
         self.command_queue: list[tuple[tuple[str, ...], bool]] = []
         self.command_outputs: list[str] = []
@@ -282,11 +342,17 @@ class ThermalrightDisplayStudio(QGroupBox):
         import_button.clicked.connect(self.choose_media_directory)
         self.media_combo = QComboBox()
         self.media_combo.setMinimumContentsLength(36)
+        self.media_combo.setMaxVisibleItems(24)
         self.media_combo.currentIndexChanged.connect(self.update_preview)
+        self.media_category = QComboBox()
+        self.media_category.setMinimumContentsLength(19)
+        self.media_category.addItem("Alle Kategorien", "all")
+        self.media_category.currentIndexChanged.connect(self._apply_media_filter)
         self.media_filter = QLineEdit()
         self.media_filter.setPlaceholderText("Designs filtern …")
         self.media_filter.textChanged.connect(self._apply_media_filter)
         media_row.addWidget(import_button)
+        media_row.addWidget(self.media_category)
         media_row.addWidget(self.media_filter)
         media_row.addWidget(self.media_combo, 1)
         outer.addLayout(media_row)
@@ -296,7 +362,11 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.media_directory_label.setWordWrap(True)
         outer.addWidget(self.media_directory_label)
 
-        self.canvas = ThermalrightCanvas(self._overlay_moved)
+        self.canvas = ThermalrightCanvas(
+            self._overlay_moved,
+            self._remember_overlay_state,
+            self._notch_resized_in_preview,
+        )
         outer.addWidget(self.canvas)
 
         geometry_box = QGroupBox("Hintergrund und schwarzer Kamera-/Notch-Balken")
@@ -330,21 +400,36 @@ class ThermalrightDisplayStudio(QGroupBox):
         geometry_grid.addWidget(self.notch_visible, 1, 0, 1, 2)
         geometry_grid.addWidget(QLabel("Balkenbreite"), 1, 2)
         geometry_grid.addWidget(self.notch_width, 1, 3)
-        wide_preset = QPushButton("Breiter Standard · 320 px und Bild nach links")
+        self.media_scale_mode = QComboBox()
+        self.media_scale_mode.addItem(
+            "Einpassen · vollständig und unverzerrt", MEDIA_SCALE_CONTAIN,
+        )
+        self.media_scale_mode.addItem(
+            "Ausfüllen · unverzerrt, Rand beschneiden", MEDIA_SCALE_COVER,
+        )
+        saved_scale = str(self.settings.value(
+            "thermalright/media_scale_mode", MEDIA_SCALE_CONTAIN,
+        ) or MEDIA_SCALE_CONTAIN)
+        scale_index = self.media_scale_mode.findData(saved_scale)
+        self.media_scale_mode.setCurrentIndex(max(0, scale_index))
+        geometry_grid.addWidget(QLabel("Bild-/Videoskalierung"), 2, 0)
+        geometry_grid.addWidget(self.media_scale_mode, 2, 1, 1, 3)
+        wide_preset = QPushButton("Levita-Standard · 80 px und Bild zentriert")
         wide_preset.clicked.connect(self.apply_wide_notch_preset)
-        geometry_grid.addWidget(wide_preset, 2, 0, 1, 4)
+        geometry_grid.addWidget(wide_preset, 3, 0, 1, 4)
         geometry_note = QLabel(
             "X/Y verschiebt eine lokal erzeugte Arbeitskopie; das importierte Original bleibt unverändert. "
-            "Der schwarze Balken wird als echte Maske an TRCC übertragen."
+            "Der schwarze Balken lässt sich auch direkt in der Vorschau ziehen und wird als echte Maske übertragen."
         )
         geometry_note.setWordWrap(True)
         geometry_note.setObjectName("muted")
-        geometry_grid.addWidget(geometry_note, 3, 0, 1, 4)
+        geometry_grid.addWidget(geometry_note, 4, 0, 1, 4)
         outer.addWidget(geometry_box)
         self.background_x.valueChanged.connect(self._display_geometry_changed)
         self.background_y.valueChanged.connect(self._display_geometry_changed)
         self.notch_visible.toggled.connect(self._display_geometry_changed)
         self.notch_width.valueChanged.connect(self._display_geometry_changed)
+        self.media_scale_mode.currentIndexChanged.connect(self._media_scale_mode_changed)
 
         options_row = QHBoxLayout()
         options_row.addWidget(QLabel("Notch / Dynamic Island"))
@@ -353,8 +438,8 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.split_mode.addItem("Stil A · derzeit nur Vorschau", 1)
         self.split_mode.addItem("Stil B · derzeit nur Vorschau", 2)
         self.split_mode.addItem("Stil C · derzeit nur Vorschau", 3)
-        saved_split_value = self.settings.value("thermalright/split_mode", 0)
-        saved_split = max(0, min(3, int(saved_split_value or 0)))
+        saved_split_value = self.settings.value("thermalright/split_mode", 3)
+        saved_split = max(0, min(3, int(saved_split_value if saved_split_value is not None else 3)))
         self.split_mode.setCurrentIndex(saved_split)
         self.split_mode.currentIndexChanged.connect(self._split_mode_changed)
         options_row.addWidget(self.split_mode)
@@ -406,7 +491,12 @@ class ThermalrightDisplayStudio(QGroupBox):
                 grid.addWidget(widget, row, column)
         reset_button = QPushButton("Hardware-Infos zurücksetzen")
         reset_button.clicked.connect(self.reset_overlays)
-        grid.addWidget(reset_button, len(self.overlay_specs) + 1, 0, 1, 2)
+        grid.addWidget(reset_button, len(self.overlay_specs) + 1, 0)
+        undo_button = QPushButton("Letzten Zustand wiederherstellen")
+        undo_button.clicked.connect(self.undo_overlay_change)
+        self.overlay_undo_button = undo_button
+        self.overlay_undo_button.setEnabled(False)
+        grid.addWidget(undo_button, len(self.overlay_specs) + 1, 1)
         two_rows_button = QPushButton("Zwei saubere Reihen")
         two_rows_button.clicked.connect(lambda: self.apply_overlay_layout("two_rows"))
         grid.addWidget(two_rows_button, len(self.overlay_specs) + 1, 2, 1, 2)
@@ -505,16 +595,24 @@ class ThermalrightDisplayStudio(QGroupBox):
             return
         self.settings.setValue("thermalright/media_directory", str(directory.resolve()))
         self.media_directory_label.setText(f"{directory.resolve()} · {len(self.media_entries)} lokale Designs")
+        self._populate_media_categories()
         self._populate_media_combo(self.media_entries)
         if not quiet:
             self._status(f"{len(self.media_entries)} Designs lokal eingelesen · keine Dateien kopiert")
 
     def _populate_media_combo(self, entries: Iterable[MediaEntry]) -> None:
         current_path = self.current_media_path()
+        ordered = sorted(
+            entries,
+            key=lambda entry: (
+                list(MEDIA_CATEGORY_LABELS).index(media_category_key(entry)),
+                entry.relative_name.casefold(),
+            ),
+        )
         self.media_combo.blockSignals(True)
         self.media_combo.clear()
         selected_index = -1
-        for entry in entries:
+        for entry in ordered:
             icon = "▣" if entry.kind == "theme" else "▶" if entry.kind == "video" else "▧"
             self.media_combo.addItem(f"{icon}  {entry.relative_name}", str(entry.path))
             if current_path and entry.path == current_path:
@@ -524,10 +622,29 @@ class ThermalrightDisplayStudio(QGroupBox):
             self.media_combo.setCurrentIndex(max(0, selected_index))
             self.update_preview()
 
-    def _apply_media_filter(self, text: str) -> None:
-        needle = text.strip().casefold()
+    def _populate_media_categories(self) -> None:
+        current = str(self.media_category.currentData() or "all")
+        counts: dict[str, int] = {}
+        for entry in self.media_entries:
+            key = media_category_key(entry)
+            counts[key] = counts.get(key, 0) + 1
+        self.media_category.blockSignals(True)
+        self.media_category.clear()
+        self.media_category.addItem(f"Alle Kategorien · {len(self.media_entries)}", "all")
+        for key, label in MEDIA_CATEGORY_LABELS.items():
+            if counts.get(key):
+                self.media_category.addItem(f"{label} · {counts[key]}", key)
+        index = self.media_category.findData(current)
+        self.media_category.setCurrentIndex(max(0, index))
+        self.media_category.blockSignals(False)
+
+    def _apply_media_filter(self, _value: object = None) -> None:
+        needle = self.media_filter.text().strip().casefold()
+        category = str(self.media_category.currentData() or "all")
         self._populate_media_combo(
-            entry for entry in self.media_entries if not needle or needle in entry.relative_name.casefold()
+            entry for entry in self.media_entries
+            if (category == "all" or media_category_key(entry) == category)
+            and (not needle or needle in entry.relative_name.casefold())
         )
 
     def current_media_path(self) -> Path | None:
@@ -558,18 +675,34 @@ class ThermalrightDisplayStudio(QGroupBox):
         return target
 
     @staticmethod
-    def _fit_pixmap(source: Path) -> QPixmap:
+    def _fit_pixmap(source: Path, scale_mode: str) -> QPixmap:
         pixmap = QPixmap(str(source))
         if pixmap.isNull():
             return QPixmap()
+        aspect_mode = (
+            Qt.AspectRatioMode.KeepAspectRatio
+            if scale_mode == MEDIA_SCALE_CONTAIN
+            else Qt.AspectRatioMode.KeepAspectRatioByExpanding
+        )
         scaled = pixmap.scaled(
             LEVITA_WIDTH, LEVITA_HEIGHT,
-            Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+            aspect_mode,
             Qt.TransformationMode.SmoothTransformation,
         )
-        x = max(0, (scaled.width() - LEVITA_WIDTH) // 2)
-        y = max(0, (scaled.height() - LEVITA_HEIGHT) // 2)
-        return scaled.copy(x, y, LEVITA_WIDTH, LEVITA_HEIGHT)
+        if scale_mode == MEDIA_SCALE_COVER:
+            x = max(0, (scaled.width() - LEVITA_WIDTH) // 2)
+            y = max(0, (scaled.height() - LEVITA_HEIGHT) // 2)
+            return scaled.copy(x, y, LEVITA_WIDTH, LEVITA_HEIGHT)
+        canvas = QPixmap(LEVITA_WIDTH, LEVITA_HEIGHT)
+        canvas.fill(QColor("#000000"))
+        painter = QPainter(canvas)
+        painter.drawPixmap(
+            (LEVITA_WIDTH - scaled.width()) // 2,
+            (LEVITA_HEIGHT - scaled.height()) // 2,
+            scaled,
+        )
+        painter.end()
+        return canvas
 
     def update_preview(self) -> None:
         media = self.current_media_path()
@@ -577,7 +710,8 @@ class ThermalrightDisplayStudio(QGroupBox):
             self.canvas.set_background(QPixmap())
             return
         source = self._preview_source(media)
-        pixmap = self._fit_pixmap(source) if source else QPixmap()
+        scale_mode = str(self.media_scale_mode.currentData() or MEDIA_SCALE_CONTAIN)
+        pixmap = self._fit_pixmap(source, scale_mode) if source else QPixmap()
         self.canvas.set_background(pixmap)
         self.canvas.set_specs(self.overlay_specs)
         self.canvas.set_split_mode(int(self.split_mode.currentData() or 0))
@@ -590,6 +724,11 @@ class ThermalrightDisplayStudio(QGroupBox):
         mode = int(self.split_mode.currentData() or 0)
         self.settings.setValue("thermalright/split_mode", mode)
         self.canvas.set_split_mode(mode)
+
+    def _media_scale_mode_changed(self) -> None:
+        mode = str(self.media_scale_mode.currentData() or MEDIA_SCALE_CONTAIN)
+        self.settings.setValue("thermalright/media_scale_mode", mode)
+        self.update_preview()
 
     def _safe_right_x(self) -> int:
         if not hasattr(self, "notch_width") or not hasattr(self, "notch_visible"):
@@ -619,6 +758,10 @@ class ThermalrightDisplayStudio(QGroupBox):
         self._save_overlays()
         self.canvas.set_specs(self.overlay_specs)
 
+    def _notch_resized_in_preview(self, width: int) -> None:
+        self.notch_width.setValue(bounded_notch_width(width))
+        self._status(f"Schwarzer Balken in der Vorschau auf {self.notch_width.value()} px gezogen")
+
     def apply_wide_notch_preset(self) -> None:
         for widget in (self.background_x, self.background_y, self.notch_width, self.notch_visible):
             widget.blockSignals(True)
@@ -629,7 +772,7 @@ class ThermalrightDisplayStudio(QGroupBox):
         for widget in (self.background_x, self.background_y, self.notch_width, self.notch_visible):
             widget.blockSignals(False)
         self._display_geometry_changed()
-        self._status("Breiter Notch-Standard aktiv · 320 px schwarzer Balken · Hintergrund 160 px nach links")
+        self._status("Levita-Standard aktiv · 80 px schwarzer Balken · Hintergrund zentriert")
 
     def apply_overlay_layout(self, layout: str) -> None:
         right = self._safe_right_x()
@@ -649,6 +792,7 @@ class ThermalrightDisplayStudio(QGroupBox):
             message = "Hardware-Infos mit gleichmäßigem Abstand untereinander angeordnet"
         else:
             return
+        self._remember_overlay_state()
         self.overlay_specs = [
             clamp_overlay_outside_cutout(
                 replace(spec, x=positions[index][0], y=positions[index][1], size=size),
@@ -667,9 +811,13 @@ class ThermalrightDisplayStudio(QGroupBox):
 
     def _overlay_control_changed(self, ident: str, **changes: object) -> None:
         index = self._overlay_index(ident)
-        self.overlay_specs[index] = clamp_overlay_outside_cutout(
+        candidate = clamp_overlay_outside_cutout(
             replace(self.overlay_specs[index], **changes), safe_right_x=self._safe_right_x(),
         )
+        if candidate == self.overlay_specs[index]:
+            return
+        self._remember_overlay_state()
+        self.overlay_specs[index] = candidate
         self._sync_overlay_controls(ident)
         self._save_overlays()
         self.canvas.set_specs(self.overlay_specs)
@@ -684,6 +832,27 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.overlay_specs[index] = updated
         self._sync_overlay_controls(ident)
         self._save_overlays()
+
+    def _remember_overlay_state(self) -> None:
+        state = tuple(self.overlay_specs)
+        if self.overlay_undo_stack and self.overlay_undo_stack[-1] == state:
+            return
+        self.overlay_undo_stack.append(state)
+        del self.overlay_undo_stack[:-20]
+        if hasattr(self, "overlay_undo_button"):
+            self.overlay_undo_button.setEnabled(True)
+
+    def undo_overlay_change(self) -> None:
+        if not self.overlay_undo_stack:
+            self._status("Kein früherer Elementzustand vorhanden")
+            return
+        self.overlay_specs = list(self.overlay_undo_stack.pop())
+        for spec in self.overlay_specs:
+            self._sync_overlay_controls(spec.ident)
+        self._save_overlays()
+        self.canvas.set_specs(self.overlay_specs)
+        self.overlay_undo_button.setEnabled(bool(self.overlay_undo_stack))
+        self._status("Letzten Zustand der Hardware-Infos wiederhergestellt")
 
     def _sync_overlay_controls(self, ident: str) -> None:
         spec = self.overlay_specs[self._overlay_index(ident)]
@@ -710,6 +879,7 @@ class ThermalrightDisplayStudio(QGroupBox):
             self._overlay_control_changed(ident, color=color.name())
 
     def reset_overlays(self) -> None:
+        self._remember_overlay_state()
         self.overlay_specs = [
             clamp_overlay_outside_cutout(item, safe_right_x=self._safe_right_x())
             for item in DEFAULT_OVERLAYS
@@ -756,6 +926,7 @@ class ThermalrightDisplayStudio(QGroupBox):
                 self.cache_dir / "prepared-media",
                 offset_x=self.background_x.value(),
                 offset_y=self.background_y.value(),
+                scale_mode=str(self.media_scale_mode.currentData() or MEDIA_SCALE_CONTAIN),
             )
             mask_path = (
                 create_black_notch_mask(self.cache_dir / "masks", self.notch_width.value())
@@ -853,7 +1024,18 @@ class ThermalrightDisplayStudio(QGroupBox):
             return
         if exit_code != 0:
             detail = bytes(process.readAllStandardError()).decode("utf-8", errors="replace").strip()
-            self._status(f"Thermalright-Livestream beendet: {detail or 'Backendfehler'}", error=True)
+            relevant = [
+                line for line in detail.splitlines()
+                if "NVIDIA GPU present but NVML init failed" not in line
+            ]
+            if relevant:
+                self._status(
+                    f"Thermalright-Livestream beendet: {relevant[-1]}", error=True,
+                )
+            elif detail:
+                self._status(
+                    "Thermalright-Livestream beendet · optionale NVIDIA-NVML-Abfrage war auf diesem System nicht verfügbar",
+                )
         self.play_process = None
 
     def _start_queue(

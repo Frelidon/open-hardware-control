@@ -14,6 +14,8 @@ from mainboard_fan_control import (
     CurveState,
     DmiInfo,
     decide_curve_output,
+    channel_control_mode,
+    channel_control_mode_supported,
     detect_dmi,
     fan_preset,
     MAINBOARD_FAN_PRESETS,
@@ -32,6 +34,7 @@ from mainboard_fan_control import (
     restore_snapshot,
     select_temperature,
     set_channel_percent,
+    set_channel_control_mode,
     set_fan_control_watchdog,
     snapshot_channel,
     update_curve_state,
@@ -64,6 +67,7 @@ def test_hwmon_discovery_finds_pwm_and_rpm(tmp_path: Path, monkeypatch: pytest.M
     write(hw / "name", "nct6687\n")
     write(hw / "pwm1", "128\n")
     write(hw / "pwm1_enable", "99\n")
+    write(hw / "pwm1_mode", "1\n")
     write(hw / "fan1_input", "1050\n")
     write(hw / "fan1_label", "System Fan #1\n")
     write(hw / "pwm6", "200\n")
@@ -76,6 +80,8 @@ def test_hwmon_discovery_finds_pwm_and_rpm(tmp_path: Path, monkeypatch: pytest.M
     assert [channel.index for channel in controller.channels] == [1, 6]
     assert controller.channels[0].rpm == 1050
     assert controller.channels[0].display_name.startswith("System Fan #1")
+    assert controller.channels[0].mode_path == hw / "pwm1_mode"
+    assert channel_control_mode(controller.channels[0]) == "pwm"
     assert controller.channels[1].stable_id == "nct6687:pwm6"
 
 
@@ -146,6 +152,7 @@ def test_sysfs_write_snapshot_restore_and_firmware_mode(tmp_path: Path, monkeypa
     write(hw / "name", "nct6687\n")
     write(hw / "pwm3", "210\n")
     write(hw / "pwm3_enable", "99\n")
+    write(hw / "pwm3_mode", "1\n")
     monkeypatch.setattr(os, "access", lambda path, mode: True)
     channel = discover_hwmon_controllers(tmp_path)[0].channels[0]
     snapshot = snapshot_channel(channel)
@@ -160,6 +167,24 @@ def test_sysfs_write_snapshot_restore_and_firmware_mode(tmp_path: Path, monkeypa
     set_channel_percent(channel, 55)
     restore_firmware_control(channel)
     assert (hw / "pwm3_enable").read_text().strip() == "2"
+
+
+def test_pwm_dc_switch_requires_exposed_driver_node(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    hw = tmp_path / "hwmon4"
+    write(hw / "name", "nct6687\n")
+    write(hw / "pwm3", "128\n")
+    write(hw / "pwm3_enable", "2\n")
+    write(hw / "pwm3_mode", "1\n")
+    monkeypatch.setattr(os, "access", lambda path, mode: True)
+    channel = discover_hwmon_controllers(tmp_path)[0].channels[0]
+    assert channel_control_mode_supported(channel)
+    set_channel_control_mode(channel, "dc")
+    assert (hw / "pwm3_mode").read_text().strip() == "0"
+    assert channel_control_mode(channel) == "dc"
+    channel.mode_path = None
+    assert not channel_control_mode_supported(channel)
+    with pytest.raises(Exception):
+        set_channel_control_mode(channel, "pwm")
 
 
 def test_nct6687_driver_watchdog_arm_refresh_and_disarm(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -289,10 +314,14 @@ def test_persistent_authorization_uses_fixed_per_user_rule_and_helper_command(
     import mainboard_fan_control as mfc
 
     monkeypatch.setattr(mfc, "PERSISTENT_FAN_RULES_DIR", tmp_path)
+    monkeypatch.setattr(mfc, "PERSISTENT_FAN_STATE_DIR", tmp_path / "states")
     monkeypatch.setattr(mfc, "privileged_fan_helper_available", lambda: True)
     uid = os.getuid()
     assert persistent_fan_authorization_path(uid) == tmp_path / f"49-open-hardware-control-fan-{uid}.rules"
     assert not persistent_fan_authorization_enabled(uid)
+    marker = mfc.PERSISTENT_FAN_STATE_DIR / str(uid)
+    write(marker, "enabled\n")
+    assert persistent_fan_authorization_enabled(uid)
     assert persistent_fan_authorization_command(True)[-1] == "grant-persistent"
     assert persistent_fan_authorization_command(False)[-1] == "revoke-persistent"
 

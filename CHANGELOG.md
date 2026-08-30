@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.4.29.8 INTERN
+
+- Add safe per-channel PWM/DC selection only when Linux hwmon exposes the fixed `pwmN_mode` node. A confirmed change stops automation, invalidates calibration and requires the physical channel test again.
+- Add Leise, Ausbalanciert and Leistung curve presets to every chassis-fan card and the global chassis-fan header, plus an explicit balanced-standard reset in the curve editor. Applying a preset preserves calibration and activation state.
+- Fix persistent Polkit grant detection on protected Fedora rule directories with a root-owned readable status marker and explicit helper JSON confirmation. Rule and marker are installed/removed together; no password or extra write authority is stored.
+- Change the photographed Levita default to a centered background, 80-pixel right mask and preview style C. Images and ordinary videos are always prepared aspect-correct at 1600×720 with user-selectable contain/cover behavior.
+- Make the Levita mask directly draggable in the preview, add a 20-step element-position history with one-click restore, group existing local TRCC themes by stable A/B/C/D/E/Y filename prefixes and keep imported assets local.
+- Preserve `%` and temperature suffixes on the physical TRCC display by using the backend's show-unit render path for formats that already contain their required glyph.
+- Prioritize detected LCD hardware, hide the round Kraken preview on rectangular Thermalright-only systems and collapse the NZXT-ESC importer when no Kraken is present.
+- Prevent full-UI tests from starting OpenRGB or other hardware I/O. If an OHC-managed OpenRGB process nevertheless exits unexpectedly, quarantine automatic restarts for the session until the user explicitly requests a retry.
+- Downgrade the known irrelevant TRCC NVIDIA/NVML shutdown warning when it is the only livestream diagnostic, while retaining all other backend failures as errors.
+
 ## 3.4.29.7 INTERN
 
 - Suppress creation of the OHC native window surface from the beginning of a minimized KDE/Wayland tray autostart. This removes the photographed black, unpainted OHC window instead of hiding it only after the complete UI constructor; the surface is enabled when the user explicitly opens OHC from the tray.

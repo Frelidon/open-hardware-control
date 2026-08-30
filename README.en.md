@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.7 INTERNAL
+# Open Hardware Control by Frelidon 3.4.29.8 INTERNAL
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -15,6 +15,8 @@ Project repository: <https://github.com/Frelidon/open-hardware-control>
 > **Unofficial independent community project:** Open Hardware Control is not supported, approved, endorsed, operated by, or affiliated with NZXT, Corsair, be quiet!, OpenLinkHub, OpenRGB, or any other named manufacturer or project. Product and brand names are used only to describe compatibility. Manufacturers and rights holders can contact Frelidon through the public contact address in the GitHub profile or the Steam username **Frelidon**.
 
 Version 3.4.29 INTERNAL adds a local-first Thermalright Levita display studio and the exact Thermalright Levita Vision 360 ARGB Black cooling path. It also strengthens ENE-DRAM cold-start recovery with two ordered Direct transitions before the saved RGB design starts.
+
+Hotfix 3.4.29.8 adds safe PWM/DC switching only for kernel-exposed `pwmN_mode` channels, per-fan/global curve presets and curve reset. Persistent Polkit status is now readable without exposing the rule or storing a password. Levita media keeps its aspect ratio at 1600×720, uses the photographed 80-pixel centered default, supports direct mask dragging, overlay undo, categorized local themes and reliable percent signs. Hardware-aware LCD tiles hide the round Kraken preview for a rectangular Levita. UI tests cannot start hardware processes, and a crashed OpenRGB server is quarantined until an explicit manual retry.
 
 Hotfix 3.4.29.7 suppresses the photographed black OHC surface before a minimized KDE/Wayland tray-autostart UI is built, runs every OpenRGB Qt client offscreen and adds explicit grant/remove controls for an optional exact-user Polkit authorization of the bounded NCT6687 helper. No password is stored and physical PWM calibration remains mandatory.
 
@@ -303,14 +305,14 @@ Fedora/Nobara RPM:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.7-0.intern2.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.8-0.intern2.noarch.rpm
 ```
 
 Debian/Ubuntu/Linux Mint DEB:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.7~intern2_all.deb'
+sudo apt install './open-hardware-control_3.4.29.8~intern2_all.deb'
 ```
 
 Universal ZIP for the supported distro families:
@@ -318,7 +320,7 @@ Universal ZIP for the supported distro families:
 ```bash
 cd ~/Downloads
 unzip open_hardware_control_v3_4_29_7_INTERN.zip
-cd open-hardware-control-3.4.29.7-INTERN
+cd open-hardware-control-3.4.29.8-INTERN
 chmod +x install.sh
 ./install.sh
 ```

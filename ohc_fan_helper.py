@@ -22,6 +22,7 @@ MAX_CHANNEL = 8
 POLKIT_ACTION_ID = "io.github.Frelidon.OpenHardwareControl.fan-control"
 PERSISTENT_RULES_DIR = Path("/etc/polkit-1/rules.d")
 PERSISTENT_RULE_PREFIX = "49-open-hardware-control-fan"
+PERSISTENT_STATE_DIR = Path("/var/lib/open-hardware-control/polkit-grants")
 
 
 def fail(message: str, code: int = 2) -> "NoReturn":
@@ -73,11 +74,48 @@ def persistent_rule_path(uid: int) -> Path:
     return PERSISTENT_RULES_DIR / f"{PERSISTENT_RULE_PREFIX}-{int(uid)}.rules"
 
 
+def persistent_state_path(uid: int) -> Path:
+    return PERSISTENT_STATE_DIR / str(int(uid))
+
+
+def write_atomic_text(
+    directory: Path,
+    target: Path,
+    content: str,
+    *,
+    public_directory: bool = False,
+) -> None:
+    directory.mkdir(parents=True, exist_ok=True, mode=0o755)
+    # Never relax the distribution-owned permissions of
+    # /etc/polkit-1/rules.d.  Only OHC's status-marker directory must be
+    # searchable by the unprivileged desktop process.
+    if public_directory:
+        os.chmod(directory, 0o755)
+    temporary = directory / f".{target.name}.tmp-{os.getpid()}"
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    descriptor = os.open(temporary, flags, 0o644)
+    try:
+        with os.fdopen(descriptor, "w", encoding="ascii") as handle:
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, target)
+        os.chmod(target, 0o644)
+    finally:
+        try:
+            temporary.unlink()
+        except FileNotFoundError:
+            pass
+
+
 def set_persistent_authorization(enabled: bool) -> None:
     """Install/remove one exact-user rule for this helper's fixed action."""
 
     uid, username = invoking_desktop_user()
     rule_path = persistent_rule_path(uid)
+    state_path = persistent_state_path(uid)
     if enabled:
         # JSON string escaping is valid JavaScript string escaping too.  This
         # keeps even unusual account names from changing the rule program.
@@ -92,29 +130,31 @@ def set_persistent_authorization(enabled: bool) -> None:
             "});\n"
         )
         try:
-            PERSISTENT_RULES_DIR.mkdir(parents=True, exist_ok=True, mode=0o755)
-            temporary = PERSISTENT_RULES_DIR / f".{rule_path.name}.tmp-{os.getpid()}"
-            flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-            if hasattr(os, "O_NOFOLLOW"):
-                flags |= os.O_NOFOLLOW
-            descriptor = os.open(temporary, flags, 0o644)
-            try:
-                with os.fdopen(descriptor, "w", encoding="ascii") as handle:
-                    handle.write(content)
-                    handle.flush()
-                    os.fsync(handle.fileno())
-                os.replace(temporary, rule_path)
-                os.chmod(rule_path, 0o644)
-            finally:
-                try:
-                    temporary.unlink()
-                except FileNotFoundError:
-                    pass
+            write_atomic_text(PERSISTENT_RULES_DIR, rule_path, content)
+            marker = json.dumps(
+                {"action": POLKIT_ACTION_ID, "uid": uid, "user": username},
+                ensure_ascii=True,
+                sort_keys=True,
+            ) + "\n"
+            write_atomic_text(
+                PERSISTENT_STATE_DIR,
+                state_path,
+                marker,
+                public_directory=True,
+            )
         except OSError as exc:
+            # Do not leave an invisible, apparently failed grant behind if the
+            # readable status marker could not be created.
+            try:
+                rule_path.unlink(missing_ok=True)
+                state_path.unlink(missing_ok=True)
+            except OSError:
+                pass
             fail(f"cannot install persistent authorization: {exc}")
     else:
         try:
             rule_path.unlink(missing_ok=True)
+            state_path.unlink(missing_ok=True)
         except OSError as exc:
             fail(f"cannot remove persistent authorization: {exc}")
     print(
@@ -215,6 +255,23 @@ def dispatch(root: Path, args: list[str]) -> None:
         write_value(enable, 1)
         write_value(pwm, target)
         emit(root, channel, target_pwm=target)
+        return
+
+    if op == "set-mode" and len(args) == 3:
+        channel = parse_channel(args[1])
+        mode = bounded_int(args[2], 0, 1, "control mode")
+        mode_path = root / f"pwm{channel}_mode"
+        if not mode_path.is_file():
+            fail(f"pwm{channel}_mode is not exposed")
+        write_value(mode_path, mode)
+        print(
+            json.dumps(
+                {"ok": True, "controller": read_text(root / "name"), "channel": channel, "mode": mode},
+                ensure_ascii=False,
+                sort_keys=True,
+            ),
+            flush=True,
+        )
         return
 
     if op == "restore-firmware" and len(args) == 2:
