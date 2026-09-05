@@ -218,4 +218,4 @@ WallpaperWorkShopId=654321
             assert command[-1] == str(package.resolve())
             assert privileged_install_command(package, "0" * 64) == []
 
-print("3.4.29.44 Wallpaper Engine playback, scaling, setup and integration regression guards passed.")
+print("3.4.29.45 Wallpaper Engine playback, scaling, setup and integration regression guards passed.")

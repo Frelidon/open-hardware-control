@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.4.29.45 STABLE
+
+- Isoliert den Levita-Videovorschau-Belastungstest vollständig von bereits beim Studioaufbau gestarteten Aufgaben für die gebündelte OHC-Animation. Vor der Messung werden diese Test-Worker kontrolliert beendet und ihre Zähler geleert; danach werden alle 140 synthetischen Einträge und die Zwei-Worker-Grenze deterministisch geprüft.
+- Übernimmt den vollständigen 3.4.29.44-Funktionsstand einschließlich Thermalright-Levita-Display-Highlight, eigener KI-Galerie, OpenRGB-Kaltstartkorrektur und vervollständigter GitHub-Qt/EGL-Testumgebung in den finalen öffentlichen Release.
+
 ## 3.4.29.44 STABLE
 
 - Korrigiert den Levita-Videovorschau-Belastungstest für frische Systeme ohne Thumbnail-Cache: Die eine gebündelte OHC-Animation wird als legitimer Anfangsauftrag berücksichtigt, bevor 140 synthetische Videos ergänzt werden.

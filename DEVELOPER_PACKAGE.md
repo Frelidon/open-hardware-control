@@ -1,8 +1,8 @@
-# Entwicklerpaket 3.4.29.44
+# Entwicklerpaket 3.4.29.45
 
 Das Entwicklerpaket enthält:
 
-- den vollständigen editierbaren Quellbaum von Open Hardware Control 3.4.29.44 STABLE
+- den vollständigen editierbaren Quellbaum von Open Hardware Control 3.4.29.45 STABLE
 - alle Python-, Shell-, Test-, Dokumentations- und GitHub-Workflow-Dateien
 - den reproduzierbaren Builder für ZIP, DEB, RPM, Quellarchiv und Prüfsummen
 - die fünf eigenen OpenLinkHub-Maus-SVGs und ihre Zuordnungslogik
@@ -49,13 +49,13 @@ Der Installer kann für einen isolierten Pakettest mit `OHC_INSTALL_HOME=/absolu
 Alle Release-Artefakte werden mit folgendem Befehl gebaut. Auf Debian/Ubuntu muss zusätzlich das Paket `rpm` für den Fedora-RPM-Build installiert sein:
 
 ```bash
-./scripts/build_release.sh 3.4.29.44
+./scripts/build_release.sh 3.4.29.45
 ```
 
 Auf Fedora wird ein nicht installiertes `dpkg-deb` jetzt automatisch erkannt und nur das DEB übersprungen; RPM, ZIPs, Quellarchiv und Prüfsummen werden weiterhin gebaut. Mit folgender Variable kann das DEB auch auf anderen Systemen ausdrücklich übersprungen werden:
 
 ```bash
-OHC_SKIP_DEB=1 ./scripts/build_release.sh 3.4.29.44
+OHC_SKIP_DEB=1 ./scripts/build_release.sh 3.4.29.45
 ```
 
 Nach erfolgreichem Abschluss legt der Builder automatisch eine vollständige Sicherung im Geschwisterordner `Open Hardware Control Backup` an. `RELEASE_BACKUP_POLICY.md` beschreibt Inhalt, atomaren Aufbau und die Aufbewahrung der zwei neuesten Versionen. Ein übersprungenes DEB wird nicht vorgetäuscht; bei einem Bau mit DEB wird es automatisch mitgesichert.

@@ -38,17 +38,34 @@ def _exercise_real_qt_queue() -> None:
         display_ui.default_trcc_design_directory = lambda: None
         settings = QSettings(str(temporary_root / "settings.ini"), QSettings.Format.IniFormat)
         studio = display_ui.ThermalrightDisplayStudio(settings, temporary_root / "cache")
-        initial_total = studio.thumbnail_total
-        initial_pending = len(studio.thumbnail_queue) + len(studio.thumbnail_active)
+
+        # Isolate the synthetic load test from bundled videos. Their thumbnail
+        # may still be queued, active or already complete depending on runner
+        # speed, so cancel that constructor work before measuring 140 entries.
+        studio.thumbnail_shutting_down = True
+        for worker in studio.thumbnail_workers:
+            studio.thumbnail_worker_timeouts[worker].stop()
+            if worker.state() != QProcess.ProcessState.NotRunning:
+                worker.kill()
+                worker.waitForFinished(500)
+        studio.thumbnail_queue.clear()
+        studio.thumbnail_queued.clear()
+        studio.thumbnail_active.clear()
+        studio.thumbnail_total = 0
+        studio.thumbnail_finished = 0
 
         started = time.monotonic()
         studio._populate_media_combo(entries)
         elapsed = time.monotonic() - started
 
         assert elapsed < 1.5, f"gallery construction blocked for {elapsed:.2f}s"
-        assert studio.thumbnail_total == initial_total + 140
+        assert studio.thumbnail_total == 140
+        assert len(studio.thumbnail_queue) == 140
+        assert not studio.thumbnail_active
+        studio.thumbnail_shutting_down = False
+        studio._start_thumbnail_workers()
         assert len(studio.thumbnail_active) <= 2
-        assert len(studio.thumbnail_queue) + len(studio.thumbnail_active) == initial_pending + 140
+        assert len(studio.thumbnail_queue) + len(studio.thumbnail_active) == 140
         assert not studio.thumbnail_progress_panel.isHidden()
 
         # The cache key includes source path, size, and modification time. A

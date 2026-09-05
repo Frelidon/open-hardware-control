@@ -8,7 +8,7 @@ constants = (ROOT / "app_constants.py").read_text(encoding="utf-8")
 integration = (ROOT / "openrgb_integration.py").read_text(encoding="utf-8")
 recovery = (ROOT / "modules" / "rgb_studio" / "v1_1" / "ene_start_recovery.py").read_text(encoding="utf-8")
 
-assert 'APP_VERSION = "3.4.29.44"' in constants
+assert 'APP_VERSION = "3.4.29.45"' in constants
 assert "def prime_ene_dram_cold_start" in code
 assert "def is_ene_dram_device" in code
 assert "ENE_DRAM_RECLAIM_PASSES = 2" in code
@@ -32,4 +32,4 @@ assert 'arguments += ["--mode", "direct"]' in integration
 assert 'return self.client_command(*arguments)' in integration
 assert "ENERegisterWrite" not in integration
 
-print("3.4.29.44 ENE-DRAM cold-boot regression guards passed.")
+print("3.4.29.45 ENE-DRAM cold-boot regression guards passed.")

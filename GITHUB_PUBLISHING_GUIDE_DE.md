@@ -1,4 +1,4 @@
-# Open Hardware Control 3.4.29.44 STABLE – GitHub-Veröffentlichung
+# Open Hardware Control 3.4.29.45 STABLE – GitHub-Veröffentlichung
 
 Repository: <https://github.com/Frelidon/open-hardware-control>
 
@@ -28,19 +28,19 @@ Das erwartete Remote ist `https://github.com/Frelidon/open-hardware-control.git`
 
 ```bash
 ./scripts/check_release.sh
-./scripts/build_release.sh 3.4.29.44
+./scripts/build_release.sh 3.4.29.45
 cd dist
 sha256sum -c SHA256SUMS
 ```
 
 Erwartete Dateien:
 
-- `open_hardware_control_v3_4_29_44.zip`
-- `open-hardware-control_3.4.29.44_all.deb`
-- `open-hardware-control-3.4.29.44-1.noarch.rpm`
-- `open-hardware-control-3.4.29.44-source.tar.gz`
-- `Entwicklerpaket 3.4.29.44.zip`
-- `Open_Hardware_Control_3.4.29.44_LOCAL_AI.gitbundle`
+- `open_hardware_control_v3_4_29_45.zip`
+- `open-hardware-control_3.4.29.45_all.deb`
+- `open-hardware-control-3.4.29.45-1.noarch.rpm`
+- `open-hardware-control-3.4.29.45-source.tar.gz`
+- `Entwicklerpaket 3.4.29.45.zip`
+- `Open_Hardware_Control_3.4.29.45_LOCAL_AI.gitbundle`
 - `SHA256SUMS`
 
 Der Build muss außerdem die externe Zwei-Versionen-Sicherung aus `RELEASE_BACKUP_POLICY.md` vollständig aktualisieren; beide aufbewahrten Versionen werden in ihren jeweiligen Ordnern erneut mit `sha256sum -c SHA256SUMS` geprüft.
@@ -51,16 +51,16 @@ Nach sauberem Commit wird der geprüfte Stand zuerst ohne Force-Push auf `main` 
 
 ```bash
 git push origin main
-git tag -a v3.4.29.44 -m "Open Hardware Control v3.4.29.44"
-git push origin v3.4.29.44
+git tag -a v3.4.29.45 -m "Open Hardware Control v3.4.29.45"
+git push origin v3.4.29.45
 ```
 
-Der Workflow `.github/workflows/release.yml` wiederholt die Tests, baut sämtliche Artefakte aus genau diesem Tag und erstellt den öffentlichen Release mit `docs/RELEASE_NOTES_v3.4.29.44.md`.
+Der Workflow `.github/workflows/release.yml` wiederholt die Tests, baut sämtliche Artefakte aus genau diesem Tag und erstellt den öffentlichen Release mit `docs/RELEASE_NOTES_v3.4.29.45.md`.
 
 Kontrolle:
 
 ```bash
-gh release view v3.4.29.44 --web
+gh release view v3.4.29.45 --web
 ```
 
 ## Repository-Beschreibung und Topics
