@@ -64,7 +64,7 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
       - name: Install package builders
-        run: sudo apt-get update && sudo apt-get install -y rpm
+        run: sudo apt-get update && sudo apt-get install -y libegl1 rpm
       - name: Check release
         run: ./scripts/check_release.sh
       - name: Build release assets
