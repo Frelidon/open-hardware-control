@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.43
+# Open Hardware Control by Frelidon 3.4.29.44
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -14,7 +14,7 @@ Projekt-Repository: <https://github.com/Frelidon/open-hardware-control>
 
 > **Inoffizielles unabhängiges Community-Projekt:** Bisher besteht keine offizielle Unterstützung, Kooperation, Freigabe oder Verbindung zu NZXT, Corsair, be quiet!, OpenLinkHub, OpenRGB oder anderen genannten Herstellern und Projekten. Produkt- und Markennamen dienen nur der Kompatibilitätsbeschreibung. Hersteller und Rechteinhaber erreichen Frelidon über die öffentliche Kontaktadresse im GitHub-Profil oder über den Steam-Benutzernamen **Frelidon**.
 
-## Highlight in 3.4.29.43: Thermalright Levita Vision Display
+## Highlight in 3.4.29.44: Thermalright Levita Vision Display
 
 **Das 1600×720-Display der Thermalright Levita Vision 360 ARGB Black wird jetzt unterstützt.** Das neue lokale Studio kombiniert eigene Bilder und Videos mit frei bearbeitbaren Live-Daten für CPU, GPU, RAM und Uhrzeit. Mitgeliefert werden elf eigene OHC-Hintergründe, zwei vollständige OHC-Datenlayouts und eine 30-sekündige KI-Animation.
 
@@ -22,7 +22,7 @@ Alle gebündelten Motive wurden vom Projektinhaber gemeinsam mit OpenAI-Werkzeug
 
 Version 3.4.29 erweitert die LCD-Seite um ein lokales Thermalright-Levita-Display-Studio. Eigene beziehungsweise bereits vorhandene Designs lassen sich ohne Kopie einlesen, auf einer echten 1600×720-Fläche ansehen und mit frei verschiebbaren Hardwarewerten ergänzen. Der sichere Testmodus ist standardmäßig aktiv; echte USB-Übertragung erfolgt nur über das separat installierte GPL-Backend TRCC Linux.
 
-Version 3.4.29.43 verhindert, dass ein gespeichertes RGB-Startprofil verloren geht, wenn OpenRGB beim Kaltstart zunächst nur einen vorläufigen Teil des bekannten Gerätebestands meldet. OHC wartet begrenzt auf die vollständige Erkennung und startet anschließend das gespeicherte Design. Zugleich unterstützt die Modulregisterprüfung nun den stabilen Release-Kanal. Diese Version veröffentlicht die zuvor intern geprüften Levita-, RGB-, Wallpaper-, Lüfter-, Diagnose- und KDE-/Wayland-Erweiterungen der 3.4.29-Reihe.
+Version 3.4.29.44 verhindert, dass ein gespeichertes RGB-Startprofil verloren geht, wenn OpenRGB beim Kaltstart zunächst nur einen vorläufigen Teil des bekannten Gerätebestands meldet. OHC wartet begrenzt auf die vollständige Erkennung und startet anschließend das gespeicherte Design. Zugleich unterstützt die Modulregisterprüfung nun den stabilen Release-Kanal. Diese Version veröffentlicht die zuvor intern geprüften Levita-, RGB-, Wallpaper-, Lüfter-, Diagnose- und KDE-/Wayland-Erweiterungen der 3.4.29-Reihe. Die GitHub-Tests berücksichtigen das mitgelieferte Video nun auch auf einem frischen Runner ohne Vorschaubild-Cache korrekt.
 
 Version 3.4.29.42 repariert die Wallpaper-Wiedergabeknöpfe: Pause, Fortsetzen, Weiter und Ton verwenden das tatsächlich registrierte Plasma-D-Bus-Objekt; Zurück wählt die vorherige lokale Workshop-Karte, da CaptSilver v1.4 noch keinen echten Rücksprung bereitstellt. Dazu kommen die drei CaptSilver-Skalierungsarten für jeden gewählten Bildschirm. Das Hauptfenster startet standardmäßig auf dem Hauptbildschirm; alternativ lässt sich ein Bildschirm anhand seines stabilen Qt-Namens festlegen, wobei ein fehlender Monitor sicher auf den Hauptbildschirm zurückfällt. Alle vertikalen und horizontalen Scrollleisten verwenden nun dasselbe schmale Design. Der Assistent, die geprüfte optionale Fedora-Installation, feste Galeriekarten, Originalwerte und rücksetzbare Optimierung aus 3.4.29.41 bleiben erhalten. Unter Wayland behält KWin die letzte Entscheidung über die Fensterposition.
 
@@ -70,7 +70,7 @@ Hotfix 3.4.29.8 ergänzt sichere PWM/DC-Umschaltung nur für vom Kernel angebote
 
 Hotfix 3.4.29.7 verhindert das fotografierte schwarze OHC-Zwischenfenster beim minimierten KDE-/Wayland-Autostart, startet auch alle OpenRGB-Qt-Clients ausdrücklich offscreen und ergänzt eine freiwillige, benutzerspezifische Dauerfreigabe für den eng begrenzten NCT6687-Helfer einschließlich eigener Entfernen-Schaltfläche. Es wird kein Passwort gespeichert; die physische PWM-Kalibrierung bleibt Pflicht.
 
-## Neu in 3.4.29.43
+## Neu in 3.4.29.44
 
 - Neues Thermalright-Levita-Studio als breite Karte auf der LCD-Seite.
 - Zwei getrennte Levita-Ebenen: lokales Hintergrundvideo plus vollständiges TRCC-Hardwaredaten-Layout mit live aktualisierten Sensorwerten darüber.
@@ -496,30 +496,30 @@ Die Animation kann dabei kurz stehen bleiben, muss aber weder neu eingelesen noc
 
 ### Fedora und Nobara – RPM
 
-Lade `open-hardware-control-3.4.29.43-1.noarch.rpm` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control-3.4.29.44-1.noarch.rpm` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.43-1.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.44-1.noarch.rpm
 ```
 
 ### Debian, Ubuntu und Linux Mint – DEB
 
-Lade `open-hardware-control_3.4.29.43_all.deb` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control_3.4.29.44_all.deb` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.43_all.deb'
+sudo apt install './open-hardware-control_3.4.29.44_all.deb'
 ```
 
 ### Universelles Installationspaket
 
-Das ZIP funktioniert auf Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_43.zip` herunter und führe aus:
+Das ZIP funktioniert auf Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_44.zip` herunter und führe aus:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_43.zip
-cd open-hardware-control-3.4.29.43
+unzip open_hardware_control_v3_4_29_44.zip
+cd open-hardware-control-3.4.29.44
 chmod +x install.sh
 ./install.sh
 ```

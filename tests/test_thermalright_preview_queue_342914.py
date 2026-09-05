@@ -38,15 +38,17 @@ def _exercise_real_qt_queue() -> None:
         display_ui.default_trcc_design_directory = lambda: None
         settings = QSettings(str(temporary_root / "settings.ini"), QSettings.Format.IniFormat)
         studio = display_ui.ThermalrightDisplayStudio(settings, temporary_root / "cache")
+        initial_total = studio.thumbnail_total
+        initial_pending = len(studio.thumbnail_queue) + len(studio.thumbnail_active)
 
         started = time.monotonic()
         studio._populate_media_combo(entries)
         elapsed = time.monotonic() - started
 
         assert elapsed < 1.5, f"gallery construction blocked for {elapsed:.2f}s"
-        assert studio.thumbnail_total == 140
+        assert studio.thumbnail_total == initial_total + 140
         assert len(studio.thumbnail_active) <= 2
-        assert len(studio.thumbnail_queue) + len(studio.thumbnail_active) == 140
+        assert len(studio.thumbnail_queue) + len(studio.thumbnail_active) == initial_pending + 140
         assert not studio.thumbnail_progress_panel.isHidden()
 
         # The cache key includes source path, size, and modification time. A

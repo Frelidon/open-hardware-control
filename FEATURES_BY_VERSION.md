@@ -2,6 +2,7 @@
 
 | Version | Erstmals hinzugekommene Hauptfunktionen |
 |---|---|
+| 3.4.29.44 STABLE | Bereinigter öffentlicher Release der 3.4.29-Funktionsreihe; GitHub-Runner mit vollständiger Qt/EGL-Testumgebung; cache-unabhängiger Levita-Videovorschau-Test für die gebündelte 30-Sekunden-Animation. |
 | 3.4.29.43 STABLE | Gespeicherter RGB-Profilstart wartet bei vorläufiger OpenRGB-Teilerkennung auf den vollständigen Bestand; stabile Modulregisterprüfung; Veröffentlichung der geprüften 3.4.29-Levita-, RGB-, Wallpaper-, Lüfter-, Diagnose- und KDE-/Wayland-Erweiterungen. |
 | 3.4.29.42 INTERN | Reparierte Wallpaper-Wiedergabeknöpfe über das registrierte Plasma-D-Bus-Objekt; drei CaptSilver-Skalierungsmodi pro Zielbildschirm; Programmstart standardmäßig auf dem Hauptbildschirm oder einem fest gewählten benannten Monitor mit Rückfall; global einheitliche schmale Scrollleisten; Wallpaper-Modul 1.2 und Fensterplatzierungsmodul 1.0. |
 | 3.4.29.41 INTERN | Wallpaper-Erststart-Assistent mit Fünf-Workshop-Checkliste und wiederaufrufbarer Anleitung; Fedora-Installer lädt nur das passende offizielle CaptSilver-RPM, prüft GitHub-SHA256 und verlangt vor Polkit/DNF eine zweite Bestätigung; feste Galerie-Kartenmaße nach Apply-Refresh; Wallpaper Engine direkt nach LCD in der neuen Standardnavigation bei Erhalt individueller Reihenfolgen. |

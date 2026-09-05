@@ -2,7 +2,7 @@
 
 Jeder weitergegebene Open-Hardware-Control-Stand soll vollständig nachvollziehbar bleiben.
 
-Das Installations-ZIP 3.4.29.43 enthält den direkt editierbaren Python-Quellcode einschließlich `desktop_shell.py`, `desktop_assets.py` und `desktop_designs.py`:
+Das Installations-ZIP 3.4.29.44 enthält den direkt editierbaren Python-Quellcode einschließlich `desktop_shell.py`, `desktop_assets.py` und `desktop_designs.py`:
 
 - `kraken_control.py`
 - `openlinkhub_integration.py` (lokale OpenLinkHub-API-, validierte Schreib- und Benutzerdienst-Anbindung)
@@ -34,11 +34,11 @@ Das Installations-ZIP 3.4.29.43 enthält den direkt editierbaren Python-Quellcod
 Zu jedem Release werden aus genau demselben Git-Stand erzeugt:
 
 - `open_hardware_control_v3_4_29_43.zip` – universelles Benutzerpaket
-- `open-hardware-control_3.4.29.43_all.deb` – Debian/Ubuntu/Linux-Mint-Paket
-- `open-hardware-control-3.4.29.43-1.noarch.rpm` – Fedora/Nobara-Paket
-- `open-hardware-control-3.4.29.43-source.tar.gz` – vollständiger Quellcode-Snapshot
-- `Entwicklerpaket 3.4.29.43.zip` – vollständiger editierbarer Projektbaum einschließlich Tests, Werkzeuge und GitHub-Automatisierung
-- `Open_Hardware_Control_3.4.29.43_LOCAL_AI.gitbundle` – vollständige Git-Historie für lokale KI-Arbeit
+- `open-hardware-control_3.4.29.44_all.deb` – Debian/Ubuntu/Linux-Mint-Paket
+- `open-hardware-control-3.4.29.44-1.noarch.rpm` – Fedora/Nobara-Paket
+- `open-hardware-control-3.4.29.44-source.tar.gz` – vollständiger Quellcode-Snapshot
+- `Entwicklerpaket 3.4.29.44.zip` – vollständiger editierbarer Projektbaum einschließlich Tests, Werkzeuge und GitHub-Automatisierung
+- `Open_Hardware_Control_3.4.29.44_LOCAL_AI.gitbundle` – vollständige Git-Historie für lokale KI-Arbeit
 - `SHA256SUMS` – Prüfsummen aller Release-Dateien
 
 Das universelle Installations-ZIP enthält den ausführbaren Quellcode und die Laufzeitdokumentation, aber absichtlich keine Entwicklungsordner `tests/` oder `scripts/`. Das **Entwicklerpaket** und das Quellarchiv enthalten diese Ordner vollständig. Der Paketbau vergleicht den vollständigen Testbestand des Repositorys mit dem Entwicklerpaket und bricht bei fehlenden Dateien ab.

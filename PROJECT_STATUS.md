@@ -1,12 +1,12 @@
 # Open Hardware Control — Project Status
 
-**Current development version:** 3.4.29.43 STABLE
+**Current development version:** 3.4.29.44 STABLE
 
 **Status date:** 05 September 2026
 
 **Release channel:** STABLE — public release scripts may run only after the complete release checks, clean commit and explicit owner request.
 
-Version 3.4.29.43 keeps a saved RGB start profile pending while the managed OpenRGB engine reports its known cold-start partial inventory. The bounded inventory retry can now discover the complete controller set and apply the saved design instead of losing the one-shot profile start. The module-registry validator also follows the declared `BUILD_CHANNEL`, removing the internal-only gate that previously rejected a valid stable candidate. Stable RPM source preparation now uses a dedicated temporary parent instead of colliding with the identically named runtime ZIP tree. The bundled Levita gallery adds eight owner-created AI backgrounds and one deduplicated 30-second owner-created animation through an explicit allowlist; no manufacturer/TRCC catalog media is present. This version promotes the tested 3.4.29 feature line to the stable release channel.
+Version 3.4.29.44 keeps a saved RGB start profile pending while the managed OpenRGB engine reports its known cold-start partial inventory. The bounded inventory retry can now discover the complete controller set and apply the saved design instead of losing the one-shot profile start. The module-registry validator also follows the declared `BUILD_CHANNEL`, removing the internal-only gate that previously rejected a valid stable candidate. Stable RPM source preparation now uses a dedicated temporary parent instead of colliding with the identically named runtime ZIP tree. The bundled Levita gallery adds eight owner-created AI backgrounds and one deduplicated 30-second owner-created animation through an explicit allowlist; no manufacturer/TRCC catalog media is present. The clean-runner preview-queue regression now measures its initial bundled-media work instead of assuming an empty thumbnail cache. This version promotes the tested 3.4.29 feature line to the stable release channel.
 
 Version 3.4.29.42 advances the Wallpaper Engine for KDE module to 1.2. Pause, resume, next and mute target `/WallpaperEngine` on Plasma's existing `org.kde.plasmashell` bus service, matching the object exposed by CaptSilver v1.4 even when its optional standalone alias cannot be registered. Because v1.4's advertised Previous method currently advances instead, OHC's back button safely selects the preceding validated local Workshop entry. The page also reads and applies DisplayMode 0/1/2 per selected screen. The main window defaults to Qt's primary screen, persists an optional exact screen name with primary fallback, and repositions restored geometry before display where the compositor permits it. A global eight-pixel scrollbar style makes all pages consistent. Existing hardware ownership and Wallpaper/Steam immutability boundaries are unchanged. The complete two-version backup remains mandatory.
 
@@ -168,7 +168,7 @@ The 3.4.29 codebase has also begun an incremental local-AI-oriented split of the
 - GPU fan control is not part of the mainboard PWM subsystem.
 - Open Radeon Control Center remains separate.
 
-## Before publishing 3.4.29.43
+## Before publishing 3.4.29.44
 
 - Keep `BUILD_CHANNEL=STABLE`; return to `INTERN` if the real desktop/hardware release-candidate test exposes a regression.
 - Run all release checks.

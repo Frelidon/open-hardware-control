@@ -23,7 +23,7 @@ installer = (ROOT / "install.sh").read_text(encoding="utf-8")
 helper = (ROOT / "install-udev-rule.sh").read_text(encoding="utf-8")
 diagnostics = (ROOT / "collect-diagnostics.sh").read_text(encoding="utf-8")
 
-assert 'APP_VERSION = "3.4.29.43"' in code
+assert 'APP_VERSION = "3.4.29.44"' in code
 assert 'BUILD_CHANNEL = "STABLE"' in code
 assert 'APP_NAME = "Open Hardware Control"' in code
 assert "shell=True" not in wallpaper_installer_code
@@ -336,7 +336,7 @@ assert "maybe_offer_desktop_design_dependencies" in code
 assert "Fehlende Pakete &installieren" in code
 
 readme = (ROOT / "README.md").read_text(encoding="utf-8")
-assert "# Open Hardware Control by Frelidon 3.4.29.43" in readme
+assert "# Open Hardware Control by Frelidon 3.4.29.44" in readme
 assert "Inoffizielles unabhängiges Community-Projekt" in readme
 assert "Corsair · OpenLinkHub" in readme
 assert "| NZXT 2023 RGB Controller | `1e71:2012`" in readme

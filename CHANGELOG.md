@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.4.29.44 STABLE
+
+- Korrigiert den Levita-Videovorschau-Belastungstest für frische Systeme ohne Thumbnail-Cache: Die eine gebündelte OHC-Animation wird als legitimer Anfangsauftrag berücksichtigt, bevor 140 synthetische Videos ergänzt werden.
+- Installiert in GitHub Actions die vollständigen Testabhängigkeiten `pytest`, Pillow, PySide6 und die für Qt benötigte EGL-Laufzeitbibliothek. Ein manueller Release-Wiederanlauf validiert einen vorhandenen stabilen Tag, ohne ihn zu verschieben.
+- Übernimmt sämtliche Programmkorrekturen, Thermalright-Levita-Highlights und ausschließlich projekt-eigenen KI-Medien aus 3.4.29.43 in den bereinigten öffentlichen Release.
+
 ## 3.4.29.43 STABLE
 
 - Stellt die neue Unterstützung für das 1600×720-Display der **Thermalright Levita Vision 360 ARGB Black** als Release-Highlight heraus und bündelt elf eigene OHC-Hintergründe, zwei OHC-Datenlayouts sowie genau eine deduplizierte 30-Sekunden-KI-Animation. Hersteller-/TRCC-Katalogmedien und importierte Benutzerdateien bleiben vollständig außerhalb des Repositorys und der Releasepakete.

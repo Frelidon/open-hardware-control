@@ -34,7 +34,7 @@ builder = (ROOT / 'scripts/build_release.py').read_text(encoding='utf-8')
 assert 'backup_release(ROOT, DIST, VERSION, CHANNEL)' in builder
 
 publishing = (ROOT / 'GITHUB_PUBLISHING_GUIDE_DE.md').read_text(encoding='utf-8')
-assert '3.4.29.43 STABLE – GitHub-Veröffentlichung' in publishing
+assert '3.4.29.44 STABLE – GitHub-Veröffentlichung' in publishing
 assert 'erfolgreicher vollständiger Prüfung, sauberem Commit und realem KDE-/Hardwaretest' in publishing
 assert 'Die Erlaubnis für den normalen Branch-Push erlaubt niemals automatisch Force-Push' in publishing
 

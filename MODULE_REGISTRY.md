@@ -1,7 +1,7 @@
 # Open Hardware Control — verbindliches Modulregister
 
 **Stand:** 05.09.26
-**Anwendung:** 3.4.29.43 STABLE
+**Anwendung:** 3.4.29.44 STABLE
 
 Diese Datei ist der verpflichtende erste Wegweiser für lokale und webbasierte Coding-KIs. Sie beantwortet, welches Modul für eine Aufgabe zuständig ist, wo ausschließlich dessen aktuelle Version liegt und welche Dateien dafür gelesen werden müssen. Änderungen an Quellcode, Modulstruktur, Modulversionen oder Verantwortlichkeiten müssen dieses Register im selben Arbeitsschritt aktualisieren. Das Auslassen ist nicht zulässig.
 
@@ -90,6 +90,7 @@ layout_model.py  -> keine Qt-, UI- oder Hardwareabhängigkeit
 
 | Datum | Modul | Version | Änderung |
 |---|---|---:|---|
+| 05.09.26 | Release-Paketierung / Levita-Testumgebung | 1.0 / Legacy 3.4.29.43 | GitHub Actions installiert die vollständigen Python-/Qt-Testabhängigkeiten samt EGL-Laufzeit; Vorschau-Warteschlangentest misst vorhandene gebündelte Medien relativ zum echten Anfangszustand statt einen leeren Cache vorauszusetzen |
 | 05.09.26 | Levita LCD-Orchestrierung | Legacy 3.4.29.43 | Acht weitere eigene 1600×720-KI-Hintergründe und genau eine deduplizierte 30-Sekunden-Animation über eine feste Paket-Allowlist in die OHC-Galerie aufgenommen; Hersteller-/TRCC-Katalogmedien bleiben ausgeschlossen |
 | 05.09.26 | Hauptfenster und Seitenkomposition / OpenRGB Studio | Legacy 3.4.29.43 / 1.1 | Gespeicherten RGB-Profilstart bei absichtlich zurückgehaltener erster OpenRGB-Teilerkennung vorgemerkt gehalten; begrenzte Inventarwiederholung übernimmt das Design nach vollständiger Erkennung statt den einmaligen Startwunsch zu verwerfen |
 | 05.09.26 | Release-Paketierung | 1.0 | Modulregisterprüfung vom fest verdrahteten internen Kanal auf den validierten Inhalt von `BUILD_CHANNEL` umgestellt; stabilen RPM-Quellbaum unter einen eigenen temporären Elternordner gelegt, damit er nicht mit dem gleichnamigen Laufzeitbaum kollidiert |

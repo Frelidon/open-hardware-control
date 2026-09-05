@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.43
+# Open Hardware Control by Frelidon 3.4.29.44
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -14,7 +14,7 @@ Project repository: <https://github.com/Frelidon/open-hardware-control>
 
 > **Unofficial independent community project:** Open Hardware Control is not supported, approved, endorsed, operated by, or affiliated with NZXT, Corsair, be quiet!, OpenLinkHub, OpenRGB, or any other named manufacturer or project. Product and brand names are used only to describe compatibility. Manufacturers and rights holders can contact Frelidon through the public contact address in the GitHub profile or the Steam username **Frelidon**.
 
-## 3.4.29.43 highlight: Thermalright Levita Vision display
+## 3.4.29.44 highlight: Thermalright Levita Vision display
 
 **Open Hardware Control now supports the 1600×720 display in the Thermalright Levita Vision 360 ARGB Black.** The new local studio combines personal images and videos with editable live CPU, GPU, RAM and clock data. The offline gallery includes eleven original OHC backgrounds, two complete OHC data layouts and one 30-second AI animation.
 
@@ -22,7 +22,7 @@ Every bundled design was created by the project owner together with OpenAI tools
 
 Version 3.4.29 adds a local-first Thermalright Levita display studio and the exact Thermalright Levita Vision 360 ARGB Black cooling path. It also strengthens ENE-DRAM cold-start recovery with two ordered Direct transitions before the saved RGB design starts.
 
-Version 3.4.29.43 keeps a saved RGB startup profile pending when OpenRGB initially reports only a partial cold-start inventory. OHC waits for the bounded discovery retry and then starts the saved design against the complete controller set. The module-registry validator now supports the stable release channel as well. This release promotes the previously tested Levita, RGB, Wallpaper, fan-control, diagnostics and KDE/Wayland work from the 3.4.29 internal series.
+Version 3.4.29.44 keeps a saved RGB startup profile pending when OpenRGB initially reports only a partial cold-start inventory. OHC waits for the bounded discovery retry and then starts the saved design against the complete controller set. The module-registry validator now supports the stable release channel as well. This release promotes the previously tested Levita, RGB, Wallpaper, fan-control, diagnostics and KDE/Wayland work from the 3.4.29 internal series. GitHub tests now also account for the bundled video on a clean runner without a thumbnail cache.
 
 Version 3.4.29.42 repairs the Wallpaper Engine playback buttons: pause, resume, next and mute address the D-Bus object actually registered on Plasma, while back selects the preceding local Workshop card because CaptSilver v1.4 does not yet provide a true back operation. It also adds all three CaptSilver scaling modes for the selected screen. The main window now starts on the primary screen by default, or on a persistently selected screen identified by its stable Qt name; a missing screen safely falls back to primary. Every vertical and horizontal scrollbar now uses the same narrow style. The guided setup, verified optional Fedora installer, fixed gallery cards, stock defaults and reversible optimization from 3.4.29.41 remain intact. On Wayland, KWin retains final authority over top-level window placement.
 
@@ -70,7 +70,7 @@ Hotfix 3.4.29.8 adds safe PWM/DC switching only for kernel-exposed `pwmN_mode` c
 
 Hotfix 3.4.29.7 suppresses the photographed black OHC surface before a minimized KDE/Wayland tray-autostart UI is built, runs every OpenRGB Qt client offscreen and adds explicit grant/remove controls for an optional exact-user Polkit authorization of the bounded NCT6687 helper. No password is stored and physical PWM calibration remains mandatory.
 
-## New in 3.4.29.43
+## New in 3.4.29.44
 
 - Thermalright Levita studio with a 1600×720 canvas, protected right cutout, local image/video/TRCC import, movable CPU/GPU/RAM/clock overlays and a safe preview-only test mode by default.
 - Separate Levita background and hardware-data layers: a local video can run behind a complete imported TRCC sensor layout with live values.
@@ -357,22 +357,22 @@ Fedora/Nobara RPM:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.43-1.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.44-1.noarch.rpm
 ```
 
 Debian/Ubuntu/Linux Mint DEB:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.43_all.deb'
+sudo apt install './open-hardware-control_3.4.29.44_all.deb'
 ```
 
 Universal ZIP for the supported distro families:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_43.zip
-cd open-hardware-control-3.4.29.43
+unzip open_hardware_control_v3_4_29_44.zip
+cd open-hardware-control-3.4.29.44
 chmod +x install.sh
 ./install.sh
 ```

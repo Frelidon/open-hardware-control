@@ -1,6 +1,6 @@
 # Open Hardware Control – zentrale Projektdokumentation
 
-Stand: **3.4.29.43 STABLE**, 05. September 2026
+Stand: **3.4.29.44 STABLE**, 05. September 2026
 
 ## Zielbild
 
@@ -8,9 +8,9 @@ Open Hardware Control by Frelidon ist die gemeinsame, modular erweiterbare Linux
 
 Open Radeon Control Center bleibt ein eigenständiges Projekt. Es wird weder technisch noch organisatorisch in Open Hardware Control verschmolzen.
 
-## Version 3.4.29.43 STABLE
+## Version 3.4.29.44 STABLE
 
-Version 3.4.29.43 hält ein gespeichertes RGB-Startprofil während einer vorläufigen OpenRGB-Teilerkennung vorgemerkt, wartet begrenzt auf den vollständigen Gerätebestand und startet danach das Design. Die Modulregisterprüfung folgt nun dem tatsächlichen Build-Kanal, sodass der zuvor intern geprüfte 3.4.29-Stand stabil veröffentlicht werden kann.
+Version 3.4.29.44 hält ein gespeichertes RGB-Startprofil während einer vorläufigen OpenRGB-Teilerkennung vorgemerkt, wartet begrenzt auf den vollständigen Gerätebestand und startet danach das Design. Die Modulregisterprüfung folgt nun dem tatsächlichen Build-Kanal, sodass der zuvor intern geprüfte 3.4.29-Stand stabil veröffentlicht werden kann. Der plattformunabhängige Vorschau-Warteschlangentest berücksichtigt auch das mitgelieferte OHC-Video auf frischen GitHub-Runnern ohne Cache.
 
 Version 3.4.29.42 repariert die Wallpaper-Wiedergabesteuerung über das in Plasma registrierte CaptSilver-D-Bus-Objekt und ergänzt Seitenverhältnis, Zuschneiden und Vollbildstreckung pro Zielbildschirm. Das Programmfenster verwendet standardmäßig den Hauptbildschirm, kann einen benannten Monitor dauerhaft wählen und fällt bei dessen Fehlen zurück. Einheitlich schmale Scrollleisten gelten in der gesamten Anwendung. Assistent, geprüfter Fedora-Installer, feste Galeriekarten, schreibgeschützte Workshop-Bibliothek und Originalzustand als Standard bleiben erhalten.
 
