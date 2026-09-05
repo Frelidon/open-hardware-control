@@ -6,20 +6,34 @@ ROOT = Path(__file__).resolve().parents[1]
 main_code = (ROOT / "kraken_control.py").read_text(encoding="utf-8")
 module_names = (
     "app_constants.py", "command_backend.py", "cooling_card_state.py", "cooling_widgets.py",
-    "localization_catalog.py", "privacy_logging.py", "temperature_utils.py",
+    "dashboard_layout.py", "localization_catalog.py", "privacy_logging.py", "temperature_utils.py",
 )
 module_code = {name: (ROOT / name).read_text(encoding="utf-8") for name in module_names}
+rgb_gallery_code = (
+    ROOT / "modules" / "rgb_studio" / "v1_1" / "design_gallery.py"
+).read_text(encoding="utf-8")
+wallpaper_installer_code = (
+    ROOT / "modules" / "wallpaper_engine" / "v1_2" / "installer.py"
+).read_text(encoding="utf-8")
 # Static guards search the complete runtime implementation even though the
 # former monolith is now split into focused modules.
-code = main_code + "\n" + "\n".join(module_code.values())
+code = main_code + "\n" + "\n".join(module_code.values()) + "\n" + rgb_gallery_code
 rule = (ROOT / "71-nzxt-kraken-2023.rules").read_text(encoding="utf-8")
 installer = (ROOT / "install.sh").read_text(encoding="utf-8")
 helper = (ROOT / "install-udev-rule.sh").read_text(encoding="utf-8")
 diagnostics = (ROOT / "collect-diagnostics.sh").read_text(encoding="utf-8")
 
-assert 'APP_VERSION = "3.4.29.9"' in code
-assert 'BUILD_CHANNEL = "INTERN"' in code
+assert 'APP_VERSION = "3.4.29.43"' in code
+assert 'BUILD_CHANNEL = "STABLE"' in code
 assert 'APP_NAME = "Open Hardware Control"' in code
+assert "shell=True" not in wallpaper_installer_code
+assert 'GITHUB_API_URL = "https://api.github.com/repos/CaptSilver/wallpaper-engine-kde-plugin/releases/latest"' in wallpaper_installer_code
+assert "SHA256_RE.fullmatch" in wallpaper_installer_code
+assert 'match.group("fedora") != version' in wallpaper_installer_code
+assert 'match.group("arch") != architecture' in wallpaper_installer_code
+assert "digest.hexdigest() != expected_sha256" in wallpaper_installer_code
+assert 'return [pkexec, dnf, "install", "-y", str(resolved)]' in wallpaper_installer_code
+assert '"sudo"' not in wallpaper_installer_code
 assert "from command_backend import Backend" in main_code
 assert "from cooling_widgets import CurveEditor, FanCurveMiniPreview" in main_code
 assert "from localization_catalog import (" in main_code
@@ -118,7 +132,8 @@ assert (ROOT / "nzxt_rgb.py").exists()
 assert (ROOT / "ui_layout.py").exists()
 assert "class ReorderableSectionArea" in code
 assert "Standardreihenfolge wiederherstellen" in code
-assert '("engine", openrgb_box)' in code
+assert "devices_effects_layout.addWidget(openrgb_box)" in code
+assert '("engine", openrgb_box)' not in code
 assert 'editor_form.addRow("OHC-Modi", self.rgb_studio_mode_list)' in code
 assert 'editor_form.addRow("Modusfarben", colors)' in code
 assert "dashboard_fields_hidden" in code and "reset_dashboard_card_visibility" in code
@@ -304,6 +319,7 @@ assert '"_buildhost open-hardware-control.invalid"' in build_release_code
 assert 'filter=anonymize_tar_metadata' in build_release_code
 assert 'info.mtime = ARCHIVE_MTIME' in build_release_code
 assert 'Skipping DEB build because dpkg-deb is unavailable on this system' in build_release_code
+assert 'temp / "rpm-source" / f"open-hardware-control-{VERSION}"' in build_release_code
 assert 'info.uname = "root"' in build_release_code
 rpm_fallback_code = (ROOT / "scripts/build_rpm_fallback.py").read_text(encoding="utf-8")
 assert 'usr/libexec/open-hardware-control-fan-helper' in rpm_fallback_code
@@ -320,7 +336,7 @@ assert "maybe_offer_desktop_design_dependencies" in code
 assert "Fehlende Pakete &installieren" in code
 
 readme = (ROOT / "README.md").read_text(encoding="utf-8")
-assert "# Open Hardware Control by Frelidon 3.4.29.9 INTERN" in readme
+assert "# Open Hardware Control by Frelidon 3.4.29.43" in readme
 assert "Inoffizielles unabhängiges Community-Projekt" in readme
 assert "Corsair · OpenLinkHub" in readme
 assert "| NZXT 2023 RGB Controller | `1e71:2012`" in readme
@@ -411,6 +427,7 @@ assert '"layers" if self.lcd_layer_active else "hardware_animation" if self.gif_
 assert 'def render_lcd_layer_file' in code
 assert 'def start_lcd_layers' in code
 assert 'class RGBDesignGallery' in code
+assert 'from modules.rgb_studio.v1_1 import (' in main_code
 assert 'studio_autostart_enabled' in code
 assert 'gif/fps' in code
 assert 'Beim Systemstart minimiert/im Tray starten' in code
@@ -604,6 +621,7 @@ assert 'self.perform_orderly_hardware_exit("Fenster/Programmende")' in code
 assert 'self.perform_orderly_hardware_exit("manuelles Programmende")' in code
 assert 'self.perform_orderly_hardware_exit("System-Shutdown/Logout")' in code
 assert 'app.aboutToQuit.connect(lambda: window.perform_orderly_hardware_exit("Qt aboutToQuit"))' in code
+assert 'app.aboutToQuit.connect(diagnostics.detach_ui_sink)' in code
 assert 'Backend.kraken_args() + ["set", "lcd", "screen", "liquid"]' in code
 assert code.index('self.shutdown_gif_stream_sync()') < code.index('self.restore_original_lcd_sync_on_quit()')
 assert 'class MouseSchematicWidget' in code

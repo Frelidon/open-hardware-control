@@ -14,6 +14,7 @@ from PySide6.QtCore import QObject, QProcess, QProcessEnvironment, QTimer, Signa
 
 from app_constants import KRAKEN_MATCH, LIQUIDCTL, RGB_MATCH
 from privacy_logging import redact_private_text
+from window_diagnostics import track_qprocess
 
 
 def needs_headless_qt_platform(args: list[str]) -> bool:
@@ -151,7 +152,7 @@ class Backend(QObject):
         if command.log_command:
             self.log.emit(redact_private_text("$ " + " ".join(command.args)))
 
-        process = QProcess(self)
+        process = track_qprocess(QProcess(self))
         process.setProcessChannelMode(QProcess.ProcessChannelMode.SeparateChannels)
         # OpenRGB is a Qt GUI application even when it is used only as a
         # short-lived CLI client.  Some builds briefly create an empty native

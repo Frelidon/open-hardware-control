@@ -1,0 +1,17 @@
+{
+  "name": "OHC Orbital Command",
+  "width": 1600,
+  "height": 720,
+  "overlay_enabled": true,
+  "elements": [
+    {"type": "text", "x": 302, "y": 126, "text": "CPU", "color": "#73d9ff", "size": 28, "bold": true},
+    {"type": "metric", "x": 302, "y": 220, "metric": "cpu:usage", "format": "{value:.0f}%", "color": "#ffffff", "size": 58, "bold": true, "show_unit": true},
+    {"type": "metric", "x": 302, "y": 307, "metric": "cpu:temp", "format": "{value:.0f}°C", "color": "#42c8ff", "size": 34, "bold": true, "show_unit": true},
+    {"type": "metric", "x": 302, "y": 535, "metric": "cpu:freq", "format": "CPU CLOCK  {value:.0f} MHz", "color": "#9be8ff", "size": 30, "bold": true, "show_unit": true},
+    {"type": "text", "x": 1082, "y": 126, "text": "GPU", "color": "#a99bff", "size": 28, "bold": true},
+    {"type": "metric", "x": 1082, "y": 220, "metric": "gpu:primary:usage", "format": "{value:.0f}%", "color": "#ffffff", "size": 58, "bold": true, "show_unit": true},
+    {"type": "metric", "x": 1082, "y": 307, "metric": "gpu:primary:temp", "format": "{value:.0f}°C", "color": "#8d8cff", "size": 34, "bold": true, "show_unit": true},
+    {"type": "metric", "x": 902, "y": 535, "metric": "gpu:primary:clock", "format": "GPU  {value:.0f} MHz", "color": "#8fe9ff", "size": 28, "bold": true, "show_unit": true},
+    {"type": "metric", "x": 1262, "y": 535, "metric": "gpu:primary:vram_used", "format": "VRAM  {value:.0f} MB", "color": "#c0b7ff", "size": 28, "bold": true, "show_unit": true}
+  ]
+}

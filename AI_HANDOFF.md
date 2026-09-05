@@ -7,7 +7,7 @@ For LM Studio with a local model, begin with `START_HIER_LOKALE_KI.md`; the user
 ## Start a fresh session
 
 1. Read `AGENTS.md`.
-2. Read `PROJECT_STATUS.md`, `DECISIONS.md`, `ARCHITECTURE.md`, `MODULE_MAP.md` and `DEVICE_SUPPORT.md`.
+2. Read `PROJECT_STATUS.md`, `DECISIONS.md`, `ARCHITECTURE.md`, `MODULE_MAP.md`, `DEVICE_SUPPORT.md` and `RELEASE_BACKUP_POLICY.md`.
 3. Read the latest section of `CHANGELOG.md` and current release notes.
 4. Inspect `git status`, current branch and recent commits.
 5. Inspect the exact code/tests related to the requested feature before proposing edits.
@@ -25,6 +25,8 @@ For a context-limited local model, use the task-specific file sets in `MODULE_MA
 ## End a substantial session
 
 Update `PROJECT_STATUS.md` with what is now true, not what was merely discussed. Update `CHANGELOG.md` for user-visible behavior. Leave unresolved items explicitly marked as pending; never make a future agent infer them from chat history.
+
+After a version build, confirm the sibling `Open Hardware Control Backup` directory contains the newest two complete versions and that both `SHA256SUMS` files validate.
 
 ## Before GitHub
 

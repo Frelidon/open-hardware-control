@@ -7,11 +7,14 @@ This repository is the long-term source of truth for Open Hardware Control by Fr
 Before any substantive code change:
 
 1. Read `PROJECT_STATUS.md`.
-2. Read `DECISIONS.md`.
-3. Read `ARCHITECTURE.md`.
-4. Read `DEVICE_SUPPORT.md` and the authoritative `SUPPORTED_DEVICES.md` when hardware support is involved.
-5. Read the relevant latest release notes and `CHANGELOG.md`.
-6. Inspect `git status` and the relevant code/tests before editing.
+2. Read `MODULE_REGISTRY.md`; it is the mandatory task-to-module and current-version index.
+3. Read `AI_DEVELOPMENT_GUIDE.md` for the mandatory UI, sensor and LCD extension workflow.
+4. Read `DECISIONS.md`.
+5. Read `ARCHITECTURE.md`.
+6. Read `DEVICE_SUPPORT.md` and the authoritative `SUPPORTED_DEVICES.md` when hardware support is involved.
+7. Read the relevant latest release notes and `CHANGELOG.md`.
+8. Read `RELEASE_BACKUP_POLICY.md` when packaging or versioning is involved.
+9. Inspect `git status` and the relevant code/tests before editing.
 
 If a request conflicts with these files or the current code, stop and explain the conflict instead of silently deleting or redesigning established behavior.
 
@@ -45,10 +48,19 @@ If a request conflicts with these files or the current code, stop and explain th
 
 - Run the narrowest relevant tests while developing.
 - Before declaring a version/release ready, run `./scripts/check_release.sh`.
+- A successful version build must also complete the external rolling backup defined in `RELEASE_BACKUP_POLICY.md`; verify both retained versions and their SHA256 files.
 - Update or add regression tests for behavior changes.
 - Do not weaken tests to make broken behavior pass.
 - Update `PROJECT_STATUS.md` after meaningful changes and `DECISIONS.md` when a durable product/architecture decision changes.
 - Add a `CHANGELOG.md` entry for user-visible changes and release notes for a versioned release.
+- Update `MODULE_REGISTRY.md` without exception whenever source files, module responsibilities, paths, dependencies or module versions change. Dates there use European `TT.MM.JJ` format only, never a time.
+
+## Local-AI modularity
+
+- New or migrated feature modules live only in their current `modules/<name>/v<major>_<minor>/` folder and follow `MODULE_REGISTRY.md`.
+- Target at most 600 lines/32,000 characters per handwritten source file. Split before 800 lines/40,000 characters. New handwritten files above 1,200 lines/60,000 characters are forbidden unless the registry documents a generated/legacy exception.
+- Prefer two focused files over one context-heavy file. Keep UI composition, pure state, persistence, rendering and hardware commands separate.
+- Do not keep source backups or old version folders beside the current module. Git history and tagged releases are the source recovery path. The only backup exception is the rolling, packaged release archive outside the repository defined in `RELEASE_BACKUP_POLICY.md`.
 
 ## Git and GitHub safety
 
@@ -58,6 +70,8 @@ Before any `git push`, GitHub repository push, tag push or GitHub release action
 2. Run the relevant tests and inspect the final diff.
 3. Keep `BUILD_CHANNEL=INTERN` until a public release is intentionally prepared and validated.
 4. Require an explicit project-owner request before pushing, tagging or creating a release.
+
+A normal push of committed, tested work to a non-release development branch is explicitly permitted when the project owner requests that push. `BUILD_CHANNEL=INTERN` does not block such a branch push or an explicitly requested pull request. It blocks public release publication. Tags, public GitHub releases, force-pushes and remote deletion are separate actions and each requires its own explicit project-owner request; public tags/releases additionally require the validated `STABLE` channel. Never reinterpret the default "do not push" rule as an absolute inability to push after an explicit owner request.
 
 ## Destructive commands
 

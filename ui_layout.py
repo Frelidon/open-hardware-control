@@ -74,3 +74,16 @@ def sanitize_dashboard_cards(stored: object) -> list[str]:
         if key in DASHBOARD_CARD_DEFAULTS and key not in result:
             result.append(key)
     return result
+
+
+def dashboard_card_hardware_available(
+    key: str,
+    *,
+    kraken_connected: bool,
+    liquid_temperature: float | None,
+) -> bool:
+    """Return whether hardware currently supplies the requested dashboard card."""
+
+    if str(key) == "water_temperature":
+        return bool(kraken_connected) and liquid_temperature is not None
+    return True

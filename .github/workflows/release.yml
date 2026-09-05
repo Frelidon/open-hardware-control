@@ -69,12 +69,12 @@ jobs:
           NOTES="docs/RELEASE_NOTES_v${VERSION}.md"
           if [[ -f "$NOTES" ]]; then
             gh release create "$TAG" dist/* \
-              --title "Open Hardware Control $TAG – NZXT Kraken & Corsair on Linux" \
+              --title "Open Hardware Control $TAG – Thermalright Levita, NZXT Kraken & RGB on Linux" \
               --notes-file "$NOTES" \
               --verify-tag
           else
             gh release create "$TAG" dist/* \
-              --title "Open Hardware Control $TAG – NZXT Kraken & Corsair on Linux" \
+              --title "Open Hardware Control $TAG – Thermalright Levita, NZXT Kraken & RGB on Linux" \
               --generate-notes \
               --verify-tag
           fi

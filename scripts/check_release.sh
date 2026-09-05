@@ -11,12 +11,10 @@ mapfile -t python_files < <(find . -type f -name '*.py' -not -path './dist/*' -n
 PYTHONPYCACHEPREFIX="$TMP_PYCACHE" python3 -m py_compile "${python_files[@]}"
 bash -n install.sh install-dependencies.sh install-udev-rule.sh collect-diagnostics.sh uninstall.sh scripts/*.sh
 
-for test_file in tests/test_*.py; do
-  echo "Running $test_file"
-  PYTHONDONTWRITEBYTECODE=1 python3 "$test_file"
-done
+PYTHONDONTWRITEBYTECODE=1 python3 -m pytest -q
 
 PYTHONDONTWRITEBYTECODE=1 python3 scripts/security_scan_release.py
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/check_module_registry.py
 
 VERSION="$(tr -d '\r\n' < VERSION)"
 CHANNEL="$(tr -d '\r\n' < BUILD_CHANNEL)"
@@ -56,12 +54,12 @@ if find . -type d -name __pycache__ -print -quit | grep -q .; then
 fi
 
 for required in \
-  LICENSE README.md README.en.md INSTALL.md CHANGELOG.md SECURITY.md PRIVACY.md BUILD_CHANNEL \
+  LICENSE README.md README.en.md INSTALL.md CHANGELOG.md SECURITY.md PRIVACY.md BUILD_CHANNEL MODULE_REGISTRY.md AI_DEVELOPMENT_GUIDE.md RELEASE_BACKUP_POLICY.md \
   CONTRIBUTING.md SOURCE_CODE.md DEVELOPER_PACKAGE.md VERSION AGENTS.md PROJECT_STATUS.md ARCHITECTURE.md MODULE_MAP.md DECISIONS.md DEVICE_SUPPORT.md AI_HANDOFF.md CURSOR_SETUP.md START_HIER_LOKALE_KI.md LM_STUDIO_ANLEITUNG_DE.md LOCAL_AI_STARTPROMPT.txt \
-  kraken_control.py app_constants.py command_backend.py cooling_card_state.py cooling_widgets.py localization_catalog.py privacy_logging.py temperature_utils.py kraken_cam_streamer.py openlinkhub_integration.py openrgb_integration.py openrgb_sdk.py rgb_effects.py ui_layout.py desktop_designs.py \
+  kraken_control.py app_constants.py command_backend.py cooling_card_state.py cooling_widgets.py dashboard_layout.py localization_catalog.py privacy_logging.py temperature_utils.py kraken_cam_streamer.py openlinkhub_integration.py openrgb_integration.py openrgb_sdk.py rgb_effects.py ui_layout.py desktop_designs.py \
   desktop_assets.py desktop_shell.py DESKTOP_SECURITY_AUDIT.md RGB_STUDIO.md RGB_SECURITY_AUDIT.md SECURITY_SCAN_REPORT.json \
-  scripts/build_release.py scripts/build_release.sh \
-  .cursor/hooks.json .cursor/hooks/session-start.py .cursor/hooks/guard-destructive-shell.py; do
+  scripts/build_release.py scripts/backup_release.py scripts/build_release.sh scripts/check_module_registry.py \
+  .github/copilot-instructions.md .cursor/hooks.json .cursor/hooks/session-start.py .cursor/hooks/guard-destructive-shell.py; do
   [[ -f "$required" ]] || { echo "Missing required file: $required" >&2; exit 1; }
 done
 

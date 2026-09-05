@@ -12,7 +12,8 @@ version = (root / 'VERSION').read_text(encoding='utf-8').strip() if (root / 'VER
 channel = (root / 'BUILD_CHANNEL').read_text(encoding='utf-8').strip() if (root / 'BUILD_CHANNEL').exists() else 'unknown'
 context = (
     f"Open Hardware Control project session. Repository version={version}, channel={channel}. "
-    "Before substantive edits, read AGENTS.md, PROJECT_STATUS.md, DECISIONS.md and ARCHITECTURE.md. "
+    "Before substantive edits, read AGENTS.md, MODULE_REGISTRY.md, AI_DEVELOPMENT_GUIDE.md, "
+    "PROJECT_STATUS.md, DECISIONS.md and ARCHITECTURE.md. Use only the current registered module version. "
     "For hardware changes also read DEVICE_SUPPORT.md/SUPPORTED_DEVICES.md. "
     "Push, tag or release only from a clean tested worktree after an explicit project-owner request."
 )

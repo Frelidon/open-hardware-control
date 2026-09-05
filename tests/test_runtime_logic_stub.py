@@ -5,6 +5,14 @@ import types
 from pathlib import Path
 from unittest.mock import patch
 
+_PYSIDE_MODULE_NAMES = (
+    "PySide6", "PySide6.QtCore", "PySide6.QtGui", "PySide6.QtWidgets",
+)
+_PREVIOUS_PYSIDE_MODULES = {
+    name: sys.modules.get(name) for name in _PYSIDE_MODULE_NAMES
+}
+_PREVIOUS_MODULE_NAMES = set(sys.modules)
+
 class Dummy:
     class _Enum:
         def __getattr__(self, _name):
@@ -26,16 +34,16 @@ class SignalDummy(Dummy):
     pass
 
 qtcore=types.ModuleType('PySide6.QtCore')
-for n in ['QEvent','QMimeData','QObject','QProcess','QProcessEnvironment','QSettings','QSize','QTimer','QPoint','QPointF','QRectF','QUrl','QStandardPaths']:
+for n in ['QChildEvent','QEvent','QMimeData','QObject','QProcess','QProcessEnvironment','QSettings','QSize','QTimer','QPoint','QPointF','QRectF','QUrl','QStandardPaths']:
     setattr(qtcore,n,Dummy)
 qtcore.Signal=SignalDummy
 qtcore.qVersion=lambda: 'test'
 qtcore.Qt=Dummy()
 qtgui=types.ModuleType('PySide6.QtGui')
-for n in ['QAction','QBrush','QColor','QCloseEvent','QDrag','QFont','QIcon','QImage','QImageReader','QPixmap','QMovie','QPainter','QPainterPath','QPen','QPalette','QMouseEvent','QKeyEvent','QDesktopServices','QKeySequence','QLinearGradient','QRadialGradient']:
+for n in ['QAction','QBrush','QColor','QCloseEvent','QDrag','QFont','QIcon','QImage','QImageReader','QPixmap','QMovie','QPainter','QPainterPath','QPen','QPalette','QMouseEvent','QKeyEvent','QDesktopServices','QKeySequence','QLinearGradient','QRadialGradient','QWindow']:
     setattr(qtgui,n,Dummy)
 qtwidgets=types.ModuleType('PySide6.QtWidgets')
-for n in ['QApplication','QAbstractButton','QAbstractItemView','QCheckBox','QColorDialog','QComboBox','QDialog','QDialogButtonBox','QFileDialog','QFormLayout','QFrame','QGridLayout','QGroupBox','QHBoxLayout','QInputDialog','QLabel','QLineEdit','QMainWindow','QMenu','QMessageBox','QPushButton','QScrollArea','QSlider','QSpinBox','QStackedLayout','QStackedWidget','QSystemTrayIcon','QTabBar','QTabWidget','QTableWidget','QTableWidgetItem','QTreeWidget','QTreeWidgetItem','QVBoxLayout','QWidget','QPlainTextEdit','QTextBrowser','QWizard','QWizardPage']:
+for n in ['QApplication','QAbstractButton','QAbstractItemView','QCheckBox','QColorDialog','QComboBox','QDialog','QDialogButtonBox','QFileDialog','QFormLayout','QFrame','QGridLayout','QGroupBox','QHBoxLayout','QInputDialog','QLabel','QLineEdit','QListView','QListWidget','QListWidgetItem','QMainWindow','QMenu','QMessageBox','QProgressBar','QPushButton','QScrollArea','QSlider','QSpinBox','QStackedLayout','QStackedWidget','QSystemTrayIcon','QTabBar','QTabWidget','QTableWidget','QTableWidgetItem','QTreeWidget','QTreeWidgetItem','QVBoxLayout','QWidget','QPlainTextEdit','QTextBrowser','QWizard','QWizardPage']:
     setattr(qtwidgets,n,Dummy)
 pyside=types.ModuleType('PySide6')
 pyside.__version__='test'
@@ -47,8 +55,8 @@ spec=importlib.util.spec_from_file_location('kraken_v29',str(ROOT / 'kraken_cont
 mod=importlib.util.module_from_spec(spec)
 sys.modules[spec.name]=mod
 spec.loader.exec_module(mod)
-assert mod.APP_VERSION=='3.4.29.9'
-assert mod.BUILD_CHANNEL=='INTERN'
+assert mod.APP_VERSION=='3.4.29.43'
+assert mod.BUILD_CHANNEL=='STABLE'
 assert mod.APP_NAME=='Open Hardware Control'
 assert len(mod.AM5_CPU_PROFILES)>=20
 assert len(mod.AnimatedBackgroundWidget.THEMES) >= 10
@@ -443,3 +451,17 @@ for card_name, vram, temp in (('card0', 512 * 1024**2, 45000), ('card1', 16 * 10
     (hwmon / 'temp1_label').write_text('edge\n', encoding='ascii')
 gpu_temp, gpu_label = mod.KrakenControl.read_amd_gpu_temperature(fake_drm)
 assert gpu_temp == 62.0 and 'card1' in gpu_label
+
+# pytest imports this script-style regression during collection. Restore the
+# real modules so its deliberately tiny Qt stubs cannot leak into later tests.
+for _module_name, _module in list(sys.modules.items()):
+    if _module_name in _PREVIOUS_MODULE_NAMES:
+        continue
+    _module_file = getattr(_module, "__file__", "") or ""
+    if _module_file and _module_file.startswith(str(ROOT)):
+        sys.modules.pop(_module_name, None)
+for _module_name, _previous_module in _PREVIOUS_PYSIDE_MODULES.items():
+    if _previous_module is None:
+        sys.modules.pop(_module_name, None)
+    else:
+        sys.modules[_module_name] = _previous_module

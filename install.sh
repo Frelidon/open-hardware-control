@@ -6,11 +6,13 @@ APP_DIR="$OHC_INSTALL_HOME/.local/share/open-hardware-control"
 BIN_DIR="$OHC_INSTALL_HOME/.local/bin"
 DESKTOP_DIR="$OHC_INSTALL_HOME/.local/share/applications"
 ICON_DIR="$OHC_INSTALL_HOME/.local/share/icons/hicolor/scalable/apps"
+ICON_BASE_DIR="$OHC_INSTALL_HOME/.local/share/icons/hicolor"
 SOURCE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 mkdir -p "$APP_DIR" "$BIN_DIR" "$DESKTOP_DIR" "$ICON_DIR"
 install -m 0755 "$SOURCE_DIR/kraken_control.py" "$APP_DIR/kraken_control.py"
 install -m 0644 "$SOURCE_DIR/app_constants.py" "$APP_DIR/app_constants.py"
+install -m 0644 "$SOURCE_DIR/branding.py" "$APP_DIR/branding.py"
 install -m 0644 "$SOURCE_DIR/command_backend.py" "$APP_DIR/command_backend.py"
 install -m 0644 "$SOURCE_DIR/cooling_card_state.py" "$APP_DIR/cooling_card_state.py"
 install -m 0644 "$SOURCE_DIR/cooling_widgets.py" "$APP_DIR/cooling_widgets.py"
@@ -35,12 +37,27 @@ install -m 0644 "$SOURCE_DIR/nzxt_esc_profiles.py" "$APP_DIR/nzxt_esc_profiles.p
 install -m 0644 "$SOURCE_DIR/hardware_request_coordinator.py" "$APP_DIR/hardware_request_coordinator.py"
 install -m 0644 "$SOURCE_DIR/mainboard_fan_control.py" "$APP_DIR/mainboard_fan_control.py"
 install -m 0644 "$SOURCE_DIR/cooling_ownership.py" "$APP_DIR/cooling_ownership.py"
+install -m 0644 "$SOURCE_DIR/thermalright_cooling.py" "$APP_DIR/thermalright_cooling.py"
+install -m 0644 "$SOURCE_DIR/thermalright_display.py" "$APP_DIR/thermalright_display.py"
+install -m 0644 "$SOURCE_DIR/thermalright_display_ui.py" "$APP_DIR/thermalright_display_ui.py"
+install -m 0644 "$SOURCE_DIR/window_diagnostics.py" "$APP_DIR/window_diagnostics.py"
+install -m 0644 "$SOURCE_DIR/hardware_diagnostics.py" "$APP_DIR/hardware_diagnostics.py"
+install -m 0644 "$SOURCE_DIR/log_view_support.py" "$APP_DIR/log_view_support.py"
 install -m 0755 "$SOURCE_DIR/ohc_fan_helper.py" "$APP_DIR/ohc_fan_helper.py"
 install -m 0644 "$SOURCE_DIR/io.github.Frelidon.OpenHardwareControl.fan.policy" "$APP_DIR/io.github.Frelidon.OpenHardwareControl.fan.policy"
 install -m 0755 "$SOURCE_DIR/install-fan-helper.sh" "$APP_DIR/install-fan-helper.sh"
 install -m 0755 "$SOURCE_DIR/kraken_cam_streamer.py" "$APP_DIR/kraken_cam_streamer.py"
 install -m 0644 "$SOURCE_DIR/kraken-control.svg" "$APP_DIR/kraken-control.svg"
 install -m 0644 "$SOURCE_DIR/kraken-control.svg" "$ICON_DIR/open-hardware-control.svg"
+for size in 22 32 48 64 128 256; do
+    mkdir -p "$ICON_BASE_DIR/${size}x${size}/apps"
+    install -m 0644 \
+        "$SOURCE_DIR/assets/branding/icons/open-hardware-control-${size}.png" \
+        "$ICON_BASE_DIR/${size}x${size}/apps/open-hardware-control.png"
+done
+mkdir -p "$ICON_BASE_DIR/512x512/apps"
+install -m 0644 "$SOURCE_DIR/assets/branding/open-hardware-control-icon.png" \
+    "$ICON_BASE_DIR/512x512/apps/open-hardware-control.png"
 install -m 0755 "$SOURCE_DIR/collect-diagnostics.sh" "$APP_DIR/collect-diagnostics.sh"
 install -m 0755 "$SOURCE_DIR/install-udev-rule.sh" "$APP_DIR/install-udev-rule.sh"
 install -m 0755 "$SOURCE_DIR/install-dependencies.sh" "$APP_DIR/install-dependencies.sh"
@@ -66,6 +83,7 @@ install -m 0644 "$SOURCE_DIR/COMPONENT_VERSIONS.md" "$APP_DIR/COMPONENT_VERSIONS
 install -m 0644 "$SOURCE_DIR/ANIMATED_BACKGROUNDS.md" "$APP_DIR/ANIMATED_BACKGROUNDS.md"
 install -m 0644 "$SOURCE_DIR/PROFILES.md" "$APP_DIR/PROFILES.md"
 install -m 0644 "$SOURCE_DIR/FEATURES_BY_VERSION.md" "$APP_DIR/FEATURES_BY_VERSION.md"
+install -m 0644 "$SOURCE_DIR/MODULE_REGISTRY.md" "$APP_DIR/MODULE_REGISTRY.md"
 install -m 0644 "$SOURCE_DIR/SOURCE_CODE.md" "$APP_DIR/SOURCE_CODE.md"
 install -m 0644 "$SOURCE_DIR/Kraken_Control_Projekt.md" "$APP_DIR/Kraken_Control_Projekt.md"
 install -m 0644 "$SOURCE_DIR/Open_Hardware_Control_Projekt.md" "$APP_DIR/Open_Hardware_Control_Projekt.md"
@@ -86,6 +104,11 @@ if [[ -d "$SOURCE_DIR/assets" ]]; then
   rm -rf "$APP_DIR/assets"
   mkdir -p "$APP_DIR/assets"
   cp -a "$SOURCE_DIR/assets/." "$APP_DIR/assets/"
+fi
+if [[ -d "$SOURCE_DIR/modules" ]]; then
+  rm -rf "$APP_DIR/modules"
+  mkdir -p "$APP_DIR/modules"
+  cp -a "$SOURCE_DIR/modules/." "$APP_DIR/modules/"
 fi
 
 cat > "$BIN_DIR/open-hardware-control" <<LAUNCHER
@@ -115,7 +138,7 @@ LAUNCHER
 chmod 0755 "$BIN_DIR/kraken-control"
 
 sed -e "s|@EXEC@|$BIN_DIR/open-hardware-control|g" \
-    -e "s|@ICON@|$APP_DIR/kraken-control.svg|g" \
+    -e "s|@ICON@|$APP_DIR/assets/branding/open-hardware-control-icon.png|g" \
     "$SOURCE_DIR/kraken-control.desktop.in" > "$DESKTOP_DIR/open-hardware-control.desktop"
 chmod 0644 "$DESKTOP_DIR/open-hardware-control.desktop"
 rm -f "$DESKTOP_DIR/kraken-control.desktop"

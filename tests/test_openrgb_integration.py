@@ -18,6 +18,7 @@ from openrgb_integration import (
     is_confirmed_small_inventory_shrink,
     is_openrgb_apply_options_crash,
     is_openrgb_configuration_error,
+    openrgb_subprocess_environment,
     parse_device_listing,
     preferred_reset_mode,
     running_openrgb_process_ids,
@@ -46,6 +47,11 @@ Connected to server
 
 
 class OpenRGBIntegrationTests(unittest.TestCase):
+    def test_every_direct_openrgb_process_is_forced_offscreen(self):
+        environment = openrgb_subprocess_environment({"DISPLAY": ":0", "QT_QPA_PLATFORM": "xcb"})
+        self.assertEqual(environment["DISPLAY"], ":0")
+        self.assertEqual(environment["QT_QPA_PLATFORM"], "offscreen")
+
     def test_listing_parser_preserves_device_capabilities(self):
         devices = parse_device_listing(LISTING)
         self.assertEqual(len(devices), 2)

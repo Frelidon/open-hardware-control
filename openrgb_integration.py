@@ -11,6 +11,7 @@ from silently falling back to standalone hardware access.
 from __future__ import annotations
 
 import ipaddress
+import os
 import re
 import shlex
 import shutil
@@ -31,6 +32,21 @@ DEVICE_HEADER_RE = re.compile(r"^\s*(\d+)\s*:\s*(.+?)\s*$")
 FIELD_RE = re.compile(r"^\s*(Type|Description|Version|Location|Serial|Modes|Zones|LEDs)\s*:\s*(.*?)\s*$", re.IGNORECASE)
 class OpenRGBError(RuntimeError):
     pass
+
+
+def openrgb_subprocess_environment(
+    source: dict[str, str] | None = None,
+) -> dict[str, str]:
+    """Return an environment that cannot map an OpenRGB helper window.
+
+    OpenRGB is a Qt GUI binary even for ``--version`` and SDK-client commands.
+    Every subprocess path therefore needs the same explicit offscreen boundary
+    as the long-lived managed server.
+    """
+
+    environment = dict(os.environ if source is None else source)
+    environment["QT_QPA_PLATFORM"] = "offscreen"
+    return environment
 
 
 def running_named_process_ids(
@@ -495,6 +511,7 @@ class OpenRGBClient:
             text=True,
             timeout=max(1.0, min(60.0, timeout)),
             check=False,
+            env=openrgb_subprocess_environment(),
         )
         if completed.returncode != 0:
             detail = (completed.stderr or completed.stdout).strip()

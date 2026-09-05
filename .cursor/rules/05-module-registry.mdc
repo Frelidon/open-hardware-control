@@ -1,0 +1,7 @@
+---
+description: Mandatory versioned module registry and local-AI size budgets
+globs:
+alwaysApply: true
+---
+
+Read @MODULE_REGISTRY.md before opening implementation files. Every source, module-boundary, responsibility or module-version change must update that registry in the same work item. New/migrated modules use only their current `modules/<name>/v<major>_<minor>/` folder. Respect its 16-GB-local-AI file-size budgets and split code before a file crosses the review threshold. Registry dates use `TT.MM.JJ` only; never add times or local identity metadata.

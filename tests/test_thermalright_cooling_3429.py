@@ -70,6 +70,8 @@ def test_profiles_keep_pump_and_fans_in_safe_ranges() -> None:
 
 def test_application_requires_mapping_calibration_and_restores_firmware() -> None:
     main = (ROOT / "kraken_control.py").read_text(encoding="utf-8")
+    dashboard = (ROOT / "dashboard_layout.py").read_text(encoding="utf-8")
+    layout_policy = (ROOT / "ui_layout.py").read_text(encoding="utf-8")
     build = (ROOT / "scripts/build_release.py").read_text(encoding="utf-8")
 
     assert "Wasserkühlung und PWM-Zuordnung" in main
@@ -79,7 +81,9 @@ def test_application_requires_mapping_calibration_and_restores_firmware() -> Non
     assert "CoolerControl besitzt aktuell die Mainboard-PWM-Steuerung" in main
     assert "restore_thermalright_cooling_on_quit" in main
     assert "restore_mainboard_firmware_control(channel)" in main
-    assert "Levita meldet keinen Kühlmittelsensor" in main
+    assert "Levita meldet keinen Kühlmittelsensor" not in main
+    assert 'if str(key) == "water_temperature"' in layout_policy
+    assert "card.setVisible(selected_by_user and available)" in dashboard
     assert "Kraken-LCD-Anteil des Profils" in main
     assert "sync_manual_control_to_curve_target(channel, duty)" in main
     assert "nzxt_liquidctl_device_present" in main

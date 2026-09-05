@@ -17,6 +17,7 @@
       <li>NZXT Kraken cooling, pump, radiator fans, RGB and LCD controls</li>
       <li>LCD images, GIF playback, live hardware dashboards and layered LCD designs</li>
       <li>Corsair hardware through the local OpenLinkHub service</li>
+      <li>Guided local Wallpaper Engine for KDE library, verified Fedora plugin setup and Plasma playback controls</li>
       <li>RGB Studio using a loopback-only OpenRGB SDK connection</li>
       <li>Safety-gated motherboard and case fan control through Linux hwmon/NCT6687</li>
       <li>Profiles, hardware detection, diagnostics and safety-oriented device handoffs</li>
@@ -71,9 +72,9 @@
   </screenshots>
   <content_rating type="oars-1.1" />
   <releases>
-    <release version="@VERSION@" date="2026-08-28">
+    <release version="@VERSION@" date="2026-09-05">
       <description>
-        <p>@CHANNEL@ build with explicit CoolerControl background-service and autostart management, calibration-gated motherboard fan control, and the existing coordinated LCD/RGB hardware paths.</p>
+        <p>@CHANNEL@ build with guided Wallpaper Engine setup, a SHA256-verified opt-in Fedora plugin installer, stable gallery sizing, the requested default navigation order and the existing coordinated LCD/RGB hardware paths.</p>
       </description>
     </release>
   </releases>

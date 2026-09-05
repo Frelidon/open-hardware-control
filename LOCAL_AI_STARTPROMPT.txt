@@ -1,6 +1,6 @@
 Arbeite als lokale Coding-KI am Projekt Open Hardware Control by Frelidon.
 
-Lies zuerst START_HIER_LOKALE_KI.md und danach die dort vorgeschriebene Pflichtreihenfolge vollständig. Prüfe außerdem VERSION, BUILD_CHANNEL, git status, den aktuellen Branch, origin und die letzten Commits. Ändere noch keine Datei und führe keine Hardware-Schreibbefehle aus.
+Lies zuerst START_HIER_LOKALE_KI.md und danach zwingend AGENTS.md, MODULE_REGISTRY.md, AI_DEVELOPMENT_GUIDE.md und RELEASE_BACKUP_POLICY.md sowie die dort vorgeschriebene Pflichtreihenfolge vollständig. Prüfe außerdem VERSION, BUILD_CHANNEL, git status, den aktuellen Branch, origin und die letzten Commits. Ändere noch keine Datei und führe keine Hardware-Schreibbefehle aus.
 
 Melde mir anschließend kurz:
 1. aktuelle Version und Release-Kanal,
@@ -9,4 +9,6 @@ Melde mir anschließend kurz:
 4. welche nächste offene Aufgabe PROJECT_STATUS.md und ROADMAP.md nennen,
 5. ob Dokumentation und Quellcode einen erkennbaren Widerspruch enthalten.
 
-Git push, Pull Request, Tag oder Release sind ohne meine spätere ausdrückliche Freigabe verboten. Zugangsdaten oder Gerätecodes dürfen nie gespeichert oder committed werden.
+Git-Push, Pull Request, Tag oder Release sind ohne meine spätere ausdrückliche Freigabe verboten. Wenn ich einen normalen Push auf einen Entwicklungsbranch ausdrücklich beauftrage, ist dieser nach Tests und sauberem Commit auch mit `BUILD_CHANNEL=INTERN` erlaubt. Ein öffentlicher Tag oder Release bleibt eine getrennte Aktion und benötigt zusätzlich den validierten Kanal `STABLE`. Zugangsdaten oder Gerätecodes dürfen nie gespeichert oder committed werden.
+
+Nach jedem erfolgreichen Versionsbau muss automatisch der externe Geschwisterordner `Open Hardware Control Backup` aktualisiert werden. Dort sind nach `RELEASE_BACKUP_POLICY.md` immer mindestens die zwei neuesten vollständigen Versionen einschließlich Paketen, Entwicklerpaket und gültigen SHA256-Prüfsummen zu erhalten.

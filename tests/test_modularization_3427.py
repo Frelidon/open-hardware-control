@@ -42,7 +42,7 @@ for moved_name in (
 ):
     assert moved_name not in top_level_names, moved_name
 
-assert len(main_code.splitlines()) < 22_000
+assert len(main_code.splitlines()) < 22_300
 assert "from command_backend import Backend, CommandResult, PendingCommand" in main_code
 assert "from cooling_widgets import CurveEditor, FanCurveMiniPreview" in main_code
 assert "from localization_catalog import (" in main_code

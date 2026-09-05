@@ -7,4 +7,5 @@ Icon=@ICON@
 Terminal=false
 Categories=System;Settings;HardwareSettings;
 StartupNotify=true
+StartupWMClass=open-hardware-control
 Keywords=Hardware;NZXT;Kraken;Corsair;OpenLinkHub;OpenRGB;RGB Studio;AIO;Cooling;RGB;LCD;liquidctl;Frelidon;

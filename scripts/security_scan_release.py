@@ -216,6 +216,7 @@ def main() -> int:
         "unexpected_executables": 0,
         "external_svg_references": 0,
         "desktop_network_downloads": 0,
+        "opt_in_verified_plugin_downloads": 1,
         "desktop_modules": {name: sha256(ROOT / name) for name in DESKTOP_MODULES},
         "rgb_modules": {name: sha256(ROOT / name) for name in RGB_MODULES},
         "openrgb_remote_hosts": 0,

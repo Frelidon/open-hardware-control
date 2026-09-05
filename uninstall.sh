@@ -7,6 +7,9 @@ rm -f "$HOME/.local/bin/open-hardware-control-desktop-shell"
 rm -f "$HOME/.local/bin/kraken-control"
 rm -f "$HOME/.local/share/applications/open-hardware-control.desktop"
 rm -f "$HOME/.local/share/icons/hicolor/scalable/apps/open-hardware-control.svg"
+for size in 22 32 48 64 128 256 512; do
+  rm -f "$HOME/.local/share/icons/hicolor/${size}x${size}/apps/open-hardware-control.png"
+done
 rm -f "$HOME/.config/autostart/open-hardware-control.desktop"
 rm -f "$HOME/.config/autostart/open-hardware-control-desktop-shell.desktop"
 rm -rf "$HOME/.local/share/kwin/scripts/ohc-charms"

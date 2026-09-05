@@ -1,6 +1,6 @@
 # Open Hardware Control – zentrale Projektdokumentation
 
-Stand: **3.4.29.9 INTERN**, 30. August 2026
+Stand: **3.4.29.43 STABLE**, 05. September 2026
 
 ## Zielbild
 
@@ -8,7 +8,13 @@ Open Hardware Control by Frelidon ist die gemeinsame, modular erweiterbare Linux
 
 Open Radeon Control Center bleibt ein eigenständiges Projekt. Es wird weder technisch noch organisatorisch in Open Hardware Control verschmolzen.
 
-## Version 3.4.29 INTERN
+## Version 3.4.29.43 STABLE
+
+Version 3.4.29.43 hält ein gespeichertes RGB-Startprofil während einer vorläufigen OpenRGB-Teilerkennung vorgemerkt, wartet begrenzt auf den vollständigen Gerätebestand und startet danach das Design. Die Modulregisterprüfung folgt nun dem tatsächlichen Build-Kanal, sodass der zuvor intern geprüfte 3.4.29-Stand stabil veröffentlicht werden kann.
+
+Version 3.4.29.42 repariert die Wallpaper-Wiedergabesteuerung über das in Plasma registrierte CaptSilver-D-Bus-Objekt und ergänzt Seitenverhältnis, Zuschneiden und Vollbildstreckung pro Zielbildschirm. Das Programmfenster verwendet standardmäßig den Hauptbildschirm, kann einen benannten Monitor dauerhaft wählen und fällt bei dessen Fehlen zurück. Einheitlich schmale Scrollleisten gelten in der gesamten Anwendung. Assistent, geprüfter Fedora-Installer, feste Galeriekarten, schreibgeschützte Workshop-Bibliothek und Originalzustand als Standard bleiben erhalten.
+
+Version 3.4.29.38 modernisiert das RGB-Studio, lagert die hardwarefreie Designgalerie in Modul 1.1 aus und verhindert einen dauerhaft blockierten ENE-Reinitialisierungszustand nach abgewiesenen Befehlen. TRCC Linux 9.9.12 ist die empfohlene kompatible Backend-Version; der reale Levita-Hardwaretest bleibt auf 9.9.11 dokumentiert.
 
 Hotfix 3.4.29.1 ergänzt die beim ersten Modulschnitt fehlenden expliziten Importe für LCD- und Über-Seitentexte. Ein echter Offscreen-Test baut nun alle elf Hauptseiten vollständig auf, ohne Hardwareerkennung zu starten.
 
@@ -26,9 +32,33 @@ Hotfix 3.4.29.8 ergänzt sichere PWM/DC-Umschaltung, globale/einzelne Lüftervor
 
 Hotfix 3.4.29.9 übernimmt den aktuellen TRCC-Linux-Katalog exakt: Gallery `a001–a082`, Tech `b001–b025`, HUD `c001–c072`, Light `d001–d055`, Nature `e001–e054` und Aesthetic `y001–y010`. Lokale Medien und Layoutordner werden nur bei einer gültigen originalen ID automatisch einsortiert und numerisch geordnet; alle anderen Dateien bleiben unter „Eigene Dateien“. Dafür werden weder Herstellerdateien heruntergeladen noch mit OHC ausgeliefert.
 
+Hotfix 3.4.29.10 ergänzt echte getrennte Levita-Ebenen: Ein lokales Video läuft unten, während ein vollständiges importiertes TRCC-Hardwaredesign seine Live-Sensorwerte darüber zeichnet. Die eigene Designmaske wird mit dem rechts oben und unten auf 18 Renderpixel gerundeten Levita-Balken kombiniert, statt sie zu ersetzen. Eine neue Kachel zeigt lokale Bild-/Layout- und kurze Videovorschauen direkt in OHC. Die bislang noch synchrone OpenRGB-Versions- und Inventarabfrage wird ebenfalls ausdrücklich offscreen gestartet und kann beim Programmaufbau kein leeres Hilfsfenster mehr öffnen.
+
+Hotfix 3.4.29.12 baut das Levita-Studio auf moderne Karten für Hintergrund und Datenoberfläche um, animiert lokale Videos in der Hauptvorschau und ergänzt drei eigene OHC-Hintergründe. Ein ausdrücklich aktivierbares Startdesign speichert beide Ebenen, wartet die Desktop-Ruhezeit ab und wiederholt einen fehlgeschlagenen Displaystart genau einmal. Unpassende TRCC-Layoutgeometrien werden auch bei breiten Importen ausgeschlossen; Qt-Desktop-ID und `StartupWMClass` sichern die richtige Plasma-Symbolzuordnung.
+
+Hotfix 3.4.29.13 trennt den gemerkten eigenen Designordner von seiner aktiven Einbindung, sortiert vollständige Live-Themes standardmäßig in Ebene 2 und erlaubt bewusste Ebenenwechsel. Videokarten besitzen Standbild- und Hover-Vorschau. Eigene Levita-Helligkeit und -Ausrichtung verwenden reale TRCC-Befehle. USB-Wechsel werden serialisiert und ein bestätigter Timeout einmal begrenzt wiederholt. Die globalen Gehäuselüfterprofile stehen nun oben in der Zusammenfassung, ohne Kalibrierung oder Aktivierung zu verändern.
+
+Hotfix 3.4.29.14 beseitigt die synchrone Videovorschau-Erzeugung im Qt-Hauptthread. Eine sichtbare Warteschlange mit höchstens zwei `ffmpeg`-Workern hält die Oberfläche bei großen Katalogen bedienbar; erfolgreiche Startbilder bleiben quellversionsgebunden für spätere Programmstarts im OHC-Cache erhalten.
+
+Hotfix 3.4.29.15 erhält Bild- und Videohintergründe beim Wechsel der Datenoberfläche und aktualisiert die kombinierte Vorschau bei jedem Klick auf Ebene 2. Fehlt einem TRCC-Layout die trennbare Hintergrunddatei, zeigt OHC ersatzweise seine vollständige `Theme.png`. Die Vorschau ist mittig auf 960×432 begrenzt und entspricht damit ohne seitliche Leerbalken exakt dem Levita-Format 1600×720.
+
+Hotfix 3.4.29.16 fasst gleiche vollständige Dateinamen im Levita-Katalog zu genau einer Karte zusammen. Bei mehreren Sicherungspfaden wird der normale beziehungsweise kürzeste Pfad bevorzugt; gespeicherte Auswahlen werden automatisch auf diese Datei umgestellt. Benutzerdateien bleiben vollständig unangetastet. Das neue Log identifiziert das schwarze Startfenster außerdem als OHC-eigenes, elternloses und namenloses 640×480-`QFrame`. Nur dieses vollständige Muster wird vor der Anzeige gesperrt; vertiefte Objekt-, Layout-, Kinder-, Elternketten- und Zeitdiagnosen bleiben erhalten.
+
+Hotfix 3.4.29.19 repariert die reale Übertragung dieser bearbeiteten Ebene. OHC akzeptiert sein geprüftes natives Cache-`trcc.json` jetzt wie TRCC Linux als vollständiges Theme und verlangt dafür kein künstliches `config1.dc`. Auswahlwechsel vermeiden außerdem unnötige Karten- und Vorschau-Neuaufbauten.
+
+Hotfix 3.4.29.24 integriert die geprüften 22/23-Korrekturen in den vollständigen Repository-Stand: beschädigte Layout-Einträge werden einzeln übersprungen, Symlink-Themes abgewiesen, der Split-Standard ist sicher Aus, Rendererstart wird bestätigt und Vorschauprozesse werden beim Beenden geschlossen. Das aktuelle Levita-Fachmodul ist 1.2. Hotfix 3.4.29.21 übernahm zuvor eine gewählte Ebene-1-Karte sofort in die große Vorschau und rundete nur die äußeren rechten Displayecken; die Innenkante des Notchbalkens blieb gerade.
+
+Hotfix 3.4.29.20 bringt Editor und reales Levita-Display geometrisch zusammen: Alle TRCC-Textkoordinaten sind Blockmittelpunkte, animierte Hintergrundframes ersetzen keine Drag-Objekte mehr und eine erneut gewählte Hintergrundkarte wird unmittelbar neu geladen. Die Kraken-Kühlmittelkarte erscheint nur bei verbundenem Kraken und tatsächlich geliefertem Temperaturwert.
+
+Hotfix 3.4.29.18 macht die Levita-Datenoberfläche 2 vollständig editierbar. Logische Datenblöcke bleiben intern zusammen, können aber jeweils einzeln gezogen und über ein Kontextmenü angepasst werden; die gesamte Ebene besitzt zusätzliche X/Y-Offsets. Die Fachlogik ist in einem versionierten Modulordner getrennt, und das verpflichtende Modulregister hält Pfade, Versionen und kleine Kontextbudgets für künftige Coding-KIs fest.
+
+Hotfix 3.4.29.17 ersetzt das generische Symbol des Plasma-Systemabschnitts durch das kompakte OHC-Emblem. Eine eigene 22×22-Datei ergänzt die installierten Icongrößen; das Tray erhält ausschließlich die projektbezogene 22/32/48/64-Rasterstaffelung.
+
+Hotfix 3.4.29.11 protokolliert zur Ursachenfindung des weiterhin sichtbaren leeren Startfensters jedes eigene Qt-Top-Level-, Dialog-, Popup- und Werkzeugfenster samt nativer Oberflächenerzeugung. Gestartete Helferprozesse tragen Programm, sichere Befehlsmerkmale und `QT_QPA_PLATFORM` in das sichtbare sowie das frühe dauerhafte Startprotokoll ein. Die Levita-Rundung zeigt ausschließlich nach innen zum Display, während die rechte Außenkante bündig bleibt.
+
 Hotfix 3.4.29.7 unterdrückt die native OHC-Fensteroberfläche bereits vor dem Aufbau eines minimierten KDE-/Wayland-Tray-Autostarts und verhindert damit das fotografierte schwarze Zwischenfenster. Zusätzlich laufen auch alle kurzlebigen OpenRGB-Qt-Clients offscreen. Für den fest installierten, eng begrenzten NCT6687-Helfer stehen „Dauerhafte Berechtigung erteilen“ und „Dauerhafte Berechtigung entfernen“ bereit; die benutzerspezifische Polkit-Regel speichert kein Passwort und ändert nichts an Kalibrierung, Besitzschutz, Watchdog oder Firmware-Rückgabe.
 
-Die LCD-Seite enthält ein lokales Thermalright-Levita-Studio mit echter 1600×720-Arbeitsfläche, geschützter rechter 80-Pixel-Aussparung, lokalen Medien-/TRCC-Imports und frei positionierbaren CPU-, GPU-, RAM- und Uhrzeitwerten. Der Testmodus schreibt standardmäßig nicht auf USB; reale Übertragung wird ausschließlich an das separat installierte GPL-Backend TRCC Linux delegiert.
+Die LCD-Seite enthält ein lokales Thermalright-Levita-Studio mit echter 1600×720-Arbeitsfläche, geschützter rechter 80-Pixel-Aussparung und getrennten Hintergrund-/Hardwaredaten-Ebenen. Ein lokales Video kann hinter einem vollständigen TRCC-Layout mit live aktualisierten Sensorwerten laufen; alternativ bleiben CPU, GPU, RAM und Uhr frei positionierbar. Der Testmodus schreibt standardmäßig nicht auf USB; reale Übertragung wird ausschließlich an das separat installierte GPL-Backend TRCC Linux delegiert.
 
 Für die Thermalright Levita Vision 360 ARGB Black sind Display und Kühlung bewusst getrennt. Das USB-Gerät identifiziert das Display, während Pumpe und Radiatorlüfter über einzeln ausgewählte und physisch bestätigte Mainboard-PWM-Header laufen. Leise, Ausbalanciert, Leistung, Sicherheit und CPU-Temperaturkurven werden erst nach dem 70-%-/10-s-Test freigegeben. CoolerControl blockiert parallele Zugriffe, verwendete Header gehen beim Beenden an BIOS/Firmware zurück, und ein nicht vorhandener Kühlmittelsensor wird nicht simuliert.
 

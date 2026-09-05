@@ -1,4 +1,4 @@
-# Unterstützte Geräte – Open Hardware Control 3.4.29.9 INTERN
+# Unterstützte Geräte – Open Hardware Control 3.4.29.43
 
 ## Direkt getestetes NZXT-Modul
 
@@ -13,7 +13,7 @@ Der Schwerpunkt bleibt die NZXT Kraken RGB 360 (2023, Standard / Non-Elite) mit 
 
 | Teilpfad | Erkennung/Anschluss | Backend | Umfang und Status |
 |---|---|---|---|
-| Display | USB `87ad:70db` (`USBDISPLAY`) | separat installiertes GPL-Backend TRCC Linux 9.9.11 | Handshake Modell-ID 64/Sub 3 mit 1600×720 und sichtbarer Rot-/Grün-/Blau-/Schwarz-Übertragung bestätigt; vollständiger OHC-Design-/Overlay-Dauertest noch offen |
+| Display | USB `87ad:70db` (`USBDISPLAY`) | separat installiertes GPL-Backend TRCC Linux 9.9.12 empfohlen; 9.9.11 getestet | Handshake Modell-ID 64/Sub 3 mit 1600×720 und sichtbarer Rot-/Grün-/Blau-/Schwarz-Übertragung unter 9.9.11 bestätigt; 9.9.12 ist CLI-/Daemon-kompatibel und behebt den Fedora-RPM-Konflikt, wurde am Referenzdisplay aber noch nicht erneut getestet |
 | Pumpe | 4-Pin PWM, vom Linux-Treiber typischerweise als `Pump Fan` gemeldet | Linux hwmon/NCT6687 | RPM read-only erkannt; Schreiben erst nach separatem 70-%-/10-s-Test |
 | Radiatorlüfter | 4-Pin PWM, vom Linux-Treiber typischerweise als `CPU Fan` gemeldet | Linux hwmon/NCT6687 | RPM read-only erkannt; Schreiben erst nach separatem 70-%-/10-s-Test |
 
@@ -26,6 +26,35 @@ TRCC Linux 9.9.11 verwendet für die dekorativen Split-Modi A–C unter PySide6 
 OHC 3.4.29.8 richtet die eigene transparente Vollbildmaske nach der aktuellen Referenzaufnahme standardmäßig auf 80 Pixel und den Hintergrund auf X/Y 0 aus; die Breite bleibt zwischen 80 und 800 Pixeln einstellbar und kann direkt in der Vorschau gezogen werden. Bilder und übliche Videos werden immer seitenrichtig in eine lokale 1600×720-Cache-Arbeitskopie eingepasst oder optional unverzerrt beschnitten; komplette TRCC-Layouts und `.zt`-Dateien bleiben unverändert. Elementpositionen besitzen eine lokale Rückgängig-Historie, und `%`/Temperaturzeichen werden über den passenden TRCC-Einheitenpfad erhalten.
 
 OHC 3.4.29.9 übernimmt die originalen TRCC-Kategorien samt gültigen ID-Bereichen: Gallery `a001–a082`, Tech `b001–b025`, HUD `c001–c072`, Light `d001–d055`, Nature `e001–e054` und Aesthetic `y001–y010`. Bereits vorhandene lokale Medien und Layoutordner werden anhand dieser ID einsortiert und numerisch geordnet. Unbekannte, fehlerhafte oder außerhalb des Bereichs liegende Namen bleiben unter „Eigene Dateien“; es werden keine Herstellerdateien geladen oder ausgeliefert.
+
+OHC 3.4.29.10 verwendet für den schwarzen rechten Balken in Editor und realer Maskendatei einen dezenten Radius von 18 Renderpixeln an Ober- und Unterkante. Die neue Hover-Kachel zeigt nur lokale Vorschauen; bei gewöhnlichen Videos erzeugt das vorhandene `ffmpeg` bis zu vier kleine Cacheframes, die OHC selbst abspielt. Es startet weder einen externen Player noch einen Netzwerkabruf.
+
+Zusätzlich trennt OHC 3.4.29.10 den Videohintergrund vom vollständigen Hardwaredaten-Design. Im Zwei-Ebenen-Modus lädt OHC zuerst den lokalen TRCC-Layoutordner, wodurch TRCC Linux dessen `config1.dc` als live aktualisierte Sensoranordnung übernimmt, und ersetzt anschließend nur den Hintergrund mit `play-video`. Die zum Design gehörende `01.png` wird mit dem rechten Levita-Balken alpha-komponiert. Diese Sequenz folgt dem vorhandenen Backendvertrag; ihr Dauertest auf dem physischen Display bleibt wie die übrige vollständige OHC-Designübertragung noch offen.
+
+OHC 3.4.29.11 richtet den Radius ausschließlich an den beiden zum sichtbaren Display zeigenden Balkenecken aus; die rechte physische Außenkante bleibt bündig schwarz. Die zusätzlich aktive Fenster-/Helferprozessdiagnose verändert keine USB-, PWM- oder Backendgrenze und liest unter Wayland keine Fenster fremder Anwendungen aus.
+
+Zusätzlich erkennt OHC die von TRCC Linux installierten vollständigen Levita-Landschaftsdesigns unter `~/.trcc/data/theme1600720l` automatisch. Ein solches Layout kann seinen eigenen Hintergrund und seine vorhandene `config1.dc` mit Live-Positionen, Farben und Sensorwerten direkt übernehmen oder als obere Datenebene über einem anderen lokalen Video dienen. Andere TRCC-Geometrien werden nicht als Levita-Design angeboten; Erkennung und Vorschau lösen keinen USB-Schreibzugriff aus.
+
+OHC 3.4.29.12 stellt Hintergrund und Datenoberfläche als Karten dar und animiert Videos direkt in der großen Hauptvorschau. Carbon Blue, Titanium Blue und Plasma Circuit sind projektbezogene lokale 1600×720-Hintergründe. Breit gewählte TRCC-Elternordner liefern nur dann ein Live-Layout, wenn `1600720l` im Geometriepfad oder eine exakt 1600×720 große PNG-Vorschau die Levita-Fläche bestätigt. Der ausdrücklich aktivierbare Display-Autostart speichert beide Ebenen, bleibt im Testmodus schreibgeschützt und versucht ein beim Desktopstart noch nicht bereites Display höchstens einmal erneut.
+
+OHC 3.4.29.13 trennt Bilder/Videos von vollständigen `config1.dc`-Datenoberflächen und erlaubt eine ausdrückliche manuelle Ebenenabweichung. Eigene Ordner können ohne Dateilöschung ausgeblendet und samt letzter Auswahl wieder aktiviert werden. Helligkeit und Ausrichtung sind echte, auf Levita begrenzte TRCC-Befehle. USB-Designwechsel warten auf die Freigabe des vorherigen Renderers und wiederholen einen bestätigten Handshake-Timeout höchstens einmal.
+
+OHC 3.4.29.14 erzeugt die Startbilder großer Videokataloge über höchstens zwei Hintergrund-Worker. Ein Fortschrittsbalken bleibt sichtbar, bis die Warteschlange abgeschlossen ist; unveränderte Ergebnisse werden bei späteren Programmstarts direkt aus dem dauerhaften Cache geladen.
+
+OHC 3.4.29.15 zeigt die gewählte Ebene‑2-Datenoberfläche auch über einem Bildhintergrund und nutzt bei unvollständigen TRCC-Layouts deren vollständige `Theme.png` als Vorschau. Die mittige Vorschau besitzt ohne seitliche Leerbalken exakt das Levita-Verhältnis 1600×720.
+
+OHC 3.4.29.16 zeigt gleiche vollständige Dateinamen unabhängig vom Sicherungspfad nur einmal. Andere Namen oder Dateiendungen bleiben getrennt; keine Originaldatei wird gelöscht, verschoben oder verändert.
+
+OHC 3.4.29.18 macht die Datenoberfläche 2 editierbar. Jeder logische Live-Block lässt sich einzeln ziehen; getrennt importierte CPU-/GPU-Beschriftungen und ihre Auslastungswerte werden dabei als gemeinsamer Block behandelt. Rechtsklick ändert Farbe, Schriftgröße und Text beziehungsweise Bezeichnung, während Gesamt-X/Y die komplette Ebene verschiebt. OHC speichert nur eigene Overrides und ein Cache-`trcc.json`; `config1.dc`, Bilder und Videos werden nicht überschrieben.
+
+OHC 3.4.29.19 behebt den Übertragungsabbruch dieses Cache-Layouts. Der vorgeschaltete OHC-Check akzeptiert jetzt wie TRCC Linux entweder ein vorhandenes `config1.dc` oder ein geprüftes natives `trcc.json` mit 1600×720-Geometrie. Bestehende `editable-themes/theme-*`-Ordner werden direkt wiederverwendet; fehlerhaftes JSON und fremde Geometrien bleiben gesperrt.
+
+OHC 3.4.29.21 übernimmt eine gewählte Ebene-1-Karte sofort in die große Vorschau und rundet nur die äußeren rechten Displayecken; die Innenkante des Notchbalkens bleibt gerade.
+OHC 3.4.29.24 isoliert beschädigte Layoutdatensätze, weist symlink-verlinkte Theme-Dateien ab, startet Split-Vorschauen sicher auf Aus und bestätigt den Rendererstart vor der Aktivmeldung. USB-Protokoll und Hardwaregrenzen bleiben unverändert.
+
+OHC 3.4.29.35 liest zusätzlich projekt-eigene und importierte native 1600×720-`trcc.json`-Layouts ein. Ebene 1 und 2 stehen nebeneinander; ein Kartenmenü weist komplette Themes ausdrücklich einer Ebene zu und verwaltet Favoriten, ohne Originaldateien zu verändern. Nebula Drift und Orbital Command sind eigene, mit OpenAIs eingebautem Bildgenerator erzeugte OHC-Grafiken; Orbital Command enthält CPU-/GPU-Auslastung, Temperatur, Takt und GPU-Speicherbelegung. Die acht vom Projektinhaber gezeigten Sci-Fi-Bilder dienten ausschließlich als Stilreferenz und werden nicht zusätzlich kopiert oder verpackt.
+
+OHC 3.4.29.20 verwendet für Textblöcke dieselben Mittelpunkt-Koordinaten wie TRCC Linux. Videoframes aktualisieren nur noch Ebene 1, ohne die verschiebbaren Elemente der Ebene 2 neu zu erzeugen. Dadurch bleiben Uhr und Sensorblöcke beim Ziehen stabil; die Vorschau lädt den gewählten Hintergrund auch bei erneuter Auswahl sofort neu.
 
 Nach einer ausdrücklichen Polkit-Administratorfreigabe verwendet OHC für wiederholte Kurvenwerte eine einzige prozessgebundene Helfersitzung. Deren Protokoll akzeptiert weiterhin ausschließlich begrenzte, validierte NCT6687-Aktionen; beim Programmende wird zuerst die Firmwaresteuerung wiederhergestellt und danach die Sitzung geschlossen. Dadurch entsteht nach Ablauf des kurzfristigen Polkit-Caches kein neuer Hintergrunddialog für jeden Kurvenwert.
 
@@ -50,6 +79,8 @@ Eine Maustaste ist direkt belegbar, wenn OpenLinkHub für sie einen eindeutigen 
 Version 3.4.23 besitzt bewusst keine kopierte OpenRGB-USB-Geräteliste. OHC startet das installierte Backend selbst als privaten, fensterlosen Kindprozess und zeigt ausschließlich die von ihm gemeldeten Geräte, Zonen, LEDs und Modi an. Damit entspricht die Hardwareabdeckung der installierten OpenRGB-Version und deren aktivierten Treibern/udev-Regeln.
 
 Auch die kurzlebigen OpenRGB-Clientprozesse für Geräteinventar und native Moduswechsel werden ausdrücklich mit einer Offscreen-Qt-Plattform gestartet. Damit können GUI-basierte OpenRGB-Builds beim OHC-Start kein leeres Hilfsfenster mehr öffnen.
+
+Seit 3.4.29.10 gilt diese Offscreen-Umgebung ausdrücklich auch für die synchrone Versionsabfrage beim Aufbau der Über-Seite und den direkten Inventar-Hilfspfad.
 
 Ein unerwartet abgestürzter privater OpenRGB-Prozess wird seit 3.4.29.8 für den Rest der laufenden OHC-Sitzung nicht automatisch neu gestartet. Erst „RGB-Geräte neu erkennen“ hebt diese Sperre bewusst auf; dadurch entstehen bei einem fehlerhaften OpenRGB-Gerätetreiber keine wiederholten Coredumps.
 

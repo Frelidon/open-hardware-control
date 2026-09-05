@@ -95,6 +95,8 @@ BUILTIN_DESIGNS: tuple[tuple[str, RGBEffectConfig], ...] = (
     ("Synth-Wechsel", RGBEffectConfig("alternating", "ff1678", "13d8ff", 88, 112)),
     ("Sternenstaub", RGBEffectConfig("sparkle", "102a4f", "ffffff", 85, 70)),
     ("Glühwürmchen", RGBEffectConfig("sparkle", "062b16", "76ff82", 82, 52, 1, 11939)),
+    ("Aurora-Vortex", RGBEffectConfig("spinner", "126dff", "b35cff", 92, 74, 1, 24091)),
+    ("Galaxie-Komet", RGBEffectConfig("comet", "081a52", "5de8ff", 96, 92, -1, 30917)),
 )
 
 # Categories are presentation metadata only.  Keeping them separate preserves
@@ -102,7 +104,7 @@ BUILTIN_DESIGNS: tuple[tuple[str, RGBEffectConfig], ...] = (
 BUILTIN_DESIGN_CATEGORIES: tuple[str, ...] = (
     "Ruhig", "Ruhig", "Ruhig", "Ruhig", "Spektrum", "Spektrum", "Energie", "Energie",
     "Bewegung", "Bewegung", "Spektrum", "Spektrum", "Bewegung", "Bewegung",
-    "Impuls", "Impuls", "Energie", "Energie",
+    "Impuls", "Impuls", "Energie", "Energie", "Spektrum", "Bewegung",
 )
 
 

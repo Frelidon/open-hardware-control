@@ -1,8 +1,9 @@
-# Software and links – Open Hardware Control 3.4.29.9 INTERNAL
+# Software and links – Open Hardware Control 3.4.29.43
 
 | Component | Purpose | Project | License |
 |---|---|---|---|
 | Open Hardware Control | shared UI and integration logic | internal project; previous [Kraken repository](https://github.com/Frelidon/kraken-control-linux) as module history | GPL-3.0-or-later |
+| Wallpaper Engine for KDE | optional separate Plasma plugin; OHC reads local libraries and, on Fedora after explicit consent, can verify the matching official release RPM against its published SHA256 before handing it to Polkit/DNF | [CaptSilver on GitHub](https://github.com/CaptSilver/wallpaper-engine-kde-plugin) | GPL-2.0; Wallpaper Engine itself is proprietary and separate |
 | OpenLinkHub | local Corsair hardware service and API | [GitHub](https://github.com/jurkovic-nikola/OpenLinkHub), [API](https://github.com/jurkovic-nikola/OpenLinkHub/blob/main/api/README.md) | GPL-3.0 |
 | OpenRGB | optional local SDK/hardware service for additional RGB devices; not vendored | [Website](https://openrgb.org/), [GitLab](https://gitlab.com/CalcProgrammer1/OpenRGB), [SDK](https://openrgb.org/sdk.html) | GPL-2.0-or-later |
 | OpenRGB Effects Plugin | function/licence reference only; no code or assets are vendored | [GitLab](https://gitlab.com/OpenRGBDevelopers/OpenRGBEffectsPlugin) | GPL-2.0-or-later |

@@ -1,5 +1,264 @@
 # Changelog
 
+## 3.4.29.43 STABLE
+
+- Stellt die neue Unterstützung für das 1600×720-Display der **Thermalright Levita Vision 360 ARGB Black** als Release-Highlight heraus und bündelt elf eigene OHC-Hintergründe, zwei OHC-Datenlayouts sowie genau eine deduplizierte 30-Sekunden-KI-Animation. Hersteller-/TRCC-Katalogmedien und importierte Benutzerdateien bleiben vollständig außerhalb des Repositorys und der Releasepakete.
+- Verhindert, dass ein gespeichertes RGB-Startprofil während der absichtlich zurückgehaltenen ersten OpenRGB-Teilerkennung endgültig verworfen wird. Der Profilstart bleibt nun exklusiv vorgemerkt, wartet begrenzt auf den vollständigen Gerätebestand und übernimmt anschließend das gespeicherte Design.
+- Korrigiert die Release-Prüfung des Modulregisters: Sie validiert jetzt den tatsächlich in `BUILD_CHANNEL` gesetzten Kanal und unterstützt dadurch sowohl interne als auch stabile Builds.
+- Trennt den temporären RPM-Quellbaum vom gleichnamigen stabilen Laufzeit-ZIP-Baum, sodass der erste `STABLE`-Paketbau nicht mehr mit `FileExistsError` abbricht.
+- Übernimmt die geprüften Wallpaper-Engine-, Fensterplatzierungs-, RGB-Studio-, Levita-, Diagnose-, Paketierungs- und Oberflächenänderungen der internen 3.4.29-Reihe in den stabilen Veröffentlichungsstand.
+
+## 3.4.29.42 INTERN
+
+- Repariert Zurück, Pause, Fortsetzen, Weiter und Ton umschalten im Wallpaper-Engine-Bereich. Pause, Fortsetzen, Weiter und Ton adressieren das vom installierten CaptSilver-v1.4-Plugin tatsächlich unter `org.kde.plasmashell` registrierte Objekt `/WallpaperEngine`; Zurück nutzt die vorherige lokale Workshop-Karte, weil CaptSilver v1.4 seine veröffentlichte Previous-Methode intern noch als Vorwärtssprung ausführt.
+- Ergänzt die drei originalen CaptSilver-Skalierungswerte „Seitenverhältnis beibehalten“, „Skalieren und zuschneiden“ und „Auf Vollbild strecken“. Die Wahl gilt ausdrücklich für das ausgewählte Bildschirmziel und verändert keine Workshop- oder Plugin-Dateien.
+- Startet das Hauptfenster standardmäßig auf dem von Qt/KDE gemeldeten Hauptbildschirm. In Einstellungen → Anzeige und DPI kann stattdessen ein benannter Monitor dauerhaft gewählt werden; ein nicht verbundener Zielmonitor fällt sicher auf den Hauptbildschirm zurück. KWin behält unter Wayland die endgültige Platzierungsentscheidung.
+- Vereinheitlicht vertikale und horizontale Scrollleisten in der gesamten Anwendung auf ein schmales acht Pixel breites beziehungsweise hohes, zum Akzent passendes Design.
+- Führt Wallpaper Engine als Modul 1.2 und die reine Fensterplatzierungsrichtlinie als Modul 1.0. Erststart-Assistent, sicherer optionaler Installer, feste Galeriekarten, Originalprofil und rücksetzbare Optimierung bleiben unverändert erhalten.
+
+## 3.4.29.41 INTERN
+
+- Zeigt beim ersten bewussten Öffnen von Wallpaper Engine eine vollständige Schritt-für-Schritt-Einrichtung und hält sie über „Einrichtungsassistent öffnen“ dauerhaft erreichbar. Steam- und Workshop-Aktionen empfehlen mindestens fünf fertig geladene Abonnements und eine anschließende Bibliotheksprüfung.
+- Bietet auf Fedora eine ausdrücklich bestätigte automatische CaptSilver-Plugin-Installation. Das passende stabile RPM wird anhand Fedora-Hauptversion und Architektur ausschließlich vom offiziellen GitHub-Release gewählt, als normaler Benutzer begrenzt heruntergeladen und gegen die dort veröffentlichte SHA256-Prüfsumme geprüft. Erst eine zweite Bestätigung startet den festen `pkexec dnf install`-Befehl; Passwort und Administratorentscheidung bleiben vollständig bei Polkit.
+- Lässt andere Distributionen bei der offiziellen Anleitung, statt Paketnamen oder privilegierte Befehle zu erraten. Wallpaper Engine selbst bleibt ein separat über Steam zu installierendes Produkt.
+- Fixiert Icon- und Kartenmaße der Wallpaper-/Videogalerie auch nach dem automatischen Refresh eines angewendeten Wallpapers. Eine verzögerte Layout-Neuberechnung ersetzt den bisher nötigen Fenstergrößenwechsel.
+- Ordnet die Standardnavigation als Übersicht, Kühlung, RGB-Studio, LCD, Wallpaper Engine, optional Corsair/OpenLinkHub, Profile, Einstellungen, Über und Log. Nur exakt frühere Standardfolgen werden migriert; eigene Reihenfolgen bleiben erhalten. Das weiterhin experimentelle Desktop-Design-Modul bleibt außerhalb dieser sichtbaren Standardfolge am Ende.
+- Verschiebt eine eigene themengleiche Hauptfenster-Titelleiste bewusst in eine Folgeversion. 3.4.29.41 behält Kwins native Dekoration, bis Wayland-/X11-Verschieben, Resize, Maximieren, Tastaturzugriff und minimierter Tray-Start separat abgedeckt sind.
+
+## 3.4.29.40 INTERN
+
+- Add a dedicated Wallpaper Engine page with read-only Steam Workshop discovery, local preview cards, type/search filters, per-screen targeting and a separate personal-video category.
+- Apply selected workshop wallpapers or personal videos through Plasma's documented scripting configuration surface and expose CaptSilver's local D-Bus playback controls.
+- Open Plasma's original wallpaper KCM for advanced plugin options instead of embedding or copying the upstream QML surface.
+- Keep CaptSilver v1.4 stock settings as the default and add a reversible optional performance profile without installing the removed plugin patches, cache builders or watchers.
+- Reject a Steam library as the personal-video folder, preventing the recursive scan that caused the reported multi-second UI stalls.
+
+## 3.4.29.39 INTERN
+
+- Suppress routine Qt tooltip surfaces and direct `QComboBox` popup frames from temporary window diagnostics, eliminating misleading window-open/close noise from normal controls.
+- Keep diagnostics active for unrelated popups and retain the exact quarantine for the known parentless, untitled 640×480 startup `QFrame`.
+
+## 3.4.29.38 INTERN
+
+- Modernize RGB Studio with embedded engine controls, explicit on/off buttons, effect-aware persistent colour editing by right-click, a 0–100% overall RGB brightness slider and an in-page native hardware-channel result list.
+- Ensure rejected RGB command sequences complete their failure callback so ENE-DRAM reinitialization cannot remain stuck and disable its retry button for the rest of the session.
+- Move the hardware-free design gallery into versioned RGB Studio module 1.1, keeping the main orchestrator below its enforced size limit.
+- Recommend the compatible TRCC Linux 9.9.12 backend, whose upstream Fedora RPM no longer conflicts with the distribution `python3-sounddevice` package; retain 9.9.11 as the physically tested Levita baseline.
+
+## 3.4.29.37 INTERN
+
+- Preserve explicit percent, temperature, clock and memory units in both bundled Levita live layouts and migrate saved OHC overrides without requiring a reset.
+- Add persistent 25–150% intensity controls directly above both LCD layer galleries; Orbital Command defaults to 130%, while Nebula Drift stays at 100%.
+- Guard TRCC 9.9.11's misinterpreted low-Hz AMD idle-clock range through 1,000,000 Hz via the existing daemon socket and restore the dynamic format when the sensor recovers.
+- Add a dedicated hardware-anomaly Log view plus low-frequency plausibility checks that report only new issues and recovery.
+
+## 3.4.29.36 INTERN
+
+- Create a complete local backup after every successful version build in the sibling `Open Hardware Control Backup` directory, including runtime and developer archives, source snapshot, Local-AI Git bundle, generated RPM/DEB files, release notes and fresh SHA256 checksums.
+- Keep the newest two semantic version directories atomically while preserving every unrelated file or folder and refusing recursive backups inside the repository.
+- Teach GitHub Copilot, Cursor and local coding agents the same mandatory backup policy, without restoring the removed cloud-backup workflow or making backups a GitHub push gate.
+
+## 3.4.29.35 INTERN
+
+- Repair the stale TRCC-daemon connection left after a Levita unplug or power loss: every explicit design apply now performs a tolerated daemon detach followed by a mandatory fresh 1600×720 handshake before changing display state.
+- Use the same serialized reconnect barrier for the physical colour test and independent brightness/orientation actions, preventing OHC from reporting success against a cached handshake whose USB transport is already closed.
+- Validate the recovery on the attached 87ad:70db device: disconnect, reconnect, model-64 handshake, four-colour transfer and saved 148-frame theme restore all completed successfully without further transport errors.
+
+## 3.4.29.34 INTERN
+
+- Restore application of OHC's private editable Levita cache themes: validated staged artwork links are accepted at runtime, while the external folder-import boundary continues to reject symlinked theme inputs.
+- On every controlled application shutdown, stop the Levita video/stream client and issue one bounded 1.5-second offscreen `display stop-video` request through the existing TRCC daemon so the active original theme returns.
+- Add regressions for real staged-theme command construction, strict imported-theme isolation and the bounded shell-free shutdown request.
+
+## 3.4.29.33 INTERN
+
+- Persist the selected RGB Studio design and its per-design one- or two-colour overrides, keeping the selected card visibly outlined after a restart; add Aurora Vortex and Galaxy Comet presets.
+- Add a bounded ENE-DRAM cold-start recovery: one immediate native Direct reclaim followed by three precautionary retries after 45 seconds, 2 minutes and 4 minutes, each followed by the current OHC design.
+- Reorganize the Levita LCD library as two large side-by-side layer panels with custom-folder import, direct layer assignment, persistent favourites and a favourites-only filter.
+- Migrate the Levita notch once to its physical 80-pixel minimum so existing installations also start with the maximum usable image area; later user changes remain persistent.
+- Bundle two original project-owned 1600×720 space data surfaces: Nebula Drift and Orbital Command; the latter shows CPU/GPU load, temperature and clocks plus GPU memory usage.
+- Reduce the default/global UI scale and common control padding, and rebuild About software links plus supported-device information for About and Help.
+
+## 3.4.29.32 INTERN
+
+- Restore readable left navigation in the light theme: the sidebar uses a light rail, dark item text and a dark selected-item color instead of white text on a pale highlight.
+- Move the LCD “Design anpassen” panel to a right-hand column beside the live preview so the controls keep full width instead of sitting in a squeezed strip under the canvas.
+- Lay out layer-1 and layer-2 design cards in a full-width grid of 4–8 columns so Gallery, Tech, HUD/Art, Light, Nature, Aesthetic, OHC backgrounds and custom files need less vertical scrolling.
+
+## 3.4.29.31 INTERN
+
+- Make the LCD “Design anpassen” panel readable: number fields and combo boxes keep a usable height and width, the black-bar checkbox gets its own full-width row, and the settings group no longer shrinks below its natural size.
+- Stop window diagnostics from writing into the already destroyed log widget during shutdown, so a normal SIGTERM/Qt quit no longer prints Shiboken `QPlainTextEdit already deleted` errors.
+
+## 3.4.29.30 INTERN
+
+- Round the right edge of the selected Levita image/video at its boundary with the black camera/notch bar instead of placing the curve at the physical outer panel edge.
+- Add embedded top-right and bottom-right radius controls with a 48 px default, 0–240 px bounds, linked adjustment by default and optional independent adjustment.
+- Share one pure geometry implementation between the live preview and generated TRCC mask so the editor and physical display use the same curve.
+- Keep the separately rounded physical panel outline independent and do not render the red guide drawn on the reference photograph.
+- Raise the Levita data-surface module from 1.3 to 1.4 and retain only `modules/lcd_levita/v1_4/` as its current implementation.
+
+## 3.4.29.29 INTERN
+
+- Explicitly apply and enable the generated full-canvas `01.png` after loading an editable Levita cache theme, restoring both the original layer-2 artwork and the right physical-notch cover when persisted TRCC state had `mask_visible=False`.
+- Restore animated display backgrounds with a long-running `display play` ticker that is strictly a `TRCC_DAEMON=1` Unix-socket client; the existing daemon remains the sole USB owner and no second libusb/hidapi App is created.
+- Start the ticker only for video-backed media, stop it before a design change and terminate it during Stop/Shutdown so static designs do not pay the animation cost.
+- Fit the bounded 16-frame selected-video preview sequence once after loading instead of rescaling every frame to 1600×720 on each 250 ms UI tick.
+- Keep the Levita data-surface module at 1.3 because the layout/staging contract is unchanged; this is an orchestration correction backed by TRCC runtime logs.
+
+## 3.4.29.28 INTERN
+
+- Route every OHC TRCC command through TRCC's documented `TRCC_DAEMON=1` mode so one long-lived backend process owns the Levita USB transport and later commands reuse its connected App through the Unix socket.
+- Remove OHC's second `trcc display play` process after a successful `load-theme`; the daemon already owns the metrics/render loop and advances the staged video and live values itself.
+- Force TRCC client processes offscreen while preserving the daemon's hardware ownership, preventing extra Qt surfaces without creating another in-process USB owner.
+- Add real Qt regression coverage for the daemon environment and for successful apply completion without a separate renderer process.
+- Keep the Levita data-surface module at 1.3 because this is a transport/orchestration correction outside its stable layout and staging contract.
+
+## 3.4.29.27 INTERN
+
+- Preserve the alpha channel of editable layer-2 artwork while fitting it to the 1600×720 canvas, so it no longer becomes an opaque black surface that hides the selected layer-1 image or video.
+- Expand the selected-video preview to a bounded 16-frame, 4-FPS sequence at 800-pixel extraction width and animate it in the large Levita canvas at 250 ms per frame.
+- Give selected-video preview frames a new cache generation so previously generated four-frame hover caches cannot mask the corrected behavior.
+- Detect a crashed TRCC `QProcess` explicitly, stop automatic USB attempts and report the external backend/libusb crash separately from an ordinary command failure.
+- Keep the Levita data-surface module at 1.3; this correction belongs to the legacy media/UI orchestration boundary and does not change the module contract.
+
+## 3.4.29.26 INTERN
+
+- Stage the selected Levita background video, generated panel mask and editable layer-2 blocks as one cache theme so TRCC applies the composition through one connected `load-theme` session instead of separate `load-theme`, `play-video` and `apply-mask` handshakes.
+- Coalesce rapid complete-design requests behind a ten-second post-start USB protection interval; the latest selected combination is applied when the interval ends.
+- Limit a handshake-timeout path to one retry in total and stop the former nested startup retry from repeatedly addressing an already unresponsive display.
+- Report the required complete display power cycle when the USB device remains enumerated but endpoint `0x81` no longer answers the handshake.
+- Bump the Levita data-surface/staging module from 1.2 to 1.3 and keep only `modules/lcd_levita/v1_3/` as the current implementation.
+
+## 3.4.29.25 INTERN
+
+- Clarify that `BUILD_CHANNEL=INTERN` blocks public release publication but does not block a normal, explicitly owner-requested push to a tested non-release development branch or an explicitly requested pull request.
+- Separate authorization for a normal branch push from pull requests, tags, public releases, force-pushes and remote deletion so coding agents cannot treat one permission as approval for another action.
+- Remove contradictory publication-guide wording and make the default no-push instruction explicitly overridable only by a concrete project-owner request.
+
+## 3.4.29.24 INTERN
+
+- Review and integrate all five code fixes from the incomplete 3.4.29.22/23 comparison archives into the complete repository instead of replacing the trusted source tree.
+- Continue parsing bounded Levita layer-2 JSON after an individual malformed element and reject symlinked `config1.dc`, `Theme.png` and `00.png` theme inputs.
+- Default missing/corrupt split-mode settings to safe Off through the pure module policy, report a livestream active only after `QProcess.started`, retain the bounded autostart retry on `FailedToStart`, and stop hover-preview timers plus ffmpeg on shutdown.
+- Bump the Levita data-surface module from 1.1 to 1.2 and keep only `modules/lcd_levita/v1_2/` as the current implementation.
+- Validate package profiles during every build: the runtime ZIP intentionally excludes development folders, while the developer ZIP must contain the complete repository test inventory, release scripts, workflows and tools.
+- Build the Local-AI Git bundle from a temporary snapshot commit of that exact validated developer tree, so uncommitted release work cannot produce a correctly named but stale bundle. The working repository remains untouched.
+
+## 3.4.29.23 INTERN
+
+- Introduce safe split-mode fallback, renderer-start confirmation and hover-preview process cleanup in the intermediate deep-bugfix archive. Full-repository integration and verification follow in 3.4.29.24.
+
+## 3.4.29.22 INTERN
+
+- Introduce malformed-layout-record recovery and symlink-safe TRCC theme discovery in the intermediate bugfix archive. Full-repository integration and verification follow in 3.4.29.24.
+
+## 3.4.29.21 INTERN
+
+- Paint a selected Ebene-1 background card into the large Levita preview in the same click, using the image itself or a cached first video frame instead of a black intermediate canvas.
+- Round only the physical outer-right display corners. Keep the camera/notch bar's inner edge a straight vertical split in preview, generated mask and prepared cache images.
+- Extract the panel outline into `modules/lcd_levita/v1_1/panel_geometry.py` so local coding models can load the geometry without the Qt canvas.
+- Keep layer-2 module 1.1; this hotfix does not change the editable-block contract.
+- Leave the Debian packager wired, but skip DEB output on hosts without `dpkg-deb`.
+
+## 3.4.29.20 INTERN
+
+- Hide the Kraken coolant card on the main dashboard unless a connected Kraken supplies a real liquid-temperature value. Preserve the user's saved card selection while the hardware-dependent card is unavailable.
+- Extract dashboard grid and card-availability orchestration from the historical main window into focused `dashboard_layout.py`, keeping `kraken_control.py` below its enforced legacy size ceiling.
+- Render imported TRCC layer-2 text coordinates as visual block centres, matching the physical 1600×720 display instead of treating them as top-left positions.
+- Keep draggable clock and sensor items alive while animated video frames replace only the preview background; remove rubber-band selection that could consume the first drag gesture.
+- Replace layer-2 colour, font-size and text popup dialogs with an integrated editor beside the blue preview canvas. Apply, cancel and per-block reset close the panel in place.
+- Reload both selected preview layers immediately when the current background is selected again, and retain the last valid video frame during asynchronous preparation instead of clearing to black.
+- Add pure availability-policy tests, centre-coordinate rendering checks, same-card background reload coverage and a regression proving a video-frame update does not replace a live drag item.
+- Run the release test gate through pytest so every collected `test_*` function executes; restore real PySide6 modules after the isolated runtime-stub import to prevent cross-test contamination.
+
+## 3.4.29.19 INTERN
+
+- Fix edited Levita layer-2 apply and autostart failures reporting `Kein vollständiges TRCC-Hardwaredesign` for OHC's own `editable-themes/theme-*` cache paths.
+- Accept either a legacy `config1.dc` theme or a bounded, valid 1600×720 native `trcc.json` theme, matching TRCC Linux's documented `load-theme` contract. Wrong-geometry and malformed JSON themes remain rejected.
+- Preserve every imported source file: existing generated cache themes work immediately and no compatibility `config1.dc` is fabricated or written.
+- Stop rebuilding the large background-card catalog for a pure layer-2 selection and remove duplicate preview/status refreshes from the hidden combo model.
+- Add regression coverage for the exact failing cache-path shape, valid native JSON loading, invalid geometry rejection and the complete hardware-free UI construction.
+
+## 3.4.29.18 INTERN
+
+- Make every logical Thermalright Levita data-layer-2 block independently draggable while keeping a combined label, live value and unit together as one item.
+- Add whole-layer X/Y offsets and a block context menu for color, font size, text/label editing and individual reset. Persist overrides separately per selected design.
+- Keep imported TRCC sources immutable. Read native JSON or delegate legacy `config1.dc` decoding to the installed TRCC backend, then stage an OHC-owned content-addressed cache theme with generated `trcc.json` and linked local artwork/media.
+- Introduce `modules/lcd_levita/v1_0/` with separate pure layout model, Qt canvas interaction and TRCC adapter responsibilities; keep the existing display UI as the gradual compatibility orchestrator.
+- Add the mandatory `MODULE_REGISTRY.md`, a registry validator, version-folder rules and strict file-size budgets for local coding models with 16 GB VRAM. Add step-by-step UI, sensor and LCD extension guidance and wire it into every AI startup path.
+- Package the versioned module tree in portable, developer, RPM and DEB outputs and add model, persistence, staging, static UI, registry and full offscreen UI regressions.
+
+## 3.4.29.17 INTERN
+
+- Replace the generic `preferences-system-cooling` icon used by the KDE Plasma system-tray entry with OHC's own compact emblem. The tray no longer depends on whether that unrelated desktop-theme icon exists.
+- Add a dedicated transparent 22×22 tray raster and construct the `QSystemTrayIcon` from project-owned 22, 32, 48 and 64 pixel assets. Package and portable installers place the new size in `hicolor/22x22/apps` as well.
+- Follow the robust ckb-next pattern of providing a named application icon set plus a tray-native small raster, while retaining Qt's portable `QSystemTrayIcon` implementation.
+- Extend branding and full-UI regressions to verify the native 22×22 asset, the actual tray icon sizes and the absence of the old generic cooling-icon request.
+
+## 3.4.29.16 INTERN
+
+- Block the repeatedly observed OHC-owned blank startup surface only when it matches the exact signature `QFrame` / top-level `Window` / no parent / no title or object name / non-modal / 640×480. Named frames, dialogs, popups and any differently sized frame remain unaffected.
+- Extend window diagnostics with stable in-process object identity, flags, size hint, layout and direct-child counts, QObject ancestry, focus/active/native state, application/window age and the most recent helper process as explicitly timing-only context. Suspicious-frame reports include bounded direct-child geometry before quarantine.
+- Deduplicate the Levita media catalog by complete case-insensitive basename, including the suffix. Multiple `d002.mp4` copies now produce one card, while differently named files and `d002.png` remain independent.
+- Prefer the installed/normal and shortest media path over copies below `alt`, `old`, `backup`, `sicherung`, `kopie`, `copy`, `archive` or `archiv` directories.
+- Migrate a saved selection from a hidden duplicate path to the retained canonical path automatically.
+- Report the number of hidden duplicates in both the library label and log. This is a non-destructive catalog operation: OHC never deletes, moves or modifies the user's original media files.
+- Add pure and full-UI regressions covering case-insensitive duplicate names, backup-path preference, differently named media, separate extensions and catalog-level duplicate counts, plus positive and negative regressions for the narrowly scoped empty-frame blocker.
+
+## 3.4.29.15 INTERN
+
+- Keep image as well as video backgrounds selected when a complete data layout is chosen in Levita layer 2. The combined main preview now refreshes immediately from every layer-2 card, including a second click on the already selected card.
+- Guarantee a visible layer-2 preview for incomplete imported layouts. OHC prefers the extracted transparent hardware-data layer, but falls back to the complete `Theme.png` when `00.png` is missing or no separable layer can be built.
+- Replace the full-width graphics viewport with a centered Levita stage that follows the physical 1600×720 aspect ratio. The display preview is capped at 960×432 while the unused page width remains the normal blue OHC background.
+- Extend the real offscreen UI regression to verify that selecting a layer-2 layout preserves an image background, produces a non-empty upper layer and retains the exact preview aspect ratio.
+
+## 3.4.29.14 INTERN
+
+- Replace synchronous per-card video probing with a non-blocking thumbnail queue. At most two `ffmpeg` workers run concurrently, so opening or changing a large Levita category no longer freezes the Qt event loop.
+- Show visible thumbnail progress while the queue is active and keep the selected main preview responsive. The selected video is queued before the rest of the card catalog.
+- Store successful thumbnails in the persistent OHC configuration cache using source path, size and modification time. Unchanged videos therefore load immediately on later application starts; changed files receive a new cache identity.
+- Remember unreadable video results for six hours to prevent the same damaged asset from causing a process storm on every category change or restart. Worker timeouts remain bounded to eight seconds.
+- Add a regression that constructs 140 uncached video cards and verifies that gallery construction returns immediately, uses no more than two workers and reuses a persisted cache result.
+
+## 3.4.29.13 INTERN
+
+- Keep one remembered custom Levita design directory independently from the TRCC standard catalog. The directory can be hidden with a checkbox and restored with its last selected media without reopening a file dialog; OHC never deletes the directory or its files.
+- Separate the Levita card library by function: images/videos remain in background layer 1, while complete `config1.dc` themes with clocks and sensor values belong to data layer 2. Explicit move-to-other-layer buttons preserve intentional exceptions.
+- Add a real thumbnail for every supported local video and animate cached preview frames directly inside a hovered card. Keep the main 1600×720 preview animated as before.
+- Move “Design anpassen” and direct apply actions into the studio header. Add Levita-specific brightness (0–100), orientation (0/90/180/270) and hover-preview controls backed by TRCC's real `set-brightness` and `set-orientation` commands.
+- Serialize Levita USB operations. The persistent `display play` process exits gracefully by SIGINT, a release delay precedes the next theme handshake, concurrent switches are rejected rather than killing each other, and an `Errno 110` handshake timeout gets at most one delayed retry.
+- Place the Gehäuselüfter quick profiles Leise, Ausbalanciert and Leistung at the top of the case-fan summary card like the CPU profiles. Automatic channel control remains a separate action and presets still never activate or calibrate a channel.
+- On Thermalright-only systems, prioritize the complete Levita studio and move Kraken-only display settings to the end of the LCD workspace.
+
+## 3.4.29.12 INTERN
+
+- Rebuild the Thermalright Levita Display Studio around modern thumbnail cards for background and data layers. TRCC categories are direct buttons, long popup lists are removed, and optional crop/notch and OHC-overlay editors open only when requested.
+- Move local video animation into the main 1600×720 preview and constrain the canvas to the display aspect instead of reserving a separate hover-preview column.
+- Add three project-owned Levita backgrounds—Carbon Blue, Titanium Blue and Plasma Circuit—as an offline OHC design category.
+- Persist the selected background and upper data layer. An explicit checkbox and “save current selection” button can restore and apply that exact Levita design after desktop startup; the writer waits for desktop readiness and retries only once if the device is still busy.
+- Keep Levita autostart separate from Kraken LCD profile restoration and preserve the default no-write test mode. Selecting or discovering media alone still never authorizes USB access.
+- Reject square and portrait `config1.dc` layouts even when a broad parent TRCC folder is imported; only verified or dimension-matching 1600×720 Levita layouts become live-data cards.
+- Bind the running Qt application to the `open-hardware-control.desktop` identity and application icon, and add `StartupWMClass`, so KDE Plasma can show the project icon for the minimized/running window.
+
+## 3.4.29.11 INTERN
+
+- Add the new user-provided Open Hardware Control logo to the application rail. A separately generated text-free transparent emblem is used for the window, tray, taskbar, desktop entry and size-specific Linux icon cache entries.
+- Discover TRCC Linux's installed `~/.trcc/data/theme1600720l` layouts automatically. Complete designs can be loaded directly with their own background and saved `config1.dc` live values, or selected as the upper data layer above a different local video.
+- Fix the portable ZIP installer so the Thermalright display/cooling modules and startup window diagnostics are copied into the installed runtime.
+- Add temporary end-to-end window diagnostics for every OHC top-level/dialog/popup/tool window and native Qt surface creation. Events are written to both the visible application log and the persistent startup log with bounded, privacy-filtered identity and geometry data.
+- Trace Python subprocess and Qt QProcess launches with executable name, safe command tokens, argument count, session type and `QT_QPA_PLATFORM`; redact sensitive values and collapse rapid identical repeats.
+- Correct the Levita mask so only its inward-facing upper/lower corners are rounded while the physical outer/right edge remains flush and black. Bump cache identities so an older four-corner mask cannot be reused.
+
+## 3.4.29.10 INTERN
+
+- Add a true two-layer Levita mode: a selected local video remains the background while a complete imported TRCC `config1.dc` hardware-data layout renders live above it.
+- Preserve complete theme art by alpha-compositing the theme's own `01.png` with the rounded Levita right-hand mask. The in-app canvas extracts the sample hardware layer from `Theme.png`/`00.png` for a combined preview.
+- Keep the existing freely movable OHC metrics as an explicit alternative upper layer, and restrict the background chooser to valid videos while a complete hardware design is selected.
+- Round only the inward-facing upper/lower corners of the adjustable Levita right-hand mask with an 18-pixel radius; keep its physical outer edge flush in both preview and hardware mask.
+- Add a compact preview card to the left of the local Levita media list. Hovering an entry shows images/layout thumbnails and a short four-frame in-app video preview generated only from the local file cache.
+- Close the remaining empty-window startup path by forcing the synchronous OpenRGB version query and the direct inventory helper onto Qt's offscreen platform as well as the existing asynchronous clients and managed server.
+
 ## 3.4.29.9 INTERN
 
 - Replace the provisional local Levita theme groups with the exact current TRCC Linux cloud catalog: Gallery (`a001–a082`), Tech (`b001–b025`), HUD (`c001–c072`), Light (`d001–d055`), Nature (`e001–e054`) and Aesthetic (`y001–y010`).

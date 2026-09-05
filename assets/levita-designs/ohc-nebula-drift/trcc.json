@@ -1,0 +1,12 @@
+{
+  "name": "OHC Nebula Drift",
+  "width": 1600,
+  "height": 720,
+  "overlay_enabled": true,
+  "elements": [
+    {"type": "clock", "x": 760, "y": 245, "source": "time", "format": "{value}", "color": "#ffffff", "size": 104, "bold": true},
+    {"type": "metric", "x": 430, "y": 505, "metric": "cpu:temp", "format": "CPU  {value:.0f}°C", "color": "#5ee7ff", "size": 42, "bold": true, "show_unit": true},
+    {"type": "metric", "x": 760, "y": 505, "metric": "gpu:primary:temp", "format": "GPU  {value:.0f}°C", "color": "#8ca7ff", "size": 42, "bold": true, "show_unit": true},
+    {"type": "metric", "x": 1090, "y": 505, "metric": "memory:percent", "format": "RAM  {value:.0f}%", "color": "#c79cff", "size": 42, "bold": true, "show_unit": true}
+  ]
+}

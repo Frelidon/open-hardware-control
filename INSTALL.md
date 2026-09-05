@@ -1,6 +1,6 @@
 # Installation unter Linux
 
-Diese Anleitung gilt für **Open Hardware Control by Frelidon 3.4.29.9 INTERN**. Lade das interne Testpaket zuerst in `~/Downloads`. Diese Version ist noch nicht für ein öffentliches GitHub-Release bestimmt.
+Diese Anleitung gilt für **Open Hardware Control by Frelidon 3.4.29.43**. Lade das gewünschte Paket von der GitHub-Release-Seite zuerst in `~/Downloads`.
 
 ## Fedora und Nobara
 
@@ -8,7 +8,7 @@ Empfohlenes RPM-Paket:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.9-0.intern2.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.43-1.noarch.rpm
 ```
 
 Alternativ das universelle ZIP verwenden. Die benötigten Pakete lauten:
@@ -23,7 +23,7 @@ Empfohlenes DEB-Paket:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.9~intern2_all.deb'
+sudo apt install './open-hardware-control_3.4.29.43_all.deb'
 ```
 
 Alternativ das universelle ZIP verwenden. Die benötigten Pakete lauten:
@@ -38,8 +38,8 @@ sudo apt install liquidctl python3-pyside6.qtwidgets python3-pyside6.qtsvg pytho
 ```bash
 sudo pacman -S --needed liquidctl pyside6 python-pillow qt6-svg polkit unzip
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_9_INTERN.zip
-cd open-hardware-control-3.4.29.9-INTERN
+unzip open_hardware_control_v3_4_29_43.zip
+cd open-hardware-control-3.4.29.43
 chmod +x install.sh
 ./install.sh
 ```
@@ -49,8 +49,8 @@ chmod +x install.sh
 ```bash
 sudo zypper install liquidctl python3-pyside6 python3-Pillow libQt6Svg6 polkit unzip
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_9_INTERN.zip
-cd open-hardware-control-3.4.29.9-INTERN
+unzip open_hardware_control_v3_4_29_43.zip
+cd open-hardware-control-3.4.29.43
 chmod +x install.sh
 ./install.sh
 ```
@@ -63,13 +63,19 @@ Für alle oben genannten Distributionen:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_9_INTERN.zip
-cd open-hardware-control-3.4.29.9-INTERN
+unzip open_hardware_control_v3_4_29_43.zip
+cd open-hardware-control-3.4.29.43
 chmod +x install.sh
 ./install.sh
 ```
 
 Die vorhandene Version wird aktualisiert. Danach findest du **Open Hardware Control by Frelidon** im Anwendungsmenü.
+
+## Optionales Thermalright-Levita-Backend
+
+Für das Levita-Display wird TRCC Linux 9.9.12 empfohlen. Es bleibt separat installiert und ist keine harte Abhängigkeit des OHC-Pakets, damit Systeme ohne Thermalright-Display keine fremde Paketquelle benötigen. Version 9.9.12 behebt insbesondere einen Fedora-RPM-Dateikonflikt mit `python3-sounddevice`; die vorhandenen OHC-Daemon- und Displaybefehle bleiben kompatibel. Aktualisiere TRCC über dessen offizielle Paketquelle beziehungsweise Release-Anleitung, bevor du die Levita-Hardware in OHC testest.
+
+Die physische OHC-Referenzbestätigung wurde mit TRCC Linux 9.9.11 durchgeführt. OHC startet niemals einen zweiten Levita-USB-Besitzer neben dem TRCC-Daemon.
 
 ## Optionale Pakete für KDE-Desktop-Designs
 

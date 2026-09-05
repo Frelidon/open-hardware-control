@@ -23,6 +23,16 @@ for token in (
 assert 'page_item("overview", "⌂   Übersicht", 0, fixed=True)' in code
 assert 'self.help_button = QPushButton("?  Hilfe")' in code
 assert 'self.navigation_customize_button = QPushButton("☷  Navigation anpassen")' in code
+assert '"wallpaper_engine": ("▧   Wallpaper Engine", 9)' in code
+assert 'self.tabs.addTab(self.make_wallpaper_engine_tab(), "Wallpaper Engine")' in code
+assert '"cooling", "rgb_studio", "lcd", "wallpaper_engine", "openlinkhub"' in code
+assert '"profiles", "settings", "about", "log", "desktop_designs"' in code
+assert 'NAVIGATION_LEGACY_DEFAULTS' in code
+assert 'rail_bg = "rgba(255, 255, 255, 252)"' in code
+assert 'nav_item_color = "#18202a"' in code
+assert "QTreeWidget#hardwareNavigation::item {{" in code
+assert "self.navigation.setPalette(nav_palette)" in code
+assert "QPushButton#navigationCustomizeButton, QPushButton#helpNavigationButton" in code
 
 # Cooling icon adapts to AIO / chassis-fan detection.
 assert 'icon = "▥◉" if has_aio and has_case_fans' in code
