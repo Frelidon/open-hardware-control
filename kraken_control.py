@@ -233,6 +233,7 @@ from nzxt_rgb import (
 
 from app_constants import (
     APP_DISPLAY_VERSION,
+    helper_script_path,
     APP_NAME,
     APP_VERSION,
     AUTOSTART_LCD_DELAY_MS,
@@ -383,6 +384,7 @@ CPU_CURVE_SENSOR_FAILURE_LIMIT = 5
 # Two ordered controller transitions reproduce the manual double-click that
 # reliably woke the user's two modules, before OHC starts its SDK stream.
 ENE_DRAM_RECLAIM_PASSES = 2
+
 
 @dataclass(frozen=True)
 class CPUProfile:
@@ -10741,7 +10743,7 @@ class KrakenControl(EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActi
 
     @staticmethod
     def desktop_design_missing_packages() -> list[str]:
-        script = Path(__file__).with_name("install-dependencies.sh")
+        script = helper_script_path(Path(__file__), "install-dependencies.sh")
         if not script.is_file():
             return []
         try:
@@ -10798,7 +10800,7 @@ class KrakenControl(EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActi
             else:
                 self.show_error("Die fehlenden Desktop-Pakete konnten für diese Distribution nicht ermittelt werden.")
             return
-        script = Path(__file__).with_name("install-dependencies.sh")
+        script = helper_script_path(Path(__file__), "install-dependencies.sh")
         if not script.is_file():
             self.show_error("Das Abhängigkeits-Skript fehlt in der Installation.")
             return
@@ -13959,7 +13961,7 @@ class KrakenControl(EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActi
     # ---------- dependency/device ----------
     @staticmethod
     def missing_dependency_packages() -> list[str]:
-        script = Path(__file__).with_name("install-dependencies.sh")
+        script = helper_script_path(Path(__file__), "install-dependencies.sh")
         if script.is_file():
             try:
                 result = subprocess.run(
@@ -14033,7 +14035,7 @@ class KrakenControl(EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActi
         if not missing:
             QMessageBox.information(self, DISPLAY_NAME, "Alle benötigten Abhängigkeiten sind bereits installiert.")
             return
-        script = Path(__file__).with_name("install-dependencies.sh")
+        script = helper_script_path(Path(__file__), "install-dependencies.sh")
         if not script.exists():
             self.show_error(
                 "Das Abhängigkeits-Skript fehlt. Installiere die folgenden Pakete mit dem Paketmanager deiner "
@@ -14301,7 +14303,7 @@ class KrakenControl(EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActi
         )
 
     def repair_permissions(self) -> None:
-        script = Path(__file__).with_name("install-udev-rule.sh")
+        script = helper_script_path(Path(__file__), "install-udev-rule.sh")
         if not script.exists():
             self.show_error(
                 "Das Reparaturskript fehlt. Starte im entpackten Installationsordner: ./install-udev-rule.sh"
@@ -15751,6 +15753,9 @@ class KrakenControl(EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActi
         ):
             if self.openrgb_inventory_retry_reason:
                 self.schedule_rgb_inventory_retry(5_000, self.openrgb_inventory_retry_reason)
+            return
+        # No minutely OpenRGB CLI start while hidden in the tray unless RGB work is pending.
+        if not (self.isVisible() or self.openrgb_write_enable_pending or self.rgb_profile_autostart_pending or self.openrgb_inventory_retry_reason):
             return
         reason = self.openrgb_inventory_retry_reason
         self.openrgb_inventory_retry_reason = ""
@@ -19666,7 +19671,7 @@ class KrakenControl(EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActi
 
     @staticmethod
     def openrgb_missing_packages() -> list[str]:
-        script = Path(__file__).with_name("install-dependencies.sh")
+        script = helper_script_path(Path(__file__), "install-dependencies.sh")
         if not script.is_file():
             return [] if shutil.which("openrgb") or shutil.which("OpenRGB") else ["openrgb"]
         try:
@@ -19698,7 +19703,7 @@ class KrakenControl(EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActi
         )
         if answer != QMessageBox.StandardButton.Yes:
             return
-        script = Path(__file__).with_name("install-dependencies.sh")
+        script = helper_script_path(Path(__file__), "install-dependencies.sh")
         if not script.is_file():
             self.show_error("Das Abhängigkeitsskript fehlt.")
             return

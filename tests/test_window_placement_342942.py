@@ -69,4 +69,4 @@ assert selected is None and not matched
 
 assert screen_option_label(primary, 1) == "Monitor 2 · DP-1 · 3440×1440"
 
-print("3.4.29.45 monitor placement regression guards passed.")
+print("3.4.29.46 monitor placement regression guards passed.")

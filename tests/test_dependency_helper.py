@@ -10,7 +10,7 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-HELPER = ROOT / "install-dependencies.sh"
+HELPER = ROOT / "packaging/install-dependencies.sh"
 
 
 def write_command(directory: Path, name: str) -> None:

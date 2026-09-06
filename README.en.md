@@ -1,388 +1,169 @@
-# Open Hardware Control by Frelidon 3.4.29.45
+# Open Hardware Control by Frelidon 3.4.29.46
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
 <!-- /project-badges -->
 
-Open Hardware Control is a free Linux GUI for the **NZXT Kraken LCD**, pump, radiator fans and RGB, for the **Thermalright Levita Vision display and safely mapped cooling headers**, for **calibrated motherboard/case fans through Linux hwmon/NCT6687**, with **Corsair integration through OpenLinkHub** and additional RGB devices through an automatically managed local hardware engine. It targets Fedora, Nobara, Debian, Ubuntu, Linux Mint, Arch Linux, Manjaro, EndeavourOS and openSUSE.
-
-![Open Hardware Control dashboard](docs/images/screenshots/01-dashboard-overview.png)
+Open Hardware Control is a free Linux GUI for the **NZXT Kraken LCD**, pump, radiator fans and RGB, for the **Thermalright Levita Vision display**, for **calibrated motherboard/case fans through Linux hwmon/NCT6687**, for **Corsair devices through OpenLinkHub** and for additional RGB devices through an automatically managed local hardware engine. It targets Fedora, Nobara, Debian, Ubuntu, Linux Mint, Arch Linux, Manjaro, EndeavourOS and openSUSE.
 
 <!-- project-repository -->
 Project repository: <https://github.com/Frelidon/open-hardware-control>
 <!-- /project-repository -->
 
-> **Unofficial independent community project:** Open Hardware Control is not supported, approved, endorsed, operated by, or affiliated with NZXT, Corsair, be quiet!, OpenLinkHub, OpenRGB, or any other named manufacturer or project. Product and brand names are used only to describe compatibility. Manufacturers and rights holders can contact Frelidon through the public contact address in the GitHub profile or the Steam username **Frelidon**.
-
-## 3.4.29.45 highlight: Thermalright Levita Vision display
-
-**Open Hardware Control now supports the 1600×720 display in the Thermalright Levita Vision 360 ARGB Black.** The new local studio combines personal images and videos with editable live CPU, GPU, RAM and clock data. The offline gallery includes eleven original OHC backgrounds, two complete OHC data layouts and one 30-second AI animation.
-
-Every bundled design was created by the project owner together with OpenAI tools. No Thermalright/TRCC catalog media, manufacturer artwork or imported user files are included.
-
-Version 3.4.29 adds a local-first Thermalright Levita display studio and the exact Thermalright Levita Vision 360 ARGB Black cooling path. It also strengthens ENE-DRAM cold-start recovery with two ordered Direct transitions before the saved RGB design starts.
-
-Version 3.4.29.45 keeps a saved RGB startup profile pending when OpenRGB initially reports only a partial cold-start inventory. OHC waits for the bounded discovery retry and then starts the saved design against the complete controller set. The module-registry validator now supports the stable release channel as well. This release promotes the previously tested Levita, RGB, Wallpaper, fan-control, diagnostics and KDE/Wayland work from the 3.4.29 internal series. The GitHub load test now isolates its 140 synthetic video cards deterministically from bundled preview work.
-
-Version 3.4.29.42 repairs the Wallpaper Engine playback buttons: pause, resume, next and mute address the D-Bus object actually registered on Plasma, while back selects the preceding local Workshop card because CaptSilver v1.4 does not yet provide a true back operation. It also adds all three CaptSilver scaling modes for the selected screen. The main window now starts on the primary screen by default, or on a persistently selected screen identified by its stable Qt name; a missing screen safely falls back to primary. Every vertical and horizontal scrollbar now uses the same narrow style. The guided setup, verified optional Fedora installer, fixed gallery cards, stock defaults and reversible optimization from 3.4.29.41 remain intact. On Wayland, KWin retains final authority over top-level window placement.
-
-Version 3.4.29.38 modernizes RGB Studio with embedded engine controls, explicit on/off buttons, persistent right-click colors, overall brightness and an in-page native hardware-channel list. Rejected command sequences reliably release pending ENE reinitialization state. TRCC Linux 9.9.12 is the recommended compatible Levita backend and fixes the upstream Fedora RPM conflict with `python3-sounddevice`; physical display validation remains documented against 9.9.11.
-
-Version 3.4.29.31 makes the LCD **Design anpassen** panel readable: number fields and combo boxes keep a usable size, the black-bar checkbox occupies its own row, and shutdown no longer writes window diagnostics into a destroyed log widget.
-
-Version 3.4.29.30 rounds the right edge of the selected image/video where it meets the black camera/notch bar. Top and bottom default to a linked 48 px and can be adjusted together or independently from 0 to 240 px in the embedded Levita controls. Preview and hardware mask use the same geometry; the red guide in reference photos is not rendered. The safe daemon/Unix-socket transport from 3.4.29.29 remains intact.
-
-Version 3.4.29.27 fixes the black layer-1 live preview: transparent layer-2 artwork keeps its alpha channel while being fitted and no longer hides the clicked image or video with an opaque black surface. Selected videos run as a bounded 16-frame sequence in the large 1600×720 canvas. A crash of the external TRCC/libusb process is detected explicitly and stops further automatic USB attempts.
-
-Version 3.4.29.26 stages the selected background video, generated display mask and edited layer-2 blocks as one cache theme. A complete Levita design therefore needs only one connected `load-theme` session. Rapid switches are coalesced for ten seconds; after a repeated USB handshake timeout OHC stops automatic attempts and requests a complete power reset.
-
-Version 3.4.29.25 clarifies that `BUILD_CHANNEL=INTERN` blocks public tags and releases, not a normal push of tested, committed development work explicitly requested by the project owner. Pull requests, tags, releases, force-pushes and remote deletion remain separately authorized actions.
-
-Hotfix 3.4.29.24 integrates the reviewed fixes from internal intermediate builds 22 and 23 into the complete repository. One malformed layout record no longer drops later blocks, symlinked TRCC configuration/artwork is rejected, split mode safely defaults to Off, the livestream is active only after a confirmed process start, and hover-preview workers are fully stopped on shutdown. That release used feature module path `modules/lcd_levita/v1_2/`.
-
-Hotfix 3.4.29.21 paints a selected layer-1 card into the large preview immediately, using the image or a cached first video frame instead of a black intermediate canvas. The notch bar keeps a straight inner edge; only the two outer-right 1600×720 display corners are rounded, matching in the editor and in prepared cache images.
-
-Hotfix 3.4.29.20 aligns the Levita preview with the physical display: TRCC text coordinates render as block centres, video frames replace only the background and therefore no longer interrupt an active drag. Re-selecting the current background reloads it immediately. Right-click exposes colour, font size and text inside the blue preview surface instead of separate windows. The main dashboard hides the Kraken coolant card unless a connected Kraken supplies a real coolant value. That release used data-surface module path `modules/lcd_levita/v1_1/`.
-
-Hotfix 3.4.29.19 restores edited layer-2 transmission. OHC now accepts its validated native `trcc.json` cache themes as complete hardware designs, matching the installed TRCC Linux contract instead of incorrectly requiring `config1.dc`. Layer switches also avoid rebuilding the large background-card catalog and hidden selection models trigger only one preview refresh.
-
-Hotfix 3.4.29.18 introduced editable data layer 2 and module version 1.0. Every logical live-data block can be dragged independently while its label, value and unit stay together, and X/Y offsets move the complete layer. The mandatory `MODULE_REGISTRY.md` always names the current module path; size budgets keep it practical for local models with 16 GB VRAM.
-
-Hotfix 3.4.29.17 replaces the generic cooling symbol previously requested for KDE Plasma's system-tray entry with the compact Open Hardware Control emblem. OHC now ships a native 22×22 tray asset and gives `QSystemTrayIcon` its own 22, 32, 48 and 64 pixel raster set, keeping window, launcher and tray branding consistent.
-
-Hotfix 3.4.29.16 displays each complete media filename only once in the Levita catalog. If several backup copies of `d002.mp4` exist, OHC prefers the normal or shortest path over `alt`, `backup`, `sicherung` or copy directories. Differently named files and other suffixes remain separate. Original files are never deleted or modified; only duplicate cards are hidden. The repeatedly logged OHC-owned blank surface is also blocked before display only when it matches the exact parentless, unnamed, non-modal 640×480 `QFrame` signature. Diagnostics now capture layout, children, QObject ancestry, window flags, runtime and the last helper process explicitly as timing-only context; regular dialogs and popups remain unaffected.
-
-Hotfix 3.4.29.15 reliably shows the selected layer-2 data surface in the main preview, including over image backgrounds and for incomplete TRCC layouts without `00.png`. The preview now follows the exact 1600×720 Levita aspect ratio, is capped at 960×432 and is centered on the blue page background instead of stretching an empty viewport across the full window.
-
-Hotfix 3.4.29.14 loads still images for large Levita video catalogs entirely in the background. No more than two `ffmpeg` workers run concurrently, a progress bar reports their state and the Qt interface remains responsive. Successful thumbnails persist using the source path, size and modification time and are immediately reused on later application starts; unreadable files cannot trigger another process storm on every filter change.
-
-Hotfix 3.4.29.13 remembers a custom Levita design directory independently from the standard catalog and can hide or restore it, including its last selection, without deleting user files or reopening a picker. Layer 1 defaults to images/videos while complete live themes stay in layer 2 unless explicitly moved. Video cards show a still and animate on hover. Dedicated Levita controls call real TRCC brightness/orientation commands. Serialized design swaps prevent overlapping USB writers and perform one bounded retry for an `Errno 110` handshake timeout. Chassis-fan presets now mirror the CPU profile placement at the top of their summary card.
-
-Hotfix 3.4.29.12 replaces the oversized Levita selectors with modern background/data-layer cards, animates video in the main 1600×720 preview and includes three original OHC carbon, metal and plasma backgrounds. An explicit autostart option stores both layers, waits for desktop readiness and retries a failed display start exactly once. Broad TRCC imports reject non-1600×720 live layouts. A fixed Qt desktop-file identity and `StartupWMClass` let Plasma associate the compact OHC icon with the running/minimized window.
-
-Hotfix 3.4.29.11 adds the new project logo and compact transparent taskbar/tray derivative, installed TRCC 1600×720 layouts with direct or multilayer `config1.dc` live values, privacy-bounded startup-window diagnostics and the corrected inward-only Levita mask radius.
-
-Hotfix 3.4.29.10 adds a true two-layer Levita mode: a local video runs as the background while a separately selected complete TRCC hardware-data design keeps rendering live sensor values above it. Theme art and the rounded right-hand Levita mask are composed without discarding either layer; the freely movable OHC metrics remain available as an alternative. This release also adds fully in-app local previews and forces the final synchronous OpenRGB startup queries offscreen.
-
-Hotfix 3.4.29.9 mirrors the current TRCC Linux catalog exactly: `Gallery` (`a001–a082`), `Tech` (`b001–b025`), `HUD` (`c001–c072`), `Light` (`d001–d055`), `Nature` (`e001–e054`) and `Aesthetic` (`y001–y010`). Existing local videos, images and layout folders are classified from their validated original theme ID and sorted numerically; foreign or out-of-range names remain under custom files. OHC does not download or redistribute manufacturer media.
-
-Hotfix 3.4.29.8 adds safe PWM/DC switching only for kernel-exposed `pwmN_mode` channels, per-fan/global curve presets and curve reset. Persistent Polkit status is now readable without exposing the rule or storing a password. Levita media keeps its aspect ratio at 1600×720, uses the photographed 80-pixel centered default, supports direct mask dragging, overlay undo, categorized local themes and reliable percent signs. Hardware-aware LCD tiles hide the round Kraken preview for a rectangular Levita. UI tests cannot start hardware processes, and a crashed OpenRGB server is quarantined until an explicit manual retry.
-
-Hotfix 3.4.29.7 suppresses the photographed black OHC surface before a minimized KDE/Wayland tray-autostart UI is built, runs every OpenRGB Qt client offscreen and adds explicit grant/remove controls for an optional exact-user Polkit authorization of the bounded NCT6687 helper. No password is stored and physical PWM calibration remains mandatory.
-
-## New in 3.4.29.45
-
-- Thermalright Levita studio with a 1600×720 canvas, protected right cutout, local image/video/TRCC import, movable CPU/GPU/RAM/clock overlays and a safe preview-only test mode by default.
-- Separate Levita background and hardware-data layers: a local video can run behind a complete imported TRCC sensor layout with live values.
-- Exact Levita Vision 360 ARGB Black cooling selection: display via USB, pump and radiator fans via separately selected motherboard PWM headers.
-- Driver labels may suggest `PUMP_FAN` and `CPU_FAN`, but both require a physical 70-percent/10-second confirmation. CoolerControl blocks concurrent writes and OHC returns used headers to firmware/BIOS on exit.
-- Conservative Silent, Balanced, Performance and Safety profiles plus CPU-temperature curves; no fabricated coolant reading where the device path exposes no coolant sensor.
-- Two ordered ENE-DRAM Direct passes before saved-profile startup, covering controllers that acknowledge the first transition before their physical LEDs wake.
-- Chassis-fan cards remain compact initially, open only the explicitly selected curve and close through the same action.
-- The further split module structure and `MODULE_MAP.md` reduce context requirements for local coding models.
-- Separate status for the active CoolerControl background daemon and system autostart.
-- Confirmed Polkit actions for temporary OHC takeover, persistent disable, or re-enable and immediate start of CoolerControl.
-- Safe handoff: disabling CoolerControl never starts OHC fan control automatically; enabling CoolerControl first returns motherboard channels to firmware/BIOS ownership.
-- Consistent blue-tinted surfaces across RGB Studio, LCD, Profiles, Log, Corsair/OpenLinkHub, Settings, About, Help and Kraken details.
-- Silent, Balanced and Performance only become fully blue after successful pump and fan writes.
-- Complete local-AI handoff for LM Studio/Qwen2.5-Coder with a start prompt, repository rules and guarded GitHub workflow.
-
-## New in 3.4.26 INTERNAL
-
-- Durable AI project memory through `AGENTS.md` plus status, architecture, decision and device-support documents.
-- Cursor project rules, slash commands and a session-start hook for reliable handoffs between fresh chats.
-- Release validation for version, channel, tests, privacy and reproducible artifacts without an external backup dependency.
-- Destructive shell/Git commands require explicit confirmation in Cursor.
-
-## New in 3.4.25 INTERNAL
-
-- compact dark dashboard shell with persistent OHC sidebar and page titles
-- no “Community Edition” branding; OHC remains one unified open-source application
-- redesigned overview with compact metrics, quick actions, detected hardware and status hints
-- separate CPU/Kraken and chassis-fan summary cards in Cooling
-- direct Test / Curve / Assign actions on each chassis-fan card
-- dedicated fan-curve dialog instead of a distant editor section
-- CoolerControl ownership banner directly below the cooling summaries
-- four-step fan mapping assistant: Detect, Test, Assign, Save
-- dark theme is the default for fresh installs; existing explicit theme settings are preserved
-- real PySide6 offscreen GUI smoke test added to the internal release workflow
-
-Version 3.4.23.2 INTERNAL redesigns Cooling around compact CPU/Kraken and chassis-fan cards. Chassis fan headers are shown as individual cards with RPM/PWM, profile, sensor source and curve preview, while CPU_FAN/PUMP_FAN stay in the dedicated Kraken area. CoolerControl ownership is detected to prevent concurrent PWM writes, and a new guided chassis-fan assistant combines a safe contrast test, optional white RGB identification and shared RGB/PWM case-layout mapping.
-
-Version 3.4.23 INTERNAL adds safety-gated motherboard fan control through Linux hwmon/NCT6687. PWM channels are never guessed: each channel must first be briefly tested and physically confirmed. Confirmed channels can then use independent sensor sources, curves, minimum duty, hysteresis and response delay. RGB Studio also exposes ENE-DRAM cold-start initialization and a manual reinitialize button.
-
-## New in 3.4.23.2 INTERNAL
-
-- Compact Cooling dashboard with separate CPU/Kraken and chassis-fan detail cards.
-- CPU_FAN/PUMP_FAN are excluded from chassis control and remain in the dedicated Kraken cooling path.
-- Chassis fans use full-width cards with RPM, PWM, sensor source, preset and graphical curve preview instead of a nested scrolling table.
-- CoolerControl ownership detection prevents concurrent hwmon/PWM writes; explicit takeover/release uses systemd/Polkit.
-- Guided chassis-fan assistant with a safe 30%/80% ten-second contrast test, full state restoration, optional 100% white RGB identification and shared RGB/PWM case-layout mapping.
-- Persistent PWM-to-case-position assignments integrate with Quiet/Balanced/Performance profiles.
-
-## New in 3.4.23 INTERNAL
-
-- Motherboard fan control through Linux hwmon, with focused NCT6687/NCT6687D and MSI X870-family support.
-- Safe calibration: a selected PWM channel is set to 70% for five seconds, then its previous hwmon state is restored; automatic control remains blocked until the user confirms the physical fan group.
-- Per confirmed channel: custom name, CPU/GPU/liquid/max/weighted CPU-GPU sensor source, minimum duty, hysteresis, response delay and individual fan curve.
-- 70% sensor-failure fallback and 100% emergency request at 90 °C; disabling OHC control or exiting returns channels to firmware/BIOS control where the driver exposes it. When the current nct6687d driver exposes `fan_control_watchdog`, OHC also refreshes a 10-second driver lease so the driver can restore original curves if the controlling process disappears.
-- Driver/Secure Boot diagnostics and Fedora NCT6687 setup guidance; OHC does not bypass Secure Boot/MOK and does not write unverified controller registers directly.
-- RGB Studio shows ENE-DRAM initialization status and provides an “Reinitialize ENE RAM” action that repeats the proven OpenRGB Direct reclaim.
-
-## New in 3.4.22.1 INTERNAL
-
-- ENE-DRAM/OpenRGB stability hotfix: the long-lived Direct SDK worker is no longer killed by native NZXT/GPU writes.
-- The selected Direct device in RGB test mode can force one fresh prepare/Custom-Direct claim, allowing OHC to recover a latched ENE DRAM state without opening the OpenRGB GUI first.
-- Animated RGB designs are only marked active after both the first complete Direct SDK frame and all native/NZXT fallbacks have succeeded.
-- LCD GIF regression fixed: `prepare_gif()` accepts the additional scale value introduced by the 3.4.21 UI, so bundled and custom GIFs start correctly again.
-- The safe liquid-temperature fallback remains active after a failed LCD start.
-- Loading the recommended AM5/Kraken profile now immediately activates both CPU-controlled pump and fan curves when a CPU sensor is available.
-
-## New in 3.4.21 INTERNAL
-
-- New central Kraken USB coordinator with request IDs, priorities, owner tracking, retry/error logging and latest-request-wins handling for replaceable LCD operations.
-- Clicking a bundled LCD design activates it directly and cleanly replaces an already running LCD design.
-- RGB Studio now has its own request coordinator: duplicate short-lived requests are coalesced, obsolete effect changes are dropped, and the long-lived SDK worker is reused.
-- Saved RGB profiles are restored only after the OpenRGB device inventory has stabilized; devices that appear later can be brought into the active profile.
-- Fixes the Quick Profiles widget that was accidentally created as a detached top-level window in 3.4.20. Tray autostart continues to suppress non-critical modal startup dialogs.
-- During system shutdown or controlled exit, the LCD safety request gets critical priority: stop the animation and restore the liquid-temperature screen while USB access is still available.
-- Imported NZXT-ESC profiles use a live renderer inside the existing CAM-Raw streamer instead of a slow static refresh path. Embedded ESC preview images are used as a visible base when external media stays blocked.
-- LCD target resolution and rendering scale are derived from device capabilities rather than shipping duplicate copies of every design at many resolutions. Verified raw USB transport remains capability-gated for safety.
-- Bundled LCD designs gain persistent scale controls, animated hover previews and an optional animated main LCD preview.
-- LCD work tiles can be reordered again; long pages keep a compact preview available and middle-mouse scrolling improves navigation.
-- Imported profile files use the current filename as the proposed profile name and handle naming collisions explicitly.
-- Privacy/release checks are tightened to remove personal test labels and further anonymize diagnostic network identifiers.
-
-## New in 3.4.20 INTERNAL
-
-- ENE/OpenRGB RAM is primed into Direct/Custom exactly once per fresh RGB-worker session. This removes the observed need to open OpenRGB and touch the RAM once after boot while still avoiding repeated mode resets during effects.
-- `--autostart` no longer opens setup, fan-profile selection, or other modal startup dialogs on the desktop. Pending setup is deferred until the user deliberately opens the main window.
-- On a truly fresh installation, language selection is now the first setup page. German, English, Spanish, and French are applied immediately to the following setup pages.
-- Fixed Help button at the bottom left plus `F1`: searchable built-in guides for first steps, LCD, cooling, RGB, profiles, OpenLinkHub, desktop designs, autostart, and diagnostics with direct jumps to the matching page.
-- LCD workspace is consolidated further: preview/display/clock at the top, one static/animated content area with image/GIF import and bundled gallery, one hardware/layer area, and collapsed advanced FPS/transport diagnostics.
-- Eight original, reproducibly generated OHC LCD GIFs are bundled in a selectable gallery: Nebula Vanguard, Ringworld Runner, Singularity Dive, Abyssal Bloom, Neon Rain, Magma Heart, Polar Aurora, and Firefly Grove.
-- The clock can be added as an overlay to GIF/animated background + hardware-data streams, reusing the existing time format, date, font-size, and color settings.
-- Current NZXT-ESC v3 exports using `preset.background`, `preset.overlay`, `elementType`, `transform`, and `config` are imported correctly. Embedded `previewImage` data is used as a safe preview/fallback; CSS `rgb()`/`rgba()` colors and current elements such as Metric, Text, Shape, Clock, Analog Clock, Radial Graphic, and Sensor Chart are recognized or approximated.
-- External URL/video backgrounds are still never fetched automatically. This remains an intentional security boundary and is explicitly reported during import.
-
-## New in 3.4.19 INTERNAL
-
-- LCD is arranged as a three-column tile workspace instead of one long vertical stack; the large imported-profile manager spans the full width.
-- Hardware animation and image/GIF + hardware-layer starts no longer render synchronously in the Qt process and directly use the existing external stream renderer.
-- Brightness and orientation use the coordinated PAUSE/RESUME USB handoff while a CAM-Raw stream is active, preserving its frame cache.
-- ENE/RAM Direct devices are no longer sent a redundant `SET_CUSTOM_MODE` when OpenRGB already confirms Direct mode.
-- Discover/AppStream metadata now includes the application icon, detailed description, GitHub/issue links, search keywords, and screenshot gallery.
-- The independent NZXT-ESC compatibility layer and profile library from 3.4.18 remain fully included.
-
-- Independent importer for compatible `.nzxt-esc-preset`/JSON exports with schema-v3 support and tolerant recognition of older field aliases.
-- Every import is gated by a preview showing directly supported, approximated, unsupported, and security-blocked elements before anything can be activated.
-- Imported profiles are always new local OHC copies; the untouched import state is retained for one-click restoration.
-- Profile library with activation, editing, rename, duplicate, delete, individual export, and complete ZIP backup/restore for profiles, previews, local media, fonts, and LCD profile settings.
-- Reduced layer editor for sensor source, text, hex colors, sizes, position, rotation, visibility, locking, and drag-and-drop order. Unambiguous CPU/GPU text labels can follow a sensor remap automatically.
-- OHC live data for CPU/GPU/liquid temperature plus best-effort Linux load, clock, power, RAM, fan RPM and pump RPM values. Missing sensors are shown safely as unavailable.
-- Remote URLs, videos, web media, and NZXT-ESC fonts are never loaded automatically. OHC bundles no NZXT-ESC source code, presets, media, or fonts.
-
-### Complex LCD designs and NZXT-ESC import
-
-Open Hardware Control continues to grow its own LCD designs and graphical layer editor. Because the built-in selection is not intended to compete with a specialized design project, users looking for especially elaborate profiles may also want to look at the independent NZXT-ESC project:
-
-<https://github.com/mrgogo7/nzxt-esc>
-
-Profiles created or exported there can be loaded through Open Hardware Control's import function. Supported CPU, GPU, memory and liquid-cooling metrics are connected to OHC's own live data sources.
-
-Open Hardware Control and NZXT-ESC are independent projects. Open Hardware Control does not include NZXT-ESC source code, bundled designs, fonts, or media. Imported designs and included media remain subject to their authors' respective rights and licence terms.
-
-## New in 3.4.16 INTERNAL
-
-- RGB speed, color, brightness, and direction edits are coalesced for 360 ms; the newest value always wins.
-- In-flight NZXT/GPU transfers finish serially before the newest editor state is applied.
-- Persistent SDK-worker acknowledgements are tied to the exact submitted frame, so an old frame cannot confirm a newer profile state.
-- NZXT's five discrete speed levels are mapped evenly across 10–200%; 75% is now clearly `slower` and 100% `normal`.
-- A read-only inventory check runs at most once per minute. A large 7 → 2 drop is confirmed twice while the last complete list remains visible.
-- Unchanged background checks do not rebuild the workspace, preserving focus and scroll position.
-
-## New in 3.4.15 INTERNAL
-
-- A dedicated OHC mode list shows each effect, its description, and whether zero, one, or two user colors are meaningful.
-- Every active color accepts a `#RRGGBB` value, a built-in color preset, or the normal color picker while remaining compatible with existing RGB profiles.
-- RGB Studio now defaults to Engine, Devices and Effects, Thermaltake 360 PC layout, and Groups.
-- Major sections in RGB, LCD, and Cooling can be dragged or moved with up/down controls. Each page stores its order and has a default-order reset.
-- The dashboard remains the first app page and adds CPU model/topology plus GPU model, VRAM, driver, and PCI path. Every hardware card can be hidden and restored.
-
-## New in 3.4.14 INTERNAL
-
-- NZXT Alternating uses the confirmed two-color `fading` fallback instead of the failing `alternating-4` alias.
-- OHC-owned OpenRGB clients no longer trigger a false foreign-process/reclaim loop.
-- Asynchronous partial RGB failures are recorded in a bounded in-app list instead of modal pop-ups.
-- The Thermaltake 360 template is visibly named “Frelidon PC” while retaining its compatible internal key.
-
-## New in 3.4.13 INTERNAL
-
-- Clicking a design tile immediately starts or transfers it; no second Start click is required.
-- New “Solid Color” tile; selecting a new primary color reapplies it directly.
-- Persistent, stronger tile outlines distinguish SELECTED from ACTIVE, while a prominent status panel shows the profile, color, and transfer state.
-- New “Reclaim RGB control” button safely rebuilds the OHC write path and reapplies the selected pattern.
-- Optional automatic recovery is off by default, only observes the separate OpenRGB process, and reapplies the pattern after that process has ended.
-- OHC never terminates or writes through a separate OpenRGB process. An unknown or foreign SDK server continues to fail closed.
-- The opt-in recovery setting is stored in RGB/full profiles; no automatic hardware access starts without a previously confirmed RGB grant.
-
-## New in 3.4.12 INTERNAL
-
-- Kraken channels 1/2/3 can be dragged into their physical order in the Thermaltake diagram.
-- 17 original animated RGB presets grouped into six gallery categories.
-- An explicitly opted-in startup profile can restore RGB ownership and its effect; separate OpenRGB and a second OHC instance still block it.
-- LCD layers combine a still/GIF background with static or animated live hardware data.
-- Three additional original LCD patterns: Neon Grid, Radar, and Liquid Core.
-
-## New in 3.4.11 INTERNAL
-
-- persistent loopback SDK worker instead of one Python process and TCP connection per device and animation frame
-- one bounded multi-device frame per tick, 25 Hz target, exactly one in-flight request, and latest-frame-wins coalescing
-- measured SDK rate, most recent successful transfer, batch duration, and coalesced-frame count per active device
-- six-step RGB setup wizard for ownership, naming, isolated device tests, zone/LED calibration, case layout, and GPU mode
-- per-zone visual test that makes the selected controller zone visible while its other zones are black
-- automatic preference for Sapphire's reported External Control mode during non-Direct OHC animations
-- static changes remain serialized and confirmed; physical ARGB output is still explicitly not electrically readable
-- OpenRGB remains separately installed and privately managed; no OpenRGB drivers or Effects Plugin assets are copied
-
-## Since 3.4.7 INTERNAL
-
-- accepts SDK protocol 5 reported by OpenRGB `1.0~rc2` while retaining protocol 4 compatibility
-- keeps the SDK endpoint loopback-only and all device, LED and packet bounds intact
-- removes unsupported `marquee-4` and `moving-alternating-4` modes from the NZXT 2023 controller
-- maps OHC comet to `pulse`, spinner to the validated rainbow flow and alternating to the two-colour `fading` fallback
-- acquires a per-user kernel file lock before Qt or hardware initialization
-- exits a second launch with a clear notice without opening OpenRGB, liquidctl, Kraken or another controller
-- fails closed if the application lock cannot be created for another reason
-
-## Since 3.4.6 INTERNAL
-
-- large selected-device list with control path and last result
-- separate GPU/device hardware-mode choice without accidental OHC effect fallback
-- one-time `SETCUSTOMMODE` preparation per Direct device and engine lifetime
-- per-device failure isolation, hidden NZXT mirror and multi-stage scroll preservation
-- automatic current and previous session diagnostics logs
-
-## Since 3.4.5 INTERNAL
-
-- bounded loopback SDK writer for Direct devices outside OpenRGB CLI `ApplyOptions`
-- complete editable Thermaltake twelve-fan layout with deterministic initial arrangement
-
-## Since 3.4.4 INTERNAL
-
-- ordered reset/engine restart and fresh discovery before write access is re-enabled
-- safe collapse of the mirrored fourteen-entry inventory to seven actual reports
-- large draggable Thermaltake PC overview with stored device mapping
-
-## Since 3.4.3 INTERNAL
-
-- recognizes the confirmed OpenRGB `ApplyOptions`/`stl_vector` process-abort signature
-- quarantines only the crashing device until OHC is restarted; the block is not persisted
-- continues serialized command sequences so device-test mode can still reach its final target
-- counts ordinary Direct Mode failures per device instead of resetting them when another device succeeds
-- quarantines on the first confirmed process crash or after three ordinary failures of that same device
-- logs each detected OpenRGB index, user-visible name, LED count and Direct capability
-
-## Since 3.4.2 INTERNAL
-
-- fixes the immediate `AttributeError: rgb_preview_started` startup failure
-- adds a regression check for preview-clock initialization before `build_ui()`
-- writes privacy-filtered `startup.log` and `last-crash.log` files below the user's XDG state directory
-- includes those records in the read-only diagnostics report
-
-## Since 3.4.1 INTERNAL
-
-- one OpenRGB device per serialized process; bundled repeated `--device` arguments are prohibited
-- persistent selection/group state across delayed discovery and hotplug refreshes
-- reported native hardware-mode fallbacks for devices without Direct Mode
-- distinct and user-editable names for identically reported GPU/controller entries
-- a dedicated device test mode that lights only one OHC-owned component, turns the others off, advances to the next device and exposes renaming directly
-- a PC diagram with positions, counts, connector notes, groups and selected-device mapping
-- built-in Frelidon profile for the Kraken radiator plus A1, A2, B6, B7 and SYS-FAN6
-- all-select controls above and below the tile workspace
-- NZXT `led1`–`led3` exclusively in the common tile workspace; the separate visible editor is removed
-- profile persistence for aliases and PC layout; hardware start remains manual
-- the complete reset button remains available
-
-## Since 3.4.0 INTERNAL
-
-- managed windowless RGB backend, device tiles, drag-and-drop groups, ENE DRAM alias filtering, NZXT topology validation and complete reset
-
-## Since 3.2.0 INTERNAL
-
-- direct Fedora 44 support for `qdbus-qt6`, without a compatibility link
-- safe Qt 6 D-Bus command discovery across supported distributions
-- one-time dependency offer plus a permanent install button in Desktop designs
-- fixed DNF, APT, Pacman and Zypper package mappings with no third-party repositories
-- automatic recheck and feature enablement after installation
-- optional desktop tools never block hardware control
-
-## Since 3.1.0 INTERNAL
-
-- reversible Windows-11-style and macOS-style KDE Plasma 6 layouts
-- no-change preview and explicit confirmation before applying
-- timestamped backup, automatic rollback and manual restore
-- dark and light modes using Breeze, Noto Sans and original GPL SVG wallpapers
-
-Closing to the tray deliberately keeps LCD output and curve control running. A true quit stops the raw GIF streamer first, restores `lcd screen liquid`, then stores the conservative autonomous cooling fallback. Five in-project SVG families cover compact, ergonomic, symmetric, multi-button and MMO mice without vendor photos. Only buttons carrying a safe index reported by OpenLinkHub can be edited; the application never guesses one.
-
-Mouse assignments use OpenLinkHub's documented assignment endpoint and remain locked until writes are explicitly enabled for the session. The macro recorder captures only individual keys and delays while its visible dialog has focus; it installs no global input hook. Cooling and safety logic continue to store Celsius internally, so switching the display to Fahrenheit cannot alter the physical thresholds.
-
-Since 3.0.6, the active LCD mode is stored explicitly in full and LCD profiles. Legacy 3.0.5 profiles containing a GIF are migrated to GIF mode. A saved maximized window state can no longer reopen the hidden autostart window, while manual launches continue to open normally. Orderly desktop-session termination also clears the experimental crash marker before USB cleanup.
-
-Both NZXT curves are now evaluated continuously from Linux hwmon. The controller interpolates between points, smooths short Ryzen temperature spikes, adds hysteresis and rate limits writes. It keeps reading the CPU during LCD GIF streaming and uses the coordinated USB handoff only for relevant duty changes. Existing liquid curves are migrated to safe CPU curves, all AM5 profiles provide updated CPU points, repeated sensor failure applies a 75% fallback, and a clean application exit stores conservative autonomous liquid curves in the Kraken.
-
-CPU curves require the application to keep running. Closing to the system tray preserves control; a real exit installs the safe hardware fallback.
-
-OpenLinkHub controls include reported cooling profiles and manual channel values, RGB profiles, brightness, labels, LCD rotation, mouse DPI/polling/sleep options, keyboard profile/layout/device values and headset ANC/sidetone options. Writes remain locked until explicitly enabled for the current application session.
-
-Pump, radiator-fan, quick-profile and calculated CPU-curve writes use a short ownership handoff: the streamer finishes a frame and releases USB, the GUI sends the cooling transaction exclusively, and the same cached stream reconnects and continues automatically. Kraken status polling remains paused, while CPU sensing and CPU-curve evaluation continue through Linux hwmon.
-
-## Highlights
-
-- hierarchical left sidebar
-- automatic device discovery and hardware-filtered modules
-- optional display of undetected modules
-- migration of existing Kraken Control settings
-- OpenLinkHub installation, service-context and local-API detection
-- Corsair device and telemetry view plus allow-listed documented write actions
-- user-scoped OpenLinkHub start, stop and restart actions
-- direct access to the local OpenLinkHub dashboard
-- guided local Wallpaper Engine for KDE gallery with a five-item Workshop checklist, verified opt-in Fedora plugin installer, stable apply-refresh card sizing, workshop/video separation, per-screen selection, playback controls and the original Plasma settings launcher
-- warnings for system context or two active services
+> **Unofficial independent community project:** Open Hardware Control is not supported, approved, endorsed, operated by, or affiliated with NZXT, Corsair, Thermalright, be quiet!, OpenLinkHub, OpenRGB, or any other named manufacturer or project. Product and brand names are used only to describe compatibility. Manufacturers and rights holders can contact Frelidon through the public contact address in the GitHub profile or the Steam username **Frelidon**.
+
+## Screenshots
+
+[![Overview](docs/images/screenshots/01-uebersicht.png)](docs/images/screenshots/01-uebersicht.png)
+
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <a href="docs/images/screenshots/02-kuehlung.png"><img src="docs/images/screenshots/thumbs/02-kuehlung.png" alt="Cooling"></a><br>
+      <sub><b>Cooling</b> · Levita/Kraken, case fans, CoolerControl guard</sub>
+    </td>
+    <td align="center" width="33%">
+      <a href="docs/images/screenshots/03-rgb-studio.png"><img src="docs/images/screenshots/thumbs/03-rgb-studio.png" alt="RGB Studio"></a><br>
+      <sub><b>RGB Studio</b> · engine, ENE-DRAM, test mode, design gallery</sub>
+    </td>
+    <td align="center" width="33%">
+      <a href="docs/images/screenshots/04-lcd-levita.png"><img src="docs/images/screenshots/thumbs/04-lcd-levita.png" alt="LCD · Thermalright Levita display studio"></a><br>
+      <sub><b>LCD</b> · two-layer Thermalright Levita studio</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="33%">
+      <a href="docs/images/screenshots/05-wallpaper-engine.png"><img src="docs/images/screenshots/thumbs/05-wallpaper-engine.png" alt="Wallpaper Engine"></a><br>
+      <sub><b>Wallpaper Engine</b> · Steam Workshop and Plasma playback</sub>
+    </td>
+    <td align="center" width="33%">
+      <a href="docs/images/screenshots/06-profile.png"><img src="docs/images/screenshots/thumbs/06-profile.png" alt="Profiles"></a><br>
+      <sub><b>Profiles</b> · save cooling, RGB, LCD and design together</sub>
+    </td>
+    <td align="center" width="33%">
+      <a href="docs/images/screenshots/07-einstellungen.png"><img src="docs/images/screenshots/thumbs/07-einstellungen.png" alt="Settings"></a><br>
+      <sub><b>Settings</b> · theme, language, display, autostart</sub>
+    </td>
+  </tr>
+</table>
+
+<sub>Click an image for the full-size view. Same order as the sidebar in the app (German UI shown; English, Spanish and French are available).</sub>
+
+## Thermalright Levita Vision display
+
+**The 1600×720 display of the Thermalright Levita Vision 360 ARGB Black is supported.** The local display studio combines your own images and videos (layer 1) with a complete TRCC hardware design or freely movable OHC live values for CPU, GPU, RAM and clock (layer 2). Eleven original OHC backgrounds, two OHC data layouts and one 30-second animation ship with the app – all created by the project owner with OpenAI tools. Thermalright/TRCC catalog media is neither copied nor downloaded.
+
+The safe preview-only test mode is active by default; real USB transfer happens only through the separately installed GPL backend **TRCC Linux** (9.9.12 recommended). Levita pump and radiator fans run through separately confirmed motherboard PWM headers (`PUMP_FAN`, `CPU_FAN`) with a safe 70 %/10 s test; CoolerControl blocks concurrent writes.
+
+## New in 3.4.29.46
+
+- **No more OpenRGB process spam in the background:** the minutely device inventory (`openrgb --client --list-devices`) pauses while OHC is hidden in the system tray and no RGB startup profile, write enable or scheduled retry is pending.
+- **Tidy repository:** documentation lives in `docs/project`, `docs/ai`, `docs/hardware`, `docs/security` and `docs/releases`; distribution files in `packaging/`; community files in `.github/`. The installed layout is unchanged.
+- Seven current screenshots and a compact README with installation near the top.
+
+Older versions: [Version history](#version-history) · [CHANGELOG.md](CHANGELOG.md) · [docs/releases/](docs/releases/)
 
 ## Installation
 
-Fedora/Nobara RPM:
+### Fedora and Nobara – RPM
+
+Download `open-hardware-control-3.4.29.46-1.noarch.rpm` to your Downloads folder and run:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.45-1.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.46-1.noarch.rpm
 ```
 
-Debian/Ubuntu/Linux Mint DEB:
+### Debian, Ubuntu and Linux Mint – DEB
+
+Download `open-hardware-control_3.4.29.46_all.deb` to your Downloads folder and run:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.45_all.deb'
+sudo apt install './open-hardware-control_3.4.29.46_all.deb'
 ```
 
-Universal ZIP for the supported distro families:
+### Universal installer – ZIP
+
+For Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS and openSUSE. Download `open_hardware_control_v3_4_29_46.zip` and run:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_45.zip
-cd open-hardware-control-3.4.29.45
+unzip open_hardware_control_v3_4_29_46.zip
+cd open-hardware-control-3.4.29.46
 chmod +x install.sh
 ./install.sh
 ```
 
-The existing installation is updated in place and **Open Hardware Control by Frelidon** then appears in the application menu. See [INSTALL.md](INSTALL.md) for all distro-specific dependency commands.
+An existing installation is updated in place. Afterwards **Open Hardware Control by Frelidon** appears in the application menu, or start `~/.local/bin/open-hardware-control` from a terminal (the legacy command `kraken-control` still works). The dependency check detects the common package managers automatically; every distro-specific command is listed in [INSTALL.md](INSTALL.md).
 
-The compatibility command `kraken-control` also launches the new application. OpenLinkHub is installed separately and is not bundled or modified by Open Hardware Control.
+Optional and installed separately according to their official guides: **OpenLinkHub** (Corsair), **TRCC Linux** (Levita display), **OpenRGB** (additional RGB devices), **CaptSilver Wallpaper Engine plugin** (KDE). OHC bundles none of these components and does not modify them.
 
-The OpenLinkHub adapter only accepts loopback URLs, exposes no full serial numbers in the UI or logs, validates every payload and never changes the system-wide service automatically. The OpenRGB adapter likewise accepts only `127.0.0.1:6742`, explicit SDK client commands and session-approved writes. It blocks devices already owned by the NZXT or OpenLinkHub modules.
+## Security
 
-See `Open_Hardware_Control_Projekt.md`, `OPENLINKHUB_INTEGRATION.md`, `RGB_STUDIO.md`, `RGB_SECURITY_AUDIT.md`, `SECURITY.md` and `SUPPORTED_DEVICES.md`. The complete NZXT module history remains in `Kraken_Control_Projekt.md` and `USB_CAPTURE_FINDINGS.md`.
+- Writes only reach matching, detected devices: Kraken through liquidctl, Corsair through a fixed validated action list, motherboard PWM only after physical confirmation.
+- OpenLinkHub and OpenRGB are addressed exclusively over loopback (`127.0.0.1`); OpenRGB only in explicit `--client` mode against the local SDK server `127.0.0.1:6742`.
+- RGB/Corsair write permissions apply to the current session only; competing devices (NZXT ↔ OpenRGB, Corsair ↔ OpenLinkHub) stay locked.
+- Polkit grants store no password; system-wide services are never changed automatically. No firmware updates, no cloud, no telemetry.
+- Details: [SECURITY.md](SECURITY.md) · [docs/security/](docs/security/)
 
-Internal experimental beta, provided without warranty. Independent project, not officially affiliated with NZXT, Corsair, OpenLinkHub, Microsoft or Apple. GPL-3.0-or-later.
+## Documentation
+
+| Folder | Contents |
+|---|---|
+| [INSTALL.md](INSTALL.md) · [CHANGELOG.md](CHANGELOG.md) | per-distribution installation, complete change history |
+| [docs/hardware/](docs/hardware/) | [Supported devices](docs/hardware/SUPPORTED_DEVICES.en.md), [Profiles](docs/hardware/PROFILES.md), [CPU profiles](docs/hardware/CPU_PROFILES.en.md), [RGB Studio](docs/hardware/RGB_STUDIO.md), [OpenLinkHub integration](docs/hardware/OPENLINKHUB_INTEGRATION.md), USB capture findings |
+| [docs/project/](docs/project/) | [Architecture](docs/project/ARCHITECTURE.md), [Project status](docs/project/PROJECT_STATUS.md), [Module registry](docs/project/MODULE_REGISTRY.md), [Project scope](docs/project/PROJECT_SCOPE.en.md), roadmap, decisions |
+| [docs/security/](docs/security/) | RGB/desktop security audits, [Privacy](docs/security/PRIVACY.md), scan report |
+| [docs/ai/](docs/ai/) | working guides for local and web-based coding assistants |
+| [docs/releases/](docs/releases/) | release notes for every version, release checklist |
+| [packaging/](packaging/) | udev rule, Polkit policy, metainfo, desktop file, helper scripts |
+
+German version: [README.md](README.md)
+
+## Status
+
+Public experimental beta, provided without warranty. Channel **STABLE**, license **GPL-3.0-or-later**. Contributing: [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) · Help: [.github/SUPPORT.md](.github/SUPPORT.md) · Security reports: [SECURITY.md](SECURITY.md)
+
+## Modules
+
+### NZXT Kraken 2023
+
+RGB, images, GIFs, clock, static and animated live hardware designs, CPU/GPU live values, software-controlled CPU temperature curves for pump and fans, profiles, four languages and an LCD safety fallback. During an LCD animation Kraken status polling stays paused; required pump/fan changes run as a short exclusive USB transaction before the streamer takes over again.
+
+| Device | USB ID | Scope |
+|---|---|---|
+| NZXT Kraken 2023 | `1e71:300e` | liquid, pump, radiator fans, LCD |
+| NZXT 2023 RGB Controller | `1e71:2012` | three RGB channels |
+
+### Thermalright Levita Vision
+
+Two-layer display studio (see above), import of local images, videos, `.zt` files and TRCC layout folders, TRCC categories Gallery/Tech/HUD/Light/Nature/Aesthetic, favourites, a custom design folder, autostart of both layers and cooling through confirmed motherboard PWM headers.
+
+### Motherboard and case fans
+
+Linux hwmon/NCT6687 (e.g. MSI X870 family). Every PWM channel is unlocked only after a short physical test; afterwards Silent/Balanced/Performance, custom curves, sensor source, hysteresis, PWM/DC switching only through an existing `pwmN_mode`, a guided fan assistant and hand-back to BIOS/firmware on exit.
+
+### Corsair · OpenLinkHub
+
+Exclusively through the local API `http://127.0.0.1:27003`. Documented write commands for cooling, RGB/LCD, mouse, keyboard and headset; controls only for detected devices. User and system services are detected separately; system-wide changes are never made automatically.
+
+### RGB Studio · OpenRGB SDK
+
+OHC starts a private windowless OpenRGB process on demand and uses only the local SDK endpoint. Detected devices, zones, LEDs and modes, static colours, native hardware modes, OHC animations (Direct mode), a device test mode, ENE-DRAM cold-start reinitialisation and a saved startup profile.
+
+### Wallpaper Engine for KDE
+
+Reads only local Steam Workshop metadata, selects wallpapers through Plasma's official scripting configuration and controls playback through the local D-Bus object of the separately installed CaptSilver plugin. Guided setup for Steam, subscriptions and the plugin; on Fedora an optional verified RPM download with SHA256 comparison and a second confirmation before Polkit/DNF.
+
+## Version history
+
+**3.4.29.46** – OpenRGB inventory pauses in the tray; repository sorted into topic folders; new screenshots and compact README.
+
+**3.4.29.45** – A saved RGB startup profile is no longer lost when OpenRGB reports a partial cold-start inventory; module-registry check supports the STABLE channel; first stable release of the 3.4.29 line (Levita, RGB, Wallpaper, fans, diagnostics, KDE/Wayland).
+
+**3.4.29.42** – Wallpaper playback buttons use the registered Plasma D-Bus object; three CaptSilver scaling modes; selectable start screen with safe fallback; uniformly narrow scrollbars.
+
+**3.4.29.38** – Modernised RGB Studio with embedded engine controls, on/off buttons, persistent right-click colours, overall brightness and a native channel list; TRCC Linux 9.9.12 recommended as the Levita backend.
+
+All earlier versions back to 2.9.x: [CHANGELOG.md](CHANGELOG.md) and [docs/releases/](docs/releases/).

@@ -11,8 +11,8 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 MODULE_ROOT = ROOT / "modules"
-REGISTRY_PATH = ROOT / "MODULE_REGISTRY.md"
-GUIDE_PATH = ROOT / "AI_DEVELOPMENT_GUIDE.md"
+REGISTRY_PATH = ROOT / "docs/project/MODULE_REGISTRY.md"
+GUIDE_PATH = ROOT / "docs/ai/AI_DEVELOPMENT_GUIDE.md"
 REVIEW_LINES = 800
 REVIEW_CHARS = 40_000
 HARD_LINES = 1_200
@@ -26,12 +26,12 @@ def main() -> int:
     version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
     channel = (ROOT / "BUILD_CHANNEL").read_text(encoding="utf-8").strip().upper()
     if re.search(r"\b\d{2}:\d{2}(?::\d{2})?\b", registry):
-        errors.append("MODULE_REGISTRY.md must not contain times")
+        errors.append("docs/project/MODULE_REGISTRY.md must not contain times")
     if channel not in {"INTERN", "STABLE"}:
         errors.append(f"BUILD_CHANNEL contains an invalid value: {channel}")
     elif f"**Anwendung:** {version} {channel}" not in registry:
         errors.append(
-            f"MODULE_REGISTRY.md does not match application version {version} {channel}"
+            f"docs/project/MODULE_REGISTRY.md does not match application version {version} {channel}"
         )
     if not GUIDE_PATH.is_file() or "AI_DEVELOPMENT_GUIDE.md" not in registry:
         errors.append("mandatory AI development guide is missing from the registry workflow")

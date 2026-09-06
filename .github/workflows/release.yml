@@ -86,7 +86,7 @@ jobs:
           TAG: ${{ steps.release.outputs.tag }}
         shell: bash
         run: |
-          NOTES="docs/RELEASE_NOTES_v${VERSION}.md"
+          NOTES="docs/releases/RELEASE_NOTES_v${VERSION}.md"
           if [[ -f "$NOTES" ]]; then
             gh release create "$TAG" dist/* \
               --title "Open Hardware Control $TAG – Thermalright Levita, NZXT Kraken & RGB on Linux" \

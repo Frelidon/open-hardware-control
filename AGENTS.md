@@ -6,14 +6,14 @@ This repository is the long-term source of truth for Open Hardware Control by Fr
 
 Before any substantive code change:
 
-1. Read `PROJECT_STATUS.md`.
-2. Read `MODULE_REGISTRY.md`; it is the mandatory task-to-module and current-version index.
-3. Read `AI_DEVELOPMENT_GUIDE.md` for the mandatory UI, sensor and LCD extension workflow.
-4. Read `DECISIONS.md`.
-5. Read `ARCHITECTURE.md`.
-6. Read `DEVICE_SUPPORT.md` and the authoritative `SUPPORTED_DEVICES.md` when hardware support is involved.
+1. Read `docs/project/PROJECT_STATUS.md`.
+2. Read `docs/project/MODULE_REGISTRY.md`; it is the mandatory task-to-module and current-version index.
+3. Read `docs/ai/AI_DEVELOPMENT_GUIDE.md` for the mandatory UI, sensor and LCD extension workflow.
+4. Read `docs/project/DECISIONS.md`.
+5. Read `docs/project/ARCHITECTURE.md`.
+6. Read `docs/hardware/DEVICE_SUPPORT.md` and the authoritative `docs/hardware/SUPPORTED_DEVICES.md` when hardware support is involved.
 7. Read the relevant latest release notes and `CHANGELOG.md`.
-8. Read `RELEASE_BACKUP_POLICY.md` when packaging or versioning is involved.
+8. Read `docs/project/RELEASE_BACKUP_POLICY.md` when packaging or versioning is involved.
 9. Inspect `git status` and the relevant code/tests before editing.
 
 If a request conflicts with these files or the current code, stop and explain the conflict instead of silently deleting or redesigning established behavior.
@@ -48,19 +48,19 @@ If a request conflicts with these files or the current code, stop and explain th
 
 - Run the narrowest relevant tests while developing.
 - Before declaring a version/release ready, run `./scripts/check_release.sh`.
-- A successful version build must also complete the external rolling backup defined in `RELEASE_BACKUP_POLICY.md`; verify both retained versions and their SHA256 files.
+- A successful version build must also complete the external rolling backup defined in `docs/project/RELEASE_BACKUP_POLICY.md`; verify both retained versions and their SHA256 files.
 - Update or add regression tests for behavior changes.
 - Do not weaken tests to make broken behavior pass.
-- Update `PROJECT_STATUS.md` after meaningful changes and `DECISIONS.md` when a durable product/architecture decision changes.
+- Update `docs/project/PROJECT_STATUS.md` after meaningful changes and `docs/project/DECISIONS.md` when a durable product/architecture decision changes.
 - Add a `CHANGELOG.md` entry for user-visible changes and release notes for a versioned release.
-- Update `MODULE_REGISTRY.md` without exception whenever source files, module responsibilities, paths, dependencies or module versions change. Dates there use European `TT.MM.JJ` format only, never a time.
+- Update `docs/project/MODULE_REGISTRY.md` without exception whenever source files, module responsibilities, paths, dependencies or module versions change. Dates there use European `TT.MM.JJ` format only, never a time.
 
 ## Local-AI modularity
 
-- New or migrated feature modules live only in their current `modules/<name>/v<major>_<minor>/` folder and follow `MODULE_REGISTRY.md`.
+- New or migrated feature modules live only in their current `modules/<name>/v<major>_<minor>/` folder and follow `docs/project/MODULE_REGISTRY.md`.
 - Target at most 600 lines/32,000 characters per handwritten source file. Split before 800 lines/40,000 characters. New handwritten files above 1,200 lines/60,000 characters are forbidden unless the registry documents a generated/legacy exception.
 - Prefer two focused files over one context-heavy file. Keep UI composition, pure state, persistence, rendering and hardware commands separate.
-- Do not keep source backups or old version folders beside the current module. Git history and tagged releases are the source recovery path. The only backup exception is the rolling, packaged release archive outside the repository defined in `RELEASE_BACKUP_POLICY.md`.
+- Do not keep source backups or old version folders beside the current module. Git history and tagged releases are the source recovery path. The only backup exception is the rolling, packaged release archive outside the repository defined in `docs/project/RELEASE_BACKUP_POLICY.md`.
 
 ## Git and GitHub safety
 

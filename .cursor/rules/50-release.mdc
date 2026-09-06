@@ -1,6 +1,6 @@
 ---
 description: Release, packaging and GitHub publication rules
-globs: "VERSION,BUILD_CHANNEL,CHANGELOG.md,README*.md,docs/RELEASE_*.md,scripts/**,.github/**"
+globs: "VERSION,BUILD_CHANNEL,CHANGELOG.md,README*.md,docs/releases/RELEASE_*.md,scripts/**,.github/**"
 alwaysApply: false
 ---
 
@@ -8,7 +8,7 @@ alwaysApply: false
 - `BUILD_CHANNEL=INTERN` intentionally blocks public release publication.
 - Run `./scripts/check_release.sh` before release packaging/publication.
 - Preserve reproducible ZIP/source/DEB/RPM/developer-package and SHA256 generation.
-- After every successful version build, follow `RELEASE_BACKUP_POLICY.md`: archive the complete result outside the repository and retain and verify the newest two versions.
+- After every successful version build, follow `docs/project/RELEASE_BACKUP_POLICY.md`: archive the complete result outside the repository and retain and verify the newest two versions.
 - Require a clean committed worktree and explicit project-owner approval before GitHub publication.
 - `BUILD_CHANNEL=INTERN` still permits a normal, explicitly requested push to a non-release development branch and an explicitly requested pull request; this is not public release publication.
 - Tags, public releases, force-pushes and remote deletion are separately authorized actions. Never treat permission for one action as permission for another.

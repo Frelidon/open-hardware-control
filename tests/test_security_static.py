@@ -18,12 +18,12 @@ wallpaper_installer_code = (
 # Static guards search the complete runtime implementation even though the
 # former monolith is now split into focused modules.
 code = main_code + "\n" + "\n".join(module_code.values()) + "\n" + rgb_gallery_code
-rule = (ROOT / "71-nzxt-kraken-2023.rules").read_text(encoding="utf-8")
+rule = (ROOT / "packaging/71-nzxt-kraken-2023.rules").read_text(encoding="utf-8")
 installer = (ROOT / "install.sh").read_text(encoding="utf-8")
-helper = (ROOT / "install-udev-rule.sh").read_text(encoding="utf-8")
-diagnostics = (ROOT / "collect-diagnostics.sh").read_text(encoding="utf-8")
+helper = (ROOT / "packaging/install-udev-rule.sh").read_text(encoding="utf-8")
+diagnostics = (ROOT / "packaging/collect-diagnostics.sh").read_text(encoding="utf-8")
 
-assert 'APP_VERSION = "3.4.29.45"' in code
+assert 'APP_VERSION = "3.4.29.46"' in code
 assert 'BUILD_CHANNEL = "STABLE"' in code
 assert 'APP_NAME = "Open Hardware Control"' in code
 assert "shell=True" not in wallpaper_installer_code
@@ -171,8 +171,8 @@ assert "on_temperature_unit_changed" in code
 assert "hardware_label_color" in code and "hardware_value_color" in code
 assert 'OPENLINKHUB_API_URL = "http://127.0.0.1:27003"' in code
 assert (ROOT / "openlinkhub_integration.py").exists()
-assert (ROOT / "OPENLINKHUB_INTEGRATION.md").exists()
-assert (ROOT / "Open_Hardware_Control_Projekt.md").exists()
+assert (ROOT / "docs/hardware/OPENLINKHUB_INTEGRATION.md").exists()
+assert (ROOT / "docs/project/Open_Hardware_Control_Projekt.md").exists()
 assert "class CurveEditor" in code
 assert "class AnimatedBackgroundWidget" in code
 assert "class SetupWizard" in code
@@ -242,15 +242,15 @@ assert 'SUBSYSTEMS=="usb"' in rule
 assert 'MODE="0660"' in rule
 assert 'TAG+="uaccess"' in rule
 assert "--subsystem-match=hidraw" in helper
-assert "install-udev-rule.sh" in installer
-assert "CPU_PROFILES.md" in installer
-assert "COMPONENT_VERSIONS.md" in installer
-assert "ANIMATED_BACKGROUNDS.md" in installer
-assert "PROFILES.md" in installer
-assert "FEATURES_BY_VERSION.md" in installer
-assert "SOURCE_CODE.md" in installer
-assert "Kraken_Control_Projekt.md" in installer
-assert "USB_CAPTURE_FINDINGS.md" in installer
+assert "packaging/install-udev-rule.sh" in installer
+assert "docs/hardware/CPU_PROFILES.md" in installer
+assert "docs/project/COMPONENT_VERSIONS.md" in installer
+assert "docs/hardware/ANIMATED_BACKGROUNDS.md" in installer
+assert "docs/hardware/PROFILES.md" in installer
+assert "docs/project/FEATURES_BY_VERSION.md" in installer
+assert "docs/project/SOURCE_CODE.md" in installer
+assert "docs/project/Kraken_Control_Projekt.md" in installer
+assert "docs/hardware/USB_CAPTURE_FINDINGS.md" in installer
 assert "kraken_cam_streamer.py" in installer
 assert "kraken_lcd_designs.py" in installer
 assert "kraken_sensors.py" in installer
@@ -264,9 +264,9 @@ assert "ui_layout.py" in installer
 assert "desktop_designs.py" in installer
 assert "desktop_assets.py" in installer
 assert "desktop_shell.py" in installer
-assert "DESKTOP_DESIGNS.md" in installer
-assert "Open_Hardware_Control_Projekt.md" in installer
-assert "OPENLINKHUB_INTEGRATION.md" in installer
+assert "docs/hardware/DESKTOP_DESIGNS.md" in installer
+assert "docs/project/Open_Hardware_Control_Projekt.md" in installer
+assert "docs/hardware/OPENLINKHUB_INTEGRATION.md" in installer
 assert (ROOT / "kraken_lcd_designs.py").exists()
 assert (ROOT / "kraken_sensors.py").exists()
 assert (ROOT / "desktop_designs.py").exists()
@@ -277,14 +277,14 @@ assert (ROOT / "assets" / "desktop-designs" / "macos-wallpaper.svg").exists()
 assert (ROOT / "assets" / "desktop-designs" / "windows8-wallpaper.svg").exists()
 assert (ROOT / "assets" / "desktop-designs" / "windows81-wallpaper.svg").exists()
 assert (ROOT / "assets" / "desktop-designs" / "kwin" / "ohc-charms" / "contents" / "code" / "main.js").exists()
-assert (ROOT / "CPU_PROFILES.md").exists()
-assert (ROOT / "COMPONENT_VERSIONS.md").exists()
-assert (ROOT / "ANIMATED_BACKGROUNDS.md").exists()
-assert (ROOT / "PROFILES.md").exists()
-assert (ROOT / "FEATURES_BY_VERSION.md").exists()
-assert (ROOT / "SOURCE_CODE.md").exists()
-assert (ROOT / "Kraken_Control_Projekt.md").exists()
-assert (ROOT / "USB_CAPTURE_FINDINGS.md").exists()
+assert (ROOT / "docs/hardware/CPU_PROFILES.md").exists()
+assert (ROOT / "docs/project/COMPONENT_VERSIONS.md").exists()
+assert (ROOT / "docs/hardware/ANIMATED_BACKGROUNDS.md").exists()
+assert (ROOT / "docs/hardware/PROFILES.md").exists()
+assert (ROOT / "docs/project/FEATURES_BY_VERSION.md").exists()
+assert (ROOT / "docs/project/SOURCE_CODE.md").exists()
+assert (ROOT / "docs/project/Kraken_Control_Projekt.md").exists()
+assert (ROOT / "docs/hardware/USB_CAPTURE_FINDINGS.md").exists()
 assert (ROOT / "tools" / "analyze_usbpcap.py").exists()
 
 assert "toggle_expert_mode" in code
@@ -294,8 +294,8 @@ assert "set_cooling_mode" in code
 assert "clock_auto_resend" in code
 assert "send_clock_keepalive" in code
 
-assert (ROOT / "install-dependencies.sh").exists()
-dep_helper = (ROOT / "install-dependencies.sh").read_text(encoding="utf-8")
+assert (ROOT / "packaging/install-dependencies.sh").exists()
+dep_helper = (ROOT / "packaging/install-dependencies.sh").read_text(encoding="utf-8")
 assert "python3-pyside6" in dep_helper
 assert "python3-pillow" in dep_helper
 assert "qt6-qtsvg" in dep_helper
@@ -309,7 +309,7 @@ assert "--check-openrgb" in dep_helper and "--install-openrgb" in dep_helper
 assert "dnf:openrgb_udev" in dep_helper and 'echo "openrgb-udev-rules"' in dep_helper
 assert "liquidctl" in dep_helper
 assert "pkexec" in dep_helper
-assert "install-dependencies.sh" in installer
+assert "packaging/install-dependencies.sh" in installer
 assert 'hardware_request_coordinator.py' in installer
 assert 'mainboard_fan_control.py' in installer
 assert 'nzxt_esc_profiles.py' in installer
@@ -327,7 +327,7 @@ assert 'usr/share/polkit-1/actions/io.github.Frelidon.OpenHardwareControl.fan.po
 assert '"hardware_request_coordinator.py"' in build_release_code
 assert '"mainboard_fan_control.py"' in build_release_code
 assert '"ohc_fan_helper.py"' in build_release_code
-assert '"io.github.Frelidon.OpenHardwareControl.fan.policy"' in build_release_code
+assert 'PACKAGING_DIR / "io.github.Frelidon.OpenHardwareControl.fan.policy"' in build_release_code
 assert '"nzxt_esc_profiles.py"' in build_release_code
 assert "--check-gui-and-install" in installer
 assert "install_missing_dependencies" in code
@@ -336,7 +336,7 @@ assert "maybe_offer_desktop_design_dependencies" in code
 assert "Fehlende Pakete &installieren" in code
 
 readme = (ROOT / "README.md").read_text(encoding="utf-8")
-assert "# Open Hardware Control by Frelidon 3.4.29.45" in readme
+assert "# Open Hardware Control by Frelidon 3.4.29.46" in readme
 assert "Inoffizielles unabhängiges Community-Projekt" in readme
 assert "Corsair · OpenLinkHub" in readme
 assert "| NZXT 2023 RGB Controller | `1e71:2012`" in readme
@@ -360,7 +360,7 @@ assert "automatische Regelung bleibt gesperrt" in code
 assert "ENE-RAM erneut initialisieren" in code
 assert "manual_reinitialize_ene_dram" in code
 fan_helper = (ROOT / "ohc_fan_helper.py").read_text(encoding="utf-8")
-fan_policy = (ROOT / "io.github.Frelidon.OpenHardwareControl.fan.policy").read_text(encoding="utf-8")
+fan_policy = (ROOT / "packaging/io.github.Frelidon.OpenHardwareControl.fan.policy").read_text(encoding="utf-8")
 assert 'HWMON_ROOT = Path("/sys/class/hwmon")' in fan_helper
 assert 'MAX_CHANNEL = 8' in fan_helper
 assert 'subprocess' not in fan_helper
@@ -666,4 +666,4 @@ assert 'lcd/tile_order' in code
 assert 'Uhr zusätzlich einblenden' in code
 assert 'def open_help_center' in code
 assert 'Sprache / Language / Idioma / Langue' in code
-assert (ROOT / "io.github.Frelidon.OpenHardwareControl.metainfo.xml").exists()
+assert (ROOT / "packaging/io.github.Frelidon.OpenHardwareControl.metainfo.xml").exists()

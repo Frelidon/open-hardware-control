@@ -21,4 +21,4 @@ Dependencies point inward only: these files may import each other and stable bas
 3. Keep source-theme decoding and cache staging only in `theme_adapter.py`; never write `config1.dc`. Do not split a staged theme's background video or generated mask back into extra USB-attaching CLI commands.
 4. Wire the public contract from `thermalright_display_ui.py` without moving backend commands into the model or canvas.
 5. Run `tests/test_levita_layout_module_342918.py`, the Thermalright UI/process tests and the full offscreen UI build.
-6. Update `MODULE_REGISTRY.md` for every changed responsibility or contract. Bump the module version only for a new/changed public contract; keep exactly one current version folder.
+6. Update `../../../docs/project/MODULE_REGISTRY.md` for every changed responsibility or contract. Bump the module version only for a new/changed public contract; keep exactly one current version folder.

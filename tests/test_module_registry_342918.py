@@ -3,14 +3,14 @@ import re
 
 
 ROOT = Path(__file__).resolve().parents[1]
-REGISTRY = (ROOT / "MODULE_REGISTRY.md").read_text(encoding="utf-8")
+REGISTRY = (ROOT / "docs/project/MODULE_REGISTRY.md").read_text(encoding="utf-8")
 AGENTS = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
-GUIDE = (ROOT / "AI_DEVELOPMENT_GUIDE.md").read_text(encoding="utf-8")
+GUIDE = (ROOT / "docs/ai/AI_DEVELOPMENT_GUIDE.md").read_text(encoding="utf-8")
 REGISTRY_CHECK = (ROOT / "scripts" / "check_module_registry.py").read_text(encoding="utf-8")
 
 
 def test_registry_is_mandatory_and_uses_date_without_time() -> None:
-    assert "Read `MODULE_REGISTRY.md`" in AGENTS
+    assert "Read `docs/project/MODULE_REGISTRY.md`" in AGENTS
     assert "01.09.26" in REGISTRY
     assert "TT.MM.JJ" in REGISTRY
     assert "Keine Uhrzeit" in REGISTRY
@@ -51,7 +51,7 @@ def test_ai_guide_covers_small_ui_sensor_and_lcd_modules() -> None:
     assert "## LCD-Komponente erweitern" in GUIDE
     assert "16 GB VRAM" in GUIDE
     assert "MODULE_REGISTRY.md" in GUIDE
-    assert "MODULE_REGISTRY.md" in AGENTS
+    assert "docs/project/MODULE_REGISTRY.md" in AGENTS
 
 
 def test_registry_validator_passes() -> None:

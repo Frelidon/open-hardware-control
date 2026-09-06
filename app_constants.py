@@ -6,13 +6,14 @@
 from __future__ import annotations
 
 import shutil
+from pathlib import Path
 
 from nzxt_backend import SupportLevel
 
 
 APP_NAME = "Open Hardware Control"
 DISPLAY_NAME = "Open Hardware Control by Frelidon"
-APP_VERSION = "3.4.29.45"
+APP_VERSION = "3.4.29.46"
 BUILD_CHANNEL = "STABLE"
 APP_DISPLAY_VERSION = f"{APP_VERSION} {BUILD_CHANNEL}"
 ORG_NAME = "FloriLinuxTools"
@@ -39,3 +40,9 @@ GIF_STREAM_WATCHDOG_SECONDS = 12.0
 GIF_HELPER_NAME = "kraken_cam_streamer.py"
 AUTOSTART_LCD_DELAY_MS = 5000
 SUPPORTED_UI_LANGUAGES = {"de": "Deutsch", "en": "English", "es": "Español", "fr": "Français"}
+
+
+def helper_script_path(app_file: Path, name: str) -> Path:
+    """Installed layout keeps helper scripts flat; the source tree uses packaging/."""
+    flat = app_file.with_name(name)
+    return flat if flat.is_file() else app_file.parent / "packaging" / name

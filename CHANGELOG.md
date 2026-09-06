@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.4.29.46 STABLE
+
+- Beendet den minütlichen Hintergrundstart von `openrgb --client 127.0.0.1:6742 --list-devices`, solange das Hauptfenster im Infobereich verborgen ist und weder ein gespeichertes RGB-Startprofil noch eine Schreibfreigabe oder eine bereits geplante Wiederholung ausstehen. Sichtbares Fenster, Startprofil und Wiederholungen verhalten sich unverändert; Regressionstest `tests/test_rgb_inventory_tray_guard_342946.py`.
+- Sortiert das Repository in Themenordner: Dokumentation nach `docs/project`, `docs/ai`, `docs/hardware`, `docs/security` und `docs/releases`; udev-Regel, Polkit-Policy, Metainfo, Desktop-Vorlage, Icon und Hilfsskripte nach `packaging/`; `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` und `SUPPORT.md` nach `.github/`. `install.sh`, RPM und DEB installieren weiterhin die bekannte flache Programmstruktur; `app_constants.helper_script_path` findet `install-dependencies.sh` und `install-udev-rule.sh` sowohl installiert als auch im Quellbaum.
+- Ersetzt die veralteten August-Screenshots durch sieben aktuelle Aufnahmen (Übersicht, Kühlung, RGB-Studio, LCD/Levita, Wallpaper Engine, Profile, Einstellungen) als anklickbare Galerie in `README.md` und `README.en.md`. Installation, Sicherheit, Dokumentation und Status stehen jetzt direkt nach dem Levita-Highlight; die Versionshistorie in der README umfasst nur noch die letzten vier Versionen und verweist für ältere Stände auf `CHANGELOG.md` und `docs/releases/`.
+
 ## 3.4.29.45 STABLE
 
 - Isoliert den Levita-Videovorschau-Belastungstest vollständig von bereits beim Studioaufbau gestarteten Aufgaben für die gebündelte OHC-Animation. Vor der Messung werden diese Test-Worker kontrolliert beendet und ihre Zähler geleert; danach werden alle 140 synthetischen Einträge und die Zwei-Worker-Grenze deterministisch geprüft.
@@ -197,7 +203,7 @@
 - Add whole-layer X/Y offsets and a block context menu for color, font size, text/label editing and individual reset. Persist overrides separately per selected design.
 - Keep imported TRCC sources immutable. Read native JSON or delegate legacy `config1.dc` decoding to the installed TRCC backend, then stage an OHC-owned content-addressed cache theme with generated `trcc.json` and linked local artwork/media.
 - Introduce `modules/lcd_levita/v1_0/` with separate pure layout model, Qt canvas interaction and TRCC adapter responsibilities; keep the existing display UI as the gradual compatibility orchestrator.
-- Add the mandatory `MODULE_REGISTRY.md`, a registry validator, version-folder rules and strict file-size budgets for local coding models with 16 GB VRAM. Add step-by-step UI, sensor and LCD extension guidance and wire it into every AI startup path.
+- Add the mandatory `docs/project/MODULE_REGISTRY.md`, a registry validator, version-folder rules and strict file-size budgets for local coding models with 16 GB VRAM. Add step-by-step UI, sensor and LCD extension guidance and wire it into every AI startup path.
 - Package the versioned module tree in portable, developer, RPM and DEB outputs and add model, persistence, staging, static UI, registry and full offscreen UI regressions.
 
 ## 3.4.29.17 INTERN
@@ -979,7 +985,7 @@
 - Nach sauberem Stop werden Statusabfragen und Kühlbefehle automatisch wieder freigegeben; nach 0,5 Sekunden wird der Status neu eingelesen.
 - Neuer äußerer 12-Sekunden-Watchdog: Bleiben nach Beginn des Hardwarezugriffs Lebenszeichen aus, wird der Helfer beendet und der vorhandene LCD-Sicherheitsfallback stellt die Flüssigkeitstemperaturanzeige wieder her.
 - Diagnose erweitert um `ack_matching` und die Anzahl während der ACK-Suche übersprungener fremder HID-Berichte.
-- Neue zentrale Projektdokumentation `Kraken_Control_Projekt.md` und technische Mitschnittauswertung `USB_CAPTURE_FINDINGS.md` werden mitinstalliert und liegen im Entwicklerpaket vollständig bei.
+- Neue zentrale Projektdokumentation `docs/project/Kraken_Control_Projekt.md` und technische Mitschnittauswertung `docs/hardware/USB_CAPTURE_FINDINGS.md` werden mitinstalliert und liegen im Entwicklerpaket vollständig bei.
 - 2.9.16 führt **keine Firmwareaktualisierung** aus. Es bleibt eine experimentelle Beta für Kraken 2023 Standard / Non-Elite mit Firmware 2.0.0 und muss am realen Gerät getestet werden.
 
 ---
@@ -1237,7 +1243,7 @@
 - Schreibzugriffsprüfung für /dev/hidraw vor Lüfter- und Kurvenänderungen.
 - Reparaturschaltfläche mit polkit/pkexec sowie aktualisierte udev-Regel und gezieltes USB-/hidraw-Triggern.
 - Laufzeitübersicht für Kraken Control, Python, PySide6, Qt, liquidctl, Pillow, Distribution und Kernel.
-- Neue Dateien CPU_PROFILES.md, CPU_PROFILES.en.md und COMPONENT_VERSIONS.md.
+- Neue Dateien docs/hardware/CPU_PROFILES.md, docs/hardware/CPU_PROFILES.en.md und docs/project/COMPONENT_VERSIONS.md.
 
 # Kraken Control 2.6 - Grafischer Kurveneditor und Design-Einstellungen
 
@@ -1261,7 +1267,7 @@
 - AMD-Grafiksteuerung, allgemeines System-Tuning und externe Lüfterverwaltung sind für eigenständige Werkzeuge vorgesehen.
 - Der Über-Bereich zeigt den enthaltenen und ausgeschlossenen Funktionsumfang jetzt deutlich an.
 - Die Geräteliste erklärt, dass nur die zur Kraken-Kühlung gehörenden Lüfter unterstützt werden.
-- Neue Dateien `PROJECT_SCOPE.md` und `PROJECT_SCOPE.en.md` dokumentieren die Modulgrenzen.
+- Neue Dateien `docs/project/PROJECT_SCOPE.md` und `docs/project/PROJECT_SCOPE.en.md` dokumentieren die Modulgrenzen.
 - Versionsanzeige, Installer, Desktop-Eintrag, Diagnosebericht, README, Sicherheitsdokumentation und statische Tests wurden auf 2.5 aktualisiert.
 
 # Kraken Control 2.4 - Transparente Links und Herstellerverweise
@@ -1272,7 +1278,7 @@
 - Die eigene Projektseite wird nicht erfunden: GitHub/Codeberg bleiben sichtbar als „noch nicht veröffentlicht“, bis eine echte Repository-Adresse feststeht.
 - In der Liste der unterstützten Geräte ist die offizielle NZXT-Seite für Kraken (2023) direkt beim unterstützten Kühler verlinkt.
 - Zusätzlich sind die NZXT-Kühlerübersicht und die NZXT-Hauptseite erreichbar.
-- Neue deutsche und englische Dateien `SOFTWARE_AND_LINKS.md` / `SOFTWARE_AND_LINKS.en.md` dokumentieren alle verwendeten Komponenten, Herstellerseiten, Quellcode- und Lizenzadressen auch außerhalb der Anwendung.
+- Neue deutsche und englische Dateien `docs/project/SOFTWARE_AND_LINKS.md` / `docs/project/SOFTWARE_AND_LINKS.en.md` dokumentieren alle verwendeten Komponenten, Herstellerseiten, Quellcode- und Lizenzadressen auch außerhalb der Anwendung.
 - Versionsanzeige, Desktop-Eintrag, Installer, README und Sicherheitsdokumentation auf 2.4 aktualisiert.
 
 # Kraken Control 2.3.1 - Sicherheitsupdate

@@ -41,21 +41,30 @@ EXCLUDED_FILES = {"MANIFEST.sha256", "SHA256SUMS"}
 EXCLUDED_SUFFIXES = {".pyc", ".pyo"}
 ARCHIVE_MTIME = 946684800  # 2000-01-01 UTC; valid for tar/RPM and reproducible.
 
+# Source files that live in packaging/ but are installed flat next to the app.
+PACKAGING_FILES = {
+    "71-nzxt-kraken-2023.rules",
+    "collect-diagnostics.sh",
+    "install-dependencies.sh",
+    "install-fan-helper.sh",
+    "install-udev-rule.sh",
+    "io.github.Frelidon.OpenHardwareControl.fan.policy",
+    "io.github.Frelidon.OpenHardwareControl.metainfo.xml",
+    "kraken-control.desktop.in",
+    "kraken-control.svg",
+}
+PACKAGING_DIR = ROOT / "packaging"
+# Documentation folders whose Markdown files are installed flat into the app dir.
+DOC_DIRS = ("docs/project", "docs/ai", "docs/hardware", "docs/security")
+
 RUNTIME_FILES = {
     "BUILD_CHANNEL",
-    "71-nzxt-kraken-2023.rules",
     "app_constants.py",
     "branding.py",
-    "collect-diagnostics.sh",
     "desktop_designs.py",
     "desktop_assets.py",
     "desktop_shell.py",
-    "install-dependencies.sh",
-    "install-udev-rule.sh",
     "install.sh",
-    "kraken-control.desktop.in",
-    "kraken-control.svg",
-    "io.github.Frelidon.OpenHardwareControl.metainfo.xml",
     "kraken_cam_streamer.py",
     "hardware_request_coordinator.py",
     "mainboard_fan_control.py",
@@ -65,15 +74,12 @@ RUNTIME_FILES = {
     "dashboard_layout.py",
     "command_backend.py",
     "ohc_fan_helper.py",
-    "io.github.Frelidon.OpenHardwareControl.fan.policy",
-    "install-fan-helper.sh",
     "kraken_control.py",
     "kraken_lcd_designs.py",
     "kraken_sensors.py",
     "localization_catalog.py",
     "nzxt_backend.py",
     "LICENSE",
-    "LOCAL_AI_STARTPROMPT.txt",
     "openlinkhub_integration.py",
     "openlinkhub_mouse_visuals.py",
     "openrgb_integration.py",
@@ -91,7 +97,6 @@ RUNTIME_FILES = {
     "log_view_support.py",
     "nzxt_rgb.py",
     "nzxt_esc_profiles.py",
-    "SECURITY_SCAN_REPORT.json",
     "uninstall.sh",
     "VERSION",
 }
@@ -106,7 +111,7 @@ def should_copy(rel: Path, *, developer: bool) -> bool:
         return True
     if len(rel.parts) == 1 and (rel.name in RUNTIME_FILES or rel.suffix == ".md"):
         return True
-    return rel.parts[0] in {"assets", "test-gifs", "docs", "modules"}
+    return rel.parts[0] in {"assets", "test-gifs", "docs", "modules", "packaging"}
 
 
 def copy_tree(src: Path, dst: Path, *, developer: bool) -> None:
@@ -129,7 +134,8 @@ def validate_package_profiles(runtime: Path, developer: Path) -> None:
         raise SystemExit("Runtime ZIP profile unexpectedly contains development-only folders")
     required = (
         "AGENTS.md",
-        "MODULE_REGISTRY.md",
+        "docs/project/MODULE_REGISTRY.md",
+        "packaging/kraken-control.desktop.in",
         "scripts/check_release.sh",
         "scripts/build_release.py",
         "tests/test_security_static.py",
@@ -202,14 +208,21 @@ def anonymize_tar_metadata(info: tarfile.TarInfo) -> tarfile.TarInfo:
 def install_runtime_tree(package_root: Path) -> None:
     app_dir = package_root / "usr/share/open-hardware-control"
     app_dir.mkdir(parents=True)
-    for name in sorted(RUNTIME_FILES - {"install.sh", "uninstall.sh", "kraken-control.desktop.in"}):
+    for name in sorted(RUNTIME_FILES - {"install.sh", "uninstall.sh"}):
         source = ROOT / name
         if source.exists():
             shutil.copy2(source, app_dir / name)
+    for name in sorted(PACKAGING_FILES - {"kraken-control.desktop.in"}):
+        shutil.copy2(PACKAGING_DIR / name, app_dir / name)
+    shutil.copy2(ROOT / "docs/security/SECURITY_SCAN_REPORT.json", app_dir / "SECURITY_SCAN_REPORT.json")
+    shutil.copy2(ROOT / "docs/ai/LOCAL_AI_STARTPROMPT.txt", app_dir / "LOCAL_AI_STARTPROMPT.txt")
     for name in ("assets", "modules"):
         shutil.copytree(ROOT / name, app_dir / name)
     for source in sorted(ROOT.glob("*.md")):
         shutil.copy2(source, app_dir / source.name)
+    for doc_dir in DOC_DIRS:
+        for source in sorted((ROOT / doc_dir).glob("*.md")):
+            shutil.copy2(source, app_dir / source.name)
 
     bin_dir = package_root / "usr/bin"
     bin_dir.mkdir(parents=True)
@@ -237,7 +250,7 @@ def install_runtime_tree(package_root: Path) -> None:
 
     desktop_dir = package_root / "usr/share/applications"
     desktop_dir.mkdir(parents=True)
-    desktop = (ROOT / "kraken-control.desktop.in").read_text(encoding="utf-8")
+    desktop = (PACKAGING_DIR / "kraken-control.desktop.in").read_text(encoding="utf-8")
     desktop = desktop.replace("@EXEC@", "/usr/bin/open-hardware-control")
     desktop = desktop.replace(
         "@ICON@",
@@ -247,7 +260,7 @@ def install_runtime_tree(package_root: Path) -> None:
 
     icon_dir = package_root / "usr/share/icons/hicolor/scalable/apps"
     icon_dir.mkdir(parents=True)
-    shutil.copy2(ROOT / "kraken-control.svg", icon_dir / "open-hardware-control.svg")
+    shutil.copy2(PACKAGING_DIR / "kraken-control.svg", icon_dir / "open-hardware-control.svg")
     icon_sources = {
         22: ROOT / "assets/branding/icons/open-hardware-control-22.png",
         32: ROOT / "assets/branding/icons/open-hardware-control-32.png",
@@ -264,13 +277,13 @@ def install_runtime_tree(package_root: Path) -> None:
 
     metainfo_dir = package_root / "usr/share/metainfo"
     metainfo_dir.mkdir(parents=True)
-    metainfo = (ROOT / "io.github.Frelidon.OpenHardwareControl.metainfo.xml").read_text(encoding="utf-8")
+    metainfo = (PACKAGING_DIR / "io.github.Frelidon.OpenHardwareControl.metainfo.xml").read_text(encoding="utf-8")
     metainfo = metainfo.replace("@VERSION@", VERSION).replace("@CHANNEL@", CHANNEL)
     (metainfo_dir / "io.github.Frelidon.OpenHardwareControl.metainfo.xml").write_text(metainfo, encoding="utf-8")
 
     rules_dir = package_root / "usr/lib/udev/rules.d"
     rules_dir.mkdir(parents=True)
-    shutil.copy2(ROOT / "71-nzxt-kraken-2023.rules", rules_dir)
+    shutil.copy2(PACKAGING_DIR / "71-nzxt-kraken-2023.rules", rules_dir)
 
     libexec_dir = package_root / "usr/libexec"
     libexec_dir.mkdir(parents=True, exist_ok=True)
@@ -281,7 +294,7 @@ def install_runtime_tree(package_root: Path) -> None:
     polkit_dir = package_root / "usr/share/polkit-1/actions"
     polkit_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy2(
-        ROOT / "io.github.Frelidon.OpenHardwareControl.fan.policy",
+        PACKAGING_DIR / "io.github.Frelidon.OpenHardwareControl.fan.policy",
         polkit_dir / "io.github.Frelidon.OpenHardwareControl.fan.policy",
     )
 

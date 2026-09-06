@@ -8,7 +8,7 @@ LAYOUT_CANVAS = (ROOT / "modules" / "lcd_levita" / "v1_4" / "layout_canvas.py").
 LAYOUT_MODEL = (ROOT / "modules" / "lcd_levita" / "v1_4" / "layout_model.py").read_text(encoding="utf-8")
 THEME_ADAPTER = (ROOT / "modules" / "lcd_levita" / "v1_4" / "theme_adapter.py").read_text(encoding="utf-8")
 BUILD = (ROOT / "scripts" / "build_release.py").read_text(encoding="utf-8")
-DESKTOP = (ROOT / "kraken-control.desktop.in").read_text(encoding="utf-8")
+DESKTOP = (ROOT / "packaging/kraken-control.desktop.in").read_text(encoding="utf-8")
 
 
 def test_thermalright_studio_is_a_full_width_lcd_tile() -> None:

@@ -49,7 +49,7 @@ for name, label in (("README.md", "Projekt-Repository"), ("README.en.md", "Proje
     )
     path.write_text(text, encoding="utf-8")
 
-for name, label in (("SOFTWARE_AND_LINKS.md", "Projekt-Repository"), ("SOFTWARE_AND_LINKS.en.md", "Project repository")):
+for name, label in (("docs/project/SOFTWARE_AND_LINKS.md", "Projekt-Repository"), ("docs/project/SOFTWARE_AND_LINKS.en.md", "Project repository")):
     path = ROOT / name
     text = path.read_text(encoding="utf-8")
     text = replace_region(

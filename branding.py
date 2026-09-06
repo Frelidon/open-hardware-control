@@ -13,7 +13,10 @@ from PySide6.QtWidgets import QLabel
 
 def branding_icon_path(app_dir: Path) -> Path:
     preferred = app_dir / "assets" / "branding" / "open-hardware-control-icon.png"
-    return preferred if preferred.is_file() else app_dir / "kraken-control.svg"
+    if preferred.is_file():
+        return preferred
+    flat_svg = app_dir / "kraken-control.svg"
+    return flat_svg if flat_svg.is_file() else app_dir / "packaging" / "kraken-control.svg"
 
 
 def application_icon(app_dir: Path) -> QIcon:

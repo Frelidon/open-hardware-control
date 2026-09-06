@@ -9,7 +9,7 @@ trap 'rm -rf "$TMP_PYCACHE"' EXIT
 
 mapfile -t python_files < <(find . -type f -name '*.py' -not -path './dist/*' -not -path './build/*' -not -path './.git/*' | sort)
 PYTHONPYCACHEPREFIX="$TMP_PYCACHE" python3 -m py_compile "${python_files[@]}"
-bash -n install.sh install-dependencies.sh install-udev-rule.sh collect-diagnostics.sh uninstall.sh scripts/*.sh
+bash -n install.sh packaging/install-dependencies.sh packaging/install-udev-rule.sh packaging/collect-diagnostics.sh uninstall.sh scripts/*.sh
 
 PYTHONDONTWRITEBYTECODE=1 python3 -m pytest -q
 
@@ -26,7 +26,7 @@ if ! grep -Fq "APP_VERSION = \"$VERSION\"" app_constants.py; then
   echo "APP_VERSION does not match VERSION $VERSION." >&2
   exit 1
 fi
-if [[ ! -f "docs/RELEASE_NOTES_v${VERSION}.md" ]]; then
+if [[ ! -f "docs/releases/RELEASE_NOTES_v${VERSION}.md" ]]; then
   echo "Missing release notes for $VERSION." >&2
   exit 1
 fi
@@ -54,10 +54,10 @@ if find . -type d -name __pycache__ -print -quit | grep -q .; then
 fi
 
 for required in \
-  LICENSE README.md README.en.md INSTALL.md CHANGELOG.md SECURITY.md PRIVACY.md BUILD_CHANNEL MODULE_REGISTRY.md AI_DEVELOPMENT_GUIDE.md RELEASE_BACKUP_POLICY.md \
-  CONTRIBUTING.md SOURCE_CODE.md DEVELOPER_PACKAGE.md VERSION AGENTS.md PROJECT_STATUS.md ARCHITECTURE.md MODULE_MAP.md DECISIONS.md DEVICE_SUPPORT.md AI_HANDOFF.md CURSOR_SETUP.md START_HIER_LOKALE_KI.md LM_STUDIO_ANLEITUNG_DE.md LOCAL_AI_STARTPROMPT.txt \
+  LICENSE README.md README.en.md INSTALL.md CHANGELOG.md SECURITY.md docs/security/PRIVACY.md BUILD_CHANNEL docs/project/MODULE_REGISTRY.md docs/ai/AI_DEVELOPMENT_GUIDE.md docs/project/RELEASE_BACKUP_POLICY.md \
+  .github/CONTRIBUTING.md docs/project/SOURCE_CODE.md docs/project/DEVELOPER_PACKAGE.md VERSION AGENTS.md docs/project/PROJECT_STATUS.md docs/project/ARCHITECTURE.md docs/project/MODULE_MAP.md docs/project/DECISIONS.md docs/hardware/DEVICE_SUPPORT.md docs/ai/AI_HANDOFF.md docs/ai/CURSOR_SETUP.md docs/ai/START_HIER_LOKALE_KI.md docs/ai/LM_STUDIO_ANLEITUNG_DE.md docs/ai/LOCAL_AI_STARTPROMPT.txt \
   kraken_control.py app_constants.py command_backend.py cooling_card_state.py cooling_widgets.py dashboard_layout.py localization_catalog.py privacy_logging.py temperature_utils.py kraken_cam_streamer.py openlinkhub_integration.py openrgb_integration.py openrgb_sdk.py rgb_effects.py ui_layout.py desktop_designs.py \
-  desktop_assets.py desktop_shell.py DESKTOP_SECURITY_AUDIT.md RGB_STUDIO.md RGB_SECURITY_AUDIT.md SECURITY_SCAN_REPORT.json \
+  desktop_assets.py desktop_shell.py docs/security/DESKTOP_SECURITY_AUDIT.md docs/hardware/RGB_STUDIO.md docs/security/RGB_SECURITY_AUDIT.md docs/security/SECURITY_SCAN_REPORT.json \
   scripts/build_release.py scripts/backup_release.py scripts/build_release.sh scripts/check_module_registry.py \
   .github/copilot-instructions.md .cursor/hooks.json .cursor/hooks/session-start.py .cursor/hooks/guard-destructive-shell.py; do
   [[ -f "$required" ]] || { echo "Missing required file: $required" >&2; exit 1; }
