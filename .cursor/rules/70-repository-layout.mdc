@@ -1,0 +1,12 @@
+---
+description: Permanent repository layout and short-README rules for Open Hardware Control
+globs:
+alwaysApply: true
+---
+
+The GitHub front page must stay short. Follow the layout table in @docs/ai/AGENTS.md ("Repository layout and README"):
+
+- Never create new files or folders in the repository root. Root holds only `README.md`, `LICENSE`, `CITATION.cff`, the short `AGENTS.md` pointer and dotfiles.
+- Application code → `src/` (feature modules → `src/modules/<name>/v<major>_<minor>/`). Installer, `VERSION`, `BUILD_CHANNEL`, distro files → `packaging/`. Documentation → the matching `docs/` subfolder (`project`, `ai`, `hardware`, `security`, `releases`, `images`); `INSTALL.md`, `CHANGELOG.md`, `README.en.md` directly in `docs/`. Community/security policies → `.github/`.
+- `README.md` and `docs/README.en.md`: fixed section order, under 200 lines, one "Neu in / New in" section that is replaced per release, version history with at most the four newest versions. Long change text belongs in `docs/CHANGELOG.md` and `docs/releases/RELEASE_NOTES_v<version>.md`.
+- `tests/test_repository_layout_342947.py` enforces these limits. If it fails, move the file or shorten the README – never weaken the test.

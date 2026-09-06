@@ -1,6 +1,6 @@
 ---
 description: Hardware backend ownership, protocol and write-safety rules
-globs: "*backend*.py,kraken_*.py,nzxt_*.py,openlinkhub_*.py,openrgb_*.py,rgb_*.py,src/mainboard_fan_control.py,src/ohc_fan_helper.py,src/cooling_ownership.py,src/hardware_request_coordinator.py"
+globs: "src/*backend*.py,src/kraken_*.py,src/nzxt_*.py,src/openlinkhub_*.py,src/openrgb_*.py,src/rgb_*.py,src/mainboard_fan_control.py,src/ohc_fan_helper.py,src/cooling_ownership.py,src/hardware_request_coordinator.py"
 alwaysApply: false
 ---
 

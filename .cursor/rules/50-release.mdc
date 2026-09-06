@@ -1,6 +1,6 @@
 ---
 description: Release, packaging and GitHub publication rules
-globs: "VERSION,BUILD_CHANNEL,docs/CHANGELOG.md,README*.md,docs/releases/RELEASE_*.md,scripts/**,.github/**"
+globs: "packaging/VERSION,packaging/BUILD_CHANNEL,docs/CHANGELOG.md,README.md,docs/README.en.md,docs/releases/RELEASE_*.md,scripts/**,.github/**"
 alwaysApply: false
 ---
 

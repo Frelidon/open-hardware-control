@@ -19,6 +19,7 @@ Wartungsrelease: Das Repository ist jetzt vollständig in Ordner sortiert. Am Pr
 - `install.sh` erkennt `src/` sowohl im entpackten ZIP (Skript liegt im Paketwurzelordner) als auch im Quellbaum (`packaging/install.sh`).
 - `scripts/build_release.py` kopiert Laufzeitdateien aus `src/`, legt `install.sh`, `uninstall.sh` und `SECURITY.md` in die ZIP-Wurzel und installiert weiterhin flach nach `/usr/share/open-hardware-control`.
 - `app_constants.helper_script_path` und das SVG-Fallback in `branding.py` finden Hilfsdateien im Quellbaum unter `../packaging/`.
+- Neue verbindliche Ablage- und Kurz-README-Regel für alle Coding-KIs in `docs/ai/AGENTS.md`, erzwungen durch `tests/test_repository_layout_342947.py`.
 - Tests importieren aus `ROOT / "src"`; Modulregisterprüfung, Release-Prüfung, Cursor-Regel-Globs und GitHub-Workflows verwenden die neuen Pfade.
 
 ## Aus 3.4.29.46 enthalten

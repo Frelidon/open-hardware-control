@@ -13,4 +13,4 @@ Participants are expected to:
 
 Maintainers may edit, hide or remove abusive content and may restrict participation when necessary to protect contributors or the project.
 
-For security vulnerabilities, use the private reporting route described in [`.github/SECURITY.md`](SECURITY.md), not a public issue containing exploit details.
+For security vulnerabilities, use the private reporting route described in [`SECURITY.md`](SECURITY.md), not a public issue containing exploit details.

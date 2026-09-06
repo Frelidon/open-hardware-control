@@ -38,8 +38,8 @@ jobs:
           REQUESTED_TAG: ${{ inputs.release_tag }}
         shell: bash
         run: |
-          VERSION="$(tr -d '\r\n' < VERSION)"
-          CHANNEL="$(tr -d '\r\n' < BUILD_CHANNEL)"
+          VERSION="$(tr -d '\r\n' < packaging/VERSION)"
+          CHANNEL="$(tr -d '\r\n' < packaging/BUILD_CHANNEL)"
           TAG="v${VERSION}"
           if [[ "$CHANNEL" != "STABLE" ]]; then
             echo "Refusing public release because BUILD_CHANNEL is $CHANNEL" >&2

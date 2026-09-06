@@ -5,6 +5,8 @@
 - Sortiert die letzten losen Dateien des Wurzelverzeichnisses in Ordner: der gesamte Anwendungscode (`*.py`, `assets/`, `modules/`, `test-gifs/`) liegt in `src/`; `install.sh`, `uninstall.sh`, `VERSION` und `BUILD_CHANNEL` in `packaging/`; `INSTALL.md`, `CHANGELOG.md` und `README.en.md` in `docs/`; die vollständigen Agentenanweisungen `AGENTS.md` und `CLAUDE.md` in `docs/ai/`; `SECURITY.md` in `.github/`. Im Wurzelverzeichnis bleiben `README.md`, `LICENSE`, `CITATION.cff` und ein kurzer `AGENTS.md`-Wegweiser.
 - Die installierte Programmstruktur (`~/.local/share/open-hardware-control`, `/usr/share/open-hardware-control`) bleibt flach und unverändert. `install.sh` erkennt `src/` sowohl im entpackten ZIP (Skript im Paketwurzelordner) als auch im Quellbaum (`packaging/`). RPM-/DEB-Bau, Release-Prüfung, Modulregisterprüfung, Tests, Cursor-Regeln und GitHub-Workflows verwenden die neuen Pfade.
 - `app_constants.helper_script_path` und das SVG-Fallback in `branding.py` finden Hilfsdateien im Quellbaum unter `../packaging/`.
+- Verbindliche Ablage- und Kurz-README-Regel für alle Coding-KIs (`docs/ai/AGENTS.md`, Cursor-Regel `70-repository-layout.mdc`, Copilot-/Claude-Anweisungen, `DECISIONS.md`): keine neuen Dateien im Wurzelverzeichnis, feste Zielordner, README unter 200 Zeilen mit höchstens vier Verlaufsversionen. Der Test `tests/test_repository_layout_342947.py` erzwingt die Regel.
+- Korrigiert den GitHub-Release-Workflow, der `VERSION` und `BUILD_CHANNEL` weiterhin im Wurzelverzeichnis suchte.
 
 ## 3.4.29.46 STABLE
 

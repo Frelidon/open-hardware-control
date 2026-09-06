@@ -62,6 +62,41 @@ If a request conflicts with these files or the current code, stop and explain th
 - Prefer two focused files over one context-heavy file. Keep UI composition, pure state, persistence, rendering and hardware commands separate.
 - Do not keep source backups or old version folders beside the current module. Git history and tagged releases are the source recovery path. The only backup exception is the rolling, packaged release archive outside the repository defined in `docs/project/RELEASE_BACKUP_POLICY.md`.
 
+## Repository layout and README (mandatory, owner decision 06.09.26)
+
+The GitHub front page must stay short and tidy. This layout is permanent; do not add new top-level files or folders.
+
+| Location | What belongs there |
+|---|---|
+| repository root | **only** `README.md`, `LICENSE`, `CITATION.cff`, `AGENTS.md` (short pointer to this file) and dotfiles (`.gitignore`, `.gitattributes`, `.editorconfig`). Nothing else – no scripts, no `*.py`, no further Markdown, no version files. |
+| `src/` | all application code: every `*.py` (entry `kraken_control.py`), `assets/`, `modules/<name>/v<major>_<minor>/`, `test-gifs/`. Mirrors the flat installed application directory. |
+| `packaging/` | `install.sh`, `uninstall.sh`, `VERSION`, `BUILD_CHANNEL`, udev rule, Polkit policy, metainfo, desktop template, SVG icon, helper shell scripts. |
+| `docs/` | `INSTALL.md`, `CHANGELOG.md`, `README.en.md` |
+| `docs/project/` | architecture, decisions, status, roadmap, module registry/map, component/feature versions, project documentation, release/backup policies, publishing guide, authors, third-party notices |
+| `docs/ai/` | this file, `CLAUDE.md`, all AI working guides, local-AI prompts |
+| `docs/hardware/` | device lists, profiles, CPU profiles, RGB Studio, OpenLinkHub integration, USB capture findings, desktop designs, animated backgrounds |
+| `docs/security/` | security audits, privacy, `SECURITY_SCAN_REPORT.json` |
+| `docs/releases/` | `RELEASE_NOTES_v<version>.md`, release checklist |
+| `docs/images/` | screenshots (`screenshots/` + `screenshots/thumbs/`), rendering evidence |
+| `.github/` | workflows, templates, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SUPPORT.md`, `SECURITY.md` |
+| `scripts/`, `tests/`, `tools/` | release tooling, pytest suite, developer tools |
+
+Rules for every new file:
+
+1. Pick the folder from the table above. If nothing fits, use the closest `docs/` subfolder – never the root.
+2. New Python code goes into `src/` (feature modules into `src/modules/<name>/v<major>_<minor>/`). Tests import from `ROOT / "src"`.
+3. New documentation goes into the matching `docs/` subfolder and is linked from the README documentation table or the relevant existing document – do not create a second overview document.
+4. Release notes are one file per version in `docs/releases/`; the full history belongs in `docs/CHANGELOG.md`, not in the README.
+5. `tests/test_repository_layout_342947.py` enforces the root allowlist and the README limits; do not weaken it – move the file instead.
+
+README rules (`README.md` and `docs/README.en.md`):
+
+- Fixed section order: intro → Screenshots → Thermalright Levita highlight → **Neu in `<version>`** (3–5 bullets) → Installation → Sicherheit → Dokumentation → Status → Module → Versionsverlauf.
+- Keep the README under 200 lines. Version history lists **at most the four newest versions**, one short line each; remove the oldest entry when adding a new one and point to `docs/CHANGELOG.md` / `docs/releases/` for everything older.
+- Replace the "Neu in" section for each release instead of stacking versions; detailed change text goes to `docs/CHANGELOG.md` and the release notes.
+- Screenshots stay a clickable gallery in sidebar order (`docs/images/screenshots/thumbs/` linked to the full-size images). Replace outdated screenshots; do not add extra image rows.
+- Installation must remain the first section after the highlight and contain the exact artifact names for RPM, DEB and ZIP of the current version (`scripts/check_release.sh` verifies them).
+
 ## Git and GitHub safety
 
 Before any `git push`, GitHub repository push, tag push or GitHub release action:

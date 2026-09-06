@@ -101,6 +101,8 @@ This file records decisions that future agents must preserve unless the project 
 
 ## GitHub publication
 
+- **06.09.26 / 3.4.29.47:** The repository layout is fixed and the GitHub front page must stay short. The root holds only `README.md`, `LICENSE`, `CITATION.cff`, a short `AGENTS.md` pointer and dotfiles. All application code lives in `src/` (mirroring the flat installed directory), installer and version files in `packaging/`, every document in a `docs/` subfolder, community and security policies in `.github/`. `README.md`/`docs/README.en.md` stay under 200 lines with a fixed section order, one replaced-per-release "Neu in" section, a clickable screenshot gallery and at most four history entries; longer text goes to `docs/CHANGELOG.md` and `docs/releases/`. `tests/test_repository_layout_342947.py` enforces this; installed package layouts are unchanged.
+
 - **2026-08-27 / 3.4.26:** The project owner explicitly removed the Google Drive backup workflow and its mandatory push gate. GitHub publication does not depend on Google Drive or another external backup provider.
 - **2026-08-27 / 3.4.26:** Pushes, tags and releases still require a clean committed worktree, relevant successful tests, the correct release channel and an explicit project-owner request.
 - **2026-08-27 / 3.4.26:** Authentication credentials and tokens must never be stored in the repository.
