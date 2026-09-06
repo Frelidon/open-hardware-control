@@ -55,7 +55,7 @@ spec=importlib.util.spec_from_file_location('kraken_v29',str(ROOT / 'src/kraken_
 mod=importlib.util.module_from_spec(spec)
 sys.modules[spec.name]=mod
 spec.loader.exec_module(mod)
-assert mod.APP_VERSION=='3.4.29.47'
+assert mod.APP_VERSION=='3.4.29.48'
 assert mod.BUILD_CHANNEL=='STABLE'
 assert mod.APP_NAME=='Open Hardware Control'
 assert len(mod.AM5_CPU_PROFILES)>=20

@@ -1,12 +1,15 @@
 # Changelog
 
+## 3.4.29.48 STABLE
+
+- Verbindliche Ablage- und Kurz-README-Regel für alle Coding-KIs in `docs/ai/AGENTS.md` (Tabelle *welche Datei wohin*, keine neuen Dateien im Wurzelverzeichnis, README unter 200 Zeilen mit genau einem „Neu in“-Abschnitt und höchstens vier Verlaufsversionen), gespiegelt in `.cursor/rules/70-repository-layout.mdc`, `.github/copilot-instructions.md`, `docs/ai/CLAUDE.md` und `docs/project/DECISIONS.md`. `tests/test_repository_layout_342947.py` erzwingt die Regel.
+- Korrigiert den GitHub-Release-Workflow und die Cursor-Regel-Globs, die nach der Verschiebung noch `VERSION`/`BUILD_CHANNEL` im Wurzelverzeichnis beziehungsweise `*.py` ohne `src/` erwarteten; der Tag `v3.4.29.47` bleibt ohne veröffentlichtes Release.
+
 ## 3.4.29.47 STABLE
 
 - Sortiert die letzten losen Dateien des Wurzelverzeichnisses in Ordner: der gesamte Anwendungscode (`*.py`, `assets/`, `modules/`, `test-gifs/`) liegt in `src/`; `install.sh`, `uninstall.sh`, `VERSION` und `BUILD_CHANNEL` in `packaging/`; `INSTALL.md`, `CHANGELOG.md` und `README.en.md` in `docs/`; die vollständigen Agentenanweisungen `AGENTS.md` und `CLAUDE.md` in `docs/ai/`; `SECURITY.md` in `.github/`. Im Wurzelverzeichnis bleiben `README.md`, `LICENSE`, `CITATION.cff` und ein kurzer `AGENTS.md`-Wegweiser.
 - Die installierte Programmstruktur (`~/.local/share/open-hardware-control`, `/usr/share/open-hardware-control`) bleibt flach und unverändert. `install.sh` erkennt `src/` sowohl im entpackten ZIP (Skript im Paketwurzelordner) als auch im Quellbaum (`packaging/`). RPM-/DEB-Bau, Release-Prüfung, Modulregisterprüfung, Tests, Cursor-Regeln und GitHub-Workflows verwenden die neuen Pfade.
 - `app_constants.helper_script_path` und das SVG-Fallback in `branding.py` finden Hilfsdateien im Quellbaum unter `../packaging/`.
-- Verbindliche Ablage- und Kurz-README-Regel für alle Coding-KIs (`docs/ai/AGENTS.md`, Cursor-Regel `70-repository-layout.mdc`, Copilot-/Claude-Anweisungen, `DECISIONS.md`): keine neuen Dateien im Wurzelverzeichnis, feste Zielordner, README unter 200 Zeilen mit höchstens vier Verlaufsversionen. Der Test `tests/test_repository_layout_342947.py` erzwingt die Regel.
-- Korrigiert den GitHub-Release-Workflow, der `VERSION` und `BUILD_CHANNEL` weiterhin im Wurzelverzeichnis suchte.
 
 ## 3.4.29.46 STABLE
 

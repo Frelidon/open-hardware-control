@@ -1,6 +1,6 @@
 # Installation unter Linux
 
-Diese Anleitung gilt für **Open Hardware Control by Frelidon 3.4.29.47**. Lade das gewünschte Paket von der GitHub-Release-Seite zuerst in `~/Downloads`.
+Diese Anleitung gilt für **Open Hardware Control by Frelidon 3.4.29.48**. Lade das gewünschte Paket von der GitHub-Release-Seite zuerst in `~/Downloads`.
 
 ## Fedora und Nobara
 
@@ -8,7 +8,7 @@ Empfohlenes RPM-Paket:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.47-1.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.48-1.noarch.rpm
 ```
 
 Alternativ das universelle ZIP verwenden. Die benötigten Pakete lauten:
@@ -23,7 +23,7 @@ Empfohlenes DEB-Paket:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.47_all.deb'
+sudo apt install './open-hardware-control_3.4.29.48_all.deb'
 ```
 
 Alternativ das universelle ZIP verwenden. Die benötigten Pakete lauten:
@@ -39,7 +39,7 @@ sudo apt install liquidctl python3-pyside6.qtwidgets python3-pyside6.qtsvg pytho
 sudo pacman -S --needed liquidctl pyside6 python-pillow qt6-svg polkit unzip
 cd ~/Downloads
 unzip open_hardware_control_v3_4_29_43.zip
-cd open-hardware-control-3.4.29.47
+cd open-hardware-control-3.4.29.48
 chmod +x install.sh
 ./install.sh
 ```
@@ -50,7 +50,7 @@ chmod +x install.sh
 sudo zypper install liquidctl python3-pyside6 python3-Pillow libQt6Svg6 polkit unzip
 cd ~/Downloads
 unzip open_hardware_control_v3_4_29_43.zip
-cd open-hardware-control-3.4.29.47
+cd open-hardware-control-3.4.29.48
 chmod +x install.sh
 ./install.sh
 ```
@@ -64,7 +64,7 @@ Für alle oben genannten Distributionen:
 ```bash
 cd ~/Downloads
 unzip open_hardware_control_v3_4_29_43.zip
-cd open-hardware-control-3.4.29.47
+cd open-hardware-control-3.4.29.48
 chmod +x install.sh
 ./install.sh
 ```

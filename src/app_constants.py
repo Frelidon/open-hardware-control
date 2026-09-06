@@ -13,7 +13,7 @@ from nzxt_backend import SupportLevel
 
 APP_NAME = "Open Hardware Control"
 DISPLAY_NAME = "Open Hardware Control by Frelidon"
-APP_VERSION = "3.4.29.47"
+APP_VERSION = "3.4.29.48"
 BUILD_CHANNEL = "STABLE"
 APP_DISPLAY_VERSION = f"{APP_VERSION} {BUILD_CHANNEL}"
 ORG_NAME = "FloriLinuxTools"

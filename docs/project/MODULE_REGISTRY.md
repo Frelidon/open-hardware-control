@@ -1,7 +1,7 @@
 # Open Hardware Control — verbindliches Modulregister
 
 **Stand:** 06.09.26
-**Anwendung:** 3.4.29.47 STABLE
+**Anwendung:** 3.4.29.48 STABLE
 
 Diese Datei ist der verpflichtende erste Wegweiser für lokale und webbasierte Coding-KIs. Sie beantwortet, welches Modul für eine Aufgabe zuständig ist, wo ausschließlich dessen aktuelle Version liegt und welche Dateien dafür gelesen werden müssen. Änderungen an Quellcode, Modulstruktur, Modulversionen oder Verantwortlichkeiten müssen dieses Register im selben Arbeitsschritt aktualisieren. Das Auslassen ist nicht zulässig.
 
@@ -106,7 +106,7 @@ layout_model.py  -> keine Qt-, UI- oder Hardwareabhängigkeit
 
 | Datum | Modul | Version | Änderung |
 |---|---|---:|---|
-| 06.09.26 | Projektgedächtnis / Release-Paketierung | 1.0 / Legacy 3.4.29.47 | Dauerhafte Ablage- und Kurz-README-Regel in `docs/ai/AGENTS.md`, `.cursor/rules/70-repository-layout.mdc`, `.github/copilot-instructions.md`, `docs/ai/CLAUDE.md` und `docs/project/DECISIONS.md`; Wächtertest `tests/test_repository_layout_342947.py` (Root-Allowlist, README < 200 Zeilen, höchstens vier Verlaufsversionen). Release-Workflow liest `packaging/VERSION`/`packaging/BUILD_CHANNEL`; Cursor-Globs zeigen auf `src/` |
+| 06.09.26 | Projektgedächtnis / Release-Paketierung | 1.0 / Legacy 3.4.29.48 | Dauerhafte Ablage- und Kurz-README-Regel in `docs/ai/AGENTS.md`, `.cursor/rules/70-repository-layout.mdc`, `.github/copilot-instructions.md`, `docs/ai/CLAUDE.md` und `docs/project/DECISIONS.md`; Wächtertest `tests/test_repository_layout_342947.py` (Root-Allowlist, README < 200 Zeilen, höchstens vier Verlaufsversionen). Release-Workflow liest `packaging/VERSION`/`packaging/BUILD_CHANNEL`; Cursor-Globs zeigen auf `src/` |
 | 06.09.26 | Release-Paketierung / Gemeinsame Infrastruktur | 1.0 / Legacy 3.4.29.47 | Gesamter Anwendungscode nach `src/` (spiegelt installierte Struktur), Installer/Versionsdateien nach `packaging/`, Dokumente nach `docs/`, `AGENTS.md`/`CLAUDE.md` nach `docs/ai/`, `SECURITY.md` nach `.github/`. `install.sh` erkennt `src/` aus ZIP-Wurzel und `packaging/`; `build_release.py` kopiert aus `SRC_DIR`; Tests, Registerprüfung, Cursor-Globs und Workflows angepasst |
 | 06.09.26 | OpenRGB Studio | Legacy 3.4.29.46 | Minütliche Hintergrund-Inventur (`openrgb --client --list-devices`) pausiert, solange das Hauptfenster im Infobereich verborgen ist und kein RGB-Startprofil, keine Schreibfreigabe und keine geplante Wiederholung ausstehen; Regressionstest `tests/test_rgb_inventory_tray_guard_342946.py` |
 | 06.09.26 | Release-Paketierung / Gemeinsame Infrastruktur | 1.0 / Legacy 3.4.29.46 | Repository aufgeräumt: Dokumentation nach `docs/project`, `docs/ai`, `docs/hardware`, `docs/security`, `docs/releases`; Distributionsdateien nach `packaging/`; Community-Dateien nach `.github/`. `install.sh` und `scripts/build_release.py` installieren weiterhin flach; `app_constants.helper_script_path` findet Hilfsskripte in beiden Layouts; neue README-Galerie mit sieben aktuellen Screenshots |

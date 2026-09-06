@@ -145,7 +145,7 @@ for _refresh in range(2):
     )
 assert application._GIF_SAFETY_TEXT in labels
 assert application._ABOUT_SUMMARY_TEXT in labels
-assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.47 STABLE")
+assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.48 STABLE")
 assert window.temp_card.isHidden()
 assert not window.cpu_temp_card.isHidden()
 window.devices_ready = True

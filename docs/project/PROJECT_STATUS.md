@@ -1,10 +1,12 @@
 # Open Hardware Control — Project Status
 
-**Current development version:** 3.4.29.47 STABLE
+**Current development version:** 3.4.29.48 STABLE
 
 **Status date:** 06 September 2026
 
 **Release channel:** STABLE — public release scripts may run only after the complete release checks, clean commit and explicit owner request.
+
+Version 3.4.29.48 makes the repository layout a permanent owner decision: `docs/ai/AGENTS.md` carries the mandatory placement table and README rules, mirrored in the Cursor rule `70-repository-layout.mdc`, the Copilot and Claude instructions and `DECISIONS.md`; `tests/test_repository_layout_342947.py` enforces the root allowlist, the 200-line README limit and the four-entry history. The release workflow reads `packaging/VERSION`/`packaging/BUILD_CHANNEL`; tag `v3.4.29.47` has no published release.
 
 Version 3.4.29.47 completes the repository reorganisation: all application code (`*.py`, `assets/`, `modules/`, `test-gifs/`) lives in `src/`, which mirrors the flat installed application directory; `install.sh`, `uninstall.sh`, `VERSION` and `BUILD_CHANNEL` live in `packaging/`; `INSTALL.md`, `CHANGELOG.md` and `README.en.md` in `docs/`; the full agent instructions in `docs/ai/AGENTS.md` (the root `AGENTS.md` is a short pointer); `SECURITY.md` in `.github/`. Installed layouts and package contents are unchanged. Tests import from `ROOT / "src"`, the registry validator scans `src/modules/`, and `install.sh` resolves `src/` from both the ZIP root and `packaging/`.
 
@@ -172,7 +174,7 @@ The 3.4.29 codebase has also begun an incremental local-AI-oriented split of the
 - GPU fan control is not part of the mainboard PWM subsystem.
 - Open Radeon Control Center remains separate.
 
-## Before publishing 3.4.29.47
+## Before publishing 3.4.29.48
 
 - Keep `BUILD_CHANNEL=STABLE`; return to `INTERN` if the real desktop/hardware release-candidate test exposes a regression.
 - Run all release checks.

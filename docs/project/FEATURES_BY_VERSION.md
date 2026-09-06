@@ -2,6 +2,7 @@
 
 | Version | Erstmals hinzugekommene Hauptfunktionen |
 |---|---|
+| 3.4.29.48 STABLE | Verbindliche Ablage- und Kurz-README-Regel für alle Coding-KIs mit Wächtertest `tests/test_repository_layout_342947.py`; Release-Workflow liest `packaging/VERSION`. |
 | 3.4.29.47 STABLE | Anwendungscode nach `src/`, Installer und Versionsdateien nach `packaging/`, alle Dokumente nach `docs/`; Wurzelverzeichnis nur noch README, LICENSE, CITATION und AGENTS-Wegweiser; installierte Struktur unverändert. |
 | 3.4.29.46 STABLE | Minütliche OpenRGB-Hintergrundinventur pausiert, solange OHC im Infobereich verborgen ist und keine RGB-Aktion aussteht; Repository in `docs/{project,ai,hardware,security,releases}`, `packaging/` und `.github/` sortiert; sieben aktuelle Screenshots und kompakte README. |
 | 3.4.29.45 STABLE | Deterministisch isolierter 140-Video-Levita-Vorschautest ohne Rennen gegen bereits gestartete gebündelte Medien; finaler öffentlicher Release der vollständig geprüften 3.4.29-Reihe. |
