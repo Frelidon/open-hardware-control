@@ -39,7 +39,7 @@ Quellen:
 
 ## Technische Sicherheitsgrenzen
 
-`openrgb_integration.py`:
+`src/openrgb_integration.py`:
 
 - akzeptiert ausschließlich Loopback-Adressen und in der App fest Port 6742;
 - prüft die Erreichbarkeit vor jedem Clientbefehl;
@@ -50,7 +50,7 @@ Quellen:
 - begrenzt Farblisten auf 4096 LEDs;
 - verwendet nie `shell=True`.
 
-`openrgb_sdk.py`:
+`src/openrgb_sdk.py`:
 
 - akzeptiert nur IPv4-/IPv6-Loopback und Port 1024–65535;
 - fordert SDK-Protokollversion 5 an, verwendet mit dem Server die niedrigere unterstützte Revision und verlangt mindestens Revision 4;
@@ -60,7 +60,7 @@ Quellen:
 - sendet nur Clientname, validierte `RESIZEZONE`-Aufträge, Direct-/Custom-Umschaltung und fertige LED-Farben; Hardwareerkennung und Controllerprotokolle bleiben vollständig in OpenRGB;
 - enthält keine Fernzugriffe, Downloads, Shellausführung oder Hersteller-USB-Protokolle.
 
-`rgb_devices.py`:
+`src/rgb_devices.py`:
 
 - dedupliziert nur DRAM-Namensvarianten mit gleich großen Aliasgruppen;
 - erhält mehrere reale Module mit gleichem Namen;
@@ -69,7 +69,7 @@ Quellen:
 - verwendet eine nicht blockierende Prozesssperre gegen zwei OHC-Schreiber;
 - hält zusätzlich vor jeder Hardwareinitialisierung eine nicht vererbbare Kernel-Sperre für genau eine gesamte OHC-Anwendungsinstanz.
 
-`nzxt_rgb.py`:
+`src/nzxt_rgb.py`:
 
 - enthält eine feste Positivliste dokumentierter NZXT-Effekte;
 - validiert Kanal, Farbanzahl, Hexfarben, Geschwindigkeit und Richtung;
@@ -77,7 +77,7 @@ Quellen:
 - enthält für den NZXT 2023 RGB Controller keine vom liquidctl-1.16-Treiber abgewiesenen `marquee-4`-/`alternating-4`-/`moving-alternating-4`-Aliasse;
 - führt selbst keine Geräte- oder Prozesszugriffe aus.
 
-`kraken_control.py`:
+`src/kraken_control.py`:
 
 - beendet einen zweiten Programmstart vor Qt-Fenster-, Backend- und Hardwareaufbau;
 - öffnet kein OpenRGB-Fenster;

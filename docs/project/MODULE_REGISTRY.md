@@ -1,15 +1,15 @@
 # Open Hardware Control — verbindliches Modulregister
 
 **Stand:** 06.09.26
-**Anwendung:** 3.4.29.46 STABLE
+**Anwendung:** 3.4.29.47 STABLE
 
 Diese Datei ist der verpflichtende erste Wegweiser für lokale und webbasierte Coding-KIs. Sie beantwortet, welches Modul für eine Aufgabe zuständig ist, wo ausschließlich dessen aktuelle Version liegt und welche Dateien dafür gelesen werden müssen. Änderungen an Quellcode, Modulstruktur, Modulversionen oder Verantwortlichkeiten müssen dieses Register im selben Arbeitsschritt aktualisieren. Das Auslassen ist nicht zulässig.
 
 ## Pflichtablauf für jede KI
 
-1. `AGENTS.md` und anschließend dieses Modulregister vollständig lesen.
+1. `docs/ai/AGENTS.md` und anschließend dieses Modulregister vollständig lesen.
 2. In der Tabelle genau das betroffene Modul bestimmen.
-3. Für Umsetzungsschritte `../ai/AI_DEVELOPMENT_GUIDE.md` lesen und danach nur den aktuellen Modulordner, dessen README, öffentliche Schnittstellen und gezielte Tests laden.
+3. Für Umsetzungsschritte `docs/ai/AI_DEVELOPMENT_GUIDE.md` lesen und danach nur den aktuellen Modulordner, dessen README, öffentliche Schnittstellen und gezielte Tests laden.
 4. Keine ältere Modulversion im Arbeitsbaum suchen oder neu anlegen.
 5. Bei einer Änderung Modulversion, Pfad, Abhängigkeiten, Tests und Änderungsregister hier aktualisieren.
 6. Datumsangaben ausschließlich als `TT.MM.JJ` erfassen. Keine Uhrzeit und keine lokalen Benutzer-/Rechnerdaten eintragen.
@@ -24,56 +24,58 @@ Diese Datei ist der verpflichtende erste Wegweiser für lokale und webbasierte C
 
 ## Ordner- und Versionsregel
 
-- Neue oder migrierte Fachmodule liegen unter `modules/<modulname>/v<major>_<minor>/`.
+- Neue oder migrierte Fachmodule liegen unter `src/modules/<modulname>/v<major>_<minor>/`.
 - Jeder aktuelle Versionsordner enthält ein `__init__.py`, ein kurzes `README.md` und kleine Dateien nach Verantwortlichkeit.
 - Die Modulversion beginnt bei `1.0`. Eine neue Funktion oder ein geänderter Vertrag erhöht sie nachvollziehbar, beispielsweise auf `1.1`; ein grundlegender inkompatibler Vertrag auf `2.0`.
 - Im Arbeitsbaum bleibt nur der aktuelle Versionsordner. Git-Historie, Tags und Releases sind die Rückfallebene; parallele `old`, `backup`, `copy` oder veraltete Versionsordner sind nicht erlaubt.
 - Ein bestehender Root-Einstieg darf während der schrittweisen Migration als dünne Kompatibilitätsschicht bleiben. Neue Fachlogik darf dort nicht weiter anwachsen.
-- Abhängigkeiten zeigen nach innen: Versionsmodule importieren niemals den großen UI-Orchestrator `kraken_control.py` und niemals ihre aufrufende Root-UI-Datei zurück.
+- Abhängigkeiten zeigen nach innen: Versionsmodule importieren niemals den großen UI-Orchestrator `src/kraken_control.py` und niemals ihre aufrufende Root-UI-Datei zurück.
 
 ## Aktuelle Modulübersicht
 
 | Modul | Modulversion | Aktueller Pfad | Einstieg / Verantwortung | Status |
 |---|---:|---|---|---|
-| Levita LCD-Datenoberfläche | 1.4 | `modules/lcd_levita/v1_4/` | `layout_model.py` für fehlertolerante Datenblöcke/Persistenz, `layout_canvas.py` für Mittelpunkt-geometrisches Drag-and-drop und die konfigurierbare rechte Bildkante, `panel_geometry.py` für getrennte obere/untere innere Bildradien sowie die äußere Panelkontur, `runtime_policy.py` für sichere persistierte UI-Werte, `theme_adapter.py` für read-only TRCC und ein zusammenhängendes Cache-Theme aus Video, Maske und Live-Blöcken | Versionierter Modulordner |
-| Levita LCD-Orchestrierung | Legacy 3.4.29.43 | `thermalright_display_ui.py`, `thermalright_display.py` | Zwei große Ebenengalerien; explizite Allowlist für elf eigene Hintergründe und eine eigene 30-Sekunden-Animation; persistente Intensität 25–150 % für beide Ebenen; Orbital-Standard 130 %; read-only AMD-Taktprüfung und begrenztes `overlay-update` über den vorhandenen TRCC-Daemon; Neuverbindungsbarriere, IPC-Warteschlange und daemon-sicheres Beenden | Schrittweise Zerlegung aktiv |
-| Hauptfenster und Seitenkomposition | Legacy 3.4.29.43 | `kraken_control.py`, `dashboard_layout.py`, `localization_catalog.py` | Anwendungseinstieg und noch nicht extrahierte Controller; verzögerter RGB-Profilstart bei vorläufiger OpenRGB-Teilerkennung; benannter Startbildschirm mit Hauptbildschirm-Rückfall; global einheitliche schmale Scrollleisten; kompakte Oberfläche, Hilfeseiten und Dashboard-Anordnung | Größen-Ausnahme; neue Monitor- und Wallpaper-Fachlogik ausgelagert |
-| NZXT Kraken | 1.0 legacy | `nzxt_backend.py`, `kraken_sensors.py`, `kraken_cam_streamer.py`, `kraken_lcd_designs.py`, `nzxt_rgb.py` | Erkennung, Sensoren, LCD-Transport und RGB | Ordner-Migration ausstehend |
-| Mainboard-Kühlung | 1.0 legacy | `mainboard_fan_control.py`, `ohc_fan_helper.py`, `cooling_ownership.py` | hwmon/NCT6687, Polkit-Helfer und Besitzschutz | Ordner-Migration ausstehend |
-| OpenRGB Studio | 1.1 | `modules/rgb_studio/v1_1/`, `openrgb_integration.py`, `openrgb_sdk.py`, `rgb_devices.py`, `rgb_effects.py`, Legacy-UI in `kraken_control.py` | `ene_start_recovery.py` für die begrenzte zeitversetzte ENE-DRAM-Startfolge; `design_gallery.py` für die hardwarefreie Galerie mit Auswahl und Rechtsklick-Absicht; Engine-Schalter, Gesamthelligkeit und native Ergebnisliste bleiben bis zur weiteren UI-Auslagerung im Orchestrator | Galerie und ENE-Startlogik versioniert; weitere UI-Migration ausstehend |
-| Corsair/OpenLinkHub | 1.0 legacy | `openlinkhub_integration.py`, `openlinkhub_mouse_visuals.py` | Validierte lokale API und Mausdarstellung | Ordner-Migration ausstehend |
-| Wallpaper Engine for KDE | 1.2 | `modules/wallpaper_engine/v1_2/` | `library.py` für schreibgeschützte Steam-/Video-Erkennung; `plasma.py` für Plasma-Zustand, DisplayMode-Skripte und Wiedergabe am registrierten Plasma-D-Bus-Objekt; `installer.py` für versions-/architekturgenaue offizielle RPM-Auswahl, begrenzten Download und SHA256-Prüfung; `onboarding.py` für Erststartanleitung und zweistufig bestätigte Polkit-/DNF-Installation; `page.py` für Galerie, stabile Kartenmaße, Bildschirmziel, Wiedergabe, Skalierung, Original-KCM und rücksetzbare Profile | Versionierter Modulordner; keine Upstream-Dateien oder Medien enthalten; Passwort bleibt ausschließlich bei Polkit |
-| Fensterplatzierung | 1.0 | `modules/window_placement/v1_0/` | `placement.py` normalisiert Hauptbildschirm-/Namenspräferenzen, löst den gewünschten `QScreen` ohne Qt-Abhängigkeit auf und fällt bei fehlendem Monitor auf den Hauptbildschirm zurück | Reines Richtlinienmodul; KWin behält unter Wayland die endgültige Platzierungsentscheidung |
-| Desktop-Designs | 1.0 legacy | `desktop_shell.py`, `desktop_designs.py`, `desktop_assets.py` | KDE-Designvorschau, Backup und Anwendung | Ordner-Migration ausstehend |
-| Gemeinsame Infrastruktur | 1.0 legacy | `app_constants.py`, `command_backend.py`, `privacy_logging.py`, `window_diagnostics.py`, `hardware_diagnostics.py`, `log_view_support.py`, `temperature_utils.py`, `ui_layout.py`, `dashboard_layout.py` | Identität, Prozesse, Datenschutz, read-only Sensor-Plausibilitätsprüfung, getrennte Log-Ansichten, Diagnose und kleine Dashboard-Komposition | Ordner-Migration nur bei konkreter Änderung |
-| Release-Paketierung | 1.0 | `scripts/build_release.py`, `scripts/backup_release.py`, `scripts/check_release.sh`, `packaging/` | Reproduzierbare Pakete plus atomare externe Sicherung der zwei neuesten vollständigen Versionssätze nach `RELEASE_BACKUP_POLICY.md`; `packaging/` bündelt udev-Regel, Polkit-Policy, Metainfo, Desktop-Vorlage, Icon und Hilfsskripte, die installiert flach neben `kraken_control.py` liegen | Aktiv |
+| Levita LCD-Datenoberfläche | 1.4 | `src/modules/lcd_levita/v1_4/` | `layout_model.py` für fehlertolerante Datenblöcke/Persistenz, `layout_canvas.py` für Mittelpunkt-geometrisches Drag-and-drop und die konfigurierbare rechte Bildkante, `panel_geometry.py` für getrennte obere/untere innere Bildradien sowie die äußere Panelkontur, `runtime_policy.py` für sichere persistierte UI-Werte, `theme_adapter.py` für read-only TRCC und ein zusammenhängendes Cache-Theme aus Video, Maske und Live-Blöcken | Versionierter Modulordner |
+| Levita LCD-Orchestrierung | Legacy 3.4.29.43 | `src/thermalright_display_ui.py`, `src/thermalright_display.py` | Zwei große Ebenengalerien; explizite Allowlist für elf eigene Hintergründe und eine eigene 30-Sekunden-Animation; persistente Intensität 25–150 % für beide Ebenen; Orbital-Standard 130 %; read-only AMD-Taktprüfung und begrenztes `overlay-update` über den vorhandenen TRCC-Daemon; Neuverbindungsbarriere, IPC-Warteschlange und daemon-sicheres Beenden | Schrittweise Zerlegung aktiv |
+| Hauptfenster und Seitenkomposition | Legacy 3.4.29.43 | `src/kraken_control.py`, `src/dashboard_layout.py`, `src/localization_catalog.py` | Anwendungseinstieg und noch nicht extrahierte Controller; verzögerter RGB-Profilstart bei vorläufiger OpenRGB-Teilerkennung; benannter Startbildschirm mit Hauptbildschirm-Rückfall; global einheitliche schmale Scrollleisten; kompakte Oberfläche, Hilfeseiten und Dashboard-Anordnung | Größen-Ausnahme; neue Monitor- und Wallpaper-Fachlogik ausgelagert |
+| NZXT Kraken | 1.0 legacy | `src/nzxt_backend.py`, `src/kraken_sensors.py`, `src/kraken_cam_streamer.py`, `src/kraken_lcd_designs.py`, `src/nzxt_rgb.py` | Erkennung, Sensoren, LCD-Transport und RGB | Ordner-Migration ausstehend |
+| Mainboard-Kühlung | 1.0 legacy | `src/mainboard_fan_control.py`, `src/ohc_fan_helper.py`, `src/cooling_ownership.py` | hwmon/NCT6687, Polkit-Helfer und Besitzschutz | Ordner-Migration ausstehend |
+| OpenRGB Studio | 1.1 | `src/modules/rgb_studio/v1_1/`, `src/openrgb_integration.py`, `src/openrgb_sdk.py`, `src/rgb_devices.py`, `src/rgb_effects.py`, Legacy-UI in `src/kraken_control.py` | `ene_start_recovery.py` für die begrenzte zeitversetzte ENE-DRAM-Startfolge; `design_gallery.py` für die hardwarefreie Galerie mit Auswahl und Rechtsklick-Absicht; Engine-Schalter, Gesamthelligkeit und native Ergebnisliste bleiben bis zur weiteren UI-Auslagerung im Orchestrator | Galerie und ENE-Startlogik versioniert; weitere UI-Migration ausstehend |
+| Corsair/OpenLinkHub | 1.0 legacy | `src/openlinkhub_integration.py`, `src/openlinkhub_mouse_visuals.py` | Validierte lokale API und Mausdarstellung | Ordner-Migration ausstehend |
+| Wallpaper Engine for KDE | 1.2 | `src/modules/wallpaper_engine/v1_2/` | `library.py` für schreibgeschützte Steam-/Video-Erkennung; `plasma.py` für Plasma-Zustand, DisplayMode-Skripte und Wiedergabe am registrierten Plasma-D-Bus-Objekt; `installer.py` für versions-/architekturgenaue offizielle RPM-Auswahl, begrenzten Download und SHA256-Prüfung; `onboarding.py` für Erststartanleitung und zweistufig bestätigte Polkit-/DNF-Installation; `page.py` für Galerie, stabile Kartenmaße, Bildschirmziel, Wiedergabe, Skalierung, Original-KCM und rücksetzbare Profile | Versionierter Modulordner; keine Upstream-Dateien oder Medien enthalten; Passwort bleibt ausschließlich bei Polkit |
+| Fensterplatzierung | 1.0 | `src/modules/window_placement/v1_0/` | `placement.py` normalisiert Hauptbildschirm-/Namenspräferenzen, löst den gewünschten `QScreen` ohne Qt-Abhängigkeit auf und fällt bei fehlendem Monitor auf den Hauptbildschirm zurück | Reines Richtlinienmodul; KWin behält unter Wayland die endgültige Platzierungsentscheidung |
+| Desktop-Designs | 1.0 legacy | `src/desktop_shell.py`, `src/desktop_designs.py`, `src/desktop_assets.py` | KDE-Designvorschau, Backup und Anwendung | Ordner-Migration ausstehend |
+| Gemeinsame Infrastruktur | 1.0 legacy | `src/app_constants.py`, `src/command_backend.py`, `src/privacy_logging.py`, `src/window_diagnostics.py`, `src/hardware_diagnostics.py`, `src/log_view_support.py`, `src/temperature_utils.py`, `src/ui_layout.py`, `src/dashboard_layout.py` | Identität, Prozesse, Datenschutz, read-only Sensor-Plausibilitätsprüfung, getrennte Log-Ansichten, Diagnose und kleine Dashboard-Komposition | Ordner-Migration nur bei konkreter Änderung |
+| Release-Paketierung | 1.0 | `scripts/build_release.py`, `scripts/backup_release.py`, `scripts/check_release.sh`, `packaging/` | Reproduzierbare Pakete plus atomare externe Sicherung der zwei neuesten vollständigen Versionssätze nach `RELEASE_BACKUP_POLICY.md`; `packaging/` bündelt udev-Regel, Polkit-Policy, Metainfo, Desktop-Vorlage, Icon und Hilfsskripte, die installiert flach neben `src/kraken_control.py` liegen | Aktiv |
 
 ## Ordnerstruktur der Dokumentation
 
 | Ordner | Inhalt |
 |---|---|
-| Repository-Wurzel | `README.md`, `README.en.md`, `INSTALL.md`, `CHANGELOG.md`, `SECURITY.md`, `LICENSE`, `CITATION.cff`, `AGENTS.md`, `CLAUDE.md`, `VERSION`, `BUILD_CHANNEL`, `install.sh`, `uninstall.sh`, alle `*.py` |
+| Repository-Wurzel | `README.md`, `LICENSE`, `CITATION.cff`, `AGENTS.md` (kurzer Wegweiser auf `docs/ai/AGENTS.md`) |
+| `src/` | Gesamter Anwendungscode: alle `*.py` (Einstieg `kraken_control.py`), `assets/`, `modules/`, `test-gifs/`. Der Ordner spiegelt die flache installierte Programmstruktur; Tests importieren aus `ROOT / "src"` |
+| `docs/` | `INSTALL.md`, `CHANGELOG.md`, `README.en.md` sowie die Unterordner unten |
 | `docs/project/` | Architektur, Entscheidungen, Projektstatus, Roadmap, Modulregister/-karte, Komponenten- und Funktionsversionen, Projektdokumentationen, Release-Backup-Richtlinie, Veröffentlichungsleitfaden, Autoren, Drittanbieter-Hinweise |
-| `docs/ai/` | KI-Arbeitsanleitungen (`AI_DEVELOPMENT_GUIDE.md`, `AI_HANDOFF.md`, `AI_ASSISTANCE.md`, Cursor-/LM-Studio-Einrichtung, lokaler KI-Startprompt) |
+| `docs/ai/` | `AGENTS.md` (vollständige Agentenanweisungen), `CLAUDE.md`, KI-Arbeitsanleitungen (`AI_DEVELOPMENT_GUIDE.md`, `AI_HANDOFF.md`, `AI_ASSISTANCE.md`, Cursor-/LM-Studio-Einrichtung, lokaler KI-Startprompt) |
 | `docs/hardware/` | Gerätelisten, Profile, CPU-Profile, RGB-Studio, OpenLinkHub-Anbindung, USB-Mitschnittauswertung, Desktop-Designs, animierte Hintergründe |
 | `docs/security/` | Sicherheitsaudits, Datenschutz, `SECURITY_SCAN_REPORT.json` |
 | `docs/releases/` | `RELEASE_NOTES_v*.md`, `RELEASE_CHECKLIST.md` |
 | `docs/images/` | Screenshots und Render-Belege |
-| `packaging/` | Distributions- und Installationsdateien (siehe Release-Paketierung) |
-| `.github/` | Workflows, Vorlagen, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SUPPORT.md` |
+| `packaging/` | `install.sh`, `uninstall.sh`, `VERSION`, `BUILD_CHANNEL` sowie Distributionsdateien (siehe Release-Paketierung) |
+| `.github/` | Workflows, Vorlagen, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SUPPORT.md`, `SECURITY.md` |
 
 ## Erlaubte Abhängigkeiten für Levita LCD 1.4
 
 ```text
-thermalright_display_ui.py
-  -> modules/lcd_levita/v1_4/layout_canvas.py
-  -> modules/lcd_levita/v1_4/layout_model.py
-  -> modules/lcd_levita/v1_4/theme_adapter.py
-  -> modules/lcd_levita/v1_4/panel_geometry.py
-  -> modules/lcd_levita/v1_4/runtime_policy.py
-  -> thermalright_display.py
+src/thermalright_display_ui.py
+  -> src/modules/lcd_levita/v1_4/layout_canvas.py
+  -> src/modules/lcd_levita/v1_4/layout_model.py
+  -> src/modules/lcd_levita/v1_4/theme_adapter.py
+  -> src/modules/lcd_levita/v1_4/panel_geometry.py
+  -> src/modules/lcd_levita/v1_4/runtime_policy.py
+  -> src/thermalright_display.py
 
-layout_canvas.py -> layout_model.py + panel_geometry.py + stabile Geometrie aus thermalright_display.py
+layout_canvas.py -> layout_model.py + panel_geometry.py + stabile Geometrie aus src/thermalright_display.py
 theme_adapter.py -> layout_model.py + optional installiertes TRCC-Lesemodul
 panel_geometry.py -> keine Qt-, UI- oder Hardwareabhängigkeit
 runtime_policy.py -> keine Qt-, UI- oder Hardwareabhängigkeit
@@ -97,20 +99,21 @@ layout_model.py  -> keine Qt-, UI- oder Hardwareabhängigkeit
 
 | Datei | Grund | Nächster Schnitt |
 |---|---|---|
-| `kraken_control.py` | Historischer Anwendungseinstieg mit Kompatibilitätsnamen | Jeweils eine Seite oder einen Controller pro Version in einen Modulordner extrahieren |
-| `thermalright_display_ui.py` | Bereits laufend entwickelte Karten-, Vorschau- und Prozessoberfläche | Katalog/Thumbnail-Warteschlange als nächstes getrennt auslagern; keine neue Layout-Fachlogik mehr hier ablegen |
+| `src/kraken_control.py` | Historischer Anwendungseinstieg mit Kompatibilitätsnamen | Jeweils eine Seite oder einen Controller pro Version in einen Modulordner extrahieren |
+| `src/thermalright_display_ui.py` | Bereits laufend entwickelte Karten-, Vorschau- und Prozessoberfläche | Katalog/Thumbnail-Warteschlange als nächstes getrennt auslagern; keine neue Layout-Fachlogik mehr hier ablegen |
 
 ## Änderungsregister
 
 | Datum | Modul | Version | Änderung |
 |---|---|---:|---|
+| 06.09.26 | Release-Paketierung / Gemeinsame Infrastruktur | 1.0 / Legacy 3.4.29.47 | Gesamter Anwendungscode nach `src/` (spiegelt installierte Struktur), Installer/Versionsdateien nach `packaging/`, Dokumente nach `docs/`, `AGENTS.md`/`CLAUDE.md` nach `docs/ai/`, `SECURITY.md` nach `.github/`. `install.sh` erkennt `src/` aus ZIP-Wurzel und `packaging/`; `build_release.py` kopiert aus `SRC_DIR`; Tests, Registerprüfung, Cursor-Globs und Workflows angepasst |
 | 06.09.26 | OpenRGB Studio | Legacy 3.4.29.46 | Minütliche Hintergrund-Inventur (`openrgb --client --list-devices`) pausiert, solange das Hauptfenster im Infobereich verborgen ist und kein RGB-Startprofil, keine Schreibfreigabe und keine geplante Wiederholung ausstehen; Regressionstest `tests/test_rgb_inventory_tray_guard_342946.py` |
 | 06.09.26 | Release-Paketierung / Gemeinsame Infrastruktur | 1.0 / Legacy 3.4.29.46 | Repository aufgeräumt: Dokumentation nach `docs/project`, `docs/ai`, `docs/hardware`, `docs/security`, `docs/releases`; Distributionsdateien nach `packaging/`; Community-Dateien nach `.github/`. `install.sh` und `scripts/build_release.py` installieren weiterhin flach; `app_constants.helper_script_path` findet Hilfsskripte in beiden Layouts; neue README-Galerie mit sieben aktuellen Screenshots |
 | 05.09.26 | Levita-Testumgebung | Legacy 3.4.29.43 | Bereits gestartete Vorschauarbeit gebündelter Medien vor dem synthetischen 140-Video-Belastungstest kontrolliert beendet und Zähler geleert; Workergrenze und vollständige Warteschlange werden anschließend deterministisch geprüft |
 | 05.09.26 | Release-Paketierung / Levita-Testumgebung | 1.0 / Legacy 3.4.29.43 | GitHub Actions installiert die vollständigen Python-/Qt-Testabhängigkeiten samt EGL-Laufzeit; Vorschau-Warteschlangentest misst vorhandene gebündelte Medien relativ zum echten Anfangszustand statt einen leeren Cache vorauszusetzen |
 | 05.09.26 | Levita LCD-Orchestrierung | Legacy 3.4.29.43 | Acht weitere eigene 1600×720-KI-Hintergründe und genau eine deduplizierte 30-Sekunden-Animation über eine feste Paket-Allowlist in die OHC-Galerie aufgenommen; Hersteller-/TRCC-Katalogmedien bleiben ausgeschlossen |
 | 05.09.26 | Hauptfenster und Seitenkomposition / OpenRGB Studio | Legacy 3.4.29.43 / 1.1 | Gespeicherten RGB-Profilstart bei absichtlich zurückgehaltener erster OpenRGB-Teilerkennung vorgemerkt gehalten; begrenzte Inventarwiederholung übernimmt das Design nach vollständiger Erkennung statt den einmaligen Startwunsch zu verwerfen |
-| 05.09.26 | Release-Paketierung | 1.0 | Modulregisterprüfung vom fest verdrahteten internen Kanal auf den validierten Inhalt von `BUILD_CHANNEL` umgestellt; stabilen RPM-Quellbaum unter einen eigenen temporären Elternordner gelegt, damit er nicht mit dem gleichnamigen Laufzeitbaum kollidiert |
+| 05.09.26 | Release-Paketierung | 1.0 | Modulregisterprüfung vom fest verdrahteten internen Kanal auf den validierten Inhalt von `packaging/BUILD_CHANNEL` umgestellt; stabilen RPM-Quellbaum unter einen eigenen temporären Elternordner gelegt, damit er nicht mit dem gleichnamigen Laufzeitbaum kollidiert |
 | 05.09.26 | Wallpaper Engine for KDE | 1.2 | Pause/Fortsetzen/Weiter/Ton vom nicht vorhandenen separaten Alias auf das nachweislich unter `org.kde.plasmashell` registrierte `/WallpaperEngine`-Objekt umgestellt; Zurück wegen fehlender echter CaptSilver-v1.4-API über die vorherige validierte lokale Workshop-Karte umgesetzt; DisplayMode 0/1/2 pro Zielbildschirm ergänzt |
 | 05.09.26 | Fensterplatzierung | 1.0 | Hauptbildschirm als Standard sowie persistente Auswahl über den stabilen Qt-Bildschirmnamen mit sicherem Hauptbildschirm-Rückfall eingeführt; Platzierung bleibt unter Wayland eine Anforderung an KWin |
 | 05.09.26 | Hauptfenster und Seitenkomposition | Legacy 3.4.29.42 | Wiederhergestellte Fenstergeometrie vor dem Anzeigen an die Bildschirmpräferenz gebunden und alle Scrollbereiche, Listen und Tabellen über ein gemeinsames acht Pixel schmales Scrollleisten-Design vereinheitlicht |
@@ -130,7 +133,7 @@ layout_model.py  -> keine Qt-, UI- oder Hardwareabhängigkeit
 | 01.09.26 | Levita LCD-Orchestrierung | Legacy 3.4.29.19 | Editierbare Cache-Themes mit validiertem `trcc.json` als vollständige TRCC-Hardwaredesigns zugelassen; doppelte Vorschauaufbauten beim Auswahlwechsel entfernt |
 | 01.09.26 | Levita LCD-Datenoberfläche | 1.1 | Vorschau auf TRCC-Mittelpunkt-Koordinaten korrigiert; Videoframes aktualisieren nur den Hintergrund und lassen aktive Drag-Objekte bestehen; Rechtsklick fordert den eingebetteten Seiteneditor statt externer Dialoge an |
 | 01.09.26 | Levita LCD-Orchestrierung | Legacy 3.4.29.20 | Erneute Auswahl lädt Hintergrund und Datenebene sofort; letzter gültiger Videoframe bleibt während asynchroner Vorbereitung sichtbar |
-| 01.09.26 | Hauptfenster und Seitenkomposition | Legacy 3.4.29.20 | Dashboard-Anordnung in `dashboard_layout.py` extrahiert; Kraken-Wassertemperaturkarte ohne verbundene Hardware oder echten Kühlmittelwert automatisch verborgen, gespeicherte Benutzerauswahl bleibt erhalten |
+| 01.09.26 | Hauptfenster und Seitenkomposition | Legacy 3.4.29.20 | Dashboard-Anordnung in `src/dashboard_layout.py` extrahiert; Kraken-Wassertemperaturkarte ohne verbundene Hardware oder echten Kühlmittelwert automatisch verborgen, gespeicherte Benutzerauswahl bleibt erhalten |
 | 02.09.26 | Levita LCD-Datenoberfläche | 1.1 | Gerade Notch-Innenkante und abgerundete äußere rechte Displayecken in `panel_geometry.py`; Vorschau und erzeugtes Cachebild nutzen dieselbe Kontur |
 | 02.09.26 | Levita LCD-Orchestrierung | Legacy 3.4.29.21 | Klick auf eine Ebene-1-Karte setzt Bild oder gecachten Videoframe sofort in die große Vorschau; kein erzwungenes Schwarz vor dem ersten Standbild |
 | 02.09.26 | Levita LCD-Datenoberfläche | 1.2 | Fehlerhafte importierte Einzelelemente werden isoliert übersprungen; sichere Split-Modus-Richtlinie ergänzt und einzigen aktuellen Modulordner auf `v1_2` angehoben |

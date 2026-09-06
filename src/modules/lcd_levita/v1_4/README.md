@@ -10,7 +10,7 @@ Current implementation of the editable Thermalright Levita LCD surface.
 
 The imported `config1.dc` is immutable. Runtime cache themes use `trcc.json` and symbolic links to local media; they are not source assets and are never packaged.
 
-Dependencies point inward only: these files may import each other and stable base helpers, but must never import `thermalright_display_ui.py` or `kraken_control.py`.
+Dependencies point inward only: these files may import each other and stable base helpers, but must never import `src/thermalright_display_ui.py` or `src/kraken_control.py`.
 
 ## Extension rules
 
@@ -19,6 +19,6 @@ Dependencies point inward only: these files may import each other and stable bas
    TRCC text `x/y` values identify each rendered block's visual centre. Never reinterpret them as a top-left corner. Animated background frames must update the background pixmap in place and must not rebuild draggable layer-2 items.
    The inner media radii belong to the boundary before the black notch bar, not to the physical outer panel corners. Preview and generated hardware mask must call the shared pure geometry.
 3. Keep source-theme decoding and cache staging only in `theme_adapter.py`; never write `config1.dc`. Do not split a staged theme's background video or generated mask back into extra USB-attaching CLI commands.
-4. Wire the public contract from `thermalright_display_ui.py` without moving backend commands into the model or canvas.
+4. Wire the public contract from `src/thermalright_display_ui.py` without moving backend commands into the model or canvas.
 5. Run `tests/test_levita_layout_module_342918.py`, the Thermalright UI/process tests and the full offscreen UI build.
-6. Update `../../../docs/project/MODULE_REGISTRY.md` for every changed responsibility or contract. Bump the module version only for a new/changed public contract; keep exactly one current version folder.
+6. Update `src/docs/project/MODULE_REGISTRY.md` for every changed responsibility or contract. Bump the module version only for a new/changed public contract; keep exactly one current version folder.

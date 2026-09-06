@@ -1,4 +1,4 @@
-# Supported devices – Open Hardware Control 3.4.29.46
+# Supported devices – Open Hardware Control 3.4.29.47
 
 ## NZXT module
 

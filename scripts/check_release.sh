@@ -9,20 +9,20 @@ trap 'rm -rf "$TMP_PYCACHE"' EXIT
 
 mapfile -t python_files < <(find . -type f -name '*.py' -not -path './dist/*' -not -path './build/*' -not -path './.git/*' | sort)
 PYTHONPYCACHEPREFIX="$TMP_PYCACHE" python3 -m py_compile "${python_files[@]}"
-bash -n install.sh packaging/install-dependencies.sh packaging/install-udev-rule.sh packaging/collect-diagnostics.sh uninstall.sh scripts/*.sh
+bash -n packaging/install.sh packaging/uninstall.sh packaging/install-dependencies.sh packaging/install-udev-rule.sh packaging/install-fan-helper.sh packaging/collect-diagnostics.sh scripts/*.sh
 
 PYTHONDONTWRITEBYTECODE=1 python3 -m pytest -q
 
 PYTHONDONTWRITEBYTECODE=1 python3 scripts/security_scan_release.py
 PYTHONDONTWRITEBYTECODE=1 python3 scripts/check_module_registry.py
 
-VERSION="$(tr -d '\r\n' < VERSION)"
-CHANNEL="$(tr -d '\r\n' < BUILD_CHANNEL)"
+VERSION="$(tr -d '\r\n' < packaging/VERSION)"
+CHANNEL="$(tr -d '\r\n' < packaging/BUILD_CHANNEL)"
 if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
   echo "Invalid VERSION: $VERSION" >&2
   exit 1
 fi
-if ! grep -Fq "APP_VERSION = \"$VERSION\"" app_constants.py; then
+if ! grep -Fq "APP_VERSION = \"$VERSION\"" src/app_constants.py; then
   echo "APP_VERSION does not match VERSION $VERSION." >&2
   exit 1
 fi
@@ -53,13 +53,18 @@ if find . -type d -name __pycache__ -print -quit | grep -q .; then
   exit 1
 fi
 
-for required in \
-  LICENSE README.md README.en.md INSTALL.md CHANGELOG.md SECURITY.md docs/security/PRIVACY.md BUILD_CHANNEL docs/project/MODULE_REGISTRY.md docs/ai/AI_DEVELOPMENT_GUIDE.md docs/project/RELEASE_BACKUP_POLICY.md \
-  .github/CONTRIBUTING.md docs/project/SOURCE_CODE.md docs/project/DEVELOPER_PACKAGE.md VERSION AGENTS.md docs/project/PROJECT_STATUS.md docs/project/ARCHITECTURE.md docs/project/MODULE_MAP.md docs/project/DECISIONS.md docs/hardware/DEVICE_SUPPORT.md docs/ai/AI_HANDOFF.md docs/ai/CURSOR_SETUP.md docs/ai/START_HIER_LOKALE_KI.md docs/ai/LM_STUDIO_ANLEITUNG_DE.md docs/ai/LOCAL_AI_STARTPROMPT.txt \
-  kraken_control.py app_constants.py command_backend.py cooling_card_state.py cooling_widgets.py dashboard_layout.py localization_catalog.py privacy_logging.py temperature_utils.py kraken_cam_streamer.py openlinkhub_integration.py openrgb_integration.py openrgb_sdk.py rgb_effects.py ui_layout.py desktop_designs.py \
-  desktop_assets.py desktop_shell.py docs/security/DESKTOP_SECURITY_AUDIT.md docs/hardware/RGB_STUDIO.md docs/security/RGB_SECURITY_AUDIT.md docs/security/SECURITY_SCAN_REPORT.json \
-  scripts/build_release.py scripts/backup_release.py scripts/build_release.sh scripts/check_module_registry.py \
-  .github/copilot-instructions.md .cursor/hooks.json .cursor/hooks/session-start.py .cursor/hooks/guard-destructive-shell.py; do
+for required in LICENSE README.md docs/README.en.md docs/INSTALL.md docs/CHANGELOG.md .github/SECURITY.md docs/security/PRIVACY.md \
+  packaging/BUILD_CHANNEL docs/project/MODULE_REGISTRY.md docs/ai/AI_DEVELOPMENT_GUIDE.md docs/project/RELEASE_BACKUP_POLICY.md \
+  .github/CONTRIBUTING.md docs/project/SOURCE_CODE.md docs/project/DEVELOPER_PACKAGE.md packaging/VERSION docs/ai/AGENTS.md \
+  docs/project/PROJECT_STATUS.md docs/project/ARCHITECTURE.md docs/project/MODULE_MAP.md docs/project/DECISIONS.md docs/hardware/DEVICE_SUPPORT.md \
+  docs/ai/AI_HANDOFF.md docs/ai/CURSOR_SETUP.md docs/ai/START_HIER_LOKALE_KI.md docs/ai/LM_STUDIO_ANLEITUNG_DE.md docs/ai/LOCAL_AI_STARTPROMPT.txt \
+  src/kraken_control.py src/app_constants.py src/command_backend.py src/cooling_card_state.py src/cooling_widgets.py src/dashboard_layout.py \
+  src/localization_catalog.py src/privacy_logging.py src/temperature_utils.py src/kraken_cam_streamer.py src/openlinkhub_integration.py \
+  src/openrgb_integration.py src/openrgb_sdk.py src/rgb_effects.py src/ui_layout.py src/desktop_designs.py src/desktop_assets.py src/desktop_shell.py \
+  docs/security/DESKTOP_SECURITY_AUDIT.md docs/hardware/RGB_STUDIO.md docs/security/RGB_SECURITY_AUDIT.md docs/security/SECURITY_SCAN_REPORT.json \
+  scripts/build_release.py scripts/backup_release.py scripts/build_release.sh scripts/check_module_registry.py .github/copilot-instructions.md \
+  .cursor/hooks.json .cursor/hooks/session-start.py .cursor/hooks/guard-destructive-shell.py AGENTS.md packaging/install.sh packaging/uninstall.sh \
+  docs/ai/CLAUDE.md; do
   [[ -f "$required" ]] || { echo "Missing required file: $required" >&2; exit 1; }
 done
 

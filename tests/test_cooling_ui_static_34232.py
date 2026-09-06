@@ -1,9 +1,9 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-CODE = (ROOT / "kraken_control.py").read_text(encoding="utf-8")
+CODE = (ROOT / "src/kraken_control.py").read_text(encoding="utf-8")
 BUILD = (ROOT / "scripts/build_release.py").read_text(encoding="utf-8")
-INSTALL = (ROOT / "install.sh").read_text(encoding="utf-8")
+INSTALL = (ROOT / "packaging/install.sh").read_text(encoding="utf-8")
 
 
 def test_compact_dashboard_and_cards_exist():

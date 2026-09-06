@@ -2,6 +2,7 @@
 
 | Version | Erstmals hinzugekommene Hauptfunktionen |
 |---|---|
+| 3.4.29.47 STABLE | Anwendungscode nach `src/`, Installer und Versionsdateien nach `packaging/`, alle Dokumente nach `docs/`; Wurzelverzeichnis nur noch README, LICENSE, CITATION und AGENTS-Wegweiser; installierte Struktur unverändert. |
 | 3.4.29.46 STABLE | Minütliche OpenRGB-Hintergrundinventur pausiert, solange OHC im Infobereich verborgen ist und keine RGB-Aktion aussteht; Repository in `docs/{project,ai,hardware,security,releases}`, `packaging/` und `.github/` sortiert; sieben aktuelle Screenshots und kompakte README. |
 | 3.4.29.45 STABLE | Deterministisch isolierter 140-Video-Levita-Vorschautest ohne Rennen gegen bereits gestartete gebündelte Medien; finaler öffentlicher Release der vollständig geprüften 3.4.29-Reihe. |
 | 3.4.29.44 STABLE | Bereinigter öffentlicher Release der 3.4.29-Funktionsreihe; GitHub-Runner mit vollständiger Qt/EGL-Testumgebung; cache-unabhängiger Levita-Videovorschau-Test für die gebündelte 30-Sekunden-Animation. |
@@ -76,7 +77,7 @@
 | 2.1 | Serielle asynchrone QProcess-Warteschlange; Entfernung des absturzanfälligen QThreadPool/QRunnable-Aufbaus. |
 | 2.2 | Eindeutige LCD-Einzelübertragung und optionaler Wiederholungs-Fallback. |
 | 2.3 | LCD-Uhr, runde Vorschau, Frelidon-Branding, Über-Bereich, GPL-Lizenz, Diagnosewerkzeug und englische Grunddokumentation. |
-| 2.3.1 | Sicherheitsbestätigungen, sichere Kurvenprüfung, 65/65-Standardprofil, stärkere Anonymisierung und SECURITY.md. |
+| 2.3.1 | Sicherheitsbestätigungen, sichere Kurvenprüfung, 65/65-Standardprofil, stärkere Anonymisierung und ../../.github/SECURITY.md. |
 | 2.4 | Transparente Links zu Websites, Quellcode und Lizenzen; offizieller NZXT-Gerätelink. |
 | 2.5 | Klare Beschränkung auf Kraken, zugehörige Radiatorlüfter, LCD und separaten NZXT-RGB-Controller. |
 | 2.6 | Grafischer Kurveneditor, Live-Temperaturmarker, Hell/Dunkel/System und Hex-Akzentfarben. |

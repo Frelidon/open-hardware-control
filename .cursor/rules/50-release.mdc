@@ -1,10 +1,10 @@
 ---
 description: Release, packaging and GitHub publication rules
-globs: "VERSION,BUILD_CHANNEL,CHANGELOG.md,README*.md,docs/releases/RELEASE_*.md,scripts/**,.github/**"
+globs: "VERSION,BUILD_CHANNEL,docs/CHANGELOG.md,README*.md,docs/releases/RELEASE_*.md,scripts/**,.github/**"
 alwaysApply: false
 ---
 
-- `VERSION`, `APP_VERSION`, README artifact names and release notes must agree.
+- `packaging/VERSION`, `APP_VERSION`, README artifact names and release notes must agree.
 - `BUILD_CHANNEL=INTERN` intentionally blocks public release publication.
 - Run `./scripts/check_release.sh` before release packaging/publication.
 - Preserve reproducible ZIP/source/DEB/RPM/developer-package and SHA256 generation.

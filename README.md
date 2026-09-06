@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.46
+# Open Hardware Control by Frelidon 3.4.29.47
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -55,47 +55,47 @@ Projekt-Repository: <https://github.com/Frelidon/open-hardware-control>
 
 Der sichere Testmodus ist standardmäßig aktiv; echte USB-Übertragung erfolgt nur über das separat installierte GPL-Backend **TRCC Linux** (9.9.12 empfohlen). Pumpe und Radiatorlüfter der Levita laufen über getrennt bestätigte Mainboard-PWM-Header (`PUMP_FAN`, `CPU_FAN`) mit sicherem 70-%-/10-s-Test; CoolerControl blockiert parallele Schreibzugriffe.
 
-## Neu in 3.4.29.46
+## Neu in 3.4.29.47
 
-- **Kein OpenRGB-Prozess-Spam mehr im Hintergrund:** Die minütliche Geräteinventur (`openrgb --client --list-devices`) pausiert, solange OHC im Infobereich verborgen ist und kein RGB-Startprofil, keine Schreibfreigabe und keine geplante Wiederholung ausstehen.
-- **Aufgeräumtes Repository:** Dokumentation liegt in `docs/project`, `docs/ai`, `docs/hardware`, `docs/security` und `docs/releases`; Distributionsdateien in `packaging/`; Community-Dateien in `.github/`. Die installierte Programmstruktur bleibt unverändert.
-- Sieben aktuelle Screenshots und eine kompakte README mit Installation ganz oben.
+- **Vollständig aufgeräumtes Repository:** Der gesamte Anwendungscode liegt jetzt in `src/` (Python-Module, `assets/`, `modules/`, `test-gifs/`), Installer und Versionsdateien in `packaging/`, alle Dokumente in `docs/`, Community- und Sicherheitsrichtlinien in `.github/`. Im Wurzelverzeichnis bleiben nur README, LICENSE, CITATION und ein kurzer `AGENTS.md`-Wegweiser.
+- Die installierte Programmstruktur (RPM, DEB, ZIP) bleibt flach und unverändert; `install.sh` liegt im ZIP weiterhin direkt im entpackten Ordner.
+- Aus 3.4.29.46: Die minütliche OpenRGB-Geräteinventur pausiert, solange OHC im Infobereich verborgen ist und keine RGB-Aktion aussteht; sieben aktuelle Screenshots und kompakte README.
 
-Ältere Versionen: [Versionsverlauf](#versionsverlauf) · [CHANGELOG.md](CHANGELOG.md) · [docs/releases/](docs/releases/)
+Ältere Versionen: [Versionsverlauf](#versionsverlauf) · [docs/CHANGELOG.md](docs/CHANGELOG.md) · [docs/releases/](docs/releases/)
 
 ## Installation
 
 ### Fedora und Nobara – RPM
 
-Lade `open-hardware-control-3.4.29.46-1.noarch.rpm` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control-3.4.29.47-1.noarch.rpm` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.46-1.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.47-1.noarch.rpm
 ```
 
 ### Debian, Ubuntu und Linux Mint – DEB
 
-Lade `open-hardware-control_3.4.29.46_all.deb` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control_3.4.29.47_all.deb` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.46_all.deb'
+sudo apt install './open-hardware-control_3.4.29.47_all.deb'
 ```
 
 ### Universelles Installationspaket – ZIP
 
-Für Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_46.zip` herunter und führe aus:
+Für Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_47.zip` herunter und führe aus:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_46.zip
-cd open-hardware-control-3.4.29.46
+unzip open_hardware_control_v3_4_29_47.zip
+cd open-hardware-control-3.4.29.47
 chmod +x install.sh
 ./install.sh
 ```
 
-Eine vorhandene Version wird aktualisiert. Danach findest du **Open Hardware Control by Frelidon** im Anwendungsmenü oder startest im Terminal `~/.local/bin/open-hardware-control` (der alte Befehl `kraken-control` funktioniert weiterhin). Die Abhängigkeitsprüfung erkennt die gängigen Paketmanager automatisch; alle distributionsspezifischen Befehle stehen in [INSTALL.md](INSTALL.md).
+Eine vorhandene Version wird aktualisiert. Danach findest du **Open Hardware Control by Frelidon** im Anwendungsmenü oder startest im Terminal `~/.local/bin/open-hardware-control` (der alte Befehl `kraken-control` funktioniert weiterhin). Die Abhängigkeitsprüfung erkennt die gängigen Paketmanager automatisch; alle distributionsspezifischen Befehle stehen in [docs/INSTALL.md](docs/INSTALL.md).
 
 Optional und separat nach deren offiziellen Anleitungen: **OpenLinkHub** (Corsair), **TRCC Linux** (Levita-Display), **OpenRGB** (weitere RGB-Geräte), **CaptSilver Wallpaper-Engine-Plugin** (KDE). OHC liefert keine dieser Komponenten mit und verändert sie nicht.
 
@@ -105,25 +105,26 @@ Optional und separat nach deren offiziellen Anleitungen: **OpenLinkHub** (Corsai
 - OpenLinkHub und OpenRGB werden ausschließlich über Loopback (`127.0.0.1`) angesprochen; OpenRGB nur im ausdrücklichen `--client`-Modus gegen den lokalen SDK-Server `127.0.0.1:6742`.
 - RGB-/Corsair-Schreibrechte gelten nur für die aktuelle Sitzung; konkurrierende Geräte (NZXT ↔ OpenRGB, Corsair ↔ OpenLinkHub) bleiben gesperrt.
 - Polkit-Freigaben speichern kein Passwort; systemweite Dienste werden nie automatisch geändert. Keine Firmwareaktualisierungen, keine Cloud, keine Telemetrie.
-- Details: [SECURITY.md](SECURITY.md) · [docs/security/](docs/security/)
+- Details: [.github/SECURITY.md](.github/SECURITY.md) · [docs/security/](docs/security/)
 
 ## Dokumentation
 
 | Ordner | Inhalt |
 |---|---|
-| [INSTALL.md](INSTALL.md) · [CHANGELOG.md](CHANGELOG.md) | Installation je Distribution, vollständige Änderungshistorie |
+| [docs/INSTALL.md](docs/INSTALL.md) · [docs/CHANGELOG.md](docs/CHANGELOG.md) | Installation je Distribution, vollständige Änderungshistorie |
 | [docs/hardware/](docs/hardware/) | [Unterstützte Geräte](docs/hardware/SUPPORTED_DEVICES.md), [Profile](docs/hardware/PROFILES.md), [CPU-Profile](docs/hardware/CPU_PROFILES.md), [RGB-Studio](docs/hardware/RGB_STUDIO.md), [OpenLinkHub-Anbindung](docs/hardware/OPENLINKHUB_INTEGRATION.md), USB-Mitschnittauswertung |
 | [docs/project/](docs/project/) | [Architektur](docs/project/ARCHITECTURE.md), [Projektstatus](docs/project/PROJECT_STATUS.md), [Modulregister](docs/project/MODULE_REGISTRY.md), [Projektdokumentation](docs/project/Open_Hardware_Control_Projekt.md), Roadmap, Entscheidungen |
 | [docs/security/](docs/security/) | Sicherheitsaudits RGB/Desktop, [Datenschutz](docs/security/PRIVACY.md), Scan-Bericht |
+| [src/](src/) | Anwendungscode: `kraken_control.py` (Einstieg), Fachmodule unter `src/modules/`, Grafiken unter `src/assets/` |
 | [docs/ai/](docs/ai/) | Arbeitsanleitungen für lokale und webbasierte Coding-KIs |
 | [docs/releases/](docs/releases/) | Release Notes aller Versionen, Release-Checkliste |
-| [packaging/](packaging/) | udev-Regel, Polkit-Policy, Metainfo, Desktop-Datei, Hilfsskripte |
+| [packaging/](packaging/) | `install.sh`/`uninstall.sh`, `VERSION`, `BUILD_CHANNEL`, udev-Regel, Polkit-Policy, Metainfo, Desktop-Datei, Hilfsskripte |
 
-English version: [README.en.md](README.en.md)
+English version: [docs/README.en.md](docs/README.en.md)
 
 ## Status
 
-Öffentliche experimentelle Beta, bereitgestellt ohne Garantie. Kanal **STABLE**, Lizenz **GPL-3.0-or-later**. Mitwirken: [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) · Hilfe: [.github/SUPPORT.md](.github/SUPPORT.md) · Sicherheitsmeldungen: [SECURITY.md](SECURITY.md)
+Öffentliche experimentelle Beta, bereitgestellt ohne Garantie. Kanal **STABLE**, Lizenz **GPL-3.0-or-later**. Mitwirken: [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) · Hilfe: [.github/SUPPORT.md](.github/SUPPORT.md) · Sicherheitsmeldungen: [.github/SECURITY.md](.github/SECURITY.md)
 
 ## Module
 
@@ -158,12 +159,12 @@ Liest nur lokale Steam-Workshop-Metadaten, wählt Wallpaper über Plasmas offizi
 
 ## Versionsverlauf
 
+**3.4.29.47** – Anwendungscode nach `src/`, Installer/Versionsdateien nach `packaging/`, alle Dokumente nach `docs/`; Wurzelverzeichnis enthält nur noch README, LICENSE, CITATION und AGENTS-Wegweiser.
+
 **3.4.29.46** – OpenRGB-Inventur pausiert im Tray; Repository in Themenordner sortiert; neue Screenshots und kompakte README.
 
 **3.4.29.45** – Gespeichertes RGB-Startprofil geht bei vorläufiger OpenRGB-Teilerkennung im Kaltstart nicht mehr verloren; Modulregisterprüfung unterstützt den STABLE-Kanal; erste stabile Veröffentlichung der 3.4.29-Reihe (Levita, RGB, Wallpaper, Lüfter, Diagnose, KDE/Wayland).
 
 **3.4.29.42** – Wallpaper-Wiedergabeknöpfe nutzen das registrierte Plasma-D-Bus-Objekt; drei CaptSilver-Skalierungsarten; Startbildschirm wählbar mit sicherem Rückfall; einheitlich schmale Scrollleisten.
 
-**3.4.29.38** – Modernisiertes RGB-Studio mit eingebetteter Engine-Steuerung, Ein/Aus-Schaltern, persistenten Farben per Rechtsklick, Gesamthelligkeit und nativer Kanalliste; TRCC Linux 9.9.12 als Levita-Backend empfohlen.
-
-Alle früheren Versionen bis 2.9.x: [CHANGELOG.md](CHANGELOG.md) und [docs/releases/](docs/releases/).
+Alle früheren Versionen bis 2.9.x: [docs/CHANGELOG.md](docs/CHANGELOG.md) und [docs/releases/](docs/releases/).

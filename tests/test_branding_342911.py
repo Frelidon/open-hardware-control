@@ -6,20 +6,20 @@ from PySide6.QtWidgets import QApplication
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MAIN = (ROOT / "kraken_control.py").read_text(encoding="utf-8")
-BRANDING = (ROOT / "branding.py").read_text(encoding="utf-8")
-INSTALLER = (ROOT / "install.sh").read_text(encoding="utf-8")
+MAIN = (ROOT / "src/kraken_control.py").read_text(encoding="utf-8")
+BRANDING = (ROOT / "src/branding.py").read_text(encoding="utf-8")
+INSTALLER = (ROOT / "packaging/install.sh").read_text(encoding="utf-8")
 BUILDER = (ROOT / "scripts/build_release.py").read_text(encoding="utf-8")
 
 import sys
 
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "src"))
 from branding import system_tray_icon  # noqa: E402
 
 
 def test_full_logo_and_compact_transparent_icon_are_packaged() -> None:
-    logo = ROOT / "assets/branding/open-hardware-control-logo.png"
-    icon = ROOT / "assets/branding/open-hardware-control-icon.png"
+    logo = ROOT / "src/assets/branding/open-hardware-control-logo.png"
+    icon = ROOT / "src/assets/branding/open-hardware-control-icon.png"
     assert logo.is_file()
     assert icon.is_file()
     with Image.open(logo) as image:
@@ -29,7 +29,7 @@ def test_full_logo_and_compact_transparent_icon_are_packaged() -> None:
         assert image.mode == "RGBA"
         assert image.getextrema()[3][0] == 0
     for size in (22, 32, 48, 64, 128, 256):
-        path = ROOT / f"assets/branding/icons/open-hardware-control-{size}.png"
+        path = ROOT / f"src/assets/branding/icons/open-hardware-control-{size}.png"
         with Image.open(path) as image:
             assert image.size == (size, size)
 
@@ -50,7 +50,7 @@ def test_logo_is_inlaid_in_sidebar_and_icon_reaches_window_tray_and_packages() -
 
 def test_system_tray_icon_contains_plasma_native_size() -> None:
     QApplication.instance() or QApplication(["ohc-branding-test", "-platform", "offscreen"])
-    icon = system_tray_icon(ROOT)
+    icon = system_tray_icon(ROOT / "src")
     assert not icon.isNull()
     assert any(size.width() == 22 and size.height() == 22 for size in icon.availableSizes())
 
@@ -63,4 +63,4 @@ def test_zip_installer_contains_new_runtime_modules() -> None:
         "thermalright_display_ui.py",
         "window_diagnostics.py",
     ):
-        assert f'$SOURCE_DIR/{module}' in INSTALLER
+        assert f'$SRC_DIR/{module}' in INSTALLER

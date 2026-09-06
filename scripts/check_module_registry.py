@@ -10,7 +10,7 @@ import sys
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MODULE_ROOT = ROOT / "modules"
+MODULE_ROOT = ROOT / "src/modules"
 REGISTRY_PATH = ROOT / "docs/project/MODULE_REGISTRY.md"
 GUIDE_PATH = ROOT / "docs/ai/AI_DEVELOPMENT_GUIDE.md"
 REVIEW_LINES = 800
@@ -23,8 +23,8 @@ def main() -> int:
     errors: list[str] = []
     warnings: list[str] = []
     registry = REGISTRY_PATH.read_text(encoding="utf-8")
-    version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
-    channel = (ROOT / "BUILD_CHANNEL").read_text(encoding="utf-8").strip().upper()
+    version = (ROOT / "packaging/VERSION").read_text(encoding="utf-8").strip()
+    channel = (ROOT / "packaging/BUILD_CHANNEL").read_text(encoding="utf-8").strip().upper()
     if re.search(r"\b\d{2}:\d{2}(?::\d{2})?\b", registry):
         errors.append("docs/project/MODULE_REGISTRY.md must not contain times")
     if channel not in {"INTERN", "STABLE"}:

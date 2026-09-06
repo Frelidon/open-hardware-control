@@ -6,7 +6,7 @@ import sys
 
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "src"))
 
 from cooling_card_state import normalize_expanded_channel, toggle_expanded_channel
 
@@ -22,7 +22,7 @@ assert toggle_expanded_channel("hwmon5:pwm2", "hwmon5:pwm3", channels) == "hwmon
 assert toggle_expanded_channel("hwmon5:pwm3", "hwmon5:pwm3", channels) == ""
 assert toggle_expanded_channel("hwmon5:pwm2", "missing", channels) == "hwmon5:pwm2"
 
-code = (ROOT / "kraken_control.py").read_text(encoding="utf-8")
+code = (ROOT / "src/kraken_control.py").read_text(encoding="utf-8")
 assert 'self.mainboard_expanded_channel_id = ""' in code
 assert 'expanded = channel.stable_id == self.mainboard_expanded_channel_id' in code
 assert 'curve_action_source = "Kurve & Details schließen" if expanded else "Kurve & Details bearbeiten"' in code

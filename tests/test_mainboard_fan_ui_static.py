@@ -1,7 +1,7 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-CODE = (ROOT / "kraken_control.py").read_text(encoding="utf-8")
+CODE = (ROOT / "src/kraken_control.py").read_text(encoding="utf-8")
 
 
 def test_profile_presets_are_exposed_in_ui_without_bypassing_calibration() -> None:

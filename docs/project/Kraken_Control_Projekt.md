@@ -64,7 +64,7 @@ Neu in 2.9.23:
 
 - CPU-/GPU-Livewerte in animierten Designs mit zwei Sekunden Sensorintervall
 - Wassertemperatur während Animation als klar gekennzeichneter letzter sicherer Kraken-Wert
-- gemeinsames read-only Sensormodul `kraken_sensors.py` für GUI und Streamer
+- gemeinsames read-only Sensormodul `src/kraken_sensors.py` für GUI und Streamer
 - isolierter Spawn-Renderprozess statt Zeichnen im zeitkritischen USB-Prozess
 - vollständige neue RGB565-Phasensätze werden erst nach erfolgreichem Rendern atomar übernommen
 - Fehler bei einer Livewert-Aktualisierung lassen den letzten vollständigen Cache weiterlaufen
@@ -84,7 +84,7 @@ Weiterhin enthalten aus 2.9.22:
 Weiterhin enthalten aus 2.9.21:
 
 - `Wasser · Halo`, `CPU · Orbit`, `GPU · Arc`, `CPU + GPU · Dual` und `Wasser + CPU + GPU · Trio`
-- reiner Pillow-Renderer `kraken_lcd_designs.py`, unabhängig von Qt und angeschlossener Hardware testbar
+- reiner Pillow-Renderer `src/kraken_lcd_designs.py`, unabhängig von Qt und angeschlossener Hardware testbar
 - Eisblau als Standard, sieben Farbvorlagen und eigener Hex-Farbwert im Format `#RRGGBB`
 - Live-Aktualisierung von 5 bis 60 Sekunden mit Vorschau und explizitem Start/Stop
 - gegenseitige Koordination mit statischem Bild, Wiederholungs-Fallback, LCD-Uhr und GIF-Streamer

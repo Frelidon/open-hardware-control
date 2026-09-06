@@ -16,4 +16,4 @@ kraken-control-diagnostics
 
 ## Security problems
 
-Do not publish exploitable security details in a normal issue. Follow [`SECURITY.md`](../SECURITY.md).
+Do not publish exploitable security details in a normal issue. Follow [`.github/SECURITY.md`](SECURITY.md).

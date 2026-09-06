@@ -13,7 +13,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "assets" / "lcd-designs"
+OUT = ROOT / "src/assets" / "lcd-designs"
 SIZE = 240
 FPS = 20
 FRAMES = 40

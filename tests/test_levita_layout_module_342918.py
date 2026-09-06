@@ -6,12 +6,12 @@ import sys
 
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "src"))
 
 
 def test_bundled_ohc_layouts_keep_literal_units_visible_on_device() -> None:
     for name in ("ohc-nebula-drift", "ohc-orbital-command"):
-        payload = json.loads((ROOT / "assets" / "levita-designs" / name / "trcc.json").read_text(encoding="utf-8"))
+        payload = json.loads((ROOT / "src/assets" / "levita-designs" / name / "trcc.json").read_text(encoding="utf-8"))
         metrics = [item for item in payload["elements"] if item.get("type") == "metric"]
         assert metrics
         assert all(item.get("show_unit") is True for item in metrics)

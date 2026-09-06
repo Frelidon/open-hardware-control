@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "src"))
 
 from thermalright_cooling import (
     LEVITA_COOLER_KEY,
@@ -69,9 +69,9 @@ def test_profiles_keep_pump_and_fans_in_safe_ranges() -> None:
 
 
 def test_application_requires_mapping_calibration_and_restores_firmware() -> None:
-    main = (ROOT / "kraken_control.py").read_text(encoding="utf-8")
-    dashboard = (ROOT / "dashboard_layout.py").read_text(encoding="utf-8")
-    layout_policy = (ROOT / "ui_layout.py").read_text(encoding="utf-8")
+    main = (ROOT / "src/kraken_control.py").read_text(encoding="utf-8")
+    dashboard = (ROOT / "src/dashboard_layout.py").read_text(encoding="utf-8")
+    layout_policy = (ROOT / "src/ui_layout.py").read_text(encoding="utf-8")
     build = (ROOT / "scripts/build_release.py").read_text(encoding="utf-8")
 
     assert "Wasserkühlung und PWM-Zuordnung" in main

@@ -1,8 +1,8 @@
-# Entwicklerpaket 3.4.29.46
+# Entwicklerpaket 3.4.29.47
 
 Das Entwicklerpaket enthält:
 
-- den vollständigen editierbaren Quellbaum von Open Hardware Control 3.4.29.46 STABLE
+- den vollständigen editierbaren Quellbaum von Open Hardware Control 3.4.29.47 STABLE
 - alle Python-, Shell-, Test-, Dokumentations- und GitHub-Workflow-Dateien
 - den reproduzierbaren Builder für ZIP, DEB, RPM, Quellarchiv und Prüfsummen
 - die fünf eigenen OpenLinkHub-Maus-SVGs und ihre Zuordnungslogik
@@ -14,7 +14,7 @@ Das Entwicklerpaket enthält:
 
 Das normale `open_hardware_control_…zip` ist bewusst das schlanke Benutzer-/Installationspaket und enthält daher keine Entwicklungsordner `tests/` und `scripts/`. Für KI-Arbeit, vollständige Tests und reproduzierbare Builds ist ausschließlich das separate `Entwicklerpaket …zip`, das Quellarchiv oder der Repository-Ordner vorgesehen. Der Builder bricht ab, falls im Entwicklerpaket Tests, Release-Skripte, Workflows oder Werkzeuge fehlen.
 
-Die Anwendung wird direkt aus `kraken_control.py` gestartet. Der Dateiname bleibt intern erhalten, weil er das vollständige historische NZXT-Modul trägt; der sichtbare Programmname und der installierte Starter lauten `Open Hardware Control` beziehungsweise `open-hardware-control`.
+Die Anwendung wird direkt aus `src/kraken_control.py` gestartet. Der Dateiname bleibt intern erhalten, weil er das vollständige historische NZXT-Modul trägt; der sichtbare Programmname und der installierte Starter lauten `Open Hardware Control` beziehungsweise `open-hardware-control`.
 
 Kompletter Release-Test:
 
@@ -49,13 +49,13 @@ Der Installer kann für einen isolierten Pakettest mit `OHC_INSTALL_HOME=/absolu
 Alle Release-Artefakte werden mit folgendem Befehl gebaut. Auf Debian/Ubuntu muss zusätzlich das Paket `rpm` für den Fedora-RPM-Build installiert sein:
 
 ```bash
-./scripts/build_release.sh 3.4.29.46
+./scripts/build_release.sh 3.4.29.47
 ```
 
 Auf Fedora wird ein nicht installiertes `dpkg-deb` jetzt automatisch erkannt und nur das DEB übersprungen; RPM, ZIPs, Quellarchiv und Prüfsummen werden weiterhin gebaut. Mit folgender Variable kann das DEB auch auf anderen Systemen ausdrücklich übersprungen werden:
 
 ```bash
-OHC_SKIP_DEB=1 ./scripts/build_release.sh 3.4.29.46
+OHC_SKIP_DEB=1 ./scripts/build_release.sh 3.4.29.47
 ```
 
 Nach erfolgreichem Abschluss legt der Builder automatisch eine vollständige Sicherung im Geschwisterordner `Open Hardware Control Backup` an. `RELEASE_BACKUP_POLICY.md` beschreibt Inhalt, atomaren Aufbau und die Aufbewahrung der zwei neuesten Versionen. Ein übersprungenes DEB wird nicht vorgetäuscht; bei einem Bau mit DEB wird es automatisch mitgesichert.

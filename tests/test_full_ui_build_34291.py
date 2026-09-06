@@ -20,7 +20,7 @@ os.environ["OHC_DISABLE_HARDWARE_IO"] = "1"
 os.environ["OHC_WALLPAPER_STEAM_LIBRARY"] = str(temporary_root / "Steam")
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "src"))
 
 from PySide6.QtCore import QSettings, QSize, Qt  # noqa: E402
 from PySide6.QtGui import QColor, QImage, QPalette, QPixmap  # noqa: E402
@@ -145,7 +145,7 @@ for _refresh in range(2):
     )
 assert application._GIF_SAFETY_TEXT in labels
 assert application._ABOUT_SUMMARY_TEXT in labels
-assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.46 STABLE")
+assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.47 STABLE")
 assert window.temp_card.isHidden()
 assert not window.cpu_temp_card.isHidden()
 window.devices_ready = True

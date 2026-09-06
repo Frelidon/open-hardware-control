@@ -18,7 +18,7 @@ from PIL import Image
 
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION_TEXT = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
+VERSION_TEXT = (ROOT / "packaging/VERSION").read_text(encoding="utf-8").strip()
 SKIP_PARTS = {".git", "dist", "build", "__pycache__", ".pytest_cache", ".venv", "venv"}
 RASTER_SUFFIXES = {".png", ".gif", ".jpg", ".jpeg", ".webp"}
 SVG_FORBIDDEN = (
@@ -45,7 +45,7 @@ ALLOWED_IPV4_PREFIXES = ((127,), (192, 0, 2), (198, 51, 100), (203, 0, 113))
 
 def known_project_versions() -> set[str]:
     versions = {VERSION_TEXT}
-    changelog = ROOT / "CHANGELOG.md"
+    changelog = ROOT / "docs/CHANGELOG.md"
     try:
         text = changelog.read_text(encoding="utf-8")
     except OSError:
@@ -200,7 +200,7 @@ def main() -> int:
             magic = path.read_bytes()[:4]
             if magic.startswith(b"\x7fELF") or magic[:2] == b"MZ":
                 raise ValueError(f"unexpected executable binary: {path.relative_to(ROOT)}")
-    kwin = (ROOT / "assets/desktop-designs/kwin/ohc-charms/contents/code/main.js").read_text(encoding="utf-8")
+    kwin = (ROOT / "src/assets/desktop-designs/kwin/ohc-charms/contents/code/main.js").read_text(encoding="utf-8")
     for forbidden in ("eval(", "executeCommand", "Qt.openUrlExternally", "XMLHttpRequest", "fetch("):
         if forbidden in kwin:
             raise ValueError(f"forbidden KWin token: {forbidden}")
@@ -217,8 +217,8 @@ def main() -> int:
         "external_svg_references": 0,
         "desktop_network_downloads": 0,
         "opt_in_verified_plugin_downloads": 1,
-        "desktop_modules": {name: sha256(ROOT / name) for name in DESKTOP_MODULES},
-        "rgb_modules": {name: sha256(ROOT / name) for name in RGB_MODULES},
+        "desktop_modules": {name: sha256(ROOT / "src" / name) for name in DESKTOP_MODULES},
+        "rgb_modules": {name: sha256(ROOT / "src" / name) for name in RGB_MODULES},
         "openrgb_remote_hosts": 0,
         "openrgb_shell_execution": 0,
         "privacy_text_files_checked": sum(1 for path in files if path.suffix.casefold() in TEXT_PRIVACY_SUFFIXES or path.name in {"VERSION", "BUILD_CHANNEL"}),

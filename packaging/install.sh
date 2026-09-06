@@ -7,71 +7,86 @@ BIN_DIR="$OHC_INSTALL_HOME/.local/bin"
 DESKTOP_DIR="$OHC_INSTALL_HOME/.local/share/applications"
 ICON_DIR="$OHC_INSTALL_HOME/.local/share/icons/hicolor/scalable/apps"
 ICON_BASE_DIR="$OHC_INSTALL_HOME/.local/share/icons/hicolor"
-SOURCE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# Works from the extracted ZIP root (install.sh beside src/) and from packaging/ in the source tree.
+if [[ -d "$SCRIPT_DIR/src" ]]; then
+  SOURCE_DIR="$SCRIPT_DIR"
+elif [[ -d "$SCRIPT_DIR/../src" ]]; then
+  SOURCE_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
+else
+  echo "Quellordner src/ nicht gefunden – bitte install.sh aus dem entpackten Paket starten." >&2
+  exit 1
+fi
+SRC_DIR="$SOURCE_DIR/src"
+PKG_DIR="$SOURCE_DIR/packaging"
 
 mkdir -p "$APP_DIR" "$BIN_DIR" "$DESKTOP_DIR" "$ICON_DIR"
-install -m 0755 "$SOURCE_DIR/kraken_control.py" "$APP_DIR/kraken_control.py"
-install -m 0644 "$SOURCE_DIR/app_constants.py" "$APP_DIR/app_constants.py"
-install -m 0644 "$SOURCE_DIR/branding.py" "$APP_DIR/branding.py"
-install -m 0644 "$SOURCE_DIR/command_backend.py" "$APP_DIR/command_backend.py"
-install -m 0644 "$SOURCE_DIR/cooling_card_state.py" "$APP_DIR/cooling_card_state.py"
-install -m 0644 "$SOURCE_DIR/cooling_widgets.py" "$APP_DIR/cooling_widgets.py"
-install -m 0644 "$SOURCE_DIR/localization_catalog.py" "$APP_DIR/localization_catalog.py"
-install -m 0644 "$SOURCE_DIR/privacy_logging.py" "$APP_DIR/privacy_logging.py"
-install -m 0644 "$SOURCE_DIR/temperature_utils.py" "$APP_DIR/temperature_utils.py"
-install -m 0755 "$SOURCE_DIR/openlinkhub_integration.py" "$APP_DIR/openlinkhub_integration.py"
-install -m 0644 "$SOURCE_DIR/openlinkhub_mouse_visuals.py" "$APP_DIR/openlinkhub_mouse_visuals.py"
-install -m 0644 "$SOURCE_DIR/openrgb_integration.py" "$APP_DIR/openrgb_integration.py"
-install -m 0755 "$SOURCE_DIR/openrgb_sdk.py" "$APP_DIR/openrgb_sdk.py"
-install -m 0644 "$SOURCE_DIR/rgb_devices.py" "$APP_DIR/rgb_devices.py"
-install -m 0644 "$SOURCE_DIR/rgb_effects.py" "$APP_DIR/rgb_effects.py"
-install -m 0644 "$SOURCE_DIR/ui_layout.py" "$APP_DIR/ui_layout.py"
-install -m 0644 "$SOURCE_DIR/nzxt_rgb.py" "$APP_DIR/nzxt_rgb.py"
-install -m 0644 "$SOURCE_DIR/desktop_designs.py" "$APP_DIR/desktop_designs.py"
-install -m 0644 "$SOURCE_DIR/desktop_assets.py" "$APP_DIR/desktop_assets.py"
-install -m 0755 "$SOURCE_DIR/desktop_shell.py" "$APP_DIR/desktop_shell.py"
-install -m 0644 "$SOURCE_DIR/kraken_lcd_designs.py" "$APP_DIR/kraken_lcd_designs.py"
-install -m 0644 "$SOURCE_DIR/kraken_sensors.py" "$APP_DIR/kraken_sensors.py"
-install -m 0644 "$SOURCE_DIR/nzxt_backend.py" "$APP_DIR/nzxt_backend.py"
-install -m 0644 "$SOURCE_DIR/nzxt_esc_profiles.py" "$APP_DIR/nzxt_esc_profiles.py"
-install -m 0644 "$SOURCE_DIR/hardware_request_coordinator.py" "$APP_DIR/hardware_request_coordinator.py"
-install -m 0644 "$SOURCE_DIR/mainboard_fan_control.py" "$APP_DIR/mainboard_fan_control.py"
-install -m 0644 "$SOURCE_DIR/cooling_ownership.py" "$APP_DIR/cooling_ownership.py"
-install -m 0644 "$SOURCE_DIR/thermalright_cooling.py" "$APP_DIR/thermalright_cooling.py"
-install -m 0644 "$SOURCE_DIR/thermalright_display.py" "$APP_DIR/thermalright_display.py"
-install -m 0644 "$SOURCE_DIR/thermalright_display_ui.py" "$APP_DIR/thermalright_display_ui.py"
-install -m 0644 "$SOURCE_DIR/window_diagnostics.py" "$APP_DIR/window_diagnostics.py"
-install -m 0644 "$SOURCE_DIR/hardware_diagnostics.py" "$APP_DIR/hardware_diagnostics.py"
-install -m 0644 "$SOURCE_DIR/log_view_support.py" "$APP_DIR/log_view_support.py"
-install -m 0755 "$SOURCE_DIR/ohc_fan_helper.py" "$APP_DIR/ohc_fan_helper.py"
-install -m 0644 "$SOURCE_DIR/packaging/io.github.Frelidon.OpenHardwareControl.fan.policy" "$APP_DIR/io.github.Frelidon.OpenHardwareControl.fan.policy"
-install -m 0755 "$SOURCE_DIR/packaging/install-fan-helper.sh" "$APP_DIR/install-fan-helper.sh"
-install -m 0755 "$SOURCE_DIR/kraken_cam_streamer.py" "$APP_DIR/kraken_cam_streamer.py"
-install -m 0644 "$SOURCE_DIR/packaging/kraken-control.svg" "$APP_DIR/kraken-control.svg"
-install -m 0644 "$SOURCE_DIR/packaging/kraken-control.svg" "$ICON_DIR/open-hardware-control.svg"
+install -m 0755 "$SRC_DIR/kraken_control.py" "$APP_DIR/kraken_control.py"
+install -m 0644 "$SRC_DIR/app_constants.py" "$APP_DIR/app_constants.py"
+install -m 0644 "$SRC_DIR/branding.py" "$APP_DIR/branding.py"
+install -m 0644 "$SRC_DIR/command_backend.py" "$APP_DIR/command_backend.py"
+install -m 0644 "$SRC_DIR/cooling_card_state.py" "$APP_DIR/cooling_card_state.py"
+install -m 0644 "$SRC_DIR/cooling_widgets.py" "$APP_DIR/cooling_widgets.py"
+install -m 0644 "$SRC_DIR/localization_catalog.py" "$APP_DIR/localization_catalog.py"
+install -m 0644 "$SRC_DIR/privacy_logging.py" "$APP_DIR/privacy_logging.py"
+install -m 0644 "$SRC_DIR/temperature_utils.py" "$APP_DIR/temperature_utils.py"
+install -m 0755 "$SRC_DIR/openlinkhub_integration.py" "$APP_DIR/openlinkhub_integration.py"
+install -m 0644 "$SRC_DIR/openlinkhub_mouse_visuals.py" "$APP_DIR/openlinkhub_mouse_visuals.py"
+install -m 0644 "$SRC_DIR/openrgb_integration.py" "$APP_DIR/openrgb_integration.py"
+install -m 0755 "$SRC_DIR/openrgb_sdk.py" "$APP_DIR/openrgb_sdk.py"
+install -m 0644 "$SRC_DIR/rgb_devices.py" "$APP_DIR/rgb_devices.py"
+install -m 0644 "$SRC_DIR/rgb_effects.py" "$APP_DIR/rgb_effects.py"
+install -m 0644 "$SRC_DIR/ui_layout.py" "$APP_DIR/ui_layout.py"
+install -m 0644 "$SRC_DIR/nzxt_rgb.py" "$APP_DIR/nzxt_rgb.py"
+install -m 0644 "$SRC_DIR/desktop_designs.py" "$APP_DIR/desktop_designs.py"
+install -m 0644 "$SRC_DIR/desktop_assets.py" "$APP_DIR/desktop_assets.py"
+install -m 0755 "$SRC_DIR/desktop_shell.py" "$APP_DIR/desktop_shell.py"
+install -m 0644 "$SRC_DIR/kraken_lcd_designs.py" "$APP_DIR/kraken_lcd_designs.py"
+install -m 0644 "$SRC_DIR/kraken_sensors.py" "$APP_DIR/kraken_sensors.py"
+install -m 0644 "$SRC_DIR/nzxt_backend.py" "$APP_DIR/nzxt_backend.py"
+install -m 0644 "$SRC_DIR/nzxt_esc_profiles.py" "$APP_DIR/nzxt_esc_profiles.py"
+install -m 0644 "$SRC_DIR/hardware_request_coordinator.py" "$APP_DIR/hardware_request_coordinator.py"
+install -m 0644 "$SRC_DIR/mainboard_fan_control.py" "$APP_DIR/mainboard_fan_control.py"
+install -m 0644 "$SRC_DIR/cooling_ownership.py" "$APP_DIR/cooling_ownership.py"
+install -m 0644 "$SRC_DIR/thermalright_cooling.py" "$APP_DIR/thermalright_cooling.py"
+install -m 0644 "$SRC_DIR/thermalright_display.py" "$APP_DIR/thermalright_display.py"
+install -m 0644 "$SRC_DIR/thermalright_display_ui.py" "$APP_DIR/thermalright_display_ui.py"
+install -m 0644 "$SRC_DIR/window_diagnostics.py" "$APP_DIR/window_diagnostics.py"
+install -m 0644 "$SRC_DIR/hardware_diagnostics.py" "$APP_DIR/hardware_diagnostics.py"
+install -m 0644 "$SRC_DIR/log_view_support.py" "$APP_DIR/log_view_support.py"
+install -m 0755 "$SRC_DIR/ohc_fan_helper.py" "$APP_DIR/ohc_fan_helper.py"
+install -m 0644 "$PKG_DIR/io.github.Frelidon.OpenHardwareControl.fan.policy" "$APP_DIR/io.github.Frelidon.OpenHardwareControl.fan.policy"
+install -m 0755 "$PKG_DIR/install-fan-helper.sh" "$APP_DIR/install-fan-helper.sh"
+install -m 0755 "$SRC_DIR/kraken_cam_streamer.py" "$APP_DIR/kraken_cam_streamer.py"
+install -m 0644 "$PKG_DIR/kraken-control.svg" "$APP_DIR/kraken-control.svg"
+install -m 0644 "$PKG_DIR/kraken-control.svg" "$ICON_DIR/open-hardware-control.svg"
 for size in 22 32 48 64 128 256; do
     mkdir -p "$ICON_BASE_DIR/${size}x${size}/apps"
     install -m 0644 \
-        "$SOURCE_DIR/assets/branding/icons/open-hardware-control-${size}.png" \
+        "$SRC_DIR/assets/branding/icons/open-hardware-control-${size}.png" \
         "$ICON_BASE_DIR/${size}x${size}/apps/open-hardware-control.png"
 done
 mkdir -p "$ICON_BASE_DIR/512x512/apps"
-install -m 0644 "$SOURCE_DIR/assets/branding/open-hardware-control-icon.png" \
+install -m 0644 "$SRC_DIR/assets/branding/open-hardware-control-icon.png" \
     "$ICON_BASE_DIR/512x512/apps/open-hardware-control.png"
-install -m 0755 "$SOURCE_DIR/packaging/collect-diagnostics.sh" "$APP_DIR/collect-diagnostics.sh"
-install -m 0755 "$SOURCE_DIR/packaging/install-udev-rule.sh" "$APP_DIR/install-udev-rule.sh"
-install -m 0755 "$SOURCE_DIR/packaging/install-dependencies.sh" "$APP_DIR/install-dependencies.sh"
-install -m 0644 "$SOURCE_DIR/packaging/71-nzxt-kraken-2023.rules" "$APP_DIR/71-nzxt-kraken-2023.rules"
+install -m 0755 "$PKG_DIR/collect-diagnostics.sh" "$APP_DIR/collect-diagnostics.sh"
+install -m 0755 "$PKG_DIR/install-udev-rule.sh" "$APP_DIR/install-udev-rule.sh"
+install -m 0755 "$PKG_DIR/install-dependencies.sh" "$APP_DIR/install-dependencies.sh"
+install -m 0644 "$PKG_DIR/71-nzxt-kraken-2023.rules" "$APP_DIR/71-nzxt-kraken-2023.rules"
 install -m 0644 "$SOURCE_DIR/LICENSE" "$APP_DIR/LICENSE"
-install -m 0644 "$SOURCE_DIR/VERSION" "$APP_DIR/VERSION"
-install -m 0644 "$SOURCE_DIR/BUILD_CHANNEL" "$APP_DIR/BUILD_CHANNEL"
+install -m 0644 "$PKG_DIR/VERSION" "$APP_DIR/VERSION"
+install -m 0644 "$PKG_DIR/BUILD_CHANNEL" "$APP_DIR/BUILD_CHANNEL"
 install -m 0644 "$SOURCE_DIR/docs/hardware/SUPPORTED_DEVICES.md" "$APP_DIR/SUPPORTED_DEVICES.md"
-install -m 0644 "$SOURCE_DIR/SECURITY.md" "$APP_DIR/SECURITY.md"
+if [[ -f "$SOURCE_DIR/SECURITY.md" ]]; then
+  install -m 0644 "$SOURCE_DIR/SECURITY.md" "$APP_DIR/SECURITY.md"
+else
+  install -m 0644 "$SOURCE_DIR/.github/SECURITY.md" "$APP_DIR/SECURITY.md"
+fi
 install -m 0644 "$SOURCE_DIR/docs/security/SECURITY_SCAN_REPORT.json" "$APP_DIR/SECURITY_SCAN_REPORT.json"
 install -m 0644 "$SOURCE_DIR/README.md" "$APP_DIR/README.md"
-install -m 0644 "$SOURCE_DIR/INSTALL.md" "$APP_DIR/INSTALL.md"
-install -m 0644 "$SOURCE_DIR/CHANGELOG.md" "$APP_DIR/CHANGELOG.md"
-install -m 0644 "$SOURCE_DIR/README.en.md" "$APP_DIR/README.en.md"
+install -m 0644 "$SOURCE_DIR/docs/INSTALL.md" "$APP_DIR/INSTALL.md"
+install -m 0644 "$SOURCE_DIR/docs/CHANGELOG.md" "$APP_DIR/CHANGELOG.md"
+install -m 0644 "$SOURCE_DIR/docs/README.en.md" "$APP_DIR/README.en.md"
 install -m 0644 "$SOURCE_DIR/docs/project/SOFTWARE_AND_LINKS.md" "$APP_DIR/SOFTWARE_AND_LINKS.md"
 install -m 0644 "$SOURCE_DIR/docs/project/SOFTWARE_AND_LINKS.en.md" "$APP_DIR/SOFTWARE_AND_LINKS.en.md"
 install -m 0644 "$SOURCE_DIR/docs/hardware/SUPPORTED_DEVICES.en.md" "$APP_DIR/SUPPORTED_DEVICES.en.md"
@@ -95,20 +110,20 @@ install -m 0644 "$SOURCE_DIR/docs/security/DESKTOP_SECURITY_AUDIT.md" "$APP_DIR/
 install -m 0644 "$SOURCE_DIR/docs/project/THIRD_PARTY_NOTICES.md" "$APP_DIR/THIRD_PARTY_NOTICES.md"
 install -m 0644 "$SOURCE_DIR/docs/project/DEVELOPER_PACKAGE.md" "$APP_DIR/DEVELOPER_PACKAGE.md"
 install -m 0644 "$SOURCE_DIR/docs/hardware/USB_CAPTURE_FINDINGS.md" "$APP_DIR/USB_CAPTURE_FINDINGS.md"
-if [[ -d "$SOURCE_DIR/test-gifs" ]]; then
+if [[ -d "$SRC_DIR/test-gifs" ]]; then
   rm -rf "$APP_DIR/test-gifs"
   mkdir -p "$APP_DIR/test-gifs"
-  cp -a "$SOURCE_DIR/test-gifs/." "$APP_DIR/test-gifs/"
+  cp -a "$SRC_DIR/test-gifs/." "$APP_DIR/test-gifs/"
 fi
-if [[ -d "$SOURCE_DIR/assets" ]]; then
+if [[ -d "$SRC_DIR/assets" ]]; then
   rm -rf "$APP_DIR/assets"
   mkdir -p "$APP_DIR/assets"
-  cp -a "$SOURCE_DIR/assets/." "$APP_DIR/assets/"
+  cp -a "$SRC_DIR/assets/." "$APP_DIR/assets/"
 fi
-if [[ -d "$SOURCE_DIR/modules" ]]; then
+if [[ -d "$SRC_DIR/modules" ]]; then
   rm -rf "$APP_DIR/modules"
   mkdir -p "$APP_DIR/modules"
-  cp -a "$SOURCE_DIR/modules/." "$APP_DIR/modules/"
+  cp -a "$SRC_DIR/modules/." "$APP_DIR/modules/"
 fi
 
 cat > "$BIN_DIR/open-hardware-control" <<LAUNCHER
@@ -139,7 +154,7 @@ chmod 0755 "$BIN_DIR/kraken-control"
 
 sed -e "s|@EXEC@|$BIN_DIR/open-hardware-control|g" \
     -e "s|@ICON@|$APP_DIR/assets/branding/open-hardware-control-icon.png|g" \
-    "$SOURCE_DIR/packaging/kraken-control.desktop.in" > "$DESKTOP_DIR/open-hardware-control.desktop"
+    "$PKG_DIR/kraken-control.desktop.in" > "$DESKTOP_DIR/open-hardware-control.desktop"
 chmod 0644 "$DESKTOP_DIR/open-hardware-control.desktop"
 rm -f "$DESKTOP_DIR/kraken-control.desktop"
 
@@ -151,8 +166,8 @@ command -v kbuildsycoca6 >/dev/null 2>&1 && kbuildsycoca6 --noincremental >/dev/
 command -v kbuildsycoca5 >/dev/null 2>&1 && kbuildsycoca5 --noincremental >/dev/null 2>&1 || true
 
 echo
-INSTALL_VERSION="$(tr -d '\r\n' < "$SOURCE_DIR/VERSION" 2>/dev/null || printf 'unbekannt')"
-INSTALL_CHANNEL="$(tr -d '\r\n' < "$SOURCE_DIR/BUILD_CHANNEL" 2>/dev/null || printf 'INTERN')"
+INSTALL_VERSION="$(tr -d '\r\n' < "$PKG_DIR/VERSION" 2>/dev/null || printf 'unbekannt')"
+INSTALL_CHANNEL="$(tr -d '\r\n' < "$PKG_DIR/BUILD_CHANNEL" 2>/dev/null || printf 'INTERN')"
 echo "Open Hardware Control by Frelidon ${INSTALL_VERSION} ${INSTALL_CHANNEL} wurde installiert."
 echo "Start im Terminal: $BIN_DIR/open-hardware-control"
 echo "Diagnosebericht: $BIN_DIR/open-hardware-control-diagnostics"

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION="${1:-$(tr -d '\r\n' < "$ROOT/VERSION")}" 
+VERSION="${1:-$(tr -d '\r\n' < "$ROOT/packaging/VERSION")}" 
 cd "$ROOT"
 ./scripts/check_release.sh
 PYTHONDONTWRITEBYTECODE=1 python3 scripts/build_release.py "$VERSION"

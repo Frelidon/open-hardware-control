@@ -1,12 +1,16 @@
 # Open Hardware Control – zentrale Projektdokumentation
 
-Stand: **3.4.29.46 STABLE**, 06. September 2026
+Stand: **3.4.29.47 STABLE**, 06. September 2026
 
 ## Zielbild
 
 Open Hardware Control by Frelidon ist die gemeinsame, modular erweiterbare Linux-Oberfläche für unterstützte Hardware. Die komplette bisherige NZXT-Kraken-Anwendung bleibt als fest eingebautes NZXT-Modul erhalten. Corsair-Hardware wird über OpenLinkHub eingebunden. Zusätzliche RGB-Geräte erscheinen über eine von OHC automatisch verwaltete lokale Hardware-Engine. Spätere Gerätefamilien können als weitere Module hinzukommen, ohne die Navigation mit einer langen Reihe von Hauptreitern zu überladen.
 
 Open Radeon Control Center bleibt ein eigenständiges Projekt. Es wird weder technisch noch organisatorisch in Open Hardware Control verschmolzen.
+
+## Version 3.4.29.47 STABLE
+
+Version 3.4.29.47 schließt die Repository-Neuordnung ab: Der gesamte Anwendungscode liegt in `src/` (spiegelt die flache installierte Programmstruktur), Installer und Versionsdateien in `packaging/`, alle Dokumente in `docs/`, die vollständigen Agentenanweisungen in `docs/ai/`, `SECURITY.md` in `.github/`. Im Wurzelverzeichnis bleiben nur `README.md`, `LICENSE`, `CITATION.cff` und ein kurzer `AGENTS.md`-Wegweiser. Installierte Struktur und Paketinhalte bleiben unverändert.
 
 ## Version 3.4.29.46 STABLE
 
@@ -296,7 +300,7 @@ Der Funktionsstand der Kraken-Control-Version 2.9.23 bleibt enthalten:
 - CPU-/GPU-Livewerte im isolierten Renderprozess
 - Profile, vier Oberflächensprachen, adaptive Skalierung, Hintergrunddesigns und Diagnoseprotokoll
 
-Die technische Vorgängerdokumentation `Kraken_Control_Projekt.md` und `../hardware/USB_CAPTURE_FINDINGS.md` bleiben als Modulhistorie vollständig im Entwicklerpaket.
+Die technische Vorgängerdokumentation `Kraken_Control_Projekt.md` und `docs/hardware/USB_CAPTURE_FINDINGS.md` bleiben als Modulhistorie vollständig im Entwicklerpaket.
 
 ## Installation und Aktualisierung
 

@@ -2,11 +2,11 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MAIN = (ROOT / "kraken_control.py").read_text(encoding="utf-8")
-UI = (ROOT / "thermalright_display_ui.py").read_text(encoding="utf-8")
-LAYOUT_CANVAS = (ROOT / "modules" / "lcd_levita" / "v1_4" / "layout_canvas.py").read_text(encoding="utf-8")
-LAYOUT_MODEL = (ROOT / "modules" / "lcd_levita" / "v1_4" / "layout_model.py").read_text(encoding="utf-8")
-THEME_ADAPTER = (ROOT / "modules" / "lcd_levita" / "v1_4" / "theme_adapter.py").read_text(encoding="utf-8")
+MAIN = (ROOT / "src/kraken_control.py").read_text(encoding="utf-8")
+UI = (ROOT / "src/thermalright_display_ui.py").read_text(encoding="utf-8")
+LAYOUT_CANVAS = (ROOT / "src/modules" / "lcd_levita" / "v1_4" / "layout_canvas.py").read_text(encoding="utf-8")
+LAYOUT_MODEL = (ROOT / "src/modules" / "lcd_levita" / "v1_4" / "layout_model.py").read_text(encoding="utf-8")
+THEME_ADAPTER = (ROOT / "src/modules" / "lcd_levita" / "v1_4" / "theme_adapter.py").read_text(encoding="utf-8")
 BUILD = (ROOT / "scripts" / "build_release.py").read_text(encoding="utf-8")
 DESKTOP = (ROOT / "packaging/kraken-control.desktop.in").read_text(encoding="utf-8")
 
@@ -51,7 +51,7 @@ def test_real_notch_mask_and_background_movement_are_user_adjustable() -> None:
     assert "path.quadTo(0.0, height, -bottom, height)" in LAYOUT_CANVAS
     assert "outer_right_corner_wedges()" in LAYOUT_CANVAS
     assert "def fill_outside_levita_panel" in (
-        ROOT / "modules" / "lcd_levita" / "v1_4" / "panel_geometry.py"
+        ROOT / "src/modules" / "lcd_levita" / "v1_4" / "panel_geometry.py"
     ).read_text(encoding="utf-8")
     assert "READABLE_CONTROL_HEIGHT = 36" in UI
     assert "def _readable_value_widget" in UI
@@ -197,7 +197,7 @@ def test_running_window_has_kde_desktop_identity_and_icon() -> None:
 def test_project_owned_levita_media_are_packaged_from_an_explicit_allowlist() -> None:
     from PIL import Image
 
-    designs = ROOT / "assets" / "levita-designs"
+    designs = ROOT / "src/assets" / "levita-designs"
     expected_images = {
         "ohc-carbon-blue.png",
         "ohc-titanium-blue.png",
@@ -224,7 +224,7 @@ def test_project_owned_levita_media_are_packaged_from_an_explicit_allowlist() ->
     assert (designs / expected_video).stat().st_size > 1_000_000
     for filename in expected_images | {expected_video}:
         assert filename in UI
-    assert '"ohc": "OHC-Designs"' in (ROOT / "thermalright_display.py").read_text(encoding="utf-8")
+    assert '"ohc": "OHC-Designs"' in (ROOT / "src/thermalright_display.py").read_text(encoding="utf-8")
 
 
 def test_overlay_spacing_presets_remain_individually_editable() -> None:

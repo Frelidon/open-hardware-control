@@ -23,7 +23,7 @@ benutzerdefinierte Kachelbefehle werden nicht unterstützt.
 ## Symbole und Mauszeiger
 
 Zur Auswahl stehen KDE Breeze sowie die originalen OHC-Varianten **Windowed 11**, **Orchard** und **Metro 8**.
-Sie werden lokal aus `desktop_assets.py` erzeugt. Jede Installation enthält `SOURCE.json` und einen Lizenzhinweis.
+Sie werden lokal aus `src/desktop_assets.py` erzeugt. Jede Installation enthält `SOURCE.json` und einen Lizenzhinweis.
 Die Pakete enthalten keine Microsoft-/Apple-Logos, Originalzeiger, Schriften, Hintergrundbilder oder sonstige
 proprietäre Herstellerbestandteile. Die Namen beschreiben nur die angestrebte Bedienungsrichtung.
 

@@ -5,8 +5,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CODE = (ROOT / "kraken_control.py").read_text(encoding="utf-8")
-GALLERY = (ROOT / "modules" / "rgb_studio" / "v1_1" / "design_gallery.py").read_text(
+CODE = (ROOT / "src/kraken_control.py").read_text(encoding="utf-8")
+GALLERY = (ROOT / "src/modules" / "rgb_studio" / "v1_1" / "design_gallery.py").read_text(
     encoding="utf-8"
 )
 

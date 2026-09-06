@@ -9,11 +9,11 @@ Du arbeitest am Projekt **Open Hardware Control by Frelidon**. Handle als vorsic
 ## Pflichtstart vor jeder Änderung
 
 1. Lies `AGENTS.md` vollständig.
-2. Lies zwingend `../project/MODULE_REGISTRY.md`; dort stehen aktuelle Modulversion und einziger gültiger Pfad.
-3. Lies `AI_DEVELOPMENT_GUIDE.md`, `../project/RELEASE_BACKUP_POLICY.md`, `../project/PROJECT_STATUS.md`, `../project/DECISIONS.md`, `../project/ARCHITECTURE.md`, `../project/MODULE_MAP.md` und `../hardware/DEVICE_SUPPORT.md`.
-4. Wenn Hardware betroffen ist, lies zusätzlich `../hardware/SUPPORTED_DEVICES.md`.
-5. Lies den neuesten Abschnitt von `CHANGELOG.md` und die aktuellen Release Notes.
-6. Prüfe `VERSION`, `BUILD_CHANNEL`, `git status`, den aktuellen Branch und die letzten Commits.
+2. Lies zwingend `docs/project/MODULE_REGISTRY.md`; dort stehen aktuelle Modulversion und einziger gültiger Pfad.
+3. Lies `AI_DEVELOPMENT_GUIDE.md`, `docs/project/RELEASE_BACKUP_POLICY.md`, `docs/project/PROJECT_STATUS.md`, `docs/project/DECISIONS.md`, `docs/project/ARCHITECTURE.md`, `docs/project/MODULE_MAP.md` und `docs/hardware/DEVICE_SUPPORT.md`.
+4. Wenn Hardware betroffen ist, lies zusätzlich `docs/hardware/SUPPORTED_DEVICES.md`.
+5. Lies den neuesten Abschnitt von `docs/CHANGELOG.md` und die aktuellen Release Notes.
+6. Prüfe `packaging/VERSION`, `packaging/BUILD_CHANNEL`, `git status`, den aktuellen Branch und die letzten Commits.
 7. Untersuche erst danach nur den im Modulregister genannten Code und die gezielten Tests.
 
 Antworte nach diesem Start zunächst nur mit:
@@ -45,19 +45,19 @@ Antworte nach diesem Start zunächst nur mit:
 ## Arbeitsweise für ein lokales 14B-Modell
 
 - Bearbeite jeweils eine klar abgegrenzte Aufgabe.
-- Nutze zuerst `../project/MODULE_REGISTRY.md` und danach die aufgabenspezifischen Dateigruppen in `../project/MODULE_MAP.md`; lade die große Hauptdatei nicht vollständig, wenn eine gezielte Funktionssuche genügt.
+- Nutze zuerst `docs/project/MODULE_REGISTRY.md` und danach die aufgabenspezifischen Dateigruppen in `docs/project/MODULE_MAP.md`; lade die große Hauptdatei nicht vollständig, wenn eine gezielte Funktionssuche genügt.
 - Halte handgeschriebene Dateien möglichst unter 600 Zeilen/32.000 Zeichen und teile spätestens vor 800 Zeilen/40.000 Zeichen. Neue Fachlogik liegt in kleinen Dateien im einzigen aktuellen Versionsordner.
 - Suche gezielt mit `rg`; lade nicht ungefragt das gesamte Repository in eine Antwort.
 - Lies die tatsächlich betroffenen Funktionen und Tests vollständig, bevor du sie änderst.
 - Erhalte vorhandene APIs und Einstellungswerte, sofern keine geprüfte Migration vorgesehen ist.
 - Führe zuerst enge Tests und vor einem fertigen Versionspaket `./scripts/check_release.sh` aus.
-- Lasse einen erfolgreichen Versionsbau den externen Ordner `Open Hardware Control Backup` aktualisieren und prüfe nach `../project/RELEASE_BACKUP_POLICY.md` beide aufbewahrten Versionen samt SHA256.
-- Aktualisiere nach einer wesentlichen Änderung `../project/PROJECT_STATUS.md`, bei dauerhaften Entscheidungen `../project/DECISIONS.md` und bei sichtbaren Änderungen `CHANGELOG.md` sowie Release Notes.
+- Lasse einen erfolgreichen Versionsbau den externen Ordner `Open Hardware Control Backup` aktualisieren und prüfe nach `docs/project/RELEASE_BACKUP_POLICY.md` beide aufbewahrten Versionen samt SHA256.
+- Aktualisiere nach einer wesentlichen Änderung `docs/project/PROJECT_STATUS.md`, bei dauerhaften Entscheidungen `docs/project/DECISIONS.md` und bei sichtbaren Änderungen `docs/CHANGELOG.md` sowie Release Notes.
 - Melde am Ende: geänderte Dateien, Tests, bekannte Grenzen und nächsten sinnvollen Schritt.
 
 ## Aktueller Einstiegspunkt
 
-Der aktuelle Veröffentlichungsstand ist in `../project/PROJECT_STATUS.md` beschrieben. Version 3.4.29.46 STABLE pausiert die minütliche OpenRGB-Hintergrundinventur im Infobereich und sortiert die Dokumentation in `docs/`-Themenordner sowie Distributionsdateien nach `packaging/`. Version 3.4.29.45 hält gespeicherte RGB-Startprofile während einer vorläufigen OpenRGB-Teilerkennung sicher vorgemerkt und veröffentlicht den zuvor intern geprüften Funktionsstand. Wallpaper Engine for KDE bleibt Modul 1.2: Wiedergabe adressiert das unter `org.kde.plasmashell` registrierte `/WallpaperEngine`-Objekt, die drei CaptSilver-Skalierungsmodi sind pro Zielbildschirm verfügbar, und Assistent sowie geprüfter Fedora-Installer bleiben erhalten. Das Hauptfenster startet standardmäßig auf dem Hauptbildschirm oder einem ausdrücklich gespeicherten, namentlich identifizierten Monitor mit sicherem Rückfall; KWin bleibt unter Wayland letztentscheidend. Ein globales schmales Scrollleisten-Design gilt für alle Seiten. CaptSilver-Plugin und Steam-Dateien bleiben unverändert. RGB Studio 1.1, die TRCC-Linux-9.9.12-Empfehlung, Hardware-Besitzgrenzen und externe Zwei-Versionen-Sicherung bleiben Pflicht.
+Der aktuelle Veröffentlichungsstand ist in `docs/project/PROJECT_STATUS.md` beschrieben. Version 3.4.29.47 STABLE verschiebt den gesamten Anwendungscode nach `src/` (Tests importieren aus `ROOT / "src"`), Installer/Versionsdateien nach `packaging/` und alle Dokumente nach `docs/`. Version 3.4.29.46 STABLE pausiert die minütliche OpenRGB-Hintergrundinventur im Infobereich und sortiert die Dokumentation in `docs/`-Themenordner sowie Distributionsdateien nach `packaging/`. Version 3.4.29.45 hält gespeicherte RGB-Startprofile während einer vorläufigen OpenRGB-Teilerkennung sicher vorgemerkt und veröffentlicht den zuvor intern geprüften Funktionsstand. Wallpaper Engine for KDE bleibt Modul 1.2: Wiedergabe adressiert das unter `org.kde.plasmashell` registrierte `/WallpaperEngine`-Objekt, die drei CaptSilver-Skalierungsmodi sind pro Zielbildschirm verfügbar, und Assistent sowie geprüfter Fedora-Installer bleiben erhalten. Das Hauptfenster startet standardmäßig auf dem Hauptbildschirm oder einem ausdrücklich gespeicherten, namentlich identifizierten Monitor mit sicherem Rückfall; KWin bleibt unter Wayland letztentscheidend. Ein globales schmales Scrollleisten-Design gilt für alle Seiten. CaptSilver-Plugin und Steam-Dateien bleiben unverändert. RGB Studio 1.1, die TRCC-Linux-9.9.12-Empfehlung, Hardware-Besitzgrenzen und externe Zwei-Versionen-Sicherung bleiben Pflicht.
 
 ## GitHub-Ziel
 
@@ -65,4 +65,4 @@ Das erwartete Remote ist:
 
 `https://github.com/Frelidon/open-hardware-control.git`
 
-Die vollständigen Git-/GitHub-Regeln und Befehle stehen in `../project/GITHUB_PUBLISHING_GUIDE_DE.md`. Vor jeder Übertragung muss die KI Remote, Branch, Diff, Tests und Arbeitsbaum prüfen. Sie darf niemals selbst eine Anmeldung umgehen oder Anmeldedaten speichern.
+Die vollständigen Git-/GitHub-Regeln und Befehle stehen in `docs/project/GITHUB_PUBLISHING_GUIDE_DE.md`. Vor jeder Übertragung muss die KI Remote, Branch, Diff, Tests und Arbeitsbaum prüfen. Sie darf niemals selbst eine Anmeldung umgehen oder Anmeldedaten speichern.

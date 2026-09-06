@@ -11,4 +11,4 @@ Melde mir anschließend kurz:
 
 Git-Push, Pull Request, Tag oder Release sind ohne meine spätere ausdrückliche Freigabe verboten. Wenn ich einen normalen Push auf einen Entwicklungsbranch ausdrücklich beauftrage, ist dieser nach Tests und sauberem Commit auch mit `BUILD_CHANNEL=INTERN` erlaubt. Ein öffentlicher Tag oder Release bleibt eine getrennte Aktion und benötigt zusätzlich den validierten Kanal `STABLE`. Zugangsdaten oder Gerätecodes dürfen nie gespeichert oder committed werden.
 
-Nach jedem erfolgreichen Versionsbau muss automatisch der externe Geschwisterordner `Open Hardware Control Backup` aktualisiert werden. Dort sind nach `../project/RELEASE_BACKUP_POLICY.md` immer mindestens die zwei neuesten vollständigen Versionen einschließlich Paketen, Entwicklerpaket und gültigen SHA256-Prüfsummen zu erhalten.
+Nach jedem erfolgreichen Versionsbau muss automatisch der externe Geschwisterordner `Open Hardware Control Backup` aktualisiert werden. Dort sind nach `docs/project/RELEASE_BACKUP_POLICY.md` immer mindestens die zwei neuesten vollständigen Versionen einschließlich Paketen, Entwicklerpaket und gültigen SHA256-Prüfsummen zu erhalten.

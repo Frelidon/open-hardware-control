@@ -20,7 +20,7 @@ Wenn Benutzer- und Systemdienst gleichzeitig laufen, muss eine Instanz beendet w
 
 - OpenRGB ist nicht eingebettet und bleibt ein separat installierter Prozess. Open Hardware Control übernimmt weder dessen Hardwaretreiber noch den C++-Code des Effects Plugins.
 - Der Adapter akzeptiert ausschließlich IP-Loopback und verwendet fest `127.0.0.1:6742`. Ein externer Host kann nicht über Oberfläche, Profil oder Kommandozeile eingetragen werden.
-- Vor jedem Auftrag muss der lokale Port erreichbar sein. Erkennung und native Nicht-Direct-Modi enthalten ausdrücklich `--client 127.0.0.1:6742`; Direct-Schreibzugriffe gehen über `openrgb_sdk.py` ausschließlich an dieselbe geprüfte Loopback-Adresse. Ein stiller Rückfall auf OpenRGB-Standalone-Hardwarezugriff ist ausgeschlossen.
+- Vor jedem Auftrag muss der lokale Port erreichbar sein. Erkennung und native Nicht-Direct-Modi enthalten ausdrücklich `--client 127.0.0.1:6742`; Direct-Schreibzugriffe gehen über `src/openrgb_sdk.py` ausschließlich an dieselbe geprüfte Loopback-Adresse. Ein stiller Rückfall auf OpenRGB-Standalone-Hardwarezugriff ist ausgeschlossen.
 - Gerätenummern, Modi, Hex-Farben, Helligkeit und LED-Anzahl werden begrenzt und ohne Shell als Argumentliste übergeben.
 - Schreibzugriffe sind beim Programmstart gesperrt und gelten nach Warnbestätigung nur für die laufende Sitzung.
 - Ein vom aktiven NZXT-Modul erkanntes NZXT-Gerät bleibt im OpenRGB-Pfad gesperrt. Dasselbe gilt für Corsair-Geräte, solange OpenLinkHub erkannt ist.

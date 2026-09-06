@@ -9,7 +9,7 @@ import sys
 
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "src"))
 
 from modules.window_placement.v1_0 import (  # noqa: E402
     PRIMARY_SCREEN_PREFERENCE,
@@ -69,4 +69,4 @@ assert selected is None and not matched
 
 assert screen_option_label(primary, 1) == "Monitor 2 · DP-1 · 3440×1440"
 
-print("3.4.29.46 monitor placement regression guards passed.")
+print("3.4.29.47 monitor placement regression guards passed.")

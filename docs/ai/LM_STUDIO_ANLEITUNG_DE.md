@@ -4,10 +4,10 @@ Diese Anleitung beschreibt die sichere Übergabe des vollständigen Open-Hardwar
 
 ## Empfohlene Variante: Bionic-Projekt mit direktem Ordnerzugriff
 
-1. Verwende auf diesem Rechner am einfachsten direkt den vorhandenen Git-Repository-Ordner. Für eine Übertragung auf einen anderen Rechner oder in einen neuen Ordner verwende das mitgelieferte `Open_Hardware_Control_3.4.29.46_LOCAL_AI.gitbundle` wie im nächsten Abschnitt beschrieben. Das Entwickler-ZIP ist eine vollständige Quelldatei-Sicherung, enthält aber absichtlich keinen `.git`-Ordner.
+1. Verwende auf diesem Rechner am einfachsten direkt den vorhandenen Git-Repository-Ordner. Für eine Übertragung auf einen anderen Rechner oder in einen neuen Ordner verwende das mitgelieferte `Open_Hardware_Control_3.4.29.47_LOCAL_AI.gitbundle` wie im nächsten Abschnitt beschrieben. Das Entwickler-ZIP ist eine vollständige Quelldatei-Sicherung, enthält aber absichtlich keinen `.git`-Ordner.
 2. Öffne LM Studio und erstelle ein neues **Project**.
 3. Aktiviere **Allow coding / Coding erlauben**.
-4. Wähle über **Choose a folder** genau den Ordner, in dem `AGENTS.md`, `START_HIER_LOKALE_KI.md`, `kraken_control.py` und `.git` liegen. Wähle nicht nur `dist` und nicht einen übergeordneten Sammelordner.
+4. Wähle über **Choose a folder** genau den Ordner, in dem `AGENTS.md`, `START_HIER_LOKALE_KI.md`, `src/kraken_control.py` und `.git` liegen. Wähle nicht nur `dist` und nicht einen übergeordneten Sammelordner.
 5. Wähle `qwen2.5-coder-14b-instruct` als Modell.
 6. Beginne konservativ mit etwa **16.384 Kontext-Tokens**. Wenn genügend RAM/VRAM frei bleibt, kannst du auf 32.768 erhöhen. Die ungefähr 12 GB große Modelldatei ist nicht dasselbe wie die Kontextgröße; ein längerer Kontext benötigt zusätzlichen Speicher.
 7. Stelle GPU Offload auf **Auto**. Wenn LM Studio Speicherfehler meldet, senke zuerst die Kontextlänge, bevor du das Projekt oder Dateien entfernst.
@@ -22,7 +22,7 @@ Das lokale-KI-Git-Bundle enthält den aktuellen Branch und seine vollständige b
 
 ```bash
 git clone --branch codex/3.4.29-intern \
-  /vollstaendiger/pfad/Open_Hardware_Control_3.4.29.46_LOCAL_AI.gitbundle \
+  /vollstaendiger/pfad/Open_Hardware_Control_3.4.29.47_LOCAL_AI.gitbundle \
   open-hardware-control-local-ai
 cd open-hardware-control-local-ai
 git remote set-url origin https://github.com/Frelidon/open-hardware-control.git

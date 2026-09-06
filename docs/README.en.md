@@ -1,7 +1,7 @@
-# Open Hardware Control by Frelidon 3.4.29.46
+# Open Hardware Control by Frelidon 3.4.29.47
 
 <!-- project-badges -->
-[![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
+[![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](../LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
 <!-- /project-badges -->
 
 Open Hardware Control is a free Linux GUI for the **NZXT Kraken LCD**, pump, radiator fans and RGB, for the **Thermalright Levita Vision display**, for **calibrated motherboard/case fans through Linux hwmon/NCT6687**, for **Corsair devices through OpenLinkHub** and for additional RGB devices through an automatically managed local hardware engine. It targets Fedora, Nobara, Debian, Ubuntu, Linux Mint, Arch Linux, Manjaro, EndeavourOS and openSUSE.
@@ -14,34 +14,34 @@ Project repository: <https://github.com/Frelidon/open-hardware-control>
 
 ## Screenshots
 
-[![Overview](docs/images/screenshots/01-uebersicht.png)](docs/images/screenshots/01-uebersicht.png)
+[![Overview](images/screenshots/01-uebersicht.png)](images/screenshots/01-uebersicht.png)
 
 <table>
   <tr>
     <td align="center" width="33%">
-      <a href="docs/images/screenshots/02-kuehlung.png"><img src="docs/images/screenshots/thumbs/02-kuehlung.png" alt="Cooling"></a><br>
+      <a href="images/screenshots/02-kuehlung.png"><img src="images/screenshots/thumbs/02-kuehlung.png" alt="Cooling"></a><br>
       <sub><b>Cooling</b> · Levita/Kraken, case fans, CoolerControl guard</sub>
     </td>
     <td align="center" width="33%">
-      <a href="docs/images/screenshots/03-rgb-studio.png"><img src="docs/images/screenshots/thumbs/03-rgb-studio.png" alt="RGB Studio"></a><br>
+      <a href="images/screenshots/03-rgb-studio.png"><img src="images/screenshots/thumbs/03-rgb-studio.png" alt="RGB Studio"></a><br>
       <sub><b>RGB Studio</b> · engine, ENE-DRAM, test mode, design gallery</sub>
     </td>
     <td align="center" width="33%">
-      <a href="docs/images/screenshots/04-lcd-levita.png"><img src="docs/images/screenshots/thumbs/04-lcd-levita.png" alt="LCD · Thermalright Levita display studio"></a><br>
+      <a href="images/screenshots/04-lcd-levita.png"><img src="images/screenshots/thumbs/04-lcd-levita.png" alt="LCD · Thermalright Levita display studio"></a><br>
       <sub><b>LCD</b> · two-layer Thermalright Levita studio</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="33%">
-      <a href="docs/images/screenshots/05-wallpaper-engine.png"><img src="docs/images/screenshots/thumbs/05-wallpaper-engine.png" alt="Wallpaper Engine"></a><br>
+      <a href="images/screenshots/05-wallpaper-engine.png"><img src="images/screenshots/thumbs/05-wallpaper-engine.png" alt="Wallpaper Engine"></a><br>
       <sub><b>Wallpaper Engine</b> · Steam Workshop and Plasma playback</sub>
     </td>
     <td align="center" width="33%">
-      <a href="docs/images/screenshots/06-profile.png"><img src="docs/images/screenshots/thumbs/06-profile.png" alt="Profiles"></a><br>
+      <a href="images/screenshots/06-profile.png"><img src="images/screenshots/thumbs/06-profile.png" alt="Profiles"></a><br>
       <sub><b>Profiles</b> · save cooling, RGB, LCD and design together</sub>
     </td>
     <td align="center" width="33%">
-      <a href="docs/images/screenshots/07-einstellungen.png"><img src="docs/images/screenshots/thumbs/07-einstellungen.png" alt="Settings"></a><br>
+      <a href="images/screenshots/07-einstellungen.png"><img src="images/screenshots/thumbs/07-einstellungen.png" alt="Settings"></a><br>
       <sub><b>Settings</b> · theme, language, display, autostart</sub>
     </td>
   </tr>
@@ -55,42 +55,42 @@ Project repository: <https://github.com/Frelidon/open-hardware-control>
 
 The safe preview-only test mode is active by default; real USB transfer happens only through the separately installed GPL backend **TRCC Linux** (9.9.12 recommended). Levita pump and radiator fans run through separately confirmed motherboard PWM headers (`PUMP_FAN`, `CPU_FAN`) with a safe 70 %/10 s test; CoolerControl blocks concurrent writes.
 
-## New in 3.4.29.46
+## New in 3.4.29.47
 
-- **No more OpenRGB process spam in the background:** the minutely device inventory (`openrgb --client --list-devices`) pauses while OHC is hidden in the system tray and no RGB startup profile, write enable or scheduled retry is pending.
-- **Tidy repository:** documentation lives in `docs/project`, `docs/ai`, `docs/hardware`, `docs/security` and `docs/releases`; distribution files in `packaging/`; community files in `.github/`. The installed layout is unchanged.
-- Seven current screenshots and a compact README with installation near the top.
+- **Fully tidied repository:** all application code now lives in `src/` (Python modules, `assets/`, `modules/`, `test-gifs/`), installer and version files in `packaging/`, every document in `docs/`, community and security policies in `.github/`. The root keeps only README, LICENSE, CITATION and a short `AGENTS.md` pointer.
+- The installed layout (RPM, DEB, ZIP) stays flat and unchanged; `install.sh` is still placed directly in the extracted ZIP folder.
+- From 3.4.29.46: the minutely OpenRGB device inventory pauses while OHC is hidden in the tray and no RGB action is pending; seven current screenshots and a compact README.
 
-Older versions: [Version history](#version-history) · [CHANGELOG.md](CHANGELOG.md) · [docs/releases/](docs/releases/)
+Older versions: [Version history](#version-history) · [CHANGELOG.md](CHANGELOG.md) · [docs/releases/](releases)
 
 ## Installation
 
 ### Fedora and Nobara – RPM
 
-Download `open-hardware-control-3.4.29.46-1.noarch.rpm` to your Downloads folder and run:
+Download `open-hardware-control-3.4.29.47-1.noarch.rpm` to your Downloads folder and run:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.46-1.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.47-1.noarch.rpm
 ```
 
 ### Debian, Ubuntu and Linux Mint – DEB
 
-Download `open-hardware-control_3.4.29.46_all.deb` to your Downloads folder and run:
+Download `open-hardware-control_3.4.29.47_all.deb` to your Downloads folder and run:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.46_all.deb'
+sudo apt install './open-hardware-control_3.4.29.47_all.deb'
 ```
 
 ### Universal installer – ZIP
 
-For Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS and openSUSE. Download `open_hardware_control_v3_4_29_46.zip` and run:
+For Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS and openSUSE. Download `open_hardware_control_v3_4_29_47.zip` and run:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_46.zip
-cd open-hardware-control-3.4.29.46
+unzip open_hardware_control_v3_4_29_47.zip
+cd open-hardware-control-3.4.29.47
 chmod +x install.sh
 ./install.sh
 ```
@@ -105,25 +105,26 @@ Optional and installed separately according to their official guides: **OpenLink
 - OpenLinkHub and OpenRGB are addressed exclusively over loopback (`127.0.0.1`); OpenRGB only in explicit `--client` mode against the local SDK server `127.0.0.1:6742`.
 - RGB/Corsair write permissions apply to the current session only; competing devices (NZXT ↔ OpenRGB, Corsair ↔ OpenLinkHub) stay locked.
 - Polkit grants store no password; system-wide services are never changed automatically. No firmware updates, no cloud, no telemetry.
-- Details: [SECURITY.md](SECURITY.md) · [docs/security/](docs/security/)
+- Details: [SECURITY.md](../.github/SECURITY.md) · [docs/security/](security)
 
 ## Documentation
 
 | Folder | Contents |
 |---|---|
 | [INSTALL.md](INSTALL.md) · [CHANGELOG.md](CHANGELOG.md) | per-distribution installation, complete change history |
-| [docs/hardware/](docs/hardware/) | [Supported devices](docs/hardware/SUPPORTED_DEVICES.en.md), [Profiles](docs/hardware/PROFILES.md), [CPU profiles](docs/hardware/CPU_PROFILES.en.md), [RGB Studio](docs/hardware/RGB_STUDIO.md), [OpenLinkHub integration](docs/hardware/OPENLINKHUB_INTEGRATION.md), USB capture findings |
-| [docs/project/](docs/project/) | [Architecture](docs/project/ARCHITECTURE.md), [Project status](docs/project/PROJECT_STATUS.md), [Module registry](docs/project/MODULE_REGISTRY.md), [Project scope](docs/project/PROJECT_SCOPE.en.md), roadmap, decisions |
-| [docs/security/](docs/security/) | RGB/desktop security audits, [Privacy](docs/security/PRIVACY.md), scan report |
-| [docs/ai/](docs/ai/) | working guides for local and web-based coding assistants |
-| [docs/releases/](docs/releases/) | release notes for every version, release checklist |
-| [packaging/](packaging/) | udev rule, Polkit policy, metainfo, desktop file, helper scripts |
+| [docs/hardware/](hardware) | [Supported devices](hardware/SUPPORTED_DEVICES.en.md), [Profiles](hardware/PROFILES.md), [CPU profiles](hardware/CPU_PROFILES.en.md), [RGB Studio](hardware/RGB_STUDIO.md), [OpenLinkHub integration](hardware/OPENLINKHUB_INTEGRATION.md), USB capture findings |
+| [docs/project/](project) | [Architecture](project/ARCHITECTURE.md), [Project status](project/PROJECT_STATUS.md), [Module registry](project/MODULE_REGISTRY.md), [Project scope](project/PROJECT_SCOPE.en.md), roadmap, decisions |
+| [docs/security/](security) | RGB/desktop security audits, [Privacy](security/PRIVACY.md), scan report |
+| [src/](../src) | application code: `kraken_control.py` (entry point), feature modules under `src/modules/`, artwork under `src/assets/` |
+| [docs/ai/](ai) | working guides for local and web-based coding assistants |
+| [docs/releases/](releases) | release notes for every version, release checklist |
+| [packaging/](../packaging) | `install.sh`/`uninstall.sh`, `VERSION`, `BUILD_CHANNEL`, udev rule, Polkit policy, metainfo, desktop file, helper scripts |
 
-German version: [README.md](README.md)
+German version: [README.md](../README.md)
 
 ## Status
 
-Public experimental beta, provided without warranty. Channel **STABLE**, license **GPL-3.0-or-later**. Contributing: [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) · Help: [.github/SUPPORT.md](.github/SUPPORT.md) · Security reports: [SECURITY.md](SECURITY.md)
+Public experimental beta, provided without warranty. Channel **STABLE**, license **GPL-3.0-or-later**. Contributing: [.github/CONTRIBUTING.md](../.github/CONTRIBUTING.md) · Help: [.github/SUPPORT.md](../.github/SUPPORT.md) · Security reports: [SECURITY.md](../.github/SECURITY.md)
 
 ## Modules
 
@@ -158,12 +159,12 @@ Reads only local Steam Workshop metadata, selects wallpapers through Plasma's of
 
 ## Version history
 
+**3.4.29.47** – Application code moved to `src/`, installer/version files to `packaging/`, all documents to `docs/`; the root holds only README, LICENSE, CITATION and the AGENTS pointer.
+
 **3.4.29.46** – OpenRGB inventory pauses in the tray; repository sorted into topic folders; new screenshots and compact README.
 
 **3.4.29.45** – A saved RGB startup profile is no longer lost when OpenRGB reports a partial cold-start inventory; module-registry check supports the STABLE channel; first stable release of the 3.4.29 line (Levita, RGB, Wallpaper, fans, diagnostics, KDE/Wayland).
 
 **3.4.29.42** – Wallpaper playback buttons use the registered Plasma D-Bus object; three CaptSilver scaling modes; selectable start screen with safe fallback; uniformly narrow scrollbars.
 
-**3.4.29.38** – Modernised RGB Studio with embedded engine controls, on/off buttons, persistent right-click colours, overall brightness and a native channel list; TRCC Linux 9.9.12 recommended as the Levita backend.
-
-All earlier versions back to 2.9.x: [CHANGELOG.md](CHANGELOG.md) and [docs/releases/](docs/releases/).
+All earlier versions back to 2.9.x: [CHANGELOG.md](CHANGELOG.md) and [docs/releases/](releases).

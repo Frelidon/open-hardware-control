@@ -10,7 +10,7 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "src"))
 
 from kraken_lcd_designs import COLOR_PRESETS, DEFAULT_ACCENT, DESIGNS, LABELS, normalize_hex_color, render_hardware_animation, render_hardware_design, render_hardware_frame, render_layered_hardware_animation, overlay_clock_on_frame  # noqa: E402
 

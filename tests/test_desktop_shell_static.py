@@ -4,8 +4,8 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-source = (ROOT / "desktop_shell.py").read_text(encoding="utf-8")
-kwin = (ROOT / "assets/desktop-designs/kwin/ohc-charms/contents/code/main.js").read_text(encoding="utf-8")
+source = (ROOT / "src/desktop_shell.py").read_text(encoding="utf-8")
+kwin = (ROOT / "src/assets/desktop-designs/kwin/ohc-charms/contents/code/main.js").read_text(encoding="utf-8")
 
 assert "shell=True" not in source
 assert "requests" not in source

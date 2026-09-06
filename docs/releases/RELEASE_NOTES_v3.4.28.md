@@ -13,7 +13,7 @@
 
 - The historical main file remains the compatible executable orchestrator.
 - Constants, temperature helpers, privacy logging, command execution, cooling widgets, translations/help and chassis-card state live in focused modules.
-- `../project/MODULE_MAP.md` directs context-limited models such as Qwen2.5-Coder-14B to the smallest relevant file set.
+- `docs/project/MODULE_MAP.md` directs context-limited models such as Qwen2.5-Coder-14B to the smallest relevant file set.
 
 ## Packaging reliability
 

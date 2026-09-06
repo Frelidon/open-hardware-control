@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION="$(tr -d '\r\n' < "$ROOT/VERSION")"
-CHANNEL="$(tr -d '\r\n' < "$ROOT/BUILD_CHANNEL")"
+VERSION="$(tr -d '\r\n' < "$ROOT/packaging/VERSION")"
+CHANNEL="$(tr -d '\r\n' < "$ROOT/packaging/BUILD_CHANNEL")"
 TAG="${1:-v$VERSION}"
 cd "$ROOT"
 

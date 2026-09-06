@@ -16,8 +16,8 @@ from build_rpm_fallback import build_noarch_rpm
 from backup_release import backup_release
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
-CHANNEL = (ROOT / "BUILD_CHANNEL").read_text(encoding="utf-8").strip().upper()
+VERSION = (ROOT / "packaging/VERSION").read_text(encoding="utf-8").strip()
+CHANNEL = (ROOT / "packaging/BUILD_CHANNEL").read_text(encoding="utf-8").strip().upper()
 INTERNAL = CHANNEL == "INTERN"
 if CHANNEL not in {"INTERN", "STABLE"}:
     raise SystemExit("BUILD_CHANNEL must be INTERN or STABLE")
@@ -54,17 +54,17 @@ PACKAGING_FILES = {
     "kraken-control.svg",
 }
 PACKAGING_DIR = ROOT / "packaging"
+# Application sources; this folder mirrors the flat installed application directory.
+SRC_DIR = ROOT / "src"
 # Documentation folders whose Markdown files are installed flat into the app dir.
-DOC_DIRS = ("docs/project", "docs/ai", "docs/hardware", "docs/security")
+DOC_DIRS = ("docs", "docs/project", "docs/ai", "docs/hardware", "docs/security")
 
 RUNTIME_FILES = {
-    "BUILD_CHANNEL",
     "app_constants.py",
     "branding.py",
     "desktop_designs.py",
     "desktop_assets.py",
     "desktop_shell.py",
-    "install.sh",
     "kraken_cam_streamer.py",
     "hardware_request_coordinator.py",
     "mainboard_fan_control.py",
@@ -79,7 +79,6 @@ RUNTIME_FILES = {
     "kraken_sensors.py",
     "localization_catalog.py",
     "nzxt_backend.py",
-    "LICENSE",
     "openlinkhub_integration.py",
     "openlinkhub_mouse_visuals.py",
     "openrgb_integration.py",
@@ -97,8 +96,6 @@ RUNTIME_FILES = {
     "log_view_support.py",
     "nzxt_rgb.py",
     "nzxt_esc_profiles.py",
-    "uninstall.sh",
-    "VERSION",
 }
 
 
@@ -109,9 +106,12 @@ def should_copy(rel: Path, *, developer: bool) -> bool:
         return False
     if developer:
         return True
-    if len(rel.parts) == 1 and (rel.name in RUNTIME_FILES or rel.suffix == ".md"):
-        return True
-    return rel.parts[0] in {"assets", "test-gifs", "docs", "modules", "packaging"}
+    if len(rel.parts) == 1:
+        return rel.name in {"README.md", "LICENSE", "CITATION.cff"}
+    # install.sh/uninstall.sh are placed at the ZIP root instead.
+    if rel.parts[0] == "packaging" and rel.name in {"install.sh", "uninstall.sh"}:
+        return False
+    return rel.parts[0] in {"src", "docs", "packaging"}
 
 
 def copy_tree(src: Path, dst: Path, *, developer: bool) -> None:
@@ -134,8 +134,11 @@ def validate_package_profiles(runtime: Path, developer: Path) -> None:
         raise SystemExit("Runtime ZIP profile unexpectedly contains development-only folders")
     required = (
         "AGENTS.md",
+        "docs/ai/AGENTS.md",
         "docs/project/MODULE_REGISTRY.md",
         "packaging/kraken-control.desktop.in",
+        "packaging/install.sh",
+        "src/kraken_control.py",
         "scripts/check_release.sh",
         "scripts/build_release.py",
         "tests/test_security_static.py",
@@ -208,18 +211,19 @@ def anonymize_tar_metadata(info: tarfile.TarInfo) -> tarfile.TarInfo:
 def install_runtime_tree(package_root: Path) -> None:
     app_dir = package_root / "usr/share/open-hardware-control"
     app_dir.mkdir(parents=True)
-    for name in sorted(RUNTIME_FILES - {"install.sh", "uninstall.sh"}):
-        source = ROOT / name
-        if source.exists():
-            shutil.copy2(source, app_dir / name)
+    for name in sorted(RUNTIME_FILES):
+        shutil.copy2(SRC_DIR / name, app_dir / name)
     for name in sorted(PACKAGING_FILES - {"kraken-control.desktop.in"}):
         shutil.copy2(PACKAGING_DIR / name, app_dir / name)
+    for name in ("VERSION", "BUILD_CHANNEL"):
+        shutil.copy2(PACKAGING_DIR / name, app_dir / name)
+    shutil.copy2(ROOT / "LICENSE", app_dir / "LICENSE")
+    shutil.copy2(ROOT / "README.md", app_dir / "README.md")
     shutil.copy2(ROOT / "docs/security/SECURITY_SCAN_REPORT.json", app_dir / "SECURITY_SCAN_REPORT.json")
     shutil.copy2(ROOT / "docs/ai/LOCAL_AI_STARTPROMPT.txt", app_dir / "LOCAL_AI_STARTPROMPT.txt")
+    shutil.copy2(ROOT / ".github/SECURITY.md", app_dir / "SECURITY.md")
     for name in ("assets", "modules"):
-        shutil.copytree(ROOT / name, app_dir / name)
-    for source in sorted(ROOT.glob("*.md")):
-        shutil.copy2(source, app_dir / source.name)
+        shutil.copytree(SRC_DIR / name, app_dir / name)
     for doc_dir in DOC_DIRS:
         for source in sorted((ROOT / doc_dir).glob("*.md")):
             shutil.copy2(source, app_dir / source.name)
@@ -262,13 +266,13 @@ def install_runtime_tree(package_root: Path) -> None:
     icon_dir.mkdir(parents=True)
     shutil.copy2(PACKAGING_DIR / "kraken-control.svg", icon_dir / "open-hardware-control.svg")
     icon_sources = {
-        22: ROOT / "assets/branding/icons/open-hardware-control-22.png",
-        32: ROOT / "assets/branding/icons/open-hardware-control-32.png",
-        48: ROOT / "assets/branding/icons/open-hardware-control-48.png",
-        64: ROOT / "assets/branding/icons/open-hardware-control-64.png",
-        128: ROOT / "assets/branding/icons/open-hardware-control-128.png",
-        256: ROOT / "assets/branding/icons/open-hardware-control-256.png",
-        512: ROOT / "assets/branding/open-hardware-control-icon.png",
+        22: ROOT / "src/assets/branding/icons/open-hardware-control-22.png",
+        32: ROOT / "src/assets/branding/icons/open-hardware-control-32.png",
+        48: ROOT / "src/assets/branding/icons/open-hardware-control-48.png",
+        64: ROOT / "src/assets/branding/icons/open-hardware-control-64.png",
+        128: ROOT / "src/assets/branding/icons/open-hardware-control-128.png",
+        256: ROOT / "src/assets/branding/icons/open-hardware-control-256.png",
+        512: ROOT / "src/assets/branding/open-hardware-control-icon.png",
     }
     for size, source in icon_sources.items():
         target_dir = package_root / f"usr/share/icons/hicolor/{size}x{size}/apps"
@@ -288,7 +292,7 @@ def install_runtime_tree(package_root: Path) -> None:
     libexec_dir = package_root / "usr/libexec"
     libexec_dir.mkdir(parents=True, exist_ok=True)
     helper = libexec_dir / "open-hardware-control-fan-helper"
-    shutil.copy2(ROOT / "ohc_fan_helper.py", helper)
+    shutil.copy2(ROOT / "src/ohc_fan_helper.py", helper)
     helper.chmod(0o755)
 
     polkit_dir = package_root / "usr/share/polkit-1/actions"
@@ -502,6 +506,9 @@ with tempfile.TemporaryDirectory(prefix="open-hardware-control-release-") as tem
     runtime = temp / runtime_name
     runtime.mkdir()
     copy_tree(ROOT, runtime, developer=False)
+    for name in ("install.sh", "uninstall.sh"):
+        shutil.copy2(PACKAGING_DIR / name, runtime / name)
+    shutil.copy2(ROOT / ".github/SECURITY.md", runtime / "SECURITY.md")
     write_manifest(runtime)
     zip_suffix = "_INTERN" if INTERNAL else ""
     write_zip(runtime, DIST / f"open_hardware_control_v{VERSION.replace('.', '_')}{zip_suffix}.zip", runtime_name)

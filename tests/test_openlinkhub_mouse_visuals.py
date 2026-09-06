@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "src"))
 
 import openlinkhub_mouse_visuals as visuals  # noqa: E402
 
@@ -32,7 +32,7 @@ class MouseVisualTests(unittest.TestCase):
 
     def test_every_layout_has_an_original_svg_asset(self):
         for schema in visuals.LAYOUTS.values():
-            asset = ROOT / "assets" / schema["asset"]
+            asset = ROOT / "src/assets" / schema["asset"]
             self.assertTrue(asset.is_file(), asset)
             text = asset.read_text(encoding="utf-8")
             self.assertIn("Original Open Hardware Control artwork", text)

@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.4.29.47 STABLE
+
+- Sortiert die letzten losen Dateien des Wurzelverzeichnisses in Ordner: der gesamte Anwendungscode (`*.py`, `assets/`, `modules/`, `test-gifs/`) liegt in `src/`; `install.sh`, `uninstall.sh`, `VERSION` und `BUILD_CHANNEL` in `packaging/`; `INSTALL.md`, `CHANGELOG.md` und `README.en.md` in `docs/`; die vollständigen Agentenanweisungen `AGENTS.md` und `CLAUDE.md` in `docs/ai/`; `SECURITY.md` in `.github/`. Im Wurzelverzeichnis bleiben `README.md`, `LICENSE`, `CITATION.cff` und ein kurzer `AGENTS.md`-Wegweiser.
+- Die installierte Programmstruktur (`~/.local/share/open-hardware-control`, `/usr/share/open-hardware-control`) bleibt flach und unverändert. `install.sh` erkennt `src/` sowohl im entpackten ZIP (Skript im Paketwurzelordner) als auch im Quellbaum (`packaging/`). RPM-/DEB-Bau, Release-Prüfung, Modulregisterprüfung, Tests, Cursor-Regeln und GitHub-Workflows verwenden die neuen Pfade.
+- `app_constants.helper_script_path` und das SVG-Fallback in `branding.py` finden Hilfsdateien im Quellbaum unter `../packaging/`.
+
 ## 3.4.29.46 STABLE
 
 - Beendet den minütlichen Hintergrundstart von `openrgb --client 127.0.0.1:6742 --list-devices`, solange das Hauptfenster im Infobereich verborgen ist und weder ein gespeichertes RGB-Startprofil noch eine Schreibfreigabe oder eine bereits geplante Wiederholung ausstehen. Sichtbares Fenster, Startprofil und Wiederholungen verhalten sich unverändert; Regressionstest `tests/test_rgb_inventory_tray_guard_342946.py`.

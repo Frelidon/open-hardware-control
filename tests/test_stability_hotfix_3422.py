@@ -5,11 +5,11 @@ import inspect
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "src"))
 
 import kraken_cam_streamer as streamer
 
-code = (ROOT / "kraken_control.py").read_text(encoding="utf-8")
+code = (ROOT / "src/kraken_control.py").read_text(encoding="utf-8")
 
 # LCD: UI passes scale as sixth positional argument; streamer must accept it.
 sig = inspect.signature(streamer.prepare_gif)

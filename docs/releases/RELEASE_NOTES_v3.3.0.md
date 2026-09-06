@@ -31,4 +31,4 @@ Diese interne Version führt das eigene RGB-Studio ein. Zusätzliche RGB-Geräte
 
 OpenRGB und das OpenRGB Effects Plugin sind GPL-2.0-or-later. Eine Kombination wäre unter GPLv3 grundsätzlich möglich; 3.3.0 übernimmt den Quellcode dennoch nicht. Der Client ist auf Loopback, validierte Argumente, expliziten Clientmodus und bereits erreichbaren Server begrenzt. Fremde NZXT-/Corsair-Schreibpfade werden bei aktivem OHC-Modul gesperrt.
 
-Details: `../hardware/RGB_STUDIO.md`, `../security/RGB_SECURITY_AUDIT.md`, `SECURITY.md`.
+Details: `docs/hardware/RGB_STUDIO.md`, `docs/security/RGB_SECURITY_AUDIT.md`, `SECURITY.md`.

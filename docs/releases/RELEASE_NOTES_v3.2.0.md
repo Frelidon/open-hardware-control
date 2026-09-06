@@ -18,7 +18,7 @@ OpenLinkHub-, LCD-, Pumpen-, Lüfter- und Kurvenlogik bleibt unverändert.
 
 Alle neuen visuellen Dateien werden aus dem mitgelieferten GPL-Quellcode erzeugt oder sind eigene GPL-SVGs.
 Originale Microsoft-/Apple-Dateien werden nicht verteilt. TiledScreen und andere Referenzprojekte wurden geprüft,
-aber nicht eingebettet. Details stehen in `../security/DESKTOP_SECURITY_AUDIT.md`.
+aber nicht eingebettet. Details stehen in `docs/security/DESKTOP_SECURITY_AUDIT.md`.
 
 Die Kachelübersicht lädt keine Online-Inhalte. Lokale Programme werden aus `.desktop`-Dateien gelesen und ohne
 Shell gestartet; Interpreter-/Shellstarter werden verworfen. Ein Backup-Import führt keine enthaltene Datei aus.

@@ -1,6 +1,6 @@
 ---
 description: UI and navigation invariants for Open Hardware Control
-globs: kraken_control.py,ui_layout.py,desktop_*.py,assets/**
+globs: src/kraken_control.py,src/ui_layout.py,desktop_*.py,src/assets/**
 alwaysApply: false
 ---
 

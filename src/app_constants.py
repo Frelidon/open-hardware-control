@@ -13,7 +13,7 @@ from nzxt_backend import SupportLevel
 
 APP_NAME = "Open Hardware Control"
 DISPLAY_NAME = "Open Hardware Control by Frelidon"
-APP_VERSION = "3.4.29.46"
+APP_VERSION = "3.4.29.47"
 BUILD_CHANNEL = "STABLE"
 APP_DISPLAY_VERSION = f"{APP_VERSION} {BUILD_CHANNEL}"
 ORG_NAME = "FloriLinuxTools"
@@ -43,6 +43,6 @@ SUPPORTED_UI_LANGUAGES = {"de": "Deutsch", "en": "English", "es": "Español", "f
 
 
 def helper_script_path(app_file: Path, name: str) -> Path:
-    """Installed layout keeps helper scripts flat; the source tree uses packaging/."""
+    """Installed layout keeps helper scripts flat; the source tree has them in ../packaging/."""
     flat = app_file.with_name(name)
-    return flat if flat.is_file() else app_file.parent / "packaging" / name
+    return flat if flat.is_file() else app_file.resolve().parent.parent / "packaging" / name

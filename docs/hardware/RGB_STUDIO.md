@@ -76,7 +76,7 @@ Der Scrollschutz umfasst nun Seite und Navigation nach Kachelumbau, Befehlsende 
 
 ## Direct-SDK, Scrollschutz und Layout-Editor 3.4.5
 
-Der neue Fedora-Coredump zeigt den Absturz für den gültigen Einzelgerätebefehl an Airgoo AG-DRGB16 innerhalb von OpenRGBs `ApplyOptions`. Direct-Geräte werden daher bei statischer Farbe, Einzeltest und OHC-Softwareanimation nicht mehr durch den OpenRGB-Kommandozeilenparser geschickt. `openrgb_sdk.py` verhandelt stattdessen begrenzt Protokollversion 4 mit dem ausschließlich lokalen, von OHC verwalteten OpenRGB-Server und überträgt die fertigen LED-Farben. OpenRGB bleibt für Erkennung und sämtliche Controllerprotokolle zuständig und muss weiterhin installiert sein; seine Oberfläche muss nicht laufen.
+Der neue Fedora-Coredump zeigt den Absturz für den gültigen Einzelgerätebefehl an Airgoo AG-DRGB16 innerhalb von OpenRGBs `ApplyOptions`. Direct-Geräte werden daher bei statischer Farbe, Einzeltest und OHC-Softwareanimation nicht mehr durch den OpenRGB-Kommandozeilenparser geschickt. `src/openrgb_sdk.py` verhandelt stattdessen begrenzt Protokollversion 4 mit dem ausschließlich lokalen, von OHC verwalteten OpenRGB-Server und überträgt die fertigen LED-Farben. OpenRGB bleibt für Erkennung und sämtliche Controllerprotokolle zuständig und muss weiterhin installiert sein; seine Oberfläche muss nicht laufen.
 
 Der Kachel-/Gruppen-Neuaufbau stellt die vorherige Scrollposition nach den Qt-Layoutläufen wieder her. Die PC-Ansicht beginnt geordnet mit zwölf Lüftern und unterstützt nun Hinzufügen, Bearbeiten, Entfernen und automatische Anordnung eigener Blöcke. Ein Hub mit nur einer gemeldeten logischen LED kann elektrisch gespiegelte Lüfter nur gemeinsam steuern; OHC zeigt diese Grenze an und erfindet keine Einzelkanäle.
 

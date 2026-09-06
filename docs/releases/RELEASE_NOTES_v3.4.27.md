@@ -28,11 +28,11 @@
 
 ## Local AI project handoff
 
-- `../ai/START_HIER_LOKALE_KI.md` gives local coding models a short mandatory project and safety entry point.
-- `../ai/LM_STUDIO_ANLEITUNG_DE.md` documents the recommended LM Studio Bionic setup for Qwen2.5-Coder-14B, context-memory tradeoffs and repository selection.
-- `../ai/LOCAL_AI_STARTPROMPT.txt` provides a reusable first prompt, while the GitHub guide separates internal branch pushes from blocked public releases and never stores credentials.
+- `docs/ai/START_HIER_LOKALE_KI.md` gives local coding models a short mandatory project and safety entry point.
+- `docs/ai/LM_STUDIO_ANLEITUNG_DE.md` documents the recommended LM Studio Bionic setup for Qwen2.5-Coder-14B, context-memory tradeoffs and repository selection.
+- `docs/ai/LOCAL_AI_STARTPROMPT.txt` provides a reusable first prompt, while the GitHub guide separates internal branch pushes from blocked public releases and never stores credentials.
 - A credential-free Git bundle transfers the current branch and required history to another local-AI workspace without embedding `.git` account configuration in the source ZIP.
-- `../project/MODULE_MAP.md` routes context-limited models to the smallest relevant file set for UI, Kraken, mainboard-fan, RGB, OpenLinkHub and release tasks.
+- `docs/project/MODULE_MAP.md` routes context-limited models to the smallest relevant file set for UI, Kraken, mainboard-fan, RGB, OpenLinkHub and release tasks.
 - The first compatibility-preserving refactor moves constants, temperature helpers, privacy logging, the serial command backend, cooling widgets and localization/help data out of the historical main file without changing hardware ownership behavior.
 
 ## Safety

@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def _exercise_real_qt_queue() -> None:
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    sys.path.insert(0, str(ROOT))
+    sys.path.insert(0, str(ROOT / "src"))
 
     from PySide6.QtCore import QProcess, QSettings
     from PySide6.QtGui import QColor, QImage

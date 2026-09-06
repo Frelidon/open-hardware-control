@@ -3,8 +3,8 @@
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO_NAME="${1:-kraken-control-linux}"
-VERSION="$(tr -d '\r\n' < "$ROOT/VERSION")"
-CHANNEL="$(tr -d '\r\n' < "$ROOT/BUILD_CHANNEL")"
+VERSION="$(tr -d '\r\n' < "$ROOT/packaging/VERSION")"
+CHANNEL="$(tr -d '\r\n' < "$ROOT/packaging/BUILD_CHANNEL")"
 cd "$ROOT"
 
 if [[ "$CHANNEL" != "STABLE" ]]; then

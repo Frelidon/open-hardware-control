@@ -9,8 +9,8 @@ import warnings
 from PIL import Image, ImageChops, ImageDraw, ImageSequence
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
-spec = spec_from_file_location("kraken_cam_streamer", ROOT / "kraken_cam_streamer.py")
+sys.path.insert(0, str(ROOT / "src"))
+spec = spec_from_file_location("kraken_cam_streamer", ROOT / "src/kraken_cam_streamer.py")
 mod = module_from_spec(spec)
 sys.modules[spec.name] = mod
 spec.loader.exec_module(mod)
@@ -227,7 +227,7 @@ assert mod.upload_histogram_bucket(0.043) == "ge42"
 
 for fps in (24,25,26,27):
     for stem in ("01_color-cycle","02_moving-bars"):
-        gif=ROOT/"test-gifs"/f"{stem}_{fps}fps.gif"
+        gif=ROOT/"src"/"test-gifs"/f"{stem}_{fps}fps.gif"
         assert gif.exists(), gif
         with Image.open(gif) as source:
             source_frames = [frame.convert("RGB") for frame in ImageSequence.Iterator(source)]
@@ -238,6 +238,6 @@ for fps in (24,25,26,27):
             diagnostics = mod.loop_transition_diagnostics(samples)
             assert diagnostics["loop_warning"] is False, (gif, diagnostics)
 
-assert not (ROOT/"test-gifs"/"02_moving-bars_30fps.gif").exists()
-assert not (ROOT/"test-gifs"/"02_moving-bars_32fps.gif").exists()
+assert not (ROOT/"src"/"test-gifs"/"02_moving-bars_30fps.gif").exists()
+assert not (ROOT/"src"/"test-gifs"/"02_moving-bars_32fps.gif").exists()
 print("GIF 2.9.23 phase-locked CAM transport, live hardware cache and timing checks passed.")

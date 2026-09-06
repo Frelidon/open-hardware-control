@@ -50,12 +50,12 @@ pyside.__version__='test'
 sys.modules.update({'PySide6':pyside,'PySide6.QtCore':qtcore,'PySide6.QtGui':qtgui,'PySide6.QtWidgets':qtwidgets})
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
-spec=importlib.util.spec_from_file_location('kraken_v29',str(ROOT / 'kraken_control.py'))
+sys.path.insert(0, str(ROOT / "src"))
+spec=importlib.util.spec_from_file_location('kraken_v29',str(ROOT / 'src/kraken_control.py'))
 mod=importlib.util.module_from_spec(spec)
 sys.modules[spec.name]=mod
 spec.loader.exec_module(mod)
-assert mod.APP_VERSION=='3.4.29.46'
+assert mod.APP_VERSION=='3.4.29.47'
 assert mod.BUILD_CHANNEL=='STABLE'
 assert mod.APP_NAME=='Open Hardware Control'
 assert len(mod.AM5_CPU_PROFILES)>=20

@@ -1,14 +1,16 @@
 # Open Hardware Control — Project Status
 
-**Current development version:** 3.4.29.46 STABLE
+**Current development version:** 3.4.29.47 STABLE
 
 **Status date:** 06 September 2026
 
 **Release channel:** STABLE — public release scripts may run only after the complete release checks, clean commit and explicit owner request.
 
+Version 3.4.29.47 completes the repository reorganisation: all application code (`*.py`, `assets/`, `modules/`, `test-gifs/`) lives in `src/`, which mirrors the flat installed application directory; `install.sh`, `uninstall.sh`, `VERSION` and `BUILD_CHANNEL` live in `packaging/`; `INSTALL.md`, `CHANGELOG.md` and `README.en.md` in `docs/`; the full agent instructions in `docs/ai/AGENTS.md` (the root `AGENTS.md` is a short pointer); `SECURITY.md` in `.github/`. Installed layouts and package contents are unchanged. Tests import from `ROOT / "src"`, the registry validator scans `src/modules/`, and `install.sh` resolves `src/` from both the ZIP root and `packaging/`.
+
 Version 3.4.29.46 stops the minutely `openrgb --client --list-devices` background inventory while the main window is hidden in the system tray and no RGB startup profile, write enable or scheduled retry is pending; the guard is covered by `tests/test_rgb_inventory_tray_guard_342946.py`. The repository was reorganised into `docs/project`, `docs/ai`, `docs/hardware`, `docs/security`, `docs/releases`, `packaging/` and `.github/`; `install.sh` and `scripts/build_release.py` still install a flat application directory, and `app_constants.helper_script_path` resolves helper scripts in both layouts. The README gained a clickable seven-screenshot gallery, installation near the top and a four-version history.
 
-Version 3.4.29.45 keeps a saved RGB start profile pending while the managed OpenRGB engine reports its known cold-start partial inventory. The bounded inventory retry can now discover the complete controller set and apply the saved design instead of losing the one-shot profile start. The module-registry validator also follows the declared `BUILD_CHANNEL`, removing the internal-only gate that previously rejected a valid stable candidate. Stable RPM source preparation now uses a dedicated temporary parent instead of colliding with the identically named runtime ZIP tree. The bundled Levita gallery adds eight owner-created AI backgrounds and one deduplicated 30-second owner-created animation through an explicit allowlist; no manufacturer/TRCC catalog media is present. The clean-runner preview-queue regression cancels and clears constructor thumbnail work before measuring its synthetic 140-video load, removing the final runner-speed race. This version promotes the tested 3.4.29 feature line to the stable release channel.
+Version 3.4.29.45 keeps a saved RGB start profile pending while the managed OpenRGB engine reports its known cold-start partial inventory. The bounded inventory retry can now discover the complete controller set and apply the saved design instead of losing the one-shot profile start. The module-registry validator also follows the declared `packaging/BUILD_CHANNEL`, removing the internal-only gate that previously rejected a valid stable candidate. Stable RPM source preparation now uses a dedicated temporary parent instead of colliding with the identically named runtime ZIP tree. The bundled Levita gallery adds eight owner-created AI backgrounds and one deduplicated 30-second owner-created animation through an explicit allowlist; no manufacturer/TRCC catalog media is present. The clean-runner preview-queue regression cancels and clears constructor thumbnail work before measuring its synthetic 140-video load, removing the final runner-speed race. This version promotes the tested 3.4.29 feature line to the stable release channel.
 
 Version 3.4.29.42 advances the Wallpaper Engine for KDE module to 1.2. Pause, resume, next and mute target `/WallpaperEngine` on Plasma's existing `org.kde.plasmashell` bus service, matching the object exposed by CaptSilver v1.4 even when its optional standalone alias cannot be registered. Because v1.4's advertised Previous method currently advances instead, OHC's back button safely selects the preceding validated local Workshop entry. The page also reads and applies DisplayMode 0/1/2 per selected screen. The main window defaults to Qt's primary screen, persists an optional exact screen name with primary fallback, and repositions restored geometry before display where the compositor permits it. A global eight-pixel scrollbar style makes all pages consistent. Existing hardware ownership and Wallpaper/Steam immutability boundaries are unchanged. The complete two-version backup remains mandatory.
 
@@ -76,7 +78,7 @@ Version 3.4.29.21 finishes the Levita studio geometry and the immediate Ebene-1 
 
 Version 3.4.29.20 aligns editable preview geometry with TRCC's centre-based text coordinates and keeps draggable scene items alive while video frames update only the background. Re-selecting the current media card reloads both preview layers immediately, and the last valid video frame remains visible during asynchronous preparation. Right-click requests an integrated editor beside the canvas for colour, font size, text and block reset; applying or cancelling hides it without opening a separate top-level dialog. The dashboard now gates the Kraken coolant card on both an actual Kraken connection and a real liquid-temperature value, while preserving the user's saved card preference.
 
-The 3.4.29 codebase has also begun an incremental local-AI-oriented split of the historical `kraken_control.py` monolith. The executable remains compatible, while independent constants, temperature helpers, privacy logging, the serial command backend, cooling widgets and localization/help data now live in focused modules documented by `MODULE_MAP.md`.
+The 3.4.29 codebase has also begun an incremental local-AI-oriented split of the historical `src/kraken_control.py` monolith. The executable remains compatible, while independent constants, temperature helpers, privacy logging, the serial command backend, cooling widgets and localization/help data now live in focused modules documented by `MODULE_MAP.md`.
 
 ## What 3.4.29 adds so far
 
@@ -125,8 +127,8 @@ The 3.4.29 codebase has also begun an incremental local-AI-oriented split of the
 
 ## What 3.4.26 adds
 
-- Root `AGENTS.md` as the primary durable agent instruction set.
-- `PROJECT_STATUS.md`, `ARCHITECTURE.md`, `DECISIONS.md`, `../hardware/DEVICE_SUPPORT.md` and `../ai/AI_HANDOFF.md` as maintained project memory.
+- Root `docs/ai/AGENTS.md` as the primary durable agent instruction set.
+- `PROJECT_STATUS.md`, `ARCHITECTURE.md`, `DECISIONS.md`, `docs/hardware/DEVICE_SUPPORT.md` and `docs/ai/AI_HANDOFF.md` as maintained project memory.
 - Cursor project rules under `.cursor/rules/`.
 - Cursor slash workflows under `.cursor/commands/`.
 - Project-level Cursor hooks with session context injection and destructive-command confirmation.
@@ -134,15 +136,15 @@ The 3.4.29 codebase has also begun an incremental local-AI-oriented split of the
 
 ## Current major modules
 
-- NZXT Kraken control: `nzxt_backend.py`, `kraken_sensors.py`, `kraken_cam_streamer.py`, `kraken_lcd_designs.py`, `nzxt_rgb.py`, `nzxt_esc_profiles.py`.
-- Main GUI and orchestration: `kraken_control.py`, `cooling_widgets.py`, `localization_catalog.py`, `ui_layout.py`.
-- Shared application infrastructure: `app_constants.py`, `temperature_utils.py`, `privacy_logging.py`, `window_diagnostics.py`, `command_backend.py`.
-- Hardware request coordination: `hardware_request_coordinator.py`, `cooling_ownership.py`.
-- Mainboard fan control: `mainboard_fan_control.py`, `ohc_fan_helper.py` plus Polkit policy.
-- Thermalright display/cooling: `modules/lcd_levita/v1_4/`, `thermalright_display.py`, `thermalright_display_ui.py`, `thermalright_cooling.py`.
-- Corsair/OpenLinkHub: `openlinkhub_integration.py`, `openlinkhub_mouse_visuals.py`.
-- RGB/OpenRGB: `openrgb_integration.py`, `openrgb_sdk.py`, `rgb_devices.py`, `rgb_effects.py`.
-- Desktop customization: `desktop_shell.py`, `desktop_designs.py`, `desktop_assets.py`.
+- NZXT Kraken control: `src/nzxt_backend.py`, `src/kraken_sensors.py`, `src/kraken_cam_streamer.py`, `src/kraken_lcd_designs.py`, `src/nzxt_rgb.py`, `src/nzxt_esc_profiles.py`.
+- Main GUI and orchestration: `src/kraken_control.py`, `src/cooling_widgets.py`, `src/localization_catalog.py`, `src/ui_layout.py`.
+- Shared application infrastructure: `src/app_constants.py`, `src/temperature_utils.py`, `src/privacy_logging.py`, `src/window_diagnostics.py`, `src/command_backend.py`.
+- Hardware request coordination: `src/hardware_request_coordinator.py`, `src/cooling_ownership.py`.
+- Mainboard fan control: `src/mainboard_fan_control.py`, `src/ohc_fan_helper.py` plus Polkit policy.
+- Thermalright display/cooling: `src/modules/lcd_levita/v1_4/`, `src/thermalright_display.py`, `src/thermalright_display_ui.py`, `src/thermalright_cooling.py`.
+- Corsair/OpenLinkHub: `src/openlinkhub_integration.py`, `src/openlinkhub_mouse_visuals.py`.
+- RGB/OpenRGB: `src/openrgb_integration.py`, `src/openrgb_sdk.py`, `src/rgb_devices.py`, `src/rgb_effects.py`.
+- Desktop customization: `src/desktop_shell.py`, `src/desktop_designs.py`, `src/desktop_assets.py`.
 - Release/security tooling: `scripts/` and `.github/workflows/`.
 
 ## Important current product behavior
@@ -170,7 +172,7 @@ The 3.4.29 codebase has also begun an incremental local-AI-oriented split of the
 - GPU fan control is not part of the mainboard PWM subsystem.
 - Open Radeon Control Center remains separate.
 
-## Before publishing 3.4.29.46
+## Before publishing 3.4.29.47
 
 - Keep `BUILD_CHANNEL=STABLE`; return to `INTERN` if the real desktop/hardware release-candidate test exposes a regression.
 - Run all release checks.

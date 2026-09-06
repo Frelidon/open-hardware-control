@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-main_path = ROOT / "kraken_control.py"
+main_path = ROOT / "src/kraken_control.py"
 main_code = main_path.read_text(encoding="utf-8")
 main_tree = ast.parse(main_code)
 
@@ -21,7 +21,7 @@ modules = {
 }
 
 for filename, exports in modules.items():
-    path = ROOT / filename
+    path = ROOT / "src" / filename
     assert path.is_file(), filename
     source = path.read_text(encoding="utf-8")
     ast.parse(source)

@@ -6,7 +6,7 @@
 - `.cursor/rules/*.mdc` scoped persistent rules.
 - `.cursor/commands/*.md` reusable workflows.
 - `.cursor/hooks.json` + `.cursor/hooks/*.py` safety hooks.
-- Project memory documents (`../project/PROJECT_STATUS.md`, `../project/DECISIONS.md`, `../project/ARCHITECTURE.md`, `../hardware/DEVICE_SUPPORT.md`).
+- Project memory documents (`docs/project/PROJECT_STATUS.md`, `docs/project/DECISIONS.md`, `docs/project/ARCHITECTURE.md`, `docs/hardware/DEVICE_SUPPORT.md`).
 
 When the repository is opened as a trusted Cursor workspace, project hooks are loaded from `.cursor/hooks.json`.
 

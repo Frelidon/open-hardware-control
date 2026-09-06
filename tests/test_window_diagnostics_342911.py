@@ -10,7 +10,7 @@ from PySide6.QtCore import QProcess, QProcessEnvironment, Qt
 from PySide6.QtWidgets import QApplication, QComboBox, QDialog, QFrame, QLabel, QPushButton, QVBoxLayout
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "src"))
 
 from window_diagnostics import (  # noqa: E402
     WindowProcessDiagnostics,

@@ -31,7 +31,7 @@ This release also contains the 2.9.2–2.9.4 fixes for scrollable settings, ligh
 - NZXT Kraken RGB 360 (2023 Standard / Non-Elite), USB `1e71:300e`, firmware `2.0.0`
 - NZXT 2023 RGB Controller, USB `1e71:2012`, firmware `1.5.0`
 
-See `../hardware/SUPPORTED_DEVICES.md` for the exact supported scope.
+See `docs/hardware/SUPPORTED_DEVICES.md` for the exact supported scope.
 
 ## Important notes
 

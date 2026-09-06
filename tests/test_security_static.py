@@ -3,27 +3,27 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-main_code = (ROOT / "kraken_control.py").read_text(encoding="utf-8")
+main_code = (ROOT / "src/kraken_control.py").read_text(encoding="utf-8")
 module_names = (
     "app_constants.py", "command_backend.py", "cooling_card_state.py", "cooling_widgets.py",
     "dashboard_layout.py", "localization_catalog.py", "privacy_logging.py", "temperature_utils.py",
 )
-module_code = {name: (ROOT / name).read_text(encoding="utf-8") for name in module_names}
+module_code = {name: (ROOT / "src" / name).read_text(encoding="utf-8") for name in module_names}
 rgb_gallery_code = (
-    ROOT / "modules" / "rgb_studio" / "v1_1" / "design_gallery.py"
+    ROOT / "src/modules" / "rgb_studio" / "v1_1" / "design_gallery.py"
 ).read_text(encoding="utf-8")
 wallpaper_installer_code = (
-    ROOT / "modules" / "wallpaper_engine" / "v1_2" / "installer.py"
+    ROOT / "src/modules" / "wallpaper_engine" / "v1_2" / "installer.py"
 ).read_text(encoding="utf-8")
 # Static guards search the complete runtime implementation even though the
 # former monolith is now split into focused modules.
 code = main_code + "\n" + "\n".join(module_code.values()) + "\n" + rgb_gallery_code
 rule = (ROOT / "packaging/71-nzxt-kraken-2023.rules").read_text(encoding="utf-8")
-installer = (ROOT / "install.sh").read_text(encoding="utf-8")
+installer = (ROOT / "packaging/install.sh").read_text(encoding="utf-8")
 helper = (ROOT / "packaging/install-udev-rule.sh").read_text(encoding="utf-8")
 diagnostics = (ROOT / "packaging/collect-diagnostics.sh").read_text(encoding="utf-8")
 
-assert 'APP_VERSION = "3.4.29.46"' in code
+assert 'APP_VERSION = "3.4.29.47"' in code
 assert 'BUILD_CHANNEL = "STABLE"' in code
 assert 'APP_NAME = "Open Hardware Control"' in code
 assert "shell=True" not in wallpaper_installer_code
@@ -118,18 +118,18 @@ assert "move_rgb_device_to_group" in code and "select_rgb_group" in code
 assert "reset_all_rgb" in code and "RGB KOMPLETT ZURÜCKSETZEN" in code
 assert "prepare_openrgb_devices" in code
 assert 'OPENRGB_LOCAL_ADDRESS = "127.0.0.1"' in code
-assert (ROOT / "openrgb_integration.py").exists()
-assert (ROOT / "openrgb_sdk.py").exists()
-sdk_code = (ROOT / "openrgb_sdk.py").read_text(encoding="utf-8")
+assert (ROOT / "src/openrgb_integration.py").exists()
+assert (ROOT / "src/openrgb_sdk.py").exists()
+sdk_code = (ROOT / "src/openrgb_sdk.py").read_text(encoding="utf-8")
 assert "class OpenRGBPersistentSession" in sdk_code
 assert "MAX_WORKER_REQUEST_SIZE = 2 * 1024 * 1024" in sdk_code
 assert "MAX_WORKER_DEVICES = 64" in sdk_code
 assert "def process_worker_frame" in sdk_code and "def run_worker" in sdk_code
 assert "validate_loopback(address)" in sdk_code
-assert (ROOT / "rgb_effects.py").exists()
-assert (ROOT / "rgb_devices.py").exists()
-assert (ROOT / "nzxt_rgb.py").exists()
-assert (ROOT / "ui_layout.py").exists()
+assert (ROOT / "src/rgb_effects.py").exists()
+assert (ROOT / "src/rgb_devices.py").exists()
+assert (ROOT / "src/nzxt_rgb.py").exists()
+assert (ROOT / "src/ui_layout.py").exists()
 assert "class ReorderableSectionArea" in code
 assert "Standardreihenfolge wiederherstellen" in code
 assert "devices_effects_layout.addWidget(openrgb_box)" in code
@@ -137,18 +137,18 @@ assert '("engine", openrgb_box)' not in code
 assert 'editor_form.addRow("OHC-Modi", self.rgb_studio_mode_list)' in code
 assert 'editor_form.addRow("Modusfarben", colors)' in code
 assert "dashboard_fields_hidden" in code and "reset_dashboard_card_visibility" in code
-sdk_code = (ROOT / "openrgb_sdk.py").read_text(encoding="utf-8")
+sdk_code = (ROOT / "src/openrgb_sdk.py").read_text(encoding="utf-8")
 assert "SDK_MIN_PROTOCOL_VERSION = 4" in sdk_code
 assert "SDK_PROTOCOL_VERSION = 5" in sdk_code
 assert "PACKET_UPDATE_ZONE_LEDS = 1051" in sdk_code
 assert "PACKET_RESIZE_ZONE = 1000" in sdk_code
 assert "KONFIGURATION_ERFORDERLICH" in sdk_code
 assert "request_controller_data" in sdk_code and "hat die gesendeten Farben nicht bestätigt" in sdk_code
-nzxt_code = (ROOT / "nzxt_rgb.py").read_text(encoding="utf-8")
+nzxt_code = (ROOT / "src/nzxt_rgb.py").read_text(encoding="utf-8")
 assert '"comet": "pulse"' in nzxt_code and '"spinner": "rainbow-flow"' in nzxt_code
 assert 'NZXTEffect("Marquee", "marquee-4"' not in nzxt_code
 assert "coalesce_selected_channels" in nzxt_code
-openrgb_code = (ROOT / "openrgb_integration.py").read_text(encoding="utf-8")
+openrgb_code = (ROOT / "src/openrgb_integration.py").read_text(encoding="utf-8")
 assert "color_commands" in openrgb_code and "best_native_mode_for_effect" in openrgb_code
 assert "is_openrgb_apply_options_crash" in openrgb_code
 assert "running_openrgb_process_ids" in openrgb_code
@@ -170,7 +170,7 @@ assert "record_openlinkhub_keyboard_macro" in code
 assert "on_temperature_unit_changed" in code
 assert "hardware_label_color" in code and "hardware_value_color" in code
 assert 'OPENLINKHUB_API_URL = "http://127.0.0.1:27003"' in code
-assert (ROOT / "openlinkhub_integration.py").exists()
+assert (ROOT / "src/openlinkhub_integration.py").exists()
 assert (ROOT / "docs/hardware/OPENLINKHUB_INTEGRATION.md").exists()
 assert (ROOT / "docs/project/Open_Hardware_Control_Projekt.md").exists()
 assert "class CurveEditor" in code
@@ -230,7 +230,7 @@ assert 'table.setHorizontalHeaderLabels([f"CPU {temperature_symbol(self.temperat
 assert 'restore_safe_hardware_fallback_sync_on_quit' in code
 assert 'SAFE_HARDWARE_PUMP_CURVE' in code and 'SAFE_HARDWARE_FAN_CURVE' in code
 assert 'KURVEN-MIGRATION 3.0.5' in code
-sensor_code = (ROOT / "kraken_sensors.py").read_text(encoding="utf-8")
+sensor_code = (ROOT / "src/kraken_sensors.py").read_text(encoding="utf-8")
 assert "k10temp" in sensor_code
 assert "CPU-Tjmax" in code
 assert "Kraken-Wassertemperatur" in code
@@ -242,7 +242,7 @@ assert 'SUBSYSTEMS=="usb"' in rule
 assert 'MODE="0660"' in rule
 assert 'TAG+="uaccess"' in rule
 assert "--subsystem-match=hidraw" in helper
-assert "packaging/install-udev-rule.sh" in installer
+assert "$PKG_DIR/install-udev-rule.sh" in installer
 assert "docs/hardware/CPU_PROFILES.md" in installer
 assert "docs/project/COMPONENT_VERSIONS.md" in installer
 assert "docs/hardware/ANIMATED_BACKGROUNDS.md" in installer
@@ -267,16 +267,16 @@ assert "desktop_shell.py" in installer
 assert "docs/hardware/DESKTOP_DESIGNS.md" in installer
 assert "docs/project/Open_Hardware_Control_Projekt.md" in installer
 assert "docs/hardware/OPENLINKHUB_INTEGRATION.md" in installer
-assert (ROOT / "kraken_lcd_designs.py").exists()
-assert (ROOT / "kraken_sensors.py").exists()
-assert (ROOT / "desktop_designs.py").exists()
-assert (ROOT / "desktop_assets.py").exists()
-assert (ROOT / "desktop_shell.py").exists()
-assert (ROOT / "assets" / "desktop-designs" / "windows11-wallpaper.svg").exists()
-assert (ROOT / "assets" / "desktop-designs" / "macos-wallpaper.svg").exists()
-assert (ROOT / "assets" / "desktop-designs" / "windows8-wallpaper.svg").exists()
-assert (ROOT / "assets" / "desktop-designs" / "windows81-wallpaper.svg").exists()
-assert (ROOT / "assets" / "desktop-designs" / "kwin" / "ohc-charms" / "contents" / "code" / "main.js").exists()
+assert (ROOT / "src/kraken_lcd_designs.py").exists()
+assert (ROOT / "src/kraken_sensors.py").exists()
+assert (ROOT / "src/desktop_designs.py").exists()
+assert (ROOT / "src/desktop_assets.py").exists()
+assert (ROOT / "src/desktop_shell.py").exists()
+assert (ROOT / "src/assets" / "desktop-designs" / "windows11-wallpaper.svg").exists()
+assert (ROOT / "src/assets" / "desktop-designs" / "macos-wallpaper.svg").exists()
+assert (ROOT / "src/assets" / "desktop-designs" / "windows8-wallpaper.svg").exists()
+assert (ROOT / "src/assets" / "desktop-designs" / "windows81-wallpaper.svg").exists()
+assert (ROOT / "src/assets" / "desktop-designs" / "kwin" / "ohc-charms" / "contents" / "code" / "main.js").exists()
 assert (ROOT / "docs/hardware/CPU_PROFILES.md").exists()
 assert (ROOT / "docs/project/COMPONENT_VERSIONS.md").exists()
 assert (ROOT / "docs/hardware/ANIMATED_BACKGROUNDS.md").exists()
@@ -309,7 +309,7 @@ assert "--check-openrgb" in dep_helper and "--install-openrgb" in dep_helper
 assert "dnf:openrgb_udev" in dep_helper and 'echo "openrgb-udev-rules"' in dep_helper
 assert "liquidctl" in dep_helper
 assert "pkexec" in dep_helper
-assert "packaging/install-dependencies.sh" in installer
+assert "$PKG_DIR/install-dependencies.sh" in installer
 assert 'hardware_request_coordinator.py' in installer
 assert 'mainboard_fan_control.py' in installer
 assert 'nzxt_esc_profiles.py' in installer
@@ -336,14 +336,14 @@ assert "maybe_offer_desktop_design_dependencies" in code
 assert "Fehlende Pakete &installieren" in code
 
 readme = (ROOT / "README.md").read_text(encoding="utf-8")
-assert "# Open Hardware Control by Frelidon 3.4.29.46" in readme
+assert "# Open Hardware Control by Frelidon 3.4.29.47" in readme
 assert "Inoffizielles unabhängiges Community-Projekt" in readme
 assert "Corsair · OpenLinkHub" in readme
 assert "| NZXT 2023 RGB Controller | `1e71:2012`" in readme
 
 
 # 3.4.23: motherboard fan control must stay calibration-gated and use hwmon only.
-mainboard_code = (ROOT / "mainboard_fan_control.py").read_text(encoding="utf-8")
+mainboard_code = (ROOT / "src/mainboard_fan_control.py").read_text(encoding="utf-8")
 assert "discover_hwmon_controllers" in mainboard_code
 assert "set_channel_percent" in mainboard_code
 assert "restore_firmware_control" in mainboard_code
@@ -359,7 +359,7 @@ assert "Kanal sicher testen · 70 % / 10 s" in code
 assert "automatische Regelung bleibt gesperrt" in code
 assert "ENE-RAM erneut initialisieren" in code
 assert "manual_reinitialize_ene_dram" in code
-fan_helper = (ROOT / "ohc_fan_helper.py").read_text(encoding="utf-8")
+fan_helper = (ROOT / "src/ohc_fan_helper.py").read_text(encoding="utf-8")
 fan_policy = (ROOT / "packaging/io.github.Frelidon.OpenHardwareControl.fan.policy").read_text(encoding="utf-8")
 assert 'HWMON_ROOT = Path("/sys/class/hwmon")' in fan_helper
 assert 'MAX_CHANNEL = 8' in fan_helper
@@ -452,11 +452,11 @@ assert 'CAM-nah · automatisch · empfohlen · max. 25 FPS' in code
 assert 'Erweiterte GIF-Optionen anzeigen' in code
 assert 'gif/show_advanced' in code
 assert 'test-gifs' in installer
-assert (ROOT / 'test-gifs' / '02_moving-bars_27fps.gif').exists()
+assert (ROOT / 'src/test-gifs' / '02_moving-bars_27fps.gif').exists()
 assert (ROOT / 'tools' / 'generate_test_gifs.py').exists()
 
 # 2.9.15 internal: replace 30/32-Hz experiments with CAM-near raw FW2 transport.
-helper_code = (ROOT / "kraken_cam_streamer.py").read_text(encoding="utf-8")
+helper_code = (ROOT / "src/kraken_cam_streamer.py").read_text(encoding="utf-8")
 assert 'CAM_TRANSPORT_FPS = 80.0 / 3.0' in helper_code
 assert 'SAFE_TRANSPORT_FPS = 25.6' in helper_code
 assert 'RGB565_FRAME_BYTES = LCD_SIZE[0] * LCD_SIZE[1] * 2' in helper_code
@@ -486,8 +486,8 @@ assert 'startup_profile_owns_lcd' in code
 assert 'clock_last_minute_upload_key' in code
 assert 'def update_clock_lcd(self, force: bool = False)' in code
 assert not (ROOT / 'kraken_gif_streamer.py').exists()
-assert not (ROOT / 'test-gifs' / '02_moving-bars_30fps.gif').exists()
-assert not (ROOT / 'test-gifs' / '02_moving-bars_32fps.gif').exists()
+assert not (ROOT / 'src/test-gifs' / '02_moving-bars_30fps.gif').exists()
+assert not (ROOT / 'src/test-gifs' / '02_moving-bars_32fps.gif').exists()
 
 print("2.9.15 CAM-raw static checks passed.")
 
@@ -532,10 +532,10 @@ assert 'for menu in self.findChildren(QMenu)' in code
 assert code.index('self.restore_settings()') < code.index('self.capture_translation_sources()', code.index('self.restore_settings()'))
 for language in ('en', 'es', 'fr'):
     assert f'UI_TRANSLATIONS["{language}"].update' in code
-assert 'DEFAULT_ACCENT = "#00c8ff"' in (ROOT / "kraken_lcd_designs.py").read_text(encoding="utf-8")
+assert 'DEFAULT_ACCENT = "#00c8ff"' in (ROOT / "src/kraken_lcd_designs.py").read_text(encoding="utf-8")
 
 # 2.9.22: scalable text and generated animated sensor dashboards.
-design_code = (ROOT / "kraken_lcd_designs.py").read_text(encoding="utf-8")
+design_code = (ROOT / "src/kraken_lcd_designs.py").read_text(encoding="utf-8")
 assert 'def render_hardware_animation' in design_code
 assert 'font_scale_percent' in design_code
 assert 'phase=index / frame_count' in design_code
@@ -597,7 +597,7 @@ assert 'button.style().unpolish(button)' in code
 assert 'button.style().polish(button)' in code
 
 # 3.0.4: allow-listed, session-gated OpenLinkHub device writes.
-openlink_code = (ROOT / "openlinkhub_integration.py").read_text(encoding="utf-8")
+openlink_code = (ROOT / "src/openlinkhub_integration.py").read_text(encoding="utf-8")
 assert 'WRITE_ENDPOINTS = {' in openlink_code
 assert 'def validate_write_payload' in openlink_code
 assert 'def run_write_action' in openlink_code
@@ -628,13 +628,13 @@ assert 'class MouseSchematicWidget' in code
 assert 'Grafische Tastenbelegung' in code
 assert 'def update_openlinkhub_mouse_visual' in code
 assert 'openlinkhub_mouse_visuals.py' in installer
-assert 'SOURCE_DIR/assets' in installer
-mouse_visuals = (ROOT / 'openlinkhub_mouse_visuals.py').read_text(encoding='utf-8')
+assert 'SRC_DIR/assets' in installer
+mouse_visuals = (ROOT / 'src/openlinkhub_mouse_visuals.py').read_text(encoding='utf-8')
 assert 'def classify_mouse_layout' in mouse_visuals
 assert 'def visual_button_rows' in mouse_visuals
 assert 'def _mouse_assignments' in openlink_code
 for asset in ('mouse-compact.svg', 'mouse-ergonomic.svg', 'mouse-symmetric.svg', 'mouse-multi.svg', 'mouse-mmo.svg'):
-    assert (ROOT / 'assets' / asset).exists()
+    assert (ROOT / 'src/assets' / asset).exists()
 
 # 3.0.9: verified mouse assignments/macros and complete temperature presentation.
 assert 'class MacroRecorderDialog' in code
@@ -649,7 +649,7 @@ assert 'hardware_lcd/label_color' in code and 'hardware_lcd/value_color' in code
 assert 'hardware_lcd/label_scale' in code and 'hardware_lcd/value_scale' in code
 
 # 3.4.23: consolidated LCD/help/setup plus one-shot ENE-DRAM priming.
-openrgb_sdk_code = (ROOT / "openrgb_sdk.py").read_text(encoding="utf-8")
+openrgb_sdk_code = (ROOT / "src/openrgb_sdk.py").read_text(encoding="utf-8")
 assert 'if set_custom_mode or not controller.direct_active:' in openrgb_sdk_code
 assert 'custom_changed = False' in openrgb_sdk_code
 assert '"LCD-Einstellungen",' in code

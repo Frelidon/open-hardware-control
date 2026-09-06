@@ -4,7 +4,7 @@
 
 ## Agent memory and handoff
 
-- Added `AGENTS.md`, `../project/PROJECT_STATUS.md`, `../project/ARCHITECTURE.md`, `../project/DECISIONS.md`, `../hardware/DEVICE_SUPPORT.md` and `../ai/AI_HANDOFF.md`.
+- Added `AGENTS.md`, `docs/project/PROJECT_STATUS.md`, `docs/project/ARCHITECTURE.md`, `docs/project/DECISIONS.md`, `docs/hardware/DEVICE_SUPPORT.md` and `docs/ai/AI_HANDOFF.md`.
 - Added Cursor rules and slash commands for project startup, feature completion and release preflight.
 - Added a session-start hook that reminds fresh Cursor chats of the repository memory and publication policy.
 

@@ -7,12 +7,12 @@ For LM Studio with a local model, begin with `START_HIER_LOKALE_KI.md`; the user
 ## Start a fresh session
 
 1. Read `AGENTS.md`.
-2. Read `../project/PROJECT_STATUS.md`, `../project/DECISIONS.md`, `../project/ARCHITECTURE.md`, `../project/MODULE_MAP.md`, `../hardware/DEVICE_SUPPORT.md` and `../project/RELEASE_BACKUP_POLICY.md`.
-3. Read the latest section of `CHANGELOG.md` and current release notes.
+2. Read `docs/project/PROJECT_STATUS.md`, `docs/project/DECISIONS.md`, `docs/project/ARCHITECTURE.md`, `docs/project/MODULE_MAP.md`, `docs/hardware/DEVICE_SUPPORT.md` and `docs/project/RELEASE_BACKUP_POLICY.md`.
+3. Read the latest section of `docs/CHANGELOG.md` and current release notes.
 4. Inspect `git status`, current branch and recent commits.
 5. Inspect the exact code/tests related to the requested feature before proposing edits.
 
-For a context-limited local model, use the task-specific file sets in `../project/MODULE_MAP.md`; do not load all of `kraken_control.py` when a targeted `rg` search and one focused section are sufficient.
+For a context-limited local model, use the task-specific file sets in `docs/project/MODULE_MAP.md`; do not load all of `src/kraken_control.py` when a targeted `rg` search and one focused section are sufficient.
 
 ## During work
 
@@ -20,11 +20,11 @@ For a context-limited local model, use the task-specific file sets in `../projec
 - Add/adjust tests before calling a behavior complete.
 - Do not turn uncertain hardware assumptions into write commands.
 - Preserve ownership/conflict guards.
-- If the task creates a durable design decision, update `../project/DECISIONS.md` immediately.
+- If the task creates a durable design decision, update `docs/project/DECISIONS.md` immediately.
 
 ## End a substantial session
 
-Update `../project/PROJECT_STATUS.md` with what is now true, not what was merely discussed. Update `CHANGELOG.md` for user-visible behavior. Leave unresolved items explicitly marked as pending; never make a future agent infer them from chat history.
+Update `docs/project/PROJECT_STATUS.md` with what is now true, not what was merely discussed. Update `docs/CHANGELOG.md` for user-visible behavior. Leave unresolved items explicitly marked as pending; never make a future agent infer them from chat history.
 
 After a version build, confirm the sibling `Open Hardware Control Backup` directory contains the newest two complete versions and that both `SHA256SUMS` files validate.
 

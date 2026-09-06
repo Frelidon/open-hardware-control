@@ -6,19 +6,19 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "src"))
 
 from thermalright_display import LEVITA_HEIGHT, LEVITA_WIDTH, scan_media_directory
 
 
-RGB_UI = (ROOT / "kraken_control.py").read_text(encoding="utf-8")
-LEVITA_UI = (ROOT / "thermalright_display_ui.py").read_text(encoding="utf-8")
+RGB_UI = (ROOT / "src/kraken_control.py").read_text(encoding="utf-8")
+LEVITA_UI = (ROOT / "src/thermalright_display_ui.py").read_text(encoding="utf-8")
 
 
 def test_bundled_space_layouts_are_valid_native_levita_themes() -> None:
     themes = {
         entry.path.name: entry
-        for entry in scan_media_directory(ROOT / "assets" / "levita-designs")
+        for entry in scan_media_directory(ROOT / "src/assets" / "levita-designs")
         if entry.kind == "theme"
     }
     assert {"ohc-nebula-drift", "ohc-orbital-command"} <= themes.keys()
@@ -30,7 +30,7 @@ def test_bundled_space_layouts_are_valid_native_levita_themes() -> None:
 
 def test_orbital_command_contains_requested_cpu_gpu_and_vram_values() -> None:
     config = json.loads(
-        (ROOT / "assets" / "levita-designs" / "ohc-orbital-command" / "trcc.json").read_text(
+        (ROOT / "src/assets" / "levita-designs" / "ohc-orbital-command" / "trcc.json").read_text(
             encoding="utf-8"
         )
     )

@@ -4,7 +4,7 @@ This file records decisions that future agents must preserve unless the project 
 
 ## Product and repository
 
-- **2026-08 / current:** Product name is Open Hardware Control by Frelidon. The historical filename `kraken_control.py` remains because it contains the integrated mature NZXT module; renaming the file is not required for branding.
+- **2026-08 / current:** Product name is Open Hardware Control by Frelidon. The historical filename `src/kraken_control.py` remains because it contains the integrated mature NZXT module; renaming the file is not required for branding.
 - **2026-08 / current:** Open Radeon Control Center stays a separate project.
 - **2026-08 / current:** The project remains manufacturer-neutral and unofficial. Compatibility names do not imply partnership, approval or support from manufacturers or related open-source projects.
 
@@ -94,9 +94,9 @@ This file records decisions that future agents must preserve unless the project 
 - **3.4.26:** Repository memory files and tests are the durable source of truth; a long chat is not.
 - **3.4.26:** Agents must update `PROJECT_STATUS.md` after meaningful project changes and this file when a durable decision changes.
 - **3.4.26:** Cursor project rules and hooks are version-controlled so fresh chats inherit project constraints.
-- **3.4.27:** The historical `kraken_control.py` monolith is reduced incrementally through focused, non-circular modules. During migration it remains the executable compatibility orchestrator and re-exports moved names; large simultaneous UI and hardware-writer rewrites are not accepted.
+- **3.4.27:** The historical `src/kraken_control.py` monolith is reduced incrementally through focused, non-circular modules. During migration it remains the executable compatibility orchestrator and re-exports moved names; large simultaneous UI and hardware-writer rewrites are not accepted.
 - **3.4.27:** `MODULE_MAP.md` is the task-routing guide for context-limited local coding models. Agents should read targeted functions and their direct dependencies instead of loading the complete main file for every task.
-- **3.4.29.18:** `MODULE_REGISTRY.md` is the mandatory current-version index and must be updated with every source, responsibility, path, dependency or module-version change. Its change dates use `TT.MM.JJ` without a time. New or migrated modules keep exactly one current `modules/<name>/v<major>_<minor>/` folder; Git history replaces source backup folders.
+- **3.4.29.18:** `MODULE_REGISTRY.md` is the mandatory current-version index and must be updated with every source, responsibility, path, dependency or module-version change. Its change dates use `TT.MM.JJ` without a time. New or migrated modules keep exactly one current `src/modules/<name>/v<major>_<minor>/` folder; Git history replaces source backup folders.
 - **3.4.29.18:** Handwritten modules target at most 600 lines/32,000 characters and must be split before 800 lines/40,000 characters. New files above 1,200 lines/60,000 characters require an explicitly registered generated/legacy exception. UI, state, persistence, rendering and hardware transport remain separate responsibilities.
 
 ## GitHub publication

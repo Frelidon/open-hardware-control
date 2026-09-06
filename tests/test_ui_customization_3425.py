@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from pathlib import Path
 
-root = Path(__file__).resolve().parents[1]
+root = Path(__file__).resolve().parents[1] / "src"
 code = (root / "kraken_control.py").read_text(encoding="utf-8")
 privacy = (root / "privacy_logging.py").read_text(encoding="utf-8")
 fan = (root / "mainboard_fan_control.py").read_text(encoding="utf-8")

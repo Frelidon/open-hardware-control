@@ -16,7 +16,7 @@ def branding_icon_path(app_dir: Path) -> Path:
     if preferred.is_file():
         return preferred
     flat_svg = app_dir / "kraken-control.svg"
-    return flat_svg if flat_svg.is_file() else app_dir / "packaging" / "kraken-control.svg"
+    return flat_svg if flat_svg.is_file() else app_dir.parent / "packaging" / "kraken-control.svg"
 
 
 def application_icon(app_dir: Path) -> QIcon:

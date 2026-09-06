@@ -12,7 +12,7 @@ SIZE = 240
 TARGET_FPS = (24, 25, 26, 27)
 MOVING_BAR_STEP = 4
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "test-gifs"
+OUT = ROOT / "src/test-gifs"
 
 
 def one_second_durations(fps: int) -> list[int]:

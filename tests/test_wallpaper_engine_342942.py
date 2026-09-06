@@ -12,7 +12,7 @@ import tempfile
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "src"))
 
 from modules.wallpaper_engine.v1_2.installer import (
     PluginInstallError,
@@ -218,4 +218,4 @@ WallpaperWorkShopId=654321
             assert command[-1] == str(package.resolve())
             assert privileged_install_command(package, "0" * 64) == []
 
-print("3.4.29.46 Wallpaper Engine playback, scaling, setup and integration regression guards passed.")
+print("3.4.29.47 Wallpaper Engine playback, scaling, setup and integration regression guards passed.")

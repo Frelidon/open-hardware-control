@@ -12,7 +12,7 @@ OHC überschreibt weder `config1.dc` noch Bilder oder Videos. Native `trcc.json`
 
 ## Modulstruktur für lokale KIs
 
-Die neue Fachlogik ist in `modules/lcd_levita/v1_0/` nach Modell, Canvas und TRCC-Adapter getrennt. `../project/MODULE_REGISTRY.md` ist der verpflichtende Index für aktuelle Modulversionen und Pfade. Die neue `../ai/AI_DEVELOPMENT_GUIDE.md` beschreibt die Erweiterung von UI-, Sensor- und LCD-Komponenten. Automatische Prüfungen erzwingen genau einen aktuellen Versionsordner und die für lokale Modelle mit 16 GB VRAM festgelegten Dateigrößenbudgets.
+Die neue Fachlogik ist in `modules/lcd_levita/v1_0/` nach Modell, Canvas und TRCC-Adapter getrennt. `docs/project/MODULE_REGISTRY.md` ist der verpflichtende Index für aktuelle Modulversionen und Pfade. Die neue `docs/ai/AI_DEVELOPMENT_GUIDE.md` beschreibt die Erweiterung von UI-, Sensor- und LCD-Komponenten. Automatische Prüfungen erzwingen genau einen aktuellen Versionsordner und die für lokale Modelle mit 16 GB VRAM festgelegten Dateigrößenbudgets.
 
 ## Sicherheit und Teststatus
 

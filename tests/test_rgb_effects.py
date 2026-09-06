@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "src"))
 
 from rgb_effects import BUILTIN_DESIGN_CATEGORIES, BUILTIN_DESIGNS, EFFECTS, RGBEffectConfig, effect_color_count, normalize_hex, render_effect, render_hex_frame
 
