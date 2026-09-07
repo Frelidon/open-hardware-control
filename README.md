@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.48
+# Open Hardware Control by Frelidon 3.4.29.49 INTERN
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -55,12 +55,11 @@ Projekt-Repository: <https://github.com/Frelidon/open-hardware-control>
 
 Der sichere Testmodus ist standardmäßig aktiv; echte USB-Übertragung erfolgt nur über das separat installierte GPL-Backend **TRCC Linux** (9.9.12 empfohlen). Pumpe und Radiatorlüfter der Levita laufen über getrennt bestätigte Mainboard-PWM-Header (`PUMP_FAN`, `CPU_FAN`) mit sicherem 70-%-/10-s-Test; CoolerControl blockiert parallele Schreibzugriffe.
 
-## Neu in 3.4.29.48
+## Neu in 3.4.29.49 INTERN
 
-- **Vollständig aufgeräumtes Repository:** Der gesamte Anwendungscode liegt jetzt in `src/` (Python-Module, `assets/`, `modules/`, `test-gifs/`), Installer und Versionsdateien in `packaging/`, alle Dokumente in `docs/`, Community- und Sicherheitsrichtlinien in `.github/`. Im Wurzelverzeichnis bleiben nur README, LICENSE, CITATION und ein kurzer `AGENTS.md`-Wegweiser.
-- Die installierte Programmstruktur (RPM, DEB, ZIP) bleibt flach und unverändert; `install.sh` liegt im ZIP weiterhin direkt im entpackten Ordner.
-- **Feste Ablageregel für alle Coding-KIs:** `docs/ai/AGENTS.md` beschreibt verbindlich, wohin neue Dateien gehören und dass die README kurz bleibt; `tests/test_repository_layout_342947.py` erzwingt das.
-- Aus 3.4.29.46: Die minütliche OpenRGB-Geräteinventur pausiert, solange OHC im Infobereich verborgen ist und keine RGB-Aktion aussteht; sieben aktuelle Screenshots und kompakte README.
+- Übersicht **Status & Hinweise** folgt bestätigten Levita-PWM-Tests: grüner Punkt und **OK** wie bei erkannter Hardware, sonst roter Punkt und **Fehlerhaft**.
+- RGB-Studio klappt **Geräte und Effekte** sowie die native Hardwarekanal-Liste als große Bereiche in der Seite auf; kein Extra-Fenster, die Kanalliste bleibt beim Seitenwechsel sichtbar.
+- Interne Testversion; kein öffentliches GitHub-Release.
 
 Ältere Versionen: [Versionsverlauf](#versionsverlauf) · [docs/CHANGELOG.md](docs/CHANGELOG.md) · [docs/releases/](docs/releases/)
 
@@ -68,30 +67,30 @@ Der sichere Testmodus ist standardmäßig aktiv; echte USB-Übertragung erfolgt 
 
 ### Fedora und Nobara – RPM
 
-Lade `open-hardware-control-3.4.29.48-1.noarch.rpm` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control-3.4.29.49-0.intern2.noarch.rpm` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.48-1.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.49-0.intern2.noarch.rpm
 ```
 
 ### Debian, Ubuntu und Linux Mint – DEB
 
-Lade `open-hardware-control_3.4.29.48_all.deb` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control_3.4.29.49~intern2_all.deb` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.48_all.deb'
+sudo apt install './open-hardware-control_3.4.29.49~intern2_all.deb'
 ```
 
 ### Universelles Installationspaket – ZIP
 
-Für Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_48.zip` herunter und führe aus:
+Für Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_49_INTERN.zip` herunter und führe aus:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_48.zip
-cd open-hardware-control-3.4.29.48
+unzip open_hardware_control_v3_4_29_49_INTERN.zip
+cd open-hardware-control-3.4.29.49
 chmod +x install.sh
 ./install.sh
 ```
@@ -125,7 +124,7 @@ English version: [docs/README.en.md](docs/README.en.md)
 
 ## Status
 
-Öffentliche experimentelle Beta, bereitgestellt ohne Garantie. Kanal **STABLE**, Lizenz **GPL-3.0-or-later**. Mitwirken: [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) · Hilfe: [.github/SUPPORT.md](.github/SUPPORT.md) · Sicherheitsmeldungen: [.github/SECURITY.md](.github/SECURITY.md)
+Interne Testversion, bereitgestellt ohne Garantie. Kanal **INTERN**, Lizenz **GPL-3.0-or-later**. Kein öffentliches GitHub-Release. Mitwirken: [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) · Hilfe: [.github/SUPPORT.md](.github/SUPPORT.md) · Sicherheitsmeldungen: [.github/SECURITY.md](.github/SECURITY.md)
 
 ## Module
 
@@ -160,12 +159,12 @@ Liest nur lokale Steam-Workshop-Metadaten, wählt Wallpaper über Plasmas offizi
 
 ## Versionsverlauf
 
+**3.4.29.49** – Übersicht Status & Hinweise folgt bestätigten PWM-Tests; RGB-Studio klappt Geräte/Effekte und native Kanäle in der Seite auf.
+
 **3.4.29.48** – Verbindliche Ablage- und Kurz-README-Regel für alle Coding-KIs mit Wächtertest; korrigierter Release-Workflow.
 
 **3.4.29.47** – Anwendungscode nach `src/`, Installer/Versionsdateien nach `packaging/`, alle Dokumente nach `docs/`; Wurzelverzeichnis enthält nur noch README, LICENSE, CITATION und AGENTS-Wegweiser.
 
 **3.4.29.46** – OpenRGB-Inventur pausiert im Tray; Repository in Themenordner sortiert; neue Screenshots und kompakte README.
-
-**3.4.29.45** – Gespeichertes RGB-Startprofil geht bei vorläufiger OpenRGB-Teilerkennung im Kaltstart nicht mehr verloren; Modulregisterprüfung unterstützt den STABLE-Kanal; erste stabile Veröffentlichung der 3.4.29-Reihe (Levita, RGB, Wallpaper, Lüfter, Diagnose, KDE/Wayland).
 
 Alle früheren Versionen bis 2.9.x: [docs/CHANGELOG.md](docs/CHANGELOG.md) und [docs/releases/](docs/releases/).

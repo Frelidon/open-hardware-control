@@ -10,7 +10,7 @@ Der OpenRGB-Gerätebestand wird höchstens einmal pro Minute rein lesend geprüf
 
 Die OHC-Modi stehen als eigene Liste mit Beschreibung und Farbanforderung bereit. Rainbow erzeugt sein Spektrum selbst, Statisch und Atmen verwenden eine Farbe; die übrigen Muster verwenden zwei Farben. Jedes sichtbare Farbfeld unterstützt direkte Hex-Eingabe, Standardfarben und den Farbdialog.
 
-Die Standardreihenfolge ist Engine → Geräte und Effekte → Thermaltake-360-PC-Ansicht → Gruppen. Jeder Hauptbereich besitzt rechts oben einen Ziehgriff sowie zugängliche Auf-/Ab-Schalter. OHC speichert die Reihenfolge und stellt sie auf Wunsch auf den Standard zurück. Gerätekacheln, Effekte und Gruppen bleiben intern fest geordnet und bestehende Profile unverändert kompatibel.
+Die Standardreihenfolge ist Engine → Geräte und Effekte → Thermaltake-360-PC-Ansicht → Gruppen. Jeder Hauptbereich besitzt rechts oben einen Ziehgriff sowie zugängliche Auf-/Ab-Schalter. Unter der Designgalerie klappt „Geräte und Effekte“ Auswahl, Modi, Native-Kanäle und Vorschau in der Seite auf; die native Ergebnisliste ist ein zweites eingebettetes Untermenü und kein Extra-Fenster. OHC speichert die Reihenfolge und stellt sie auf Wunsch auf den Standard zurück. Gerätekacheln, Effekte und Gruppen bleiben intern fest geordnet und bestehende Profile unverändert kompatibel.
 
 ## Direkte Galerie und sichere Wiederübernahme 3.4.13
 

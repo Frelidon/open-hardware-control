@@ -13,8 +13,8 @@ from nzxt_backend import SupportLevel
 
 APP_NAME = "Open Hardware Control"
 DISPLAY_NAME = "Open Hardware Control by Frelidon"
-APP_VERSION = "3.4.29.48"
-BUILD_CHANNEL = "STABLE"
+APP_VERSION = "3.4.29.49"
+BUILD_CHANNEL = "INTERN"
 APP_DISPLAY_VERSION = f"{APP_VERSION} {BUILD_CHANNEL}"
 ORG_NAME = "FloriLinuxTools"
 LEGACY_SETTINGS_APP_NAME = "Kraken Control"

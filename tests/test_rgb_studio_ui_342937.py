@@ -9,6 +9,9 @@ CODE = (ROOT / "src/kraken_control.py").read_text(encoding="utf-8")
 GALLERY = (ROOT / "src/modules" / "rgb_studio" / "v1_1" / "design_gallery.py").read_text(
     encoding="utf-8"
 )
+PANELS = (ROOT / "src/modules" / "rgb_studio" / "v1_1" / "studio_panels.py").read_text(
+    encoding="utf-8"
+)
 
 
 def test_engine_controls_are_embedded_toggle_buttons() -> None:
@@ -39,7 +42,15 @@ def test_brightness_native_results_and_sequence_cleanup_stay_in_page() -> None:
     assert "self.rgb_studio_brightness = QSlider(Qt.Orientation.Horizontal)" in rgb_ui
     assert "self.rgb_studio_brightness.setRange(0, 100)" in rgb_ui
     assert 'QLabel("Gesamthelligkeit")' in rgb_ui
-    assert 'setHeaderLabels(["Gerät / Kanal", "Hardwaremodus", "Status"])' in rgb_ui
+    assert 'setHeaderLabels(["Gerät / Kanal", "Hardwaremodus", "Status"])' in PANELS
+    assert "self.rgb_devices_effects_toggle = QPushButton" in rgb_ui
+    assert "set_rgb_devices_effects_expanded" in rgb_ui
+    assert "def set_rgb_native_results_expanded" in PANELS
+    assert "tree.setMinimumHeight(320)" in PANELS
+    assert "Kein Extra-Fenster" in rgb_ui
+    assert "build_native_hardware_channel_panel" in rgb_ui
+    assert "self.rgb_native_results_button.setChecked(False)" not in CODE
+    assert "self.rgb_native_results_button.setChecked(False)" not in PANELS
     sequence = CODE[
         CODE.index("    def run_rgb_command_sequence("):
         CODE.index("    def run_openrgb_write(")

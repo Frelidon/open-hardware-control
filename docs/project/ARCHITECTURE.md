@@ -55,7 +55,7 @@ Safety invariant: unconfirmed channels are not automatically written, and firmwa
 ### 4a. Thermalright Levita display and cooling
 
 - `src/thermalright_display.py` — local media/TRCC discovery, non-destructive complete-filename catalog deduplication, strict Levita geometry filtering, protected cutout and rendering model.
-- `src/dashboard_layout.py` — small dashboard-layout mixin that combines saved card preferences with current hardware/value availability; it performs no hardware discovery or writes.
+- `src/dashboard_layout.py` — small dashboard-layout mixin that combines saved card preferences with current hardware/value availability and renders Overview status hints from confirmed PWM/sensor state; it performs no hardware discovery or writes.
 - `src/thermalright_display_ui.py` — legacy-compatible thin orchestration for the card library, media preparation, process queue and the versioned editor module.
 - `src/modules/lcd_levita/v1_4/layout_model.py` — pure, malformed-record-tolerant layer-2 block model, coordinate bounds, whole-layout offsets and settings serialization.
 - `src/modules/lcd_levita/v1_4/layout_canvas.py` — Qt canvas interaction: one stable draggable graphics item per logical data block; right-click requests the inline property editor in the surrounding surface instead of opening a dialog.

@@ -22,7 +22,7 @@ Die Zerlegung erfolgt in kleinen, testbaren Schritten. Hardware-Schreiblogik, Be
 | `src/cooling_widgets.py` | Hardwareunabhängiger Kurveneditor und Mini-Vorschau | Nein |
 | `src/localization_catalog.py` | Übersetzungen und integrierte Hilfethemen | Nein |
 | `src/ui_layout.py` | Gespeicherte Navigations- und Layoutmodelle | Nein |
-| `src/dashboard_layout.py` | Dashboard-Raster, Benutzerkartenauswahl und hardwareabhängige Kartenverfügbarkeit | Nein |
+| `src/dashboard_layout.py` | Dashboard-Raster, Benutzerkartenauswahl, hardwareabhängige Kartenverfügbarkeit und reine Übersichtshinweise für Status & Hinweise | Nein |
 | `src/modules/window_placement/v1_0/placement.py` | Reine Auswahlrichtlinie für Hauptbildschirm oder stabil benannten Startmonitor mit sicherem Rückfall | Nein |
 | `src/modules/lcd_levita/v1_4/layout_model.py` | Reine, fehlertolerant importierte Ebene-2-Blöcke, Koordinaten, Gesamt-Offsets und Override-Persistenz | Nein |
 | `src/modules/lcd_levita/v1_4/layout_canvas.py` | Levita-Canvas, stabiles Drag-and-drop und Anforderung des eingebetteten Seiteneditors | Nein |

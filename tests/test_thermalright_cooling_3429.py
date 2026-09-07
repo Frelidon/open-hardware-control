@@ -84,6 +84,9 @@ def test_application_requires_mapping_calibration_and_restores_firmware() -> Non
     assert "Levita meldet keinen Kühlmittelsensor" not in main
     assert 'if str(key) == "water_temperature"' in layout_policy
     assert "card.setVisible(selected_by_user and available)" in dashboard
+    assert "update_dashboard_status_hints" in main
+    assert "Levita-Kühlung bestätigt" in dashboard
+    assert "Pumpe und Radiator sind nach zwei PWM-Tests steuerbar." in dashboard
     assert "Kraken-LCD-Anteil des Profils" in main
     assert "sync_manual_control_to_curve_target(channel, duty)" in main
     assert "nzxt_liquidctl_device_present" in main

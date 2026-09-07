@@ -101,11 +101,13 @@ from openlinkhub_mouse_visuals import mouse_schema, visual_button_rows
 from desktop_assets import CURSOR_THEMES, ICON_THEMES
 from desktop_designs import STYLE_TITLES, design_plan, desktop_status, recover_pending_transaction
 from branding import application_icon, branding_icon_path, create_sidebar_branding, system_tray_icon
-from dashboard_layout import DashboardLayoutMixin
+from dashboard_layout import DASHBOARD_HINT_KEYS, DashboardLayoutMixin
 from modules.rgb_studio.v1_1 import (
     ENE_DRAM_POST_START_RETRY_DELAYS_MS,
     EneDramStartRecoveryMixin,
     RGBDesignGallery,
+    RgbStudioExpandMixin,
+    build_native_hardware_channel_panel,
 )
 from modules.wallpaper_engine.v1_2 import WallpaperEnginePage
 from modules.window_placement.v1_0 import (
@@ -2203,7 +2205,7 @@ class CoolingLayoutDiagram(PCLayoutDiagram):
             painter.drawText(badge, Qt.AlignmentFlag.AlignCenter, self._short_channel(channel_id))
 
 
-class KrakenControl(EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActionsMixin, QMainWindow):
+class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActionsMixin, QMainWindow):
     def __init__(self):
         super().__init__()
         self.settings = QSettings(ORG_NAME, APP_NAME)
@@ -3126,6 +3128,7 @@ class KrakenControl(EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActi
             self.hardware_animation_status_label.setText(
                 f"{self.tr_static('Hardwareanimation aktiv')} · {self.animated_hardware_live_summary()}"
             )
+        self.update_dashboard_status_hints()
 
     def configure_accessibility(self) -> None:
         self.tabs.setAccessibleName("Seiten von Open Hardware Control")
@@ -3697,12 +3700,8 @@ class KrakenControl(EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActi
 
     def sync_navigation_to_page(self, page: int) -> None:
         if page != 2:
-            if hasattr(self, "rgb_native_results_button") and self.rgb_native_results_button.isChecked():
-                self.rgb_native_results_button.setChecked(False)
             if hasattr(self, "rgb_selection_list"):
                 self.rgb_selection_list.collapseAll()
-            if hasattr(self, "rgb_native_results_list"):
-                self.rgb_native_results_list.collapseAll()
         if not hasattr(self, "navigation"):
             return
         root = self.navigation.invisibleRootItem()
@@ -5325,30 +5324,27 @@ class KrakenControl(EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActi
         sv = QVBoxLayout(status)
         sv.setContentsMargins(14, 12, 14, 12)
         sv.addWidget(QLabel("Status & Hinweise", objectName="sectionTitle"))
-        self.health_label = QLabel("Gerät wird geprüft …")
-        self.health_label.setObjectName("healthNeutral")
-        self.health_label.setWordWrap(True)
-        health_row = QFrame()
-        health_row.setObjectName("hardwareListRow")
-        health_layout = QHBoxLayout(health_row)
-        health_layout.addWidget(QLabel("●"))
-        health_layout.addWidget(self.health_label, 1)
-        sv.addWidget(health_row)
-        for title, hint, obj in (
-            ("Sensoren synchronisiert", "Lokale Hardwarewerte werden fortlaufend aktualisiert.", "healthGood"),
-            ("Profile verfügbar", "Leise, Ausbalanciert und Leistung können direkt angewendet werden.", "infoText"),
-            ("Keine Cloud erforderlich", "Steuerung bleibt lokal auf diesem System.", "healthGood"),
-        ):
+        self.dashboard_hint_widgets: dict[str, tuple[QLabel, QLabel]] = {}
+        self.dashboard_kraken_health_text = "Gerät wird geprüft …"
+        self.dashboard_kraken_health_ok = False
+        for key in DASHBOARD_HINT_KEYS:
             row = QFrame()
             row.setObjectName("hardwareListRow")
             rl = QHBoxLayout(row)
-            label = QLabel(f"<b>{title}</b><br><span style='color:#8f9cad'>{hint}</span>")
+            rl.setContentsMargins(10, 8, 10, 8)
+            label = QLabel()
             label.setTextFormat(Qt.TextFormat.RichText)
+            label.setWordWrap(True)
+            badge = QLabel("● OK")
+            badge.setObjectName("healthGood")
             rl.addWidget(label, 1)
-            marker = QLabel("●")
-            marker.setObjectName(obj)
-            rl.addWidget(marker)
+            rl.addWidget(badge)
             sv.addWidget(row)
+            self.dashboard_hint_widgets[key] = (label, badge)
+            if key == "cooling":
+                self.health_label = label
+                self.health_badge = badge
+        self.update_dashboard_status_hints()
         init_btn = QPushButton("Geräte initialisieren")
         init_btn.clicked.connect(self.initialize_devices)
         sv.addWidget(init_btn)
@@ -6547,6 +6543,7 @@ class KrakenControl(EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActi
             widget.setVisible(active)
         if not active:
             self.cooling_hardware_status.setText("NZXT-Kühlung wird über den validierten liquidctl-Gerätepfad gesteuert.")
+            self.update_dashboard_status_hints()
             return
         self.populate_thermalright_channel_combos()
         pump = self.thermalright_channel("pump")
@@ -6561,6 +6558,7 @@ class KrakenControl(EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActi
         self.cooling_hardware_status.setObjectName("healthGood" if pump_ok and radiator_ok else "warningText")
         self.cooling_hardware_status.style().unpolish(self.cooling_hardware_status)
         self.cooling_hardware_status.style().polish(self.cooling_hardware_status)
+        self.update_dashboard_status_hints()
 
     def populate_thermalright_channel_combos(self) -> None:
         if not hasattr(self, "thermalright_pump_channel_combo"):
@@ -8573,12 +8571,20 @@ class KrakenControl(EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActi
         design_gallery_layout.addWidget(gallery_note)
 
         controls = QWidget()
-        controls_layout = QHBoxLayout(controls)
+        controls_layout = QVBoxLayout(controls)
         controls_layout.setContentsMargins(0, 0, 0, 0)
-        controls_layout.setSpacing(16)
+        controls_layout.setSpacing(12)
+        controls_row = QWidget()
+        controls_row_layout = QHBoxLayout(controls_row)
+        controls_row_layout.setContentsMargins(0, 0, 0, 0)
+        controls_row_layout.setSpacing(16)
 
         editor = QGroupBox("Gerät und Effekt")
-        editor_form = QFormLayout(editor)
+        editor_layout = QVBoxLayout(editor)
+        editor_layout.setContentsMargins(12, 12, 12, 12)
+        editor_layout.setSpacing(10)
+        editor_form_host = QWidget()
+        editor_form = QFormLayout(editor_form_host)
         self.openrgb_device_combo = QComboBox()
         self.openrgb_device_combo.currentIndexChanged.connect(self.on_openrgb_device_changed)
         self.openrgb_device_info = QLabel("Kein OpenRGB-Gerät erkannt.")
@@ -8786,20 +8792,8 @@ class KrakenControl(EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActi
         self.openrgb_performance_label.setObjectName("muted")
         editor_form.addRow("Übertragung", self.openrgb_performance_label)
 
-        self.rgb_native_results_button = QPushButton("Native Hardwarekanäle anzeigen")
-        self.rgb_native_results_button.setCheckable(True)
-        self.rgb_native_results_list = QTreeWidget()
-        self.rgb_native_results_list.setHeaderLabels(["Gerät / Kanal", "Hardwaremodus", "Status"])
-        self.rgb_native_results_list.setRootIsDecorated(True)
-        self.rgb_native_results_list.setAlternatingRowColors(True)
-        self.rgb_native_results_list.setMinimumHeight(180)
-        self.rgb_native_results_list.setMaximumHeight(340)
-        self.rgb_native_results_list.setColumnWidth(0, 280)
-        self.rgb_native_results_list.setColumnWidth(1, 200)
-        self.rgb_native_results_list.setVisible(False)
-        self.rgb_native_results_button.toggled.connect(self.rgb_native_results_list.setVisible)
-        editor_form.addRow(self.rgb_native_results_button)
-        editor_form.addRow(self.rgb_native_results_list)
+        native_results_panel = build_native_hardware_channel_panel(self)
+        editor_layout.addWidget(editor_form_host)
 
         issue_box = QGroupBox("RGB-Fehler und Warnungen")
         issue_layout = QVBoxLayout(issue_box)
@@ -8838,8 +8832,19 @@ class KrakenControl(EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActi
         preview_note.setObjectName("muted")
         preview_layout.addWidget(preview_note)
 
-        controls_layout.addWidget(editor, 3)
-        controls_layout.addWidget(preview_group, 2)
+        controls_row_layout.addWidget(editor, 3)
+        controls_row_layout.addWidget(preview_group, 2)
+        controls_layout.addWidget(controls_row)
+        controls_layout.addWidget(native_results_panel)
+        self.rgb_devices_effects_panel = controls
+        self.rgb_devices_effects_toggle = QPushButton("Geräte und Effekte ausblenden ⌄")
+        self.rgb_devices_effects_toggle.setCheckable(True)
+        self.rgb_devices_effects_toggle.setChecked(True)
+        self.rgb_devices_effects_toggle.setMinimumHeight(40)
+        self.rgb_devices_effects_toggle.setToolTip(
+            "Blendet Auswahl, Modi, Native-Kanäle und Vorschau in dieser Seite ein. Kein Extra-Fenster."
+        )
+        self.rgb_devices_effects_toggle.toggled.connect(self.set_rgb_devices_effects_expanded)
         devices_effects_box = QGroupBox("Geräte und Effekte")
         devices_effects_layout = QVBoxLayout(devices_effects_box)
         devices_effects_layout.setSpacing(14)
@@ -8847,8 +8852,12 @@ class KrakenControl(EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActi
         devices_effects_layout.addWidget(quick)
         devices_effects_layout.addWidget(test_box)
         devices_effects_layout.addWidget(design_gallery_box)
+        devices_effects_layout.addWidget(self.rgb_devices_effects_toggle)
         devices_effects_layout.addWidget(controls)
         devices_effects_layout.addWidget(issue_box)
+        self.set_rgb_devices_effects_expanded(
+            self.settings.value("rgb_studio/devices_effects_expanded", True, type=bool)
+        )
 
         section_container, self.rgb_section_area = self.make_reorderable_sections(
             "rgb",
@@ -14188,10 +14197,9 @@ class KrakenControl(EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActi
             self.connection_label.style().unpolish(self.connection_label)
             self.connection_label.style().polish(self.connection_label)
             self.footer_status.setText(f"{LEVITA_DISPLAY_NAME} erkannt")
-            self.health_label.setText(
-                "Levita erkannt · Pumpe und Radiator werden erst nach zwei bestätigten PWM-Tests steuerbar"
-            )
-            self.health_label.setObjectName("healthGood" if self.cooling_device_ready() else "healthWarn")
+            self.dashboard_kraken_health_text = ""
+            self.dashboard_kraken_health_ok = False
+            self.update_dashboard_status_hints()
             self.status_timer.start(self.refresh_interval.value() * 1000)
             self.cpu_curve_timer.start(CPU_CURVE_SAMPLE_MS)
             self.refresh_thermalright_cooling_status()
@@ -14234,8 +14242,9 @@ class KrakenControl(EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActi
         self.connection_label.style().unpolish(self.connection_label)
         self.connection_label.style().polish(self.connection_label)
         self.footer_status.setText(message)
-        self.health_label.setText(message)
-        self.health_label.setObjectName("healthCritical")
+        self.dashboard_kraken_health_text = message
+        self.dashboard_kraken_health_ok = False
+        self.update_dashboard_status_hints()
         self.update_navigation_visibility()
         self.update_main_connection_summary()
         self.apply_dashboard_card_visibility(save=False)
@@ -14600,10 +14609,9 @@ class KrakenControl(EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActi
             text, obj = self.tr_static("⚠ Lüfter stehen trotz erhöhter Temperatur."), "healthWarn"
         else:
             text, obj = self.tr_static("✅ Kühlung arbeitet normal."), "healthGood"
-        self.health_label.setText(text)
-        self.health_label.setObjectName(obj)
-        self.health_label.style().unpolish(self.health_label)
-        self.health_label.style().polish(self.health_label)
+        self.dashboard_kraken_health_text = text
+        self.dashboard_kraken_health_ok = obj == "healthGood"
+        self.update_dashboard_status_hints()
 
     def enforce_temperature_safety(self, temp: float) -> None:
         if not self.auto_max_checkbox.isChecked() or temp < self.safety_temperature_c(self.critical_temp):
@@ -17690,32 +17698,6 @@ class KrakenControl(EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActi
                 if self.rgb_auto_reclaim_checkbox.isChecked()
                 else "Automatische Wiederübernahme · AUS"
             )
-
-    def update_rgb_native_results(
-        self, entries: list[tuple[str, str]], successful: bool
-    ) -> None:
-        if not hasattr(self, "rgb_native_results_list"):
-            return
-        self.rgb_native_results_list.clear()
-        status = "Erfolgreich" if successful else "Fehler · Details im Fehlerbereich"
-        grouped: dict[str, list[QTreeWidgetItem]] = {}
-        for device_name, mode_name in entries:
-            vendor = self.rgb_vendor_bucket(device_name, "openrgb")
-            grouped.setdefault(vendor, []).append(QTreeWidgetItem([device_name, mode_name, status]))
-        for vendor in sorted(grouped, key=self.rgb_vendor_bucket_sort_key):
-            children = grouped[vendor]
-            parent = QTreeWidgetItem([f"{vendor} · {len(children)}", "", ""])
-            parent.setFirstColumnSpanned(True)
-            parent.setExpanded(True)
-            for child in children:
-                parent.addChild(child)
-            self.rgb_native_results_list.addTopLevelItem(parent)
-        summary = "erfolgreich" if successful else "mit Fehlern"
-        self.rgb_native_results_button.setText(
-            f"Native Hardwarekanäle anzeigen · {len(entries)} · {summary}"
-        )
-        if entries:
-            self.rgb_native_results_button.setChecked(True)
 
     def start_rgb_profile_automatically(self, profile_name: str) -> None:
         """Restore an explicitly saved RGB start intent without bypassing ownership checks."""

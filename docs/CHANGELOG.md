@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.4.29.49 INTERN
+
+- RGB-Studio klappt „Geräte und Effekte“ sowie die native Hardwarekanal-Liste als große Bereiche in der Seite auf; kein Extra-Fenster, und die Kanalliste bleibt beim Seitenwechsel sichtbar.
+- Übersicht „Status & Hinweise“ übernimmt nach bestätigten PWM-Tests den Levita-Zustand: statt der festen Warnung erscheinen ein grüner Punkt und **OK**, solange Pumpe und Radiator bestätigt sind; fehlende Tests oder Sensorfehler nutzen einen roten Punkt und **Fehlerhaft**, im gleichen Raster wie „Erkannte Hardware“.
+
 ## 3.4.29.48 STABLE
 
 - Verbindliche Ablage- und Kurz-README-Regel für alle Coding-KIs in `docs/ai/AGENTS.md` (Tabelle *welche Datei wohin*, keine neuen Dateien im Wurzelverzeichnis, README unter 200 Zeilen mit genau einem „Neu in“-Abschnitt und höchstens vier Verlaufsversionen), gespiegelt in `.cursor/rules/70-repository-layout.mdc`, `.github/copilot-instructions.md`, `docs/ai/CLAUDE.md` und `docs/project/DECISIONS.md`. `tests/test_repository_layout_342947.py` erzwingt die Regel.

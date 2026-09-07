@@ -1,10 +1,12 @@
 # Open Hardware Control — Project Status
 
-**Current development version:** 3.4.29.48 STABLE
+**Current development version:** 3.4.29.49 INTERN
 
-**Status date:** 06 September 2026
+**Status date:** 07 September 2026
 
-**Release channel:** STABLE — public release scripts may run only after the complete release checks, clean commit and explicit owner request.
+**Release channel:** INTERN — no GitHub push, tag or public release unless the project owner requests it later.
+
+Version 3.4.29.49 is an internal UI follow-up: Overview „Status & Hinweise“ follows confirmed Levita PWM tests (green **OK** after pump and radiator confirmation, red **Fehlerhaft** while tests are open or sensors fail) in the same row layout as „Erkannte Hardware“. RGB Studio expands „Geräte und Effekte“ and the native hardware-channel list as in-page panels; the channel list stays visible when leaving the page. Hardware write paths are unchanged.
 
 Version 3.4.29.48 makes the repository layout a permanent owner decision: `docs/ai/AGENTS.md` carries the mandatory placement table and README rules, mirrored in the Cursor rule `70-repository-layout.mdc`, the Copilot and Claude instructions and `DECISIONS.md`; `tests/test_repository_layout_342947.py` enforces the root allowlist, the 200-line README limit and the four-entry history. The release workflow reads `packaging/VERSION`/`packaging/BUILD_CHANNEL`; tag `v3.4.29.47` has no published release.
 
@@ -174,10 +176,11 @@ The 3.4.29 codebase has also begun an incremental local-AI-oriented split of the
 - GPU fan control is not part of the mainboard PWM subsystem.
 - Open Radeon Control Center remains separate.
 
-## Before publishing 3.4.29.48
+## Before finishing 3.4.29.49 INTERN
 
-- Keep `BUILD_CHANNEL=STABLE`; return to `INTERN` if the real desktop/hardware release-candidate test exposes a regression.
+- Keep `BUILD_CHANNEL=INTERN`; do not run GitHub push, tag or public release scripts.
 - Run all release checks.
 - Verify current documentation/version references.
 - Confirm no secrets/personal logs are present.
-- Require a clean committed state and explicit project-owner approval before any GitHub push/tag/release.
+- Complete the local package build and the two-version external backup.
+- Require an explicit project-owner request before any GitHub push/tag/release.
