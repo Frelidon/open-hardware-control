@@ -272,12 +272,12 @@ MAINBOARD_FAN_PRESETS: dict[str, FanPreset] = {
     "performance": FanPreset(
         key="performance",
         name="Leistung",
-        description="Frühere und stärkere Lüfteranhebung für hohe Dauerlast oder wärmere Radiator-/Abluftpfade.",
+        description="Fester 100-%-Override für maximale Kühlung und eindeutige Funktionsprüfung aller aktiven Gehäuselüfter.",
         source="cpu",
-        points=((30, 40), (45, 50), (60, 65), (75, 85), (85, 100)),
-        minimum_percent=35,
-        hysteresis_c=1,
-        response_delay_s=2,
+        points=((20, 100), (40, 100), (60, 100), (80, 100), (100, 100)),
+        minimum_percent=100,
+        hysteresis_c=0,
+        response_delay_s=1,
     ),
 }
 

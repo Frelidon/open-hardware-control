@@ -20,6 +20,19 @@ def test_case_profiles_match_cpu_card_and_keep_automation_separate() -> None:
     assert 'objectName="coolingQuickProfileButton"' in CODE[profile_start:automatic_start]
     assert 'self.apply_mainboard_fan_preset_to_all_channels(key)' in CODE[profile_start:automatic_start]
     assert 'QLabel("Automatische Regelung")' in CODE[automatic_start:]
+    assert '"100-%-Override für alle bestätigten, aktiven Gehäuselüfter"' in CODE
+    assert "QTimer.singleShot(0, self.update_mainboard_fan_control)" in CODE
+    assert "def apply_matching_case_fan_profile" in CODE
+    assert CODE.count("KrakenControl.apply_matching_case_fan_profile(self, name)") == 4
+    assert '"leistung": "performance"' in CODE
+
+
+def test_each_case_fan_card_exposes_bounded_stop_test_and_bios_mode_explanation() -> None:
+    assert 'QPushButton("0 % / 10 s testen")' in CODE
+    assert "def test_mainboard_channel_stop_from_card" in CODE
+    assert "self.start_mainboard_fan_calibration(stop_test=True)" in CODE
+    assert '"PWM/DC wird im BIOS festgelegt"' in CODE
+    assert "Der Kernel stellt kein pwmN_mode bereit" in CODE
 
 
 def test_mainboard_master_control_remains_calibration_gated() -> None:

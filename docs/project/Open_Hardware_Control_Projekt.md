@@ -1,6 +1,6 @@
 # Open Hardware Control – zentrale Projektdokumentation
 
-Stand: **3.4.29.49 INTERN**, 07. September 2026
+Stand: **3.4.29.50 INTERN**, 07. September 2026
 
 ## Zielbild
 
@@ -8,9 +8,9 @@ Open Hardware Control by Frelidon ist die gemeinsame, modular erweiterbare Linux
 
 Open Radeon Control Center bleibt ein eigenständiges Projekt. Es wird weder technisch noch organisatorisch in Open Hardware Control verschmolzen.
 
-## Version 3.4.29.49 INTERN
+## Version 3.4.29.50 INTERN
 
-Version 3.4.29.49 ist eine interne Folgeversion: Die Übersicht „Status & Hinweise“ folgt bestätigten Levita-PWM-Tests (grüner Punkt und OK nach Pumpe/Radiator-Bestätigung, sonst Fehlerhaft) im gleichen Raster wie „Erkannte Hardware“. Das RGB-Studio klappt Geräte und Effekte sowie die native Hardwarekanal-Liste als große Bereiche in der Seite auf. Es gibt kein öffentliches GitHub-Release.
+Version 3.4.29.50 ist eine interne Folgeversion: Die Übersicht „Status & Hinweise“ folgt bestätigten Levita-PWM-Tests (grüner Punkt und OK nach Pumpe/Radiator-Bestätigung, sonst Fehlerhaft) im gleichen Raster wie „Erkannte Hardware“. Das RGB-Studio klappt Geräte und Effekte sowie die native Hardwarekanal-Liste als große Bereiche in der Seite auf. Es gibt kein öffentliches GitHub-Release.
 
 ## Version 3.4.29.48 STABLE
 

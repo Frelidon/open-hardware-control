@@ -239,9 +239,26 @@ def test_mainboard_presets_are_safe_monotonic_and_end_at_full_speed() -> None:
     for key, preset in MAINBOARD_FAN_PRESETS.items():
         validated = validate_curve(preset.points, 0)
         assert validated[-1][1] == 100
-        assert 20 <= preset.minimum_percent <= 50
+        assert 20 <= preset.minimum_percent <= 100
         assert preset.source in {"cpu", "gpu", "liquid", "max", "weighted"}
         assert fan_preset(key) == preset
+    performance = fan_preset("performance")
+    assert performance.minimum_percent == 100
+    assert {duty for _temperature, duty in performance.points} == {100}
+
+
+@pytest.mark.parametrize("temperature", [20.0, 48.0, 75.0, 100.0])
+def test_performance_preset_is_a_full_speed_override(temperature: float) -> None:
+    preset = fan_preset("performance")
+    policy = CurvePolicy(
+        points=list(preset.points),
+        minimum_percent=preset.minimum_percent,
+        hysteresis_c=preset.hysteresis_c,
+        response_delay_s=preset.response_delay_s,
+    )
+    decision = decide_curve_output(policy, CurveState(), temperature, now=10.0)
+    assert decision.should_write
+    assert decision.percent == 100
 
 
 def test_preset_recommendation_is_conservative_and_never_maps_pwm() -> None:

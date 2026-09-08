@@ -2,6 +2,7 @@
 
 | Version | Erstmals hinzugekommene Hauptfunktionen |
 |---|---|
+| 3.4.29.50 INTERN | Gehäuselüfter-Leistungsprofil als konstanter, sofort neu ausgewerteter 100-%-Override für bestätigte aktive Kanäle; direkter 0-%-/10-s-Stopptest pro Lüfterkarte; BIOS-Erklärung bei fehlendem `pwmN_mode`, ohne geratenen DC-Registerpfad. |
 | 3.4.29.49 INTERN | Übersicht „Status & Hinweise“ folgt bestätigten Levita-PWM-Tests (OK/Fehlerhaft wie Erkannte Hardware); RGB-Studio klappt Geräte/Effekte und native Hardwarekanäle als große Bereiche in der Seite auf. |
 | 3.4.29.48 STABLE | Verbindliche Ablage- und Kurz-README-Regel für alle Coding-KIs mit Wächtertest `tests/test_repository_layout_342947.py`; Release-Workflow liest `packaging/VERSION`. |
 | 3.4.29.47 STABLE | Anwendungscode nach `src/`, Installer und Versionsdateien nach `packaging/`, alle Dokumente nach `docs/`; Wurzelverzeichnis nur noch README, LICENSE, CITATION und AGENTS-Wegweiser; installierte Struktur unverändert. |

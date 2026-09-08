@@ -1,4 +1,4 @@
-# Supported devices – Open Hardware Control 3.4.29.49
+# Supported devices – Open Hardware Control 3.4.29.50
 
 ## NZXT module
 
@@ -29,10 +29,13 @@ Direct devices no longer enter the confirmed `ApplyOptions`/`stl_vector` CLI pat
 
 Version 3.4.23 can control PWM channels exposed by Linux through `/sys/class/hwmon`, initially focused on NCT6687/NCT6687D and MSI X870-family systems. Board names are diagnostic hints only; OHC never derives a fixed physical fan mapping from them.
 
-- Every PWM channel must pass a guided 70%-for-5-seconds physical calibration before automatic control is allowed.
+- Every PWM channel must pass a guided 70%-for-10-seconds physical calibration before automatic control is allowed.
 - Only calibrated, explicitly enabled and writable channels are touched by the one-second control loop.
 - Sensor sources: CPU, GPU, Kraken liquid, maximum, or weighted CPU/GPU temperature.
 - Each channel has its own curve, minimum duty, hysteresis and response delay.
+- Quiet and Balanced remain temperature curves. Performance is a constant 100% override and is reevaluated immediately while OHC control is active, without activating unconfirmed channels.
+- Every case-fan card offers a confirmed 0%-for-10-seconds identification test and restores the previous hwmon/firmware state afterwards. Some fans cannot physically stop at 0%.
+- Electrical PWM/DC switching is available only if the driver exposes `pwmN_mode`; changing it stops automation and requires calibration again. Without that node the BIOS owns the electrical mode while OHC adjusts only the documented `pwmN` duty/DC value.
 - After three consecutive missing sensor readings OHC requests a 70% runtime fallback; at 90 °C it requests 100%.
 - Disabling OHC control or exiting cleanly returns channels to firmware/BIOS control through `pwmN_enable` where the driver exposes that state as writable. If nct6687d exposes `fan_control_watchdog`, OHC refreshes it as an additional 10-second crash-safety lease while control is active.
 - If the sysfs PWM files are not writable by the current user, OHC does not attempt a write. Driver/Secure Boot diagnostics and setup guidance are shown instead; Secure Boot/MOK is never bypassed.

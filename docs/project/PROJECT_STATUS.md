@@ -1,10 +1,12 @@
 # Open Hardware Control — Project Status
 
-**Current development version:** 3.4.29.49 INTERN
+**Current development version:** 3.4.29.50 INTERN
 
-**Status date:** 07 September 2026
+**Status date:** 08 September 2026
 
 **Release channel:** INTERN — no GitHub push, tag or public release unless the project owner requests it later.
+
+Version 3.4.29.50 synchronizes the top and saved cooling profiles with chassis-fan profiles. **Leistung** is a constant 100-percent override for pump, radiator and calibrated, individually enabled chassis-fan channels and is evaluated immediately when OHC control is active. Every chassis-fan card exposes the bounded, confirmed 0-percent/10-second identification test and restores the previous hwmon/firmware state afterwards. The reference NCT6687 driver exposes `pwm1` through `pwm8` but no `pwmN_mode`; OHC now explains that electrical PWM/DC remains configured in BIOS instead of implying a missing app feature. Drivers that do expose `pwmN_mode` retain the warning, automation stop and mandatory recalibration. Hardware ownership, CoolerControl conflict protection, watchdog and firmware return are unchanged.
 
 Version 3.4.29.49 is an internal UI follow-up: Overview „Status & Hinweise“ follows confirmed Levita PWM tests (green **OK** after pump and radiator confirmation, red **Fehlerhaft** while tests are open or sensors fail) in the same row layout as „Erkannte Hardware“. RGB Studio expands „Geräte und Effekte“ and the native hardware-channel list as in-page panels; the channel list stays visible when leaving the page. Hardware write paths are unchanged.
 
@@ -176,7 +178,7 @@ The 3.4.29 codebase has also begun an incremental local-AI-oriented split of the
 - GPU fan control is not part of the mainboard PWM subsystem.
 - Open Radeon Control Center remains separate.
 
-## Before finishing 3.4.29.49 INTERN
+## Before finishing 3.4.29.50 INTERN
 
 - Keep `BUILD_CHANNEL=INTERN`; do not run GitHub push, tag or public release scripts.
 - Run all release checks.

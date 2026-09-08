@@ -83,7 +83,7 @@ def profile_duties(name: str) -> tuple[int, int]:
     values = {
         "leise": (55, 35),
         "ausbalanciert": (70, 50),
-        "leistung": (90, 75),
+        "leistung": (100, 100),
         "sicherheit": (100, 100),
         "sicheres standardprofil": (75, 65),
     }

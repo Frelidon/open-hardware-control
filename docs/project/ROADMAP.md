@@ -40,6 +40,7 @@ After the first source release has proven stable:
 ## Longer term
 
 - More Kraken models based on diagnostic reports and real hardware testing.
+- Optional CPU performance controls only as a separately reviewed future module: begin read-only, use documented AMD/Linux interfaces, retain firmware thermal limits and never mix clock/voltage writes into the fan helper. PBO, power limits, frequency caps and undervolting need separate capability detection, rollback, suspend/resume and crash-safety tests before any write path.
 - Optional shared launcher/control-center concept for separate Frelidon hardware tools.
 
 This roadmap is not a promise of dates or compatibility.

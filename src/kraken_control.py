@@ -5810,7 +5810,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         cpu_layout.addWidget(self.cooling_cpu_summary_label)
         cpu_profiles = QHBoxLayout()
         self.cooling_quick_profile_buttons: dict[str, QPushButton] = {}
-        for title, pump, fan in (("Leise", 45, 35), ("Ausbalanciert", 55, 50), ("Leistung", 75, 75)):
+        for title, pump, fan in (("Leise", 45, 35), ("Ausbalanciert", 55, 50), ("Leistung", 100, 100)):
             button = QPushButton(title)
             button.setObjectName("coolingQuickProfileButton")
             button.setProperty("profileState", "inactive")
@@ -5845,7 +5845,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             preset = MAINBOARD_FAN_PRESETS[preset_key]
             button = QPushButton(preset.name, objectName="coolingQuickProfileButton")
             button.setProperty("profileState", "inactive")
-            button.setToolTip(f"{preset.name} für alle Gehäuselüfter; Kalibrierung und Aktivierung bleiben unverändert")
+            tip = "100-%-Override für alle bestätigten, aktiven Gehäuselüfter" if preset_key == "performance" else f"{preset.name} für alle Gehäuselüfter; Kalibrierung und Aktivierung bleiben unverändert"
+            button.setToolTip(tip)
             button.clicked.connect(lambda _checked=False, key=preset_key: self.apply_mainboard_fan_preset_to_all_channels(key))
             self.cooling_case_profile_buttons[preset_key] = button
             case_profiles.addWidget(button)
@@ -6856,6 +6857,9 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 header.addWidget(status)
                 test_btn = QPushButton("Testen")
                 test_btn.clicked.connect(lambda _checked=False, cid=channel.stable_id: self.test_mainboard_channel_from_card(cid))
+                stop_test_btn = QPushButton("0 % / 10 s testen")
+                stop_test_btn.setToolTip("Fordert diesen Gehäuselüfter nach Bestätigung kurz mit 0 % an und stellt danach den vorherigen Zustand wieder her.")
+                stop_test_btn.clicked.connect(lambda _checked=False, cid=channel.stable_id: self.test_mainboard_channel_stop_from_card(cid))
                 curve_action_source = "Kurve & Details schließen" if expanded else "Kurve & Details bearbeiten"
                 curve_btn = QPushButton(self.tr_static(curve_action_source))
                 curve_btn.setObjectName("primaryAction" if expanded else "")
@@ -6863,6 +6867,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 assign_btn = QPushButton("Zuordnen")
                 assign_btn.clicked.connect(lambda _checked=False, cid=channel.stable_id: self.open_mainboard_assignment_from_card(cid))
                 header.addWidget(test_btn)
+                header.addWidget(stop_test_btn)
                 header.addWidget(curve_btn)
                 header.addWidget(assign_btn)
                 card.addLayout(header)
@@ -6910,9 +6915,9 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                         )
                     )
                 else:
-                    mode_combo.addItem("PWM/DC · vom Treiber nicht umschaltbar", "unsupported")
+                    mode_combo.addItem("PWM/DC wird im BIOS festgelegt", "unsupported")
                     mode_combo.setEnabled(False)
-                    mode_combo.setToolTip("Der Kernel stellt für diesen Kanal kein pwmN_mode bereit; OHC rät keinen elektrischen Modus.")
+                    mode_combo.setToolTip("Der Kernel stellt kein pwmN_mode bereit. OHC regelt den vom BIOS festgelegten PWM- oder DC-Modus über pwmN; der 0-%-/10-s-Test bleibt verfügbar.")
                 quick_profiles.addWidget(QLabel("Anschlussmodus:"))
                 quick_profiles.addWidget(mode_combo)
                 card.addLayout(quick_profiles)
@@ -6954,6 +6959,11 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
     def test_mainboard_channel_from_card(self, channel_id: str) -> None:
         self.select_mainboard_channel(str(channel_id))
         self.start_mainboard_fan_calibration()
+
+    def test_mainboard_channel_stop_from_card(self, channel_id: str) -> None:
+        """Expose the bounded stop test without pretending PWM/DC is switchable."""
+        self.select_mainboard_channel(str(channel_id))
+        self.start_mainboard_fan_calibration(stop_test=True)
 
     def toggle_mainboard_fan_card_details(self, channel_id: str) -> None:
         """Keep chassis-fan cards collapsed by default and expand at most one."""
@@ -7206,13 +7216,9 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                     "Ein Wechsel wird erst beim Speichern nach ausdrücklicher Bestätigung geschrieben und setzt die Kalibrierung zurück."
                 )
             else:
-                self.mainboard_curve_overlay_control_mode.addItem(
-                    "PWM/DC · vom Treiber nicht umschaltbar", "unsupported"
-                )
+                self.mainboard_curve_overlay_control_mode.addItem("PWM/DC wird im BIOS festgelegt", "unsupported")
                 self.mainboard_curve_overlay_control_mode.setEnabled(False)
-                self.mainboard_curve_overlay_control_mode.setToolTip(
-                    "Der Kernel stellt kein pwmN_mode bereit; OHC rät keinen elektrischen Modus."
-                )
+                self.mainboard_curve_overlay_control_mode.setToolTip("Der Kernel stellt kein pwmN_mode bereit. Der elektrische Modus bleibt im BIOS festgelegt; OHC kann den Kanal trotzdem über pwmN regeln und mit 0 % / 10 s testen.")
             try:
                 points = validate_mainboard_curve([(int(x[0]), int(x[1])) for x in profile.get("curve", self._mainboard_default_curve())], 0)
             except (TypeError, ValueError, IndexError):
@@ -7309,6 +7315,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             f"MAINBOARD-FAN-PROFIL: {channel.stable_id} · {preset.name} gespeichert · "
             "Kalibrierung und Aktivierung unverändert"
         )
+        if self.mainboard_control_active: QTimer.singleShot(0, self.update_mainboard_fan_control)
 
     def apply_mainboard_fan_preset_to_all_channels(self, preset_key: str) -> None:
         channels = self.chassis_mainboard_channels()
@@ -7323,10 +7330,9 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.update_cooling_case_profile_state(preset_key)
         preset = mainboard_fan_preset(preset_key)
         self.footer_status.setText(f"Profil {preset.name} auf {len(channels)} Gehäuselüfter übernommen")
-        self.log_message(
-            f"MAINBOARD-FAN-PROFIL: {preset.name} auf alle {len(channels)} Gehäuselüfter übernommen · "
-            "keine Kalibrierung oder Aktivierung geändert"
-        )
+        effect = "100-%-Override wird sofort auf bestätigte aktive Kanäle geschrieben" if preset.key == "performance" and self.mainboard_control_active else "keine Kalibrierung oder Aktivierung geändert"
+        self.log_message(f"MAINBOARD-FAN-PROFIL: {preset.name} auf alle {len(channels)} Gehäuselüfter übernommen · {effect}")
+        if self.mainboard_control_active: QTimer.singleShot(0, self.update_mainboard_fan_control)
 
     def apply_mainboard_channel_control_mode(self, channel: MainboardFanChannel, mode: str) -> bool:
         requested = str(mode).strip().casefold()
@@ -12336,8 +12342,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
              "payload": {"cooling": {"pump_mode": "fixed", "fan_mode": "fixed", "pump": 45, "fan": 35}}},
             {"id": "builtin-balanced", "name": "Ausgeglichen", "category": "Kühlung", "description": "Pumpe 55 %, Lüfter 50 %", "builtin": True,
              "payload": {"cooling": {"pump_mode": "fixed", "fan_mode": "fixed", "pump": 55, "fan": 50}}},
-            {"id": "builtin-performance", "name": "Leistung", "category": "Kühlung", "description": "Pumpe und Lüfter 75 %", "builtin": True,
-             "payload": {"cooling": {"pump_mode": "fixed", "fan_mode": "fixed", "pump": 75, "fan": 75}}},
+            {"id": "builtin-performance", "name": "Leistung", "category": "Kühlung", "description": "Pumpe, Radiator und aktive Gehäuselüfter 100 %", "builtin": True,
+             "payload": {"cooling": {"pump_mode": "fixed", "fan_mode": "fixed", "pump": 100, "fan": 100}}},
             {"id": "builtin-safe", "name": "Sicher", "category": "Kühlung", "description": "Pumpe und Lüfter 65 %", "builtin": True,
              "payload": {"cooling": {"pump_mode": "fixed", "fan_mode": "fixed", "pump": 65, "fan": 65}}},
             {"id": "builtin-dark-space", "name": "Weltraum dunkel", "category": "Design", "description": "Dunkles Design mit Sternenfeld", "builtin": True,
@@ -13099,6 +13105,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.cpu_curve_force_update = False
             self.update_cooling_quick_profile_state("")
             self.footer_status.setText(f"Levita-Kühlung aus Profil „{name}“ aktiv")
+            KrakenControl.apply_matching_case_fan_profile(self, name)
             self.refresh_thermalright_cooling_status()
             return
         commands: list[tuple[str, list[str], str, str, int, bool]] = []
@@ -13124,6 +13131,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 self.cpu_curve_force_update = False
                 self.update_cooling_quick_profile_state("")
                 self.footer_status.setText(f"Kühlung aus Profil „{name}“ aktiv")
+                KrakenControl.apply_matching_case_fan_profile(self, name)
                 QTimer.singleShot(700, self.refresh_status)
                 return
             channel, args, mode, detail, duty, curve_controlled = commands[index]
@@ -13414,7 +13422,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         profiles = {
             "quiet": ("Leise", 45, 35),
             "balanced": ("Ausgeglichen", 55, 50),
-            "performance": ("Leistung", 75, 75),
+            "performance": ("Leistung", 100, 100),
             "safe": ("Sicher", 65, 65),
         }
         if not profile or profile not in profiles or not self.devices_ready or self.kraken_write_busy:
@@ -15240,6 +15248,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 return
             self.set_cooling_mode("pump", "Feste Drehzahl", f"{pump} % · Profil {name}")
             self.set_cooling_mode("fan", "Feste Drehzahl", f"{fan} % · Profil {name}")
+            KrakenControl.apply_matching_case_fan_profile(self, name)
             self.update_cooling_quick_profile_state(name)
             self.cpu_curve_last_duties = {"pump": None, "fan": None}
             self.footer_status.setText(f"Levita-Profil „{name}“ aktiv")
@@ -15265,6 +15274,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.footer_status.setText(f"Profil „{name}“ aktiv")
             self.set_cooling_mode("pump", "Feste Drehzahl", f"{pump} % · Profil {name}")
             self.set_cooling_mode("fan", "Feste Drehzahl", f"{fan} % · Profil {name}")
+            KrakenControl.apply_matching_case_fan_profile(self, name)
             self.update_cooling_quick_profile_state(name)
             self.cpu_curve_last_duties = {"pump": None, "fan": None}
             if notify:
@@ -15287,6 +15297,14 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             callback=pump_done,
             timeout=20,
         )
+
+    def apply_matching_case_fan_profile(self, name: str) -> None:
+        """Keep the three top cooling profiles consistent across cooling cards."""
+        preset_key = {"leise": "quiet", "ausbalanciert": "balanced", "ausgeglichen": "balanced", "leistung": "performance"}.get(str(name).strip().casefold(), "")
+        channels = getattr(self, "chassis_mainboard_channels", None)
+        apply_preset = getattr(self, "apply_mainboard_fan_preset_to_all_channels", None)
+        if preset_key and callable(channels) and callable(apply_preset) and channels():
+            apply_preset(preset_key)
 
     def apply_curve(self, channel: str, table: QTableWidget) -> None:
         if self.defer_cooling_action_for_gif(

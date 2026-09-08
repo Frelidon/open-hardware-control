@@ -60,7 +60,7 @@ def test_mainboard_labels_suggest_roles_without_board_guessing() -> None:
 def test_profiles_keep_pump_and_fans_in_safe_ranges() -> None:
     assert profile_duties("Leise") == (55, 35)
     assert profile_duties("Ausbalanciert") == (70, 50)
-    assert profile_duties("Leistung") == (90, 75)
+    assert profile_duties("Leistung") == (100, 100)
     assert profile_duties("Sicherheit") == (100, 100)
     for name in ("Leise", "Ausbalanciert", "Leistung", "Sicherheit", "unbekannt"):
         pump, radiator = profile_duties(name)

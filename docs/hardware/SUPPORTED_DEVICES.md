@@ -1,4 +1,4 @@
-# Unterstützte Geräte – Open Hardware Control 3.4.29.49
+# Unterstützte Geräte – Open Hardware Control 3.4.29.50
 
 ## Direkt getestetes NZXT-Modul
 
@@ -115,8 +115,9 @@ Version 3.4.23 kann PWM-Kanäle steuern, die Linux über `/sys/class/hwmon` bere
 - Erst bestätigte und ausdrücklich aktivierte Kanäle dürfen von der 1-s-Regelschleife geschrieben werden.
 - Sensorquellen: CPU, GPU, Kraken-Kühlmittel, Maximum oder gewichtete CPU/GPU-Temperatur.
 - Pro Kanal: eigene Kurve, Mindestleistung, Hysterese und Reaktionsverzögerung.
-- Leise/Ausbalanciert/Leistung können pro Kanal oder gemeinsam als Kurvenvorlage gewählt werden; die bestehende Kalibrierung und Aktivierung werden dabei nicht eigenmächtig geändert. Ein eigener Reset lädt den ausbalancierten Standard.
-- PWM/DC kann nur umgeschaltet werden, wenn der Kernel für genau diesen Kanal `pwmN_mode` meldet. Der bestätigte Wechsel stoppt die OHC-Automatik, verwirft Kalibrierung/Aktivierung und verlangt anschließend den physischen 70-%-/10-s-Test erneut.
+- Leise/Ausbalanciert können pro Kanal oder gemeinsam als Kurvenvorlage gewählt werden. **Leistung** ist ein konstanter 100-%-Override und wird bei laufender OHC-Regelung sofort neu ausgewertet. Kalibrierung und Aktivierung werden dabei nicht eigenmächtig geändert. Ein eigener Reset lädt den ausbalancierten Standard.
+- Jede Gehäuselüfterkarte bietet einen bestätigungspflichtigen 0-%-/10-s-Stopptest zur Zuordnung und stellt danach den vorherigen Zustand wieder her. Manche Lüfter stoppen hardwarebedingt bei 0 % nicht vollständig.
+- PWM/DC kann nur umgeschaltet werden, wenn der Kernel für genau diesen Kanal `pwmN_mode` meldet. Der bestätigte Wechsel stoppt die OHC-Automatik, verwirft Kalibrierung/Aktivierung und verlangt anschließend den physischen 70-%-/10-s-Test erneut. Fehlt `pwmN_mode`, legt das BIOS den elektrischen Modus fest; `pwmN` bleibt laut NCT6687-Treiber der Duty-/DC-Leistungswert.
 - Bei drei aufeinanderfolgenden fehlenden Sensorwerten fordert OHC 70 % als sicheren Laufzeit-Fallback an; ab 90 °C werden 100 % angefordert.
 - Beim Deaktivieren der OHC-Regelung und beim geordneten Programmende wird die Firmware-/BIOS-Steuerung über `pwmN_enable` wiederhergestellt, soweit der Treiber dies schreibbar anbietet. Ein vorhandenes nct6687d-`fan_control_watchdog` wird während aktiver Regelung als zusätzliche 10-s-Absturzsicherung aufgefrischt.
 - Wenn die PWM-sysfs-Dateien für den angemeldeten Benutzer nicht schreibbar sind, führt OHC **keinen** Schreibversuch aus. Der Treiber-/Secure-Boot-Dialog zeigt Diagnose und Einrichtungshinweise; Secure Boot/MOK wird nicht umgangen.

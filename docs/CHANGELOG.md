@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.4.29.50 INTERN
+
+- Synchronisiert die obere Kühlprofilwahl und gespeicherte Kühlprofile mit den Gehäuselüfterprofilen. **Leistung** wird von einer temperaturabhängigen Kurve zum konstanten 100-%-Override für Pumpe, Radiator und Gehäuselüfter; bei laufender OHC-Regelung werden bestätigte, aktivierte und schreibbare Kanäle sofort aktualisiert.
+- Ergänzt direkt auf jeder System-Fan-Karte den vorhandenen bestätigungspflichtigen 0-%-/10-s-Stopptest. Vorherige Firmware-/hwmon-Zustände werden nach dem begrenzten Test wiederhergestellt.
+- Erklärt bei NCT6687-Treibern ohne `pwmN_mode`, dass der elektrische PWM-/DC-Modus im BIOS festgelegt bleibt. OHC nutzt weiterhin ausschließlich dokumentierte sysfs-Knoten und erzwingt keine unbekannten Register; meldet der Treiber `pwmN_mode`, bleibt die sichere Umschaltung mit Warnung und erneuter Kalibrierung verfügbar.
+
 ## 3.4.29.49 INTERN
 
 - RGB-Studio klappt „Geräte und Effekte“ sowie die native Hardwarekanal-Liste als große Bereiche in der Seite auf; kein Extra-Fenster, und die Kanalliste bleibt beim Seitenwechsel sichtbar.

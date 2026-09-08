@@ -2,7 +2,7 @@
 
 Jeder weitergegebene Open-Hardware-Control-Stand soll vollständig nachvollziehbar bleiben.
 
-Das interne Installations-ZIP 3.4.29.49 enthält den direkt editierbaren Python-Quellcode einschließlich `src/desktop_shell.py`, `src/desktop_assets.py` und `src/desktop_designs.py`:
+Das interne Installations-ZIP 3.4.29.50 enthält den direkt editierbaren Python-Quellcode einschließlich `src/desktop_shell.py`, `src/desktop_assets.py` und `src/desktop_designs.py`:
 
 - `src/kraken_control.py`
 - `src/openlinkhub_integration.py` (lokale OpenLinkHub-API-, validierte Schreib- und Benutzerdienst-Anbindung)
@@ -33,12 +33,12 @@ Das interne Installations-ZIP 3.4.29.49 enthält den direkt editierbaren Python-
 
 Zu jedem Release werden aus genau demselben Git-Stand erzeugt:
 
-- `open_hardware_control_v3_4_29_49_INTERN.zip` – universelles internes Benutzerpaket
-- `open-hardware-control_3.4.29.49~intern2_all.deb` – internes Debian/Ubuntu/Linux-Mint-Paket
-- `open-hardware-control-3.4.29.49-0.intern2.noarch.rpm` – internes Fedora/Nobara-Paket
-- `open-hardware-control-3.4.29.49-INTERN-source.tar.gz` – vollständiger Quellcode-Snapshot
-- `Entwicklerpaket 3.4.29.49 INTERN.zip` – vollständiger editierbarer Projektbaum einschließlich Tests, Werkzeuge und GitHub-Automatisierung
-- `Open_Hardware_Control_3.4.29.49_LOCAL_AI.gitbundle` – vollständige Git-Historie für lokale KI-Arbeit
+- `open_hardware_control_v3_4_29_50_INTERN.zip` – universelles internes Benutzerpaket
+- `open-hardware-control_3.4.29.50~intern2_all.deb` – internes Debian/Ubuntu/Linux-Mint-Paket
+- `open-hardware-control-3.4.29.50-0.intern2.noarch.rpm` – internes Fedora/Nobara-Paket
+- `open-hardware-control-3.4.29.50-INTERN-source.tar.gz` – vollständiger Quellcode-Snapshot
+- `Entwicklerpaket 3.4.29.50 INTERN.zip` – vollständiger editierbarer Projektbaum einschließlich Tests, Werkzeuge und GitHub-Automatisierung
+- `Open_Hardware_Control_3.4.29.50_LOCAL_AI.gitbundle` – vollständige Git-Historie für lokale KI-Arbeit
 - `SHA256SUMS` – Prüfsummen aller Release-Dateien
 
 Das universelle Installations-ZIP enthält den ausführbaren Quellcode und die Laufzeitdokumentation, aber absichtlich keine Entwicklungsordner `tests/` oder `scripts/`. Das **Entwicklerpaket** und das Quellarchiv enthalten diese Ordner vollständig. Der Paketbau vergleicht den vollständigen Testbestand des Repositorys mit dem Entwicklerpaket und bricht bei fehlenden Dateien ab.

@@ -61,7 +61,7 @@ A stable removal of one or two devices from an expected inventory of at least fo
 
 ## Mainboard/chassis fans
 
-The current backend targets Linux hwmon fan control with a focus on NCT6687/NCT6687D. Electrical channel mapping must be calibrated and physically confirmed. Board name alone is diagnostic metadata, not a safe mapping source. Individual/global presets modify only the stored bounded curves and preserve activation/calibration state; electrical DC/PWM switching is permitted only through a driver-exposed fixed channel node and always resets confirmation state.
+The current backend targets Linux hwmon fan control with a focus on NCT6687/NCT6687D. Electrical channel mapping must be calibrated and physically confirmed. Board name alone is diagnostic metadata, not a safe mapping source. Quiet/Balanced presets update stored bounded curves; Performance is a constant 100-percent curve and is reevaluated immediately while OHC control is active. Presets preserve activation/calibration state. Every chassis-fan card exposes a confirmed, restoring 0-percent/10-second identification test. Electrical DC/PWM switching is permitted only through a driver-exposed fixed `pwmN_mode` node and always resets confirmation state; without that node the mode remains BIOS-owned and OHC writes only the documented `pwmN` duty/DC value.
 
 ## Explicitly outside current support claims
 
