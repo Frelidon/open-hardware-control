@@ -13,6 +13,23 @@ Diese Anleitung ist der praktische Erweiterungsweg für lokale und webbasierte C
 7. Bei Paketierung `docs/project/RELEASE_BACKUP_POLICY.md` befolgen und nach dem Bau die zwei neuesten vollständigen Sicherungen samt SHA256 prüfen.
 8. Bei jeder Quell-, Pfad-, Vertrags- oder Versionsänderung `docs/project/MODULE_REGISTRY.md` im selben Arbeitsschritt aktualisieren. Dort nur `TT.MM.JJ`, niemals eine Uhrzeit, ein Benutzerkonto oder einen Rechnernamen erfassen.
 
+## Fedora und Ubuntu getrennt absichern (verbindlich seit 06.10.26)
+
+Fedora und Ubuntu sind gleichrangige Zielumgebungen. Vor einer distributionsabhängigen
+Änderung beide vorhandenen Pfade ermitteln und getrennt prüfen. Ubuntu-Korrekturen
+bleiben hinter einem ausdrücklichen Ubuntu-Guard; der etablierte Fedora-Pfad wird
+nicht beiläufig überschrieben. Für Fedora-Korrekturen gilt die gleiche Regel umgekehrt.
+Installations-/Einrichtungsbefehle anhand der erkannten Distribution wählen, nicht
+anhand eines zufällig verfügbaren `dnf`-, `apt`- oder anderen Programms.
+
+Für beide Distributionen gezielte Regressionen hinzufügen beziehungsweise ausführen:
+korrekte Befehle/Programmwahl, unveränderte Gegenstrecke sowie erhaltene Funktionen,
+Designvorlagen und Einstellungen. Privilegierte Befehle mit isolierten Fixtures oder
+Fake-Programmen testen; daraus entsteht keine Freigabe für eine echte Installation.
+Reale Hardwareprüfungen je Distribution getrennt dokumentieren. Ist beispielsweise
+kein Fedora-System verfügbar, bleibt dessen Live-Prüfung ausdrücklich offen;
+ein Ubuntu-Lauf oder simulierte Fedora-Tests bestätigen keine Fedora-Hardwarefunktion.
+
 ## Kleine Module für 16 GB VRAM
 
 - Eine normale handgeschriebene Datei bleibt möglichst unter 600 Zeilen und 32.000 Zeichen.
@@ -31,6 +48,10 @@ Diese Anleitung ist der praktische Erweiterungsweg für lokale und webbasierte C
 5. Den dünnen Orchestrator nur mit Konstruktion, Signalverdrahtung und Statusmeldung ergänzen.
 6. Tastatur-/Mausverhalten, Rücksetzen, ungültige Werte und Offscreen-Konstruktion testen.
 7. Sichtbare Änderungen in Changelog und Release Notes dokumentieren; Modulregister immer aktualisieren.
+8. Jeden neuen sichtbaren Text im selben Commit unter derselben neuen Nachrichten-ID in `src/modules/localization/v1_0/de.py`, `en.py`, `es.py` und `fr.py` pflegen; bei Änderungen die vorhandene ID beibehalten. Dynamische Texte über `tr_static()` zusammensetzen und Auswahlwerte intern ausschließlich über stabile Daten-IDs auswerten.
+9. Den Offscreen-UI-Aufbau ausführen; fehlende Sprachvarianten sind ein Fehler und dürfen nicht durch eine allgemeine Ausnahme umgangen werden.
+
+Start- und regelmäßige Statuspfade dürfen keine synchronen `subprocess.run`-, `systemctl`-, `pgrep`-, Backend- oder rekursiven Medienprüfungen im GUI-Thread ausführen. Verwende einen begrenzten `QProcess`-Helfer oder starte UI-Kartenarbeit nach dem ersten Ereigniszyklus. Besitzprüfungen bleiben bis zu einem bestätigten Ergebnis fail-closed; eine Performanceoptimierung darf nie vorläufigen Schreibzugriff erlauben.
 
 ## Sensor-Komponente erweitern
 
@@ -54,7 +75,7 @@ Diese Anleitung ist der praktische Erweiterungsweg für lokale und webbasierte C
 
 ## Levita Ebene 2 konkret
 
-Aktueller Einstieg ist `src/modules/lcd_levita/v1_4/README.md`:
+Aktueller Einstieg ist `src/modules/lcd_levita/v1_7/README.md`:
 
 - `layout_model.py` besitzt Blöcke, Koordinaten, Gesamt-Offsets und Persistenz.
 - `layout_canvas.py` besitzt Drag-and-drop und fordert per Rechtsklick den eingebetteten Editor an; Eigenschaftsänderungen dürfen keine separaten Dialogfenster öffnen.
@@ -70,6 +91,7 @@ Wenn der öffentliche Vertrag erweitert wird, eine neue aktuelle Modulversion an
 - Bleiben Dateien unter dem Größenbudget oder ist die notwendige Teilung dokumentiert?
 - Sind Importgrenzen kreisfrei und Hardware-Schreibpfade unverändert sicher?
 - Sind neue Zustände, Fehlerfälle und Persistenz durch Tests abgedeckt?
+- Sind Fedora und Ubuntu getrennt geprüft, Befehle distributionsgerecht und fehlende Live-Hardwaretests ausdrücklich benannt?
 - Wurden `docs/project/MODULE_REGISTRY.md`, Status, Entscheidungen und Versionsdokumente passend aktualisiert?
 - Wurde weder eine alte Modulkopie noch eine Uhrzeit im Register hinterlassen?
 - Liegen nach einem Versionsbau die zwei neuesten vollständigen externen Sicherungen vor und bestehen beide SHA256-Prüfungen?

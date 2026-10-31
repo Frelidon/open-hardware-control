@@ -1,4 +1,312 @@
-# RGB-Studio – Open Hardware Control 3.4.16 INTERN
+# RGB-Studio – Open Hardware Control
+
+## Start, Wiederaufnahme und OpenRGB-Profilimport · nächste Version
+
+Direkt unter dem Seitenkopf steht ein großer gemeinsamer Status für gewähltes
+Startprofil, Profilautomatik, passive Wiederaufnahme und den aktuellen
+RGB-Sitzungsbesitz. Nach der ersten ausdrücklichen Bestätigung, dass OHC die
+RGB-Steuerung übernehmen darf, werden Profilautomatik und Wiederaufnahme als
+Vorgabe eingeschaltet. Das ist keine dauerhafte Hardwarefreigabe: fremdes
+OpenRGB, eine zweite OHC-Instanz und jede neue Sitzung durchlaufen weiterhin
+die bestehenden Sperren und Bestätigungen.
+
+Der Importmanager kopiert geprüfte `.orp`- beziehungsweise künftige
+OpenRGB-v6-JSON-Profile in eine private OHC-Bibliothek. Binäre `.orp`-Dateien
+enthalten undurchsichtige Controllerdatensätze; sie dürfen deshalb nur auf den
+vollständigen gespeicherten Umfang angewendet werden. Eine scheinbare
+Teilfilterung anhand geratenen Binärinhalts ist verboten. Für OHC-Designs
+bleiben die vorhandenen Haken an Geräten und Lüftergruppen uneingeschränkt
+wirksam.
+
+## Räumliche Designgalerie · 3.4.29.125
+
+Die doppelte große Live-Vorschau ist entfernt; die animierten Designkacheln
+sind jetzt die Vorschau und zeigen Kategorie, Auswahl und aktiven Zustand.
+Unter „Räumlich“ liegen sechs neue Vorlagen aus drei eigenen Algorithmen:
+3D-Fusion bewegt zwei Lichtfronten von den gegenüberliegenden Seiten zur
+Mitte, 3D-Kreuzstrom führt zwei Körper gegenläufig, und 3D-Tiefenwelle bewegt
+gestaffelte Lichtflächen durch den gespeicherten Gehäuseraum.
+
+Die Projektion nutzt ausschließlich ausdrücklich gespeicherte LED-Pfade und
+Komponentenpositionen. Bei Ringen bleibt jeder Lüfter ein eigenes Segment;
+LED 1, Lüfterreihenfolge, Drehsinn, Umkehrung und physische Einzelpixelnummer
+bleiben maßgeblich. Ohne eindeutigen Pfad bleibt die bisherige lokale Animation
+erhalten. Die neuen Designs ändern weder LED-Zahl noch Anschluss oder Besitzer.
+
+## GPU-LED-Sichtassistent 3.4.29.118
+
+Im Dialog „Grafikkarte: Steuerweg und LEDs“ startet „LED-Flüssigkeit abstimmen“
+einen Vergleich am echten GPU-ARGB-Anschluss. Dafür müssen GPU und Halterung
+bereits ausdrücklich verbunden, synchronisiert, ausgewählt und mit einem
+OHC-Lauflicht oder Komet-Effekt aktiv sein. Während des Tests werden andere
+ausgewählte OHC-LED-Zonen, geeignete native OpenRGB-Geräte und ausgewählte
+NZXT-LED-Kanäle vorübergehend dunkel. Geräte außerhalb des OHC-Besitzes
+werden nicht angefasst.
+
+GPU und Halterung erscheinen für den Vergleich vorübergehend in Blau und
+Weiß; die gespeicherten Designfarben bleiben erhalten. Jeder neue Wert läuft nach einem bestätigten Frame beider Controller
+mindestens zehn Sekunden. „Noch ruckelig“ verringert das Tempo und verbreitert
+die GPU-Lichtkanten in kleinen begrenzten Schritten; Helligkeit und Halterung
+bleiben erhalten. „Flüssig · übernehmen“ speichert über den bestehenden
+GPU-Dialog. Abbrechen setzt den Regler-Entwurf zurück. Beim Schließen wird
+das vorherige Design für alle ausgewählten Geräte neu angefordert, solange
+OHC die RGB-Engine noch besitzt. Bei Verbindungsverlust endet der Test und
+der Grund steht im Log. SDK-Bestätigung beweist keine sichtbare LED-Ausgabe;
+die Bewertung bleibt beim Nutzer.
+
+Einzelpixel- und Lüfterzonen-Sichttests zeigen den gewählten Pixel oder die
+gewählte Zone weiß und schalten andere ausgewählte OHC-LEDs vorübergehend
+schwarz. Beim Schließen des Testdialogs kehrt das gewählte Design zurück,
+sofern die RGB-Engine noch im Besitz von OHC ist.
+
+## Zonenversuch entfernt 3.4.29.117
+
+Das `.116`-Nutzerprotokoll zeigt zuerst funktionierende GPU-/Halterungs-
+Effekte mit Geräteframes. Nach Einschalten beider Zonenversuche kamen
+Zeitüberschreitungen und ein OpenRGB-Engine-Absturz. Ein vollständiger
+OHC-Neustart stellte sechs Geräte und den Geräteframe wieder her. Die beiden
+Schalter und der laufende Zonen-Schreibweg sind deshalb entfernt; gespeicherte
+Versuchswerte werden ignoriert. Die bestätigten 30 GPU- und 12 Halterungs-
+LEDs bleiben erhalten. Ob die GPU-Steifigkeit mit der LED-Zahl, dem
+OpenRGB-Gerätetakt oder der Lichtkurve zusammenhängt, benötigt einen
+getrennten Sichtvergleich. OpenRGB und OHC sollen dabei nicht gleichzeitig
+dieselben RGB-Geräte schreiben.
+
+## Sichere GPU-/Halterungs-Übertragungswahl 3.4.29.116
+
+Nach dem `.115`-Test meldete das Nutzerprotokoll Zeitüberschreitungen und
+ein unerwartetes Ende der verwalteten OpenRGB-Engine. Deshalb verwenden
+Grafikkarte und Halterung wieder standardmäßig die vorherigen vollständigen
+Geräteframes. Die `.115`-Teststellung wird ignoriert. Im GPU-Dialog können
+MSI-GPU und Airgoo-Halterung ihre Zonenpakete getrennt und ausdrücklich
+testen. Bei SDK-Fehlern oder Engine-Ende wird ein aktiver Test abgeschaltet;
+ein Engine-Absturz bleibt bis zum manuellen Neustart gesperrt. Das Log nennt
+Komponente, Schreibweg und Rückstellung. SDK-Antworten sind keine optische
+Bestätigung. Die Gehäuseanimation bleibt rein lesend.
+
+## MSI-GPU-Zonenweg und animiertes Gehäuse 3.4.29.115
+
+Der Eigentümer sieht für Grafikkarte und Halterung jeweils etwa 24,5–25
+erfolgreiche SDK-Frames pro Sekunde, aber die GPU bleibt optisch stufig.
+Diese Zahl misst nur die Übergabe an OpenRGB, nicht den tatsächlichen
+LED-Wechsel. Für die ausdrücklich auf MSI JARGB 1 gelegte GPU verwendet
+OHC jetzt testweise die dokumentierten OpenRGB-Zonenpakete (SDK 1051)
+statt des bisherigen Gesamtgerätepakets (1050). Die Option „GPU:
+Zonenpakete testen“ im GPU-Dialog lässt sich abwählen und speichern.
+Andere Zonen des MSI-Geräts werden vollständig mitgeschrieben; RAM und
+Halterung behalten ihren bisherigen Weg. Das Log meldet `zones` oder
+`device` als Schreibweg. Erst ein Sichtvergleich auf dem echten Anschluss
+zeigt, welcher Weg besser aussieht.
+
+Die Gehäusezeichnung animiert bei laufendem OHC-RGB-Effekt Grafikkarte,
+Halterung und RAM mit den ausdrücklich konfigurierten LED-Zahlen. Wo noch
+kein physischer Verlauf gespeichert ist, ist die Punktreihe nur eine
+schematische Vorschau ohne Richtungsbehauptung. Sie schreibt keine LEDs.
+
+## GPU-Lichtverlauf und Gehäusezugang 3.4.29.114
+
+Das Video des Eigentümers zeigt an der externen GPU-Leiste eine stark
+gesättigte weiße Fläche mit abrupt wirkenden Rändern, während die Halterung
+weicher ausläuft. Der GPU-Dialog hat deshalb zusätzlich „Grafikkarte ·
+Helligkeit“ für die weiße Spitze (35–100 %, Standard 65 %). Sehr schwache
+GPU-Übergangsstufen werden früher sichtbar; die Halterung behält ihren
+Verlauf. Bei laufendem OHC-Effekt verändern die Regler die echten LED-Frames
+über denselben seriellen OpenRGB-Arbeiter. Abbrechen verwirft den Entwurf,
+Speichern behält ihn. „Standard wiederherstellen“ setzt erst den Entwurf
+zurück. Eine langsame oder stufige physische Controller-Ausgabe kann OHC
+nicht aus der berechneten Vorschau ausschließen; die gemessenen SDK-Hz im
+Dialog und der optische Nachtest bleiben wichtig.
+
+Im Bereich Gehäuse öffnet „Grafikkarte: Steuerweg und LEDs“ denselben
+GPU-Dialog. „LED-Anzahl am ARGB-Anschluss ändern“ führt bei genau einem
+erkannten zugeordneten Anschluss direkt in dessen LED-Editor;
+„ARGB-Anschluss ändern“ öffnet weiterhin die gesonderte Zuordnung.
+Gehäuse-/ARGB-Editoren benennen den bearbeiteten Block. Nur tatsächlich
+gespeicherte eindeutige LED-Wege erscheinen als Start-, End- und Wegpunkte
+auf dem Block der Gehäusezeichnung. Für noch nicht konfigurierte Wege
+wird keine Richtung behauptet.
+
+## Gemeinsamer GPU-/Halterungs-Takt 3.4.29.113
+
+Der GPU-Standard für die Lichtkante ist jetzt 40 % Vorlauf und 38 % Auslauf;
+die Halterung behält 32 % / 36 %. Bereits gespeicherte Einstellungen bleiben
+erhalten. Beide Reihen nutzen denselben festen Streifenzyklus, auch wenn
+Vorlauf und Auslauf unterschiedlich sind. So verschiebt ein Regler an der GPU
+nicht mehr die Phase der Halterung. Die sichtbare Wirkung muss nach der
+Installation an den echten LED-Streifen verglichen werden.
+
+## GPU-/Halterungs-Lichtverlauf 3.4.29.112
+
+Unter „Grafikkarte → Steuerweg und LEDs“ zeigen zwei animierte Reihen die
+gespeicherte Anzahl der Grafikkarten- und Halterungs-LEDs. Vorlauf und Auslauf
+sind für beide Reihen getrennt einstellbar, das Tempo bleibt gemeinsam. Erst „Steuerweg
+speichern“ übernimmt diese Werte; „Abbrechen“ lässt die bisherige Animation.
+Die tatsächliche LED-Anzahl wird weiterhin im jeweiligen ARGB-Anschlusseditor
+mit dem Einzelpixeltest festgelegt. Die Dialogzeile „Gemessene Bildrate“ zeigt
+bestätigte SDK-Übertragungen für beide Controller. Nach einem langsamen Batch
+bewegt sich der gemeinsame Lichtkopf pro gesendetem Frame nur begrenzt weiter.
+Die Software kann die sichtbare Reaktion der Hardware nicht zurücklesen.
+
+## GPU und Halterung 3.4.29.89
+
+Unter „Grafikkarte → Steuerung und LEDs“ lässt sich „GPU und Halterung
+synchronisieren“ abschalten oder einschalten. Die Funktion ist vorbelegt,
+wirkt aber nur bei einer ausdrücklich im Gehäuse zugeordneten GPU-Halterung
+und einer eindeutig zugeordneten externen GPU-Direct-Zone. Beide Geräte müssen
+ausgewählt und konfliktfrei sein, beide Anschlusszahlen gültig eingestellt.
+Keine automatische Anschlussvermutung oder Auswahl zusätzlicher Geräte.
+
+GPU (30 LEDs) und Halterung (12 LEDs) teilen sich dann den GPU-Effekt und
+Zeitverlauf; jede Zone behält ihre echte LED-Anzahl und physische Testnummern.
+Start-/Endrichtung bleibt konfigurierbar. Ringverläufe bleiben unverändert.
+Neon-Kreisel und Lichtspuren werden an offenen Streifen zeitlich/räumlich weich
+abgetastet, langsamer bewegt und an den Enden ausgeblendet. Andere Anschlüsse
+und native GPU-Modi bleiben unverändert. Der bestehende einzelne SDK-Arbeiter
+bleibt bei nominal 25 Hz; reale USB-/Firmware-Verzögerungen sind nicht damit
+behoben oder optisch rückgelesen. ARGB-DIAG ergänzt den Strip-Bewegungsplan.
+Das Komplettpaket enthält auch die Synchronisationseinstellung.
+
+## Physischer LED-Verlauf 3.4.29.88
+
+Im Anschlusseditor neben „LEDs“ den Reiter „LED-Verlauf“ öffnen und aktivieren.
+Bei Streifen „LED 1 beginnt“ und „Letzte LED endet“ auswählen, zum Beispiel
+oben/unten oder links/rechts. Bei Lüfterringen Ringzahl, Startpunkt pro Ring
+und Drehsinn festlegen; alle Ringe müssen gleich viele LEDs haben. Die Vorschau
+berücksichtigt zusätzlich die „Lüfterreihenfolge“: LED 1 kann am oberen/linken
+oder am unteren/rechten Lüfter beginnen, unabhängig vom Drehsinn jedes Rings.
+Bestehende Verläufe bleiben oben/links zuerst. Das Komplettpaket speichert auch
+diese Auswahl; Anschlusszahl und physische Testnummerierung ändern sich nicht.
+Die Vorschau
+zeigt erste, letzte und aktuell getestete LED. Der Sichttest bleibt immer auf
+der echten physischen 1-basierten LED-Nummer, unabhängig von der Effektrichtung.
+
+„Laufrichtung im Gehäuse“ gilt gemeinsam für räumlich konfigurierte Anschlüsse:
+vertikal, horizontal oder vier Diagonalen. Vorhandene eindeutig zugeordnete
+Gehäuseblöcke liefern Position und Lüfterreihe. Mehrdeutige gemeinsame Header
+verwenden lokale Blockkoordinaten, keine erfundene getrennte Verkabelung.
+„Wie bisher (pro Anschluss)“ und Anschlüsse ohne Verlauf behalten die bisherigen
+Frames. Ungültig gewordene Ringzahlen fallen lokal zurück. Startpunkte bleiben
+von Designs unabhängig gespeichert; keine zusätzliche Transportverbindung und
+keine garantierte optische FPS. Das [Komplettpaket](PROFILES.md) sichert alles.
+
+## Bestätigte persönliche Verkabelung 3.4.29.87
+
+RGB Studio 1.10 übernimmt im persönlichen Thermalright-Profil einmalig:
+Front/SYS_FAN4 A1 2×8 LEDs, Boden/SYS_FAN6 B7 3×8, Heck/SYS_FAN1 B8 1×8,
+Radiator A8 3×10 und GPU-Halterung B6 12 LEDs. B6 ersetzt die ältere
+24-LED-Referenz; spätere manuelle Änderungen werden nicht mehr regelmäßig
+zurückgesetzt. Nur eindeutig gemeldete AG-DRGB16-Anschlüsse werden gebunden;
+vollständige gespeicherte Zonen bleiben unabhängig von Designs geschützt.
+Positionen, PWM-Zuordnung und nicht genannte Anschlüsse bleiben erhalten.
+
+Im Lüfter-Blockeditor speichert „Modell speichern“ eigene Hersteller, Modelle,
+Farbe und LEDs je Lüfter zur Wiederverwendung auch im Zoneneditor. Thermalright
+mit zehn LEDs ist die bestätigte persönliche Radiatorreferenz, keine universelle
+Hardwareerkennung. Speichern oder Übernahme aktiviert keine Hardwaresteuerung.
+Diese Verbesserungen gehen in die lokale .87-Paketierung ein; keine Installation
+oder elektrische/optische Prüfung wird dadurch automatisch durchgeführt.
+
+## Gehäuse, Anschlussdiagnose und weiche Effekte 3.4.29.83
+
+Die neue Seite „Gehäuse“ steht nach „Übersicht“. Komponenten, RGB-Anschlüsse,
+manuelle LED-Anzahl und vorhandene Gehäuselüfter-PWM-Zuordnung werden einmal
+eingestellt und in RGB/Kühlung gemeinsam gezeigt. Blockeditoren enthalten
+LED-/PWM-Knöpfe; die Anschluss-/Gesamtspalten öffnen per Doppelklick den
+Anschlusseditor. Die Gesamtzahl ist eine Deklaration, keine Messung.
+Der Synchronisierungsschalter koppelt Positionen; deaktiviert speichert
+Kühlung eigene Positionen, niemals eine zweite widersprüchliche Verkabelung.
+Zuordnen aktiviert/kalibriert/regelt keinen Kanal. CPU-/Pumpenkanäle bleiben
+außerhalb der Gehäuselüfter-Zuordnung.
+
+Jede gemeldete Direct-ARGB-Zone besitzt denselben begrenzten Einzel-LED-Test,
+auch JARGB 2/3 und Controllerports. Andere gespeicherte Anschlüsse bleiben
+unverändert. Explizit manuelle Werte überleben auch Designprofilwechsel.
+Der Besitzer bestätigte am 13.09.26 die persönliche Sapphire RX 9070 XT
+NITRO+ mit 30 einzeln adressierbaren LEDs an MSI JARGB 1: Index 1 links,
+30 rechts, 29 eine Position zurück. Kein pauschaler GPU-Standardwert.
+
+Alle eingerichteten Zonen verwenden eigene Koordinaten. Pixel-Flächenabtastung
+bleibt begrenzt auf vier Samples bis 128 LEDs, zwei bis 512, danach eines.
+Neonkreisel/Komet besitzen weiche führende Kanten und Mehrpixel-Spuren; sehr
+kurze Streifen bewegen sich langsamer. Wellen/Regenbogen werden flächenweise
+gemittelt, Wechselmuster/Funkeln/Pulsfarben weich überblendet. Statisch/Atmen
+bleiben kontinuierlich, Blitz behält absichtliche Blitze. Kein Effekt erhöht
+den vorhandenen 25-Hz-Transport-Sollwert oder garantiert physische FPS.
+
+Die volle „Übertragung“-Karte zeigt abgeschlossene SDK-Aufträge, Batchdauer
+und zusammengefasste Frames. `ARGB-DIAG` protokolliert bei Einrichtung,
+Speichern und Test: Serverpuffer versus deklarierte Anzahl, Grenzen,
+Zonenoffset, 1-basierten Pixel und SDK-Abschluss. Effektstart nennt Abtastplan
+und Sollrate; kein Log pro Frame. SDK-Erfolg ist kein optischer Rücklesebeweis.
+
+PC-Gehäuseprofile 1.1 zeichnet 30 detailliertere originale Vektoransichten.
+Retro/North wurden anhand offizieller Produktansichten überprüft; andere
+Modellansichten bleiben eigene schematische Illustrationen, keine maßgenaue
+Hersteller-CAD-Nachzeichnung. Referenzen: [Thermaltake Retro](https://thermaltakeusa.com/products/retro-360-tg-mid-tower-chassis-ca-11q-00mqwn-00),
+[Fractal North](https://www.fractal-design.com/products/cases/north-series/north/north-chalk-white/).
+`tools/render_case_workspace.py /tmp/ohc-case-render` rendert alle Vorlagen
+hardwarefrei. Herstellerbilder werden nicht mitgeliefert.
+
+## GPU-RGB ohne ARGB-Kabel · Stand 19.09.26
+
+Der OpenRGB-SDK-Pfad in OHC ist herstellerneutral: Jede von OpenRGB als GPU
+gemeldete Grafikkarte erscheint nun zusätzlich im GPU-Reiter und kann direkt
+zur vorhandenen RGB-Studio-Einrichtung geöffnet werden. OpenRGB unterstützt
+beispielsweise MSI-GPU-Controller über I²C und ASUS-Aura-/ENE-GPU-Controller
+über SMBus. Das braucht kein 5-V-ARGB-Kabel zum Mainboard. Entscheidend sind
+die konkrete PCI-/Subgeräte-ID, Linux-Zugriff und die von OpenRGB tatsächlich
+gemeldeten Modi/Zonen. Eine Herstellerreihe allein ist keine Zusage für jede
+Karte. OHC führt keine eigenen unbekannten I²C-Befehle aus.
+
+Im GPU-Reiter markiert `Direct` einen vom Controller gemeldeten direkten
+Farbweg. Andernfalls bleiben die von OpenRGB gemeldeten nativen Hardwaremodi
+verfügbar. Nur eine ausdrücklich an einen Mainboard-ARGB-Anschluss verkabelte
+Karte verwendet die manuelle LED-Zahl und den Pixeltest dieses Anschlusses;
+ein einzelner logischer OpenRGB-LED-Eintrag beweist keine physische Strip-Länge.
+LACT übernimmt GPU-Leistung und optional GPU-Lüfter, OpenRGB die Beleuchtung;
+die beiden Zuständigkeiten sind getrennt. OpenRGB 1.0 meldet SDK 6, während
+OHC für die Kompatibilität weiter Protokoll 5 aushandelt; der lokale
+Protokoll-6-Servertest ist Teil der Releaseprüfung.
+
+Quellen: [OpenRGB GPU-Controller-Dokumentation](https://gitlab.com/OpenRGBDevelopers/OpenRGB-Wiki/-/blob/becf03f35c86c2b2cf260eb86bcb1381c1a521f3/Supported%20Devices/Supported%20Devices.md), [ASUS-Detektor](https://github.com/CalcProgrammer1/OpenRGB/blob/master/Controllers/ENESMBusController/ENESMBusControllerDetect.cpp), [SDK-Spezifikation](https://github.com/CalcProgrammer1/OpenRGB/blob/master/Documentation/OpenRGBSDK.md).
+
+## GPU-ARGB-Anschluss 3.4.29.82
+
+„Grafikkarte: Steuerweg und LEDs“ wählt den realen Direct-Controller und eine
+gemeldete Zone, beim bestätigten persönlichen Aufbau MSI → JARGB 1. Der
+Anschlusseditor speichert eine Grafikkarte als ein Gerät mit manueller LED-Zahl.
+Die physische Länge kann OHC nicht elektrisch erkennen; 80/90 sind Testwerte.
+„Eine LED testen“ überträgt nur den gewählten Index ab 1 und schaltet andere
+Zonen dieses Controllers vorübergehend schwarz. Danach das Design anwenden.
+Der GPU-Effekt verwendet seine eigene Strip-Länge statt der Summe aller
+Controllerzonen; andere Zonen behalten unabhängige Längen und Controller-Effekt.
+Aktuelle GPU-Verkabelung und LED-Zahl haben Vorrang vor alten Designprofilen.
+Nur die persönliche Ansicht erhält die vom Besitzer bestätigte JARGB-1-Migration.
+Unbekannte oder mehrdeutige Geräte werden nicht automatisch zugeordnet.
+
+## Kompakte Bibliothek und PC-Gehäuseprofile 3.4.29.62
+
+RGB-Studio 1.2 zeigt beim Öffnen vier Vorschläge und ergänzt Nebula Pulse,
+Liquid Metal, Ember Flow und Arctic Halo. Ein Stern speichert Favoriten; bis zu
+vier erscheinen in der Favoritenansicht. „Alle Designs“ öffnet die vollständige
+kategorisierte Bibliothek. Geräte/Gruppen und die tiefen Effektregler starten
+eingeklappt, bleiben aber vollständig in derselben Seite erreichbar.
+
+PC-Gehäuseprofile 1.0 enthält 30 originale OHC-Schemazeichnungen. Ein
+Doppelklick auf einen Komponentenblock öffnet das zugeordnete RGB-Gerät; bei
+Direct-Geräten folgt unmittelbar die Zonen-/LED-Einrichtung. Meldet ein Gerät
+wie die Referenz-Sapphire nur einen Hardwaremodus und eine logische LED, zeigt
+OHC diese Backend-Grenze und öffnet die GPU-Steuerweg-Einrichtung, ohne LEDs zu erfinden. Das
+Thermaltake Retro 360 TG ist mit den offiziellen Herstellerdaten die exakte
+Standardvorlage. Der Programmknopf öffnet ausschließlich die Herstellerquelle
+des gewählten Modells; der persönliche Amazon-Kauflink ist nicht Teil der UI.
+Die zweispaltige Ansicht unterscheidet eigene Retro-, Lamellen-, Panorama-,
+Zweikammer-, Kompakt- und klassische Silhouetten, ohne Herstellerbilder zu
+übernehmen. AIO-/Luftkühlung ist umschaltbar. Ein markierter Lüfterblock kann
+seinen Luftstrom umkehren oder in einzeln verschiebbare Lüfter geteilt werden.
+Eigene PC-Profile speichern diese Ansicht lokal; das Anwenden schreibt keine
+Hardwarefarbe. Startpositionen bleiben anpassbare Montagevorschläge und müssen
+mit dem realen Aufbau geprüft werden.
 
 ## Tempoübernahme und automatische Inventarnachprüfung 3.4.16
 
@@ -28,7 +336,11 @@ Der frühere 100-ms-Round-Robin startete für jedes Direct-Gerät und jeden Anim
 
 Die Oberfläche zeigt die tatsächlich abgeschlossene SDK-Rate je Gerät, letzte erfolgreiche Übertragung, Batch-Dauer und zusammengefasste Frames. Das ist weiterhin kein elektrischer Nachweis der sichtbaren LEDs. Ein sechsstufiger Assistent verbindet Besitzkonfliktprüfung, Umbenennen, Einzeltest, Zonen-/LED-Kalibrierung, Thermaltake-Aufbau und Sapphire-External-Control. Der Zonendialog kann jede Zone einzeln in der Testfarbe einschalten und die übrigen Zonen desselben Controllers schwarz setzen.
 
-Bei Nicht-Direct-Geräten bevorzugt eine OHC-Animation automatisch den tatsächlich gemeldeten Modus `External Control`; auf dem Referenzsystem betrifft das die Sapphire RX 9070 XT. Statische Einzelaktionen und der GPU-/Hardwaremodus bleiben ausdrücklich bedienbar und seriell.
+Seit 3.4.29.82 nutzt eine OHC-Animation bei Nicht-Direct-Geräten passende gemeldete native Animationen statt automatisch `External Control`. Auf der Sapphire RX 9070 XT werden beispielsweise Rainbow Wave, Runway, Serial und Spectrum Cycle genutzt. Statische Einzelaktionen und der GPU-/Hardwaremodus bleiben ausdrücklich bedienbar und seriell.
+
+„Grafikkarte: Steuerweg und LEDs“ ist auch per GPU-Komponenten-Doppelklick erreichbar. Native Effekte sind der Standard für bestehende persönliche Profile. Nur bei bestätigter 5-V-ARGB-Verkabelung wird ein externer Direct-Controller ausdrücklich zugeordnet; dort öffnet „LED-Anzahl am ARGB-Anschluss ändern“ den vorhandenen Zonen-Editor. Wähle darin den tatsächlich angeschlossenen Kanal und seine reale LED-Zahl innerhalb der Backend-Grenzen. OHC speichert Steuerweg und Zonen in Einstellungen und RGB-Profilen; ein neues/aktualisiertes Profil übernimmt diese Einrichtung. Controller-Designs betreffen auch dessen übrige Zonen. Ohne ausgewählte Quelle verwendet OHC native GPU-Effekte.
+
+Die interne Zone bleibt eine logische LED: [OpenRGBs Sapphire-V3-Implementierung](https://gitlab.com/CalcProgrammer1/OpenRGB/-/raw/master/Controllers/SapphireGPUController/SapphireNitroGlowV3Controller/RGBController_SapphireNitroGlowV3.cpp) begrenzt sie auf eins. Das ist nicht die physische Strip-Länge. [Sapphire](https://www.sapphiretech.com/en/consumer/nitro-radeon-rx-9070-xt-16g-gddr6) beschreibt die externe Synchronisierung über das mitgelieferte 3-Pin-5-V-ARGB-Kabel. Ohne diesen Weg kann eine erfundene GPU-LED-Zahl keine OHC-Einzelpixel-Effekte freischalten.
 
 ## Vollständige Geräteframes und Interstellar-V2-Profil 3.4.10
 
@@ -59,6 +371,8 @@ Bei gemeinsamer Auswahl aller drei NZXT-Kanäle nutzt OHC den im realen Hardware
 ## SDK-, NZXT- und Prozesskorrekturen 3.4.7
 
 OpenRGB `1.0~rc2` auf Fedora 44 antwortet auf die SDK-Versionsabfrage mit Revision 5. OHC fordert jetzt Revision 5 an, bleibt mit Revision 4 kompatibel und lehnt nur Server ab, die älter als die für den begrenzten Farbpfad benötigte Revision 4 sind. Der Server bleibt fest auf `127.0.0.1:6742`; die erlaubten Pakete und alle Größenlimits ändern sich nicht.
+
+Die offizielle OpenRGB-Version `1.0-rc3.1` vom 23.08.2026 veröffentlicht weiterhin SDK-Protokoll 5. OHCs begrenzter Protokoll-4/5-Parser und der Loopback-Zwang bleiben deshalb kompatibel. Da auf dem Referenzsystem weiterhin das Fedora-Paket `1.0~rc2` läuft, ist dies eine Quell-/Protokollprüfung und keine neue reale Gerätebestätigung.
 
 Der im Test für „Glut-Komet“ erzeugte NZXT-Modus `marquee-4` existiert beim verwendeten NZXT-2023-Treiber nicht. OHC entfernt diesen sowie den nicht bestätigten bewegten Alternating-Alias aus der Auswahlliste. Komet verwendet `pulse`, Kreisel `rainbow-flow`; seit 3.4.15 verwendet Abwechselnd den Zweifarben-Fallback `fading`.
 

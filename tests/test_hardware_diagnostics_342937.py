@@ -5,6 +5,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from hardware_diagnostics import (
+    ClockReading,
+    advance_gpu_clock_recovery_streak,
     normalize_linux_clock,
     read_primary_amd_gpu_clock,
     validate_metric_snapshot,
@@ -37,8 +39,36 @@ def test_normal_clock_units_and_implausible_metrics() -> None:
     assert issues[0].metric == "gpuClock"
 
 
+def test_power_gated_gpu_clock_is_not_reported_as_broken() -> None:
+    assert validate_metric_snapshot({"gpuClock": 0.0, "gpuLoad": 0.0}) == ()
+    issues = validate_metric_snapshot({"gpuClock": -1.0})
+    assert len(issues) == 1
+    assert issues[0].metric == "gpuClock"
+
+
 def test_low_hz_idle_range_is_guarded_too(tmp_path: Path) -> None:
     _amd_card(tmp_path, "card0", vram=16 * 1024**3, clock=800_000)
     reading = read_primary_amd_gpu_clock(tmp_path)
     assert reading.mhz == 0.8
     assert "TRCC-9.9.11-Grenzfall" in reading.issue
+
+
+def test_missing_clock_is_not_a_plausible_recovery_sample(tmp_path: Path) -> None:
+    _amd_card(tmp_path, "card0", vram=16 * 1024**3, clock=1_000_000)
+    source = tmp_path / "card0" / "device" / "hwmon" / "hwmon0" / "freq1_input"
+    source.unlink()
+    reading = read_primary_amd_gpu_clock(tmp_path)
+    assert reading.mhz is None
+    assert "keine lesbare" in reading.issue
+
+
+def test_guard_restores_only_after_three_consecutive_plausible_samples() -> None:
+    plausible = ClockReading("freq1_input", 2_100_000_000, 2100.0, "")
+    missing = ClockReading("freq1_input", None, None, "nicht lesbar")
+    streak, restored = advance_gpu_clock_recovery_streak(0, plausible)
+    assert (streak, restored) == (1, False)
+    streak, restored = advance_gpu_clock_recovery_streak(streak, plausible)
+    assert (streak, restored) == (2, False)
+    assert advance_gpu_clock_recovery_streak(streak, missing) == (0, False)
+    streak, restored = advance_gpu_clock_recovery_streak(2, plausible)
+    assert (streak, restored) == (3, True)

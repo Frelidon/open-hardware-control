@@ -8,7 +8,7 @@ from collections.abc import Iterable
 
 
 SECTION_DEFAULTS: dict[str, tuple[str, ...]] = {
-    "rgb": ("engine", "devices_effects", "pc_layout", "groups"),
+    "rgb": ("pc_layout", "devices_effects", "groups"),
     "cooling": ("mode", "manual", "curves", "cpu_profile", "mainboard", "safety"),
     "lcd": (
         "preview",
@@ -48,6 +48,11 @@ def sanitize_section_order(scope: str, stored: object) -> list[str]:
         candidates = stored
     else:
         candidates = ()
+    if str(scope) == "rgb" and tuple(str(value).strip() for value in candidates) in {
+        ("engine", "devices_effects", "pc_layout", "groups"),
+        ("devices_effects", "pc_layout", "groups", "engine"),
+    }:
+        return list(default)
     result: list[str] = []
     for value in candidates:
         key = str(value).strip()
@@ -87,3 +92,18 @@ def dashboard_card_hardware_available(
     if str(key) == "water_temperature":
         return bool(kraken_connected) and liquid_temperature is not None
     return True
+
+
+def active_page_visible(owner: object, tabs: object, target: object) -> bool:
+    """Return whether a page's high-frequency presentation work is visible."""
+    return bool(owner.isVisible() and not owner.isMinimized() and tabs.currentWidget() is target)
+
+
+def sync_visible_page_timer(owner: object, timer: object, tabs: object, target: object, update) -> None:
+    """Start one presentation timer only while its owning page is visible."""
+    if active_page_visible(owner, tabs, target):
+        if not timer.isActive():
+            timer.start()
+        update()
+    else:
+        timer.stop()

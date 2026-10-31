@@ -11,6 +11,7 @@ real memory modules into one.
 from __future__ import annotations
 
 import hashlib
+import math
 import os
 import re
 import unicodedata
@@ -18,6 +19,7 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from openrgb_integration import MAX_OPENRGB_LEDS, OpenRGBDevice
+from modules.gpu_profiles.v1_0.visual_catalog import normalize_gpu_visual_id
 
 try:
     import fcntl
@@ -48,6 +50,10 @@ class RGBFanModel:
 
 
 RGB_FAN_MODELS = (
+    # Owner-confirmed addressable count for the personal ASIN reference;
+    # not a claim that every Interstellar variant has this physical LED count.
+    RGBFanModel("frelidon-interstellar-v2-8", "TZMRIT Interstellar-V2 · B0CN39T7QN", 8, "normal"),
+    RGBFanModel("frelidon-levita-radiator-10", "Thermalright Levita Vision 360 · Radiator", 10, "normal"),
     RGBFanModel(
         "tzmrit-interstellar-v2-normal",
         "TZMRIT / Jungle Leopard Interstellar-V2 · Normal",
@@ -90,7 +96,7 @@ def flori_component_zone_defaults(zone_names: Iterable[str]) -> dict[str, dict[s
     for raw_name in zone_names:
         name = str(raw_name)
         if re.sub(r"\s+", "", name).casefold() == "channelb6":
-            defaults[name] = {"units": 1, "leds_per_unit": 24}
+            defaults[name] = {"units": 1, "leds_per_unit": 12}
     return defaults
 
 
@@ -102,7 +108,7 @@ def migrate_flori_component_zones(
 
     changed = False
     for name, expected in flori_component_zone_defaults(zone_names).items():
-        if name in configuration and configuration.get(name) != expected:
+        if configuration.get(name) in ({"units": 1, "leds_per_unit": 24}, {"units": 1, "leds_per_unit": 30}):
             configuration[name] = dict(expected)
             changed = True
     return changed
@@ -339,6 +345,36 @@ class RGBLayoutSlot:
     y: float = 0.5
     airflow: str = "component"
     size_mm: int = 120
+    scale: float = 1.0
+    visual_kind: str = "auto"
+    gpu_visual: str = "auto"
+
+
+RGB_LAYOUT_VISUAL_KINDS = {"auto", "fans", "strip", "ring", "component"}
+
+
+def normalize_layout_visual_kind(value: object) -> str:
+    clean = str(value or "auto").casefold()
+    return clean if clean in RGB_LAYOUT_VISUAL_KINDS else "auto"
+
+
+def layout_visual_kind(slot: RGBLayoutSlot) -> str:
+    """Choose a drawing shape, without changing electrical LED topology."""
+    selected = normalize_layout_visual_kind(slot.visual_kind)
+    if selected != "auto":
+        return selected
+    if slot.position in {"top", "front", "side", "bottom", "rear"}:
+        return "fans"
+    return "strip" if slot.position == "gpu-support" else "component"
+
+
+def normalize_layout_scale(value: object) -> float:
+    """Visual-only scale; old profiles retain their original default."""
+    try:
+        number = float(value) if not isinstance(value, bool) else 1.0
+        return max(.25, min(2.0, number)) if math.isfinite(number) else 1.0
+    except (TypeError, ValueError, OverflowError):
+        return 1.0
 
 
 def normalize_device_aliases(raw: object) -> dict[str, str]:
@@ -451,7 +487,8 @@ def normalize_layout_slots(raw: object, groups: Iterable[RGBGroup]) -> list[RGBL
         result.append(
             RGBLayoutSlot(
                 position, name, count, group_id, connection, device_ids,
-                slot_id, x, y, airflow, size_mm,
+                slot_id, x, y, airflow, size_mm, normalize_layout_scale(item.get("scale", 1)),
+                normalize_layout_visual_kind(item.get("visual_kind")), normalize_gpu_visual_id(item.get("gpu_visual")),
             )
         )
     return result
@@ -477,7 +514,8 @@ def auto_arrange_layout_slots(slots: Iterable[RGBLayoutSlot]) -> list[RGBLayoutS
             RGBLayoutSlot(
                 slot.position, slot.name, slot.count, slot.group_id,
                 slot.connection, slot.device_ids, slot.slot_id,
-                x, y, slot.airflow, slot.size_mm,
+                x, y, slot.airflow, slot.size_mm, slot.scale,
+                slot.visual_kind, slot.gpu_visual,
             )
         )
     return arranged
@@ -536,7 +574,7 @@ def flori_rgb_layout_profile(aio_kind: object = "nzxt") -> tuple[list[RGBGroup],
         if thermalright else "Kraken 360 · 3× 120 mm"
     )
     radiator_connection = (
-        "Thermalright Levita Vision 360 · Radiator oben"
+        "RGB-Hub A8 · Radiator oben · 3× 10 LEDs"
         if thermalright else "NZXT RGB led1–led3 · Radiator oben"
     )
     radiator_device_ids = () if thermalright else ("nzxt:led2", "nzxt:led3", "nzxt:led1")
@@ -570,9 +608,9 @@ def flori_rgb_layout_profile(aio_kind: object = "nzxt") -> tuple[list[RGBGroup],
         RGBLayoutSlot("front", "Front · 2× 120 mm normal", 2, "front", "RGB-Hub A1 · PWM SYS-FAN4", (), "fans-front", 0.87, 0.40, "intake", 120),
         RGBLayoutSlot("side", "Rückwand/Seite · 3× 120 mm Reverse", 3, "seite-intake", "PWM SYS-FAN2 · RGB-Anschluss prüfen", (), "fans-side", 0.69, 0.40, "intake", 120),
         RGBLayoutSlot("bottom", "Netzteilabdeckung vorne · 3× 120 mm Reverse", 3, "boden-intake", "RGB-Hub B7 · PWM SYS-FAN6", (), "fans-psu-shroud", 0.57, 0.84, "intake", 120),
-        RGBLayoutSlot("rear", "Heck · 1× 120 mm Abluft", 1, "heck", "RGB-Hub A2 · PWM SYS-FAN1", (), "fan-rear", 0.13, 0.31, "exhaust", 120),
-        RGBLayoutSlot("gpu", "Sapphire RX 9070 XT", 1, "grafikkarte", "Grafikkartenbeleuchtung", (), "gpu", 0.47, 0.59, "component", 0),
-        RGBLayoutSlot("gpu-support", "Jungle Leopard GPU-Halterung · 24 LEDs", 1, "gpu-halterung", "RGB-Hub B6 · 1× 24 LEDs", (), "gpu-support", 0.48, 0.70, "component", 0),
+        RGBLayoutSlot("rear", "Heck · 1× 120 mm Abluft", 1, "heck", "RGB-Hub B8 · PWM SYS-FAN1", (), "fan-rear", 0.13, 0.31, "exhaust", 120),
+        RGBLayoutSlot("gpu", "Sapphire RX 9070 XT", 1, "grafikkarte", "Grafikkartenbeleuchtung", (), "gpu", 0.47, 0.59, "component", 0, 1.0, "auto", "sapphire-nitro-rx9000"),
+        RGBLayoutSlot("gpu-support", "Jungle Leopard GPU-Halterung · 12 LEDs", 1, "gpu-halterung", "RGB-Hub B6 · 1× 12 LEDs", (), "gpu-support", 0.48, 0.70, "component", 0),
         RGBLayoutSlot("ram", "Arbeitsspeicher · 2 Riegel", 2, "arbeitsspeicher", "2× 16 GB · DDR5-6000", (), "ram", 0.56, 0.32, "component", 0),
         RGBLayoutSlot("pump", pump_name, 1, "pumpenkopf", pump_connection, (), "pump", 0.38, 0.36, "component", 0),
     ]

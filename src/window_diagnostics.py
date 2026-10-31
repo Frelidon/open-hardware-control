@@ -21,6 +21,7 @@ from privacy_logging import append_startup_event, redact_private_text
 
 _ACTIVE_DIAGNOSTICS: "WindowProcessDiagnostics | None" = None
 _AUDIT_HOOK_INSTALLED = False
+PROCESS_REPEAT_WINDOW_SECONDS = 5 * 60
 
 
 def _enum_name(value: object) -> str:
@@ -154,6 +155,11 @@ def native_window_summary(window: QWindow, action: str) -> str:
     title = re.sub(
         r"\s+", " ", redact_private_text(window.title().strip() or "<ohne Titel>"),
     )
+    return (
+        f"NATIVES FENSTER {action} · Klasse={window.__class__.__name__} · Titel={title} · "
+        f"Typ={_enum_name(window.type())} · Geometrie={geometry.x()},{geometry.y()} "
+        f"{geometry.width()}x{geometry.height()} · sichtbar={'ja' if window.isVisible() else 'nein'}"
+    )
 
 
 def is_expected_qt_auxiliary_widget(widget: QWidget) -> bool:
@@ -170,11 +176,6 @@ def is_expected_qt_auxiliary_widget(widget: QWidget) -> bool:
 def is_expected_qt_auxiliary_window(window: QWindow) -> bool:
     """Filter native tooltip surfaces that mirror an ignored QWidget."""
     return window.type() == Qt.WindowType.ToolTip
-    return (
-        f"NATIVES FENSTER {action} · Klasse={window.__class__.__name__} · Titel={title} · "
-        f"Typ={_enum_name(window.type())} · Geometrie={geometry.x()},{geometry.y()} "
-        f"{geometry.width()}x{geometry.height()} · sichtbar={'ja' if window.isVisible() else 'nein'}"
-    )
 
 
 class WindowProcessDiagnostics(QObject):
@@ -242,8 +243,17 @@ class WindowProcessDiagnostics(QObject):
         self._last_process_context = message.split(" · Anzahl=", 1)[0]
         self._last_process_at = now
         signature = message
-        previous_at, repeats = self._recent_processes.get(signature, (0.0, 0))
-        if now - previous_at < 10.0:
+        previous = self._recent_processes.get(signature)
+        # The sensor/runtime helpers are intentionally long-lived or restart in
+        # short, bounded sequences.  Repeating their identical start signature
+        # every ten seconds drowned real window findings in hundreds of lines.
+        # Keep the first occurrence and a five-minute aggregate instead.
+        if previous is None:
+            self._record(message)
+            self._recent_processes[signature] = (now, 0)
+            return
+        previous_at, repeats = previous
+        if now - previous_at < PROCESS_REPEAT_WINDOW_SECONDS:
             self._recent_processes[signature] = (previous_at, repeats + 1)
             return
         if repeats:
@@ -281,13 +291,54 @@ class WindowProcessDiagnostics(QObject):
 
         process.stateChanged.connect(state_changed)
 
+        last_pid = [0]
+
+        def started(item: QProcess = process) -> None:
+            try:
+                from modules.application_shutdown.v1_1.journal import record
+                from modules.application_shutdown.v1_1.watcher import identity
+                pid = int(item.processId())
+                last_pid[0] = pid
+                current = identity(pid)
+                if pid > 0 and current is not None:
+                    record("owned-process-start", child_pid=pid, starttime=current[0],
+                           name=(item.objectName() or Path(item.program()).name)[:80])
+            except (OSError, RuntimeError, ValueError):
+                pass
+
+        def finished(*_args: object, item: QProcess = process) -> None:
+            try:
+                from modules.application_shutdown.v1_1.journal import record
+                record("owned-process-finished", child_pid=last_pid[0])
+            except (OSError, RuntimeError, ValueError):
+                pass
+
+        process.started.connect(started)
+        process.finished.connect(finished)
+
     def scan_existing_processes(self) -> None:
         for process in self._app.findChildren(QProcess):
             self.register_qprocess(process)
 
     def snapshot_top_level_windows(self, action: str) -> None:
-        for widget in self._app.topLevelWidgets():
+        widgets = tuple(self._app.topLevelWidgets())
+        recorded = 0
+        skipped_auxiliary = 0
+        skipped_hidden = 0
+        for widget in widgets:
+            if is_expected_qt_auxiliary_widget(widget):
+                skipped_auxiliary += 1
+                continue
+            if not widget.isVisible() and not self._is_suspicious_empty_startup_frame(widget):
+                skipped_hidden += 1
+                continue
             self._record_window(widget, action)
+            recorded += 1
+        self._record(
+            f"FENSTERSNAPSHOT {action} · relevant={recorded} · "
+            f"Qt-Hilfsfenster übersprungen={skipped_auxiliary} · "
+            f"weitere verborgene Kindfenster übersprungen={skipped_hidden}"
+        )
 
     def _timing_context(self, widget: QWidget) -> str:
         now = time.monotonic()

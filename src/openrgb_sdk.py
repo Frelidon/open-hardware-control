@@ -4,16 +4,16 @@
 
 The separately installed OpenRGB process continues to own discovery and all
 controller-specific hardware protocols. This helper implements only the
-published SDK 4/5 packet formats needed to inspect one controller and write a
-bounded color frame. Direct colors are always sent as one complete device
-frame. During the first Direct-mode initialization a complete zone map is also
-sent once as a compatibility fallback for drivers that only implement the
-zone update callback. This avoids the OpenRGB CLI ``ApplyOptions`` crash path
-and lets OHC verify the server-side color state before reporting success.
+published SDK 4/5/6 packet formats needed to inspect one controller and write a
+bounded color frame. Direct initialization sends a complete device frame and
+one complete zone map as a compatibility fallback. Subsequent frames normally
+use the device packet; the explicitly routed GPU controller can instead use
+validated zone packets. This avoids the OpenRGB CLI ``ApplyOptions`` crash
+path and lets OHC verify the server-side initial color state.
 
 The optional JSON-lines worker keeps one SDK connection open while an OHC
-animation is running.  It prepares every selected controller once and then
-sends one complete frame for all Direct devices per request.  No hardware
+animation is running. It prepares every selected controller once and then
+sends one complete frame per Direct device in each request. No hardware
 driver is implemented here; OpenRGB remains the controller owner and the
 worker remains restricted to the configured loopback endpoint.
 """
@@ -24,19 +24,22 @@ import argparse
 import ipaddress
 import json
 import socket
+import select
 import struct
 import sys
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Iterable, TextIO
+
+from modules.rgb_studio.v1_15 import sdk_v6
 
 
 SDK_MAGIC = b"ORGB"
-# OHC deliberately negotiates no newer than revision 5. Protocol 6 changes
-# device IDs from list indexes to stable IDs and is not needed for Fedora's
-# OpenRGB 1.0-rc2 backend.
+# Default revision 5 preserves the existing Fedora wire contract. Ubuntu's
+# client explicitly opts into the tested revision-6 UUID-aware implementation.
 SDK_MIN_PROTOCOL_VERSION = 4
 SDK_PROTOCOL_VERSION = 5
+SDK_MAX_PROTOCOL_VERSION = 6
 SDK_HEADER = struct.Struct("<4sIII")
 PACKET_REQUEST_CONTROLLER_COUNT = 0
 PACKET_REQUEST_CONTROLLER_DATA = 1
@@ -61,6 +64,10 @@ class OpenRGBSDKError(RuntimeError):
     """A validated local SDK transaction could not be completed."""
 
 
+class OpenRGBInventoryChanged(OpenRGBSDKError):
+    """Stop a session whose cached CLI-index-to-wire-ID mapping became stale."""
+
+
 @dataclass(frozen=True)
 class SDKPacket:
     device_id: int
@@ -68,7 +75,7 @@ class SDKPacket:
     payload: bytes
 
     def pack(self) -> bytes:
-        if not 0 <= int(self.device_id) <= MAX_DEVICE_ID:
+        if not 0 <= int(self.device_id) <= 0xFFFFFFFF:
             raise ValueError("Ungültige OpenRGB-Gerätenummer.")
         if not 0 <= len(self.payload) <= MAX_PACKET_SIZE:
             raise ValueError("Ungültige OpenRGB-SDK-Paketgröße.")
@@ -88,6 +95,9 @@ class SDKZone:
     leds_max: int
     led_count: int
     flags: int = 0
+    modes: tuple[str, ...] = ()
+    active_mode: int = -1
+    display_name: str = ""
 
     @property
     def effective_led_count(self) -> int:
@@ -108,6 +118,8 @@ class SDKController:
     zones: tuple[SDKZone, ...]
     led_count: int
     colors: tuple[str, ...]
+    device_id: int | None = None
+    display_name: str = ""
 
     @property
     def active_mode_name(self) -> str:
@@ -117,7 +129,17 @@ class SDKController:
 
     @property
     def direct_active(self) -> bool:
-        return self.active_mode_name.casefold() in {"direct", "custom"}
+        if self.active_mode_name.casefold() not in {"direct", "custom"}:
+            return False
+        # Revision 6 permits a zone mode to override the entire-device mode.
+        # Never claim Direct readiness while a populated zone runs another
+        # mode; SetCustomMode/readback must first prove the inherited state.
+        return all(
+            zone.led_count == 0 or zone.active_mode == -1
+            or (0 <= zone.active_mode < len(zone.modes)
+                and zone.modes[zone.active_mode].casefold() in {"direct", "custom"})
+            for zone in self.zones
+        )
 
     @property
     def supports_direct(self) -> bool:
@@ -141,6 +163,7 @@ class PreparedDevice:
     zone_sizes: tuple[int, ...]
     name: str
     write_path: str
+    device_id: int | None = None
 
 
 class PayloadReader:
@@ -233,10 +256,15 @@ def remap_colors(colors: Iterable[str], expected_count: int, actual_count: int) 
     return tuple(source[min(len(source) - 1, (idx * len(source)) // target_count)] for idx in range(target_count))
 
 
-def recv_exact(connection: socket.socket, amount: int) -> bytes:
+def recv_exact(connection: socket.socket, amount: int, deadline: float | None = None) -> bytes:
     chunks: list[bytes] = []
     remaining = amount
     while remaining:
+        if deadline is not None:
+            budget = deadline - time.monotonic()
+            if budget <= 0:
+                raise OpenRGBSDKError("Die OpenRGB-SDK-Antwort überschreitet das Zeitlimit.")
+            connection.settimeout(budget)
         chunk = connection.recv(remaining)
         if not chunk:
             raise OpenRGBSDKError("Der lokale OpenRGB-SDK-Server hat die Verbindung vorzeitig beendet.")
@@ -245,35 +273,87 @@ def recv_exact(connection: socket.socket, amount: int) -> bytes:
     return b"".join(chunks)
 
 
-def receive_packet(connection: socket.socket) -> SDKPacket:
-    raw_header = recv_exact(connection, SDK_HEADER.size)
+def receive_packet(connection: socket.socket, deadline: float | None = None) -> SDKPacket:
+    raw_header = recv_exact(connection, SDK_HEADER.size, deadline)
     magic, device_id, packet_type, size = SDK_HEADER.unpack(raw_header)
     if magic != SDK_MAGIC or size > MAX_PACKET_SIZE:
         raise OpenRGBSDKError("Der lokale Dienst lieferte kein gültiges OpenRGB-SDK-Paket.")
-    return SDKPacket(device_id, packet_type, recv_exact(connection, size))
+    return SDKPacket(device_id, packet_type, recv_exact(connection, size, deadline))
 
 
-def receive_response(connection: socket.socket, packet_type: int, device_id: int | None = None) -> SDKPacket:
+def _sdk6_unsolicited(packet: SDKPacket) -> bool:
+    try:
+        if packet.packet_type == sdk_v6.PACKET_ACK:
+            acknowledged = sdk_v6.ack_fields(packet.payload)
+            if acknowledged not in {PACKET_REQUEST_CONTROLLER_COUNT, PACKET_REQUEST_CONTROLLER_DATA,
+                                    PACKET_REQUEST_PROTOCOL_VERSION, PACKET_SET_CLIENT_NAME,
+                                    PACKET_RESIZE_ZONE, PACKET_UPDATE_LEDS, PACKET_UPDATE_ZONE_LEDS,
+                                    PACKET_SET_CUSTOM_MODE}:
+                raise ValueError("Unerwartete OpenRGB-SDK-Bestätigung.")
+            return True
+        known = sdk_v6.notification(packet.packet_type, packet.payload)
+    except ValueError as exc:
+        raise OpenRGBSDKError(str(exc)) from exc
+    if known and packet.packet_type in {PACKET_DEVICE_LIST_UPDATED, sdk_v6.PACKET_DETECTION_STARTED,
+                                        sdk_v6.PACKET_DETECTION_COMPLETE}:
+        raise OpenRGBInventoryChanged("OpenRGB-Geräteliste geändert; RGB-Verbindung und Inventar müssen neu geprüft werden.")
+    return known
+
+
+def receive_response(connection: socket.socket, packet_type: int, device_id: int | None = None,
+                     protocol_version: int = SDK_PROTOCOL_VERSION, *, ack_packet_id: int | None = None) -> SDKPacket:
     # Protocol 1+ may notify connected clients about an inventory refresh at
     # any time. Ignore only that documented notification, never arbitrary
     # unexpected packets.
-    for _attempt in range(8):
-        packet = receive_packet(connection)
-        if packet.packet_type == PACKET_DEVICE_LIST_UPDATED:
-            continue
-        if packet.packet_type != packet_type:
-            raise OpenRGBSDKError(
-                f"Unerwartete OpenRGB-SDK-Antwort {packet.packet_type}; erwartet wurde {packet_type}."
-            )
-        if device_id is not None and packet.device_id != int(device_id):
-            raise OpenRGBSDKError("Die OpenRGB-SDK-Antwort gehört zu einem anderen Gerät.")
-        return packet
-    raise OpenRGBSDKError("Zu viele OpenRGB-Gerätelistenänderungen während des Schreibvorgangs.")
+    timeout = connection.gettimeout() if protocol_version >= 6 else None
+    deadline = time.monotonic() + (timeout or 2.0) if protocol_version >= 6 else None
+    try:
+        for _attempt in range(sdk_v6.MAX_PENDING_PACKETS if protocol_version >= 6 else 8):
+            packet = receive_packet(connection, deadline)
+            if protocol_version >= 6:
+                if packet_type == sdk_v6.PACKET_ACK and packet.packet_type == sdk_v6.PACKET_ACK:
+                    try:
+                        acked = sdk_v6.ack_fields(packet.payload)
+                    except ValueError as exc:
+                        raise OpenRGBSDKError(str(exc)) from exc
+                    if packet.device_id == device_id and acked == ack_packet_id:
+                        return packet
+                if _sdk6_unsolicited(packet):
+                    continue
+            elif packet.packet_type == PACKET_DEVICE_LIST_UPDATED:
+                continue
+            if packet.packet_type != packet_type:
+                raise OpenRGBSDKError(
+                    f"Unerwartete OpenRGB-SDK-Antwort {packet.packet_type}; erwartet wurde {packet_type}."
+                )
+            if device_id is not None and packet.device_id != int(device_id):
+                raise OpenRGBSDKError("Die OpenRGB-SDK-Antwort gehört zu einem anderen Gerät.")
+            return packet
+        raise OpenRGBSDKError("Zu viele OpenRGB-SDK-Meldungen während des Schreibvorgangs.")
+    finally:
+        if protocol_version >= 6:
+            connection.settimeout(timeout)
+
+
+def drain_sdk6_notifications(connection: socket.socket) -> None:
+    timeout = connection.gettimeout()
+    deadline = time.monotonic() + (timeout or 2.0)
+    try:
+        for _attempt in range(sdk_v6.MAX_PENDING_PACKETS):
+            if not select.select([connection], [], [], 0)[0]:
+                return
+            packet = receive_packet(connection, deadline)
+            if not _sdk6_unsolicited(packet):
+                raise OpenRGBSDKError(f"Unerwartete OpenRGB-SDK-Antwort {packet.packet_type} vor einem Frame.")
+        raise OpenRGBSDKError("Zu viele OpenRGB-SDK-Meldungen vor einem Frame.")
+    finally:
+        connection.settimeout(timeout)
 
 
 def _skip_mode(reader: PayloadReader, protocol_version: int) -> str:
     name = reader.string()
-    reader.value("i")  # mode_value exists through protocol 5
+    if protocol_version < 6:
+        reader.value("i")  # mode_value removed in revision 6
     reader.value("I")  # flags
     reader.value("I")  # speed_min
     reader.value("I")  # speed_max
@@ -294,6 +374,17 @@ def _skip_mode(reader: PayloadReader, protocol_version: int) -> str:
     return name
 
 
+def _skip_matrix(reader: PayloadReader, protocol_version: int) -> None:
+    size = reader.value("H")
+    matrix = reader.take(size)
+    if protocol_version >= 6 and size:
+        if size < 8:
+            raise OpenRGBSDKError("OpenRGB meldet eine ungültige LED-Matrix.")
+        height, width = struct.unpack_from("<II", matrix)
+        if height * width > MAX_LED_COUNT or size != 8 + height * width * 4:
+            raise OpenRGBSDKError("OpenRGB meldet eine ungültige LED-Matrix.")
+
+
 def _parse_zone(reader: PayloadReader, protocol_version: int) -> SDKZone:
     name = reader.string()
     zone_type = reader.value("i")
@@ -304,8 +395,7 @@ def _parse_zone(reader: PayloadReader, protocol_version: int) -> SDKZone:
         raise OpenRGBSDKError("OpenRGB meldet eine zu große RGB-Zone.")
     if leds_min > leds_max or (led_count != 0 and not leds_min <= led_count <= leds_max):
         raise OpenRGBSDKError("OpenRGB meldet ungültige Grenzen für eine RGB-Zone.")
-    matrix_size = reader.value("H")
-    reader.take(matrix_size)
+    _skip_matrix(reader, protocol_version)
     if protocol_version >= 4:
         segment_count = reader.value("H")
         if segment_count > MAX_ZONE_COUNT:
@@ -313,14 +403,27 @@ def _parse_zone(reader: PayloadReader, protocol_version: int) -> SDKZone:
         for _segment in range(segment_count):
             reader.string()
             reader.value("i")
-            reader.value("I")
-            reader.value("I")
+            start = reader.value("I")
+            count = reader.value("I")
+            if protocol_version >= 6:
+                if start > MAX_LED_COUNT or count > MAX_LED_COUNT or start + count > MAX_LED_COUNT:
+                    raise OpenRGBSDKError("OpenRGB meldet ein zu großes Zonensegment.")
+                _skip_matrix(reader, protocol_version)
+                reader.value("I")  # segment flags
     flags = reader.value("I") if protocol_version >= 5 else 0
-    return SDKZone(name, zone_type, leds_min, leds_max, led_count, flags)
+    zone_modes, active_mode, display_name = (), -1, ""
+    if protocol_version >= 6:
+        active_mode = reader.value("i")
+        mode_count = reader.value("H")
+        if mode_count > MAX_MODE_COUNT:
+            raise OpenRGBSDKError("OpenRGB meldet zu viele Zonenmodi.")
+        zone_modes = tuple(_skip_mode(reader, protocol_version) for _mode in range(mode_count))
+        display_name = reader.string()
+    return SDKZone(name, zone_type, leds_min, leds_max, led_count, flags, zone_modes, active_mode, display_name)
 
 
 def parse_controller_data(payload: bytes, protocol_version: int) -> SDKController:
-    if protocol_version not in {4, 5}:
+    if protocol_version not in {4, 5, 6}:
         raise OpenRGBSDKError("Die OpenRGB-Gerätebeschreibung verwendet eine nicht unterstützte Version.")
     reader = PayloadReader(payload)
     declared_size = reader.value("I")
@@ -347,7 +450,8 @@ def parse_controller_data(payload: bytes, protocol_version: int) -> SDKControlle
         raise OpenRGBSDKError("OpenRGB meldet zu viele LEDs.")
     for _led in range(led_count):
         reader.string()
-        reader.value("I")  # led_value exists through protocol 5
+        if protocol_version < 6:
+            reader.value("I")  # led_value removed in revision 6
     color_count = reader.value("H")
     if color_count > MAX_LED_COUNT:
         raise OpenRGBSDKError("OpenRGB meldet zu viele steuerbare Gerätefarben.")
@@ -362,9 +466,13 @@ def parse_controller_data(payload: bytes, protocol_version: int) -> SDKControlle
         for _display_name in range(display_name_count):
             reader.string()
         reader.value("I")  # controller flags
+    display_name = ""
+    if protocol_version >= 6:
+        display_name = reader.string()
+        reader.take(reader.value("I"))  # bounded controller configuration block
     if reader.remaining:
         raise OpenRGBSDKError("Die OpenRGB-Gerätebeschreibung enthält unerwartete Zusatzdaten.")
-    return SDKController(name, modes, active_mode, zones, led_count, tuple(colors))
+    return SDKController(name, modes, active_mode, zones, led_count, tuple(colors), display_name=display_name)
 
 
 def request_controller_data(
@@ -375,19 +483,21 @@ def request_controller_data(
     connection.sendall(
         SDKPacket(device_id, PACKET_REQUEST_CONTROLLER_DATA, struct.pack("<I", protocol_version)).pack()
     )
-    reply = receive_response(connection, PACKET_REQUEST_CONTROLLER_DATA, device_id)
-    return parse_controller_data(reply.payload, protocol_version)
+    reply = receive_response(connection, PACKET_REQUEST_CONTROLLER_DATA, device_id, protocol_version)
+    return replace(parse_controller_data(reply.payload, protocol_version), device_id=device_id)
 
 
-def negotiate_connection(connection: socket.socket) -> int:
+def negotiate_connection(connection: socket.socket, max_protocol: int = SDK_PROTOCOL_VERSION) -> int:
+    if int(max_protocol) not in {4, 5, 6}:
+        raise ValueError("Nicht unterstützte maximale OpenRGB-SDK-Version.")
     connection.sendall(
-        SDKPacket(0, PACKET_REQUEST_PROTOCOL_VERSION, struct.pack("<I", SDK_PROTOCOL_VERSION)).pack()
+        SDKPacket(0, PACKET_REQUEST_PROTOCOL_VERSION, struct.pack("<I", int(max_protocol))).pack()
     )
-    reply = receive_response(connection, PACKET_REQUEST_PROTOCOL_VERSION)
+    reply = receive_response(connection, PACKET_REQUEST_PROTOCOL_VERSION, protocol_version=int(max_protocol))
     if len(reply.payload) != 4:
         raise OpenRGBSDKError("Der OpenRGB-SDK-Server beantwortete die Versionsabfrage ungültig.")
     server_version = struct.unpack("<I", reply.payload)[0]
-    negotiated = min(server_version, SDK_PROTOCOL_VERSION)
+    negotiated = min(server_version, int(max_protocol))
     if negotiated < SDK_MIN_PROTOCOL_VERSION:
         raise OpenRGBSDKError(
             "Nicht unterstützte OpenRGB-SDK-Protokollversion "
@@ -403,7 +513,15 @@ def synchronized_controller(
     protocol_version: int,
 ) -> SDKController:
     connection.sendall(SDKPacket(0, PACKET_REQUEST_CONTROLLER_COUNT, b"").pack())
-    count_reply = receive_response(connection, PACKET_REQUEST_CONTROLLER_COUNT)
+    count_reply = receive_response(connection, PACKET_REQUEST_CONTROLLER_COUNT, protocol_version=protocol_version)
+    if protocol_version >= 6:
+        try:
+            ids = sdk_v6.controller_ids(count_reply.payload, MAX_DEVICE_ID + 1)
+        except ValueError as exc:
+            raise OpenRGBSDKError(str(exc)) from exc
+        if not 0 <= device_id < len(ids):
+            raise OpenRGBSDKError(f"OpenRGB-Gerät {device_id} ist nicht mehr vorhanden.")
+        return request_controller_data(connection, ids[device_id], protocol_version)
     if len(count_reply.payload) != 4:
         raise OpenRGBSDKError("OpenRGB lieferte keine gültige Geräteanzahl.")
     controller_count = struct.unpack("<I", count_reply.payload)[0]
@@ -420,6 +538,7 @@ def inspect_device(
     device_id: int,
     *,
     timeout: float = 2.0,
+    max_protocol: int = SDK_PROTOCOL_VERSION,
 ) -> tuple[int, SDKController]:
     host = validate_loopback(address)
     service_port = int(port)
@@ -431,8 +550,17 @@ def inspect_device(
     socket_timeout = max(0.1, min(5.0, timeout))
     with socket.create_connection((host, service_port), timeout=socket_timeout) as connection:
         connection.settimeout(socket_timeout)
-        negotiated = negotiate_connection(connection)
+        negotiated = negotiate_connection(connection, max_protocol)
         return negotiated, synchronized_controller(connection, device, negotiated)
+
+
+def send_controller_packet(connection: socket.socket, packet: SDKPacket, protocol_version: int) -> None:
+    if protocol_version >= 6:
+        drain_sdk6_notifications(connection)
+    connection.sendall(packet.pack())
+    if protocol_version >= 6:
+        receive_response(connection, sdk_v6.PACKET_ACK, packet.device_id, protocol_version,
+                         ack_packet_id=packet.packet_type)
 
 
 def resize_controller_zones(
@@ -461,8 +589,8 @@ def resize_controller_zones(
     for index, (zone, size) in enumerate(zip(controller.zones, sizes)):
         if size == zone.led_count:
             continue
-        connection.sendall(
-            SDKPacket(device_id, PACKET_RESIZE_ZONE, struct.pack("<ii", index, size)).pack()
+        send_controller_packet(
+            connection, SDKPacket(device_id, PACKET_RESIZE_ZONE, struct.pack("<ii", index, size)), protocol_version,
         )
         changed = True
     if not changed:
@@ -496,6 +624,7 @@ def prepare_controller_write(
 
     requested_colors = tuple(colors)
     controller = synchronized_controller(connection, device, protocol_version)
+    wire_device = controller.device_id if controller.device_id is not None else device
     if not controller.supports_direct:
         raise OpenRGBSDKError(
             f"{controller.name or f'Gerät {device}'} meldet im SDK keinen Direct Mode."
@@ -504,7 +633,7 @@ def prepare_controller_write(
     if requested_zone_sizes is not None:
         controller = resize_controller_zones(
             connection,
-            device,
+            wire_device,
             protocol_version,
             controller,
             requested_zone_sizes,
@@ -519,9 +648,9 @@ def prepare_controller_write(
     # worker session claims the device wakes that hardware up; cached frames
     # never repeat this packet, so we avoid the old per-frame reset problem.
     if set_custom_mode or not controller.direct_active:
-        connection.sendall(SDKPacket(device, PACKET_SET_CUSTOM_MODE, b"").pack())
+        send_controller_packet(connection, SDKPacket(wire_device, PACKET_SET_CUSTOM_MODE, b""), protocol_version)
         custom_changed = True
-        controller = request_controller_data(connection, device, protocol_version)
+        controller = request_controller_data(connection, wire_device, protocol_version)
         if not controller.direct_active:
             raise OpenRGBSDKError(
                 f"{controller.name or f'Gerät {device}'} hat den Direct Mode nicht bestätigt."
@@ -540,8 +669,8 @@ def prepare_controller_write(
     target = remap_colors(requested_colors, int(led_count), len(controller.colors))
     effective_zone_sizes = tuple(zone.effective_led_count for zone in controller.zones)
     complete_zone_map = bool(effective_zone_sizes) and sum(effective_zone_sizes) == len(target)
-    connection.sendall(
-        SDKPacket(device, PACKET_UPDATE_LEDS, color_payload(target, len(target))).pack()
+    send_controller_packet(
+        connection, SDKPacket(wire_device, PACKET_UPDATE_LEDS, color_payload(target, len(target))), protocol_version,
     )
     written_zones = 0
     write_path = "device"
@@ -550,12 +679,13 @@ def prepare_controller_write(
         for zone_index, zone_size in enumerate(effective_zone_sizes):
             if zone_size <= 0:
                 continue
-            connection.sendall(
+            send_controller_packet(
+                connection,
                 SDKPacket(
-                    device,
+                    wire_device,
                     PACKET_UPDATE_ZONE_LEDS,
                     zone_color_payload(zone_index, target[offset:offset + zone_size]),
-                ).pack()
+                ), protocol_version,
             )
             offset += zone_size
             written_zones += 1
@@ -565,7 +695,7 @@ def prepare_controller_write(
     confirmed: SDKController | None = None
     while time.monotonic() < deadline:
         time.sleep(0.02)
-        current = request_controller_data(connection, device, protocol_version)
+        current = request_controller_data(connection, wire_device, protocol_version)
         if current.colors == target and current.direct_active:
             confirmed = current
             break
@@ -587,6 +717,7 @@ def prepare_controller_write(
         tuple(zone.led_count for zone in confirmed.zones),
         confirmed.name or controller.name,
         write_path,
+        wire_device,
     )
     return result, prepared
 
@@ -594,12 +725,17 @@ def prepare_controller_write(
 class OpenRGBPersistentSession:
     """One reconnecting loopback SDK session for bounded animation frames."""
 
-    def __init__(self, address: str, port: int, *, timeout: float = 2.0):
+    def __init__(self, address: str, port: int, *, timeout: float = 2.0,
+                 max_protocol: int = SDK_PROTOCOL_VERSION):
         self.address = validate_loopback(address)
         self.port = int(port)
         if not 1024 <= self.port <= 65535:
             raise ValueError("Der OpenRGB-Port muss zwischen 1024 und 65535 liegen.")
         self.timeout = max(0.1, min(5.0, float(timeout)))
+        if int(max_protocol) not in {4, 5, 6}:
+            raise ValueError("Nicht unterstützte maximale OpenRGB-SDK-Version.")
+        self.max_protocol = int(max_protocol)
+        self.inventory_invalidated = False
         self.connection: socket.socket | None = None
         self.protocol_version = 0
         self.prepared: dict[int, PreparedDevice] = {}
@@ -610,7 +746,7 @@ class OpenRGBPersistentSession:
         connection = socket.create_connection((self.address, self.port), timeout=self.timeout)
         try:
             connection.settimeout(self.timeout)
-            protocol = negotiate_connection(connection)
+            protocol = negotiate_connection(connection, self.max_protocol)
         except BaseException:
             connection.close()
             raise
@@ -638,6 +774,19 @@ class OpenRGBPersistentSession:
         zone_sizes: Iterable[int] | None = None,
         force_prepare: bool = False,
     ) -> dict[str, object]:
+        if self.inventory_invalidated:
+            raise OpenRGBInventoryChanged("OpenRGB-Geräteliste geändert; Worker erst nach neuer Inventarprüfung starten.")
+        try:
+            return self._write_frame(device_id, led_count, colors, zone_sizes=zone_sizes, force_prepare=force_prepare)
+        except OpenRGBInventoryChanged:
+            self.inventory_invalidated = True
+            self.close()
+            raise
+
+    def _write_frame(
+        self, device_id: int, led_count: int, colors: Iterable[str], *,
+        zone_sizes: Iterable[int] | None = None, force_prepare: bool = False,
+    ) -> dict[str, object]:
         device = int(device_id)
         if not 0 <= device <= MAX_DEVICE_ID:
             raise ValueError("Ungültige OpenRGB-Gerätenummer.")
@@ -646,6 +795,8 @@ class OpenRGBPersistentSession:
         requested_colors = tuple(colors)
         self.connect()
         assert self.connection is not None
+        if self.protocol_version >= 6:
+            drain_sdk6_notifications(self.connection)
         cached = self.prepared.get(device)
         shape_changed = cached is not None and (
             cached.requested_led_count != requested_count
@@ -672,8 +823,10 @@ class OpenRGBPersistentSession:
                 "protocol": result.protocol_version,
             }
         target = remap_colors(requested_colors, requested_count, cached.led_count)
-        self.connection.sendall(
-            SDKPacket(device, PACKET_UPDATE_LEDS, color_payload(target, len(target))).pack()
+        send_controller_packet(
+            self.connection,
+            SDKPacket(cached.device_id if cached.device_id is not None else device,
+                      PACKET_UPDATE_LEDS, color_payload(target, len(target))), self.protocol_version,
         )
         return {
             "ok": True,
@@ -706,14 +859,20 @@ def process_worker_frame(
         if device_id in seen:
             raise ValueError("Ein OpenRGB-Gerät darf pro Frame nur einmal vorkommen.")
         seen.add(device_id)
-        colors = raw_device.get("colors")
-        if not isinstance(colors, list):
-            raise ValueError("Die Worker-Farben müssen als Liste übertragen werden.")
-        zone_sizes_value = raw_device.get("zone_sizes")
-        if zone_sizes_value is not None and not isinstance(zone_sizes_value, list):
-            raise ValueError("Die Worker-Zonengrößen müssen als Liste übertragen werden.")
         device_started = time.monotonic()
         try:
+            colors = raw_device.get("colors")
+            render_ms = 0.0
+            if "render_plan" in raw_device:
+                from modules.rgb_studio.v1_15.render_plan import render
+                render_started = time.monotonic()
+                colors = render(raw_device["render_plan"], raw_device.get("led_count"), raw_device.get("zone_sizes"))
+                render_ms = (time.monotonic() - render_started) * 1000
+            if not isinstance(colors, list):
+                raise ValueError("Die Worker-Farben müssen als Liste übertragen werden.")
+            zone_sizes_value = raw_device.get("zone_sizes")
+            if zone_sizes_value is not None and not isinstance(zone_sizes_value, list):
+                raise ValueError("Die Worker-Zonengrößen müssen als Liste übertragen werden.")
             result = session.write_frame(
                 device_id,
                 int(raw_device.get("led_count", 0)),
@@ -722,9 +881,10 @@ def process_worker_frame(
                 force_prepare=bool(raw_device.get("prepare", False)),
             )
             result["key"] = key
+            result["render_ms"] = round(render_ms, 3)
             result["duration_ms"] = round((time.monotonic() - device_started) * 1000.0, 3)
             results.append(result)
-        except (OSError, ValueError, OpenRGBSDKError) as exc:
+        except Exception as exc:  # Worker-process containment boundary.
             results.append({
                 "ok": False,
                 "key": key,
@@ -735,7 +895,7 @@ def process_worker_frame(
             # A short/invalid socket transaction leaves packet boundaries
             # uncertain. Reconnect before the next device instead of risking
             # a write to the wrong controller.
-            if isinstance(exc, OSError) or "Verbindung" in str(exc) or "Antwort" in str(exc):
+            if isinstance(exc, (OSError, OpenRGBSDKError)) or "Verbindung" in str(exc) or "Antwort" in str(exc):
                 session.close()
     return {
         "type": "frame",
@@ -752,15 +912,18 @@ def run_worker(
     *,
     input_stream: TextIO = sys.stdin,
     output_stream: TextIO = sys.stdout,
+    max_protocol: int = SDK_PROTOCOL_VERSION,
 ) -> int:
     """Run the bounded JSON-lines worker until stdin closes or stop arrives."""
 
-    session = OpenRGBPersistentSession(address, port)
-    print(json.dumps({"type": "ready", "protocol_max": SDK_PROTOCOL_VERSION}), file=output_stream, flush=True)
+    session = OpenRGBPersistentSession(address, port, max_protocol=max_protocol)
+    print(json.dumps({"type": "ready", "protocol_max": int(max_protocol)}), file=output_stream, flush=True)
     try:
-        for raw_line in input_stream:
+        for raw_line in iter(lambda: input_stream.readline(MAX_WORKER_REQUEST_SIZE + 1), ""):
             if len(raw_line) > MAX_WORKER_REQUEST_SIZE:
                 response: dict[str, object] = {"type": "error", "error": "Worker-Auftrag ist zu groß."}
+                print(json.dumps(response), file=output_stream, flush=True)
+                return 2
             else:
                 try:
                     request = json.loads(raw_line)
@@ -791,6 +954,7 @@ def write_device_colors(
     timeout: float = 2.0,
     set_custom_mode: bool = True,
     zone_sizes: Iterable[int] | None = None,
+    max_protocol: int = SDK_PROTOCOL_VERSION,
 ) -> SDKWriteResult:
     host = validate_loopback(address)
     service_port = int(port)
@@ -803,7 +967,7 @@ def write_device_colors(
     socket_timeout = max(0.1, min(5.0, timeout))
     with socket.create_connection((host, service_port), timeout=socket_timeout) as connection:
         connection.settimeout(socket_timeout)
-        negotiated = negotiate_connection(connection)
+        negotiated = negotiate_connection(connection, max_protocol)
         result, _prepared = prepare_controller_write(
             connection,
             device,
@@ -829,6 +993,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--colors", help="Kommagetrennte RRGGBB-Farben")
     parser.add_argument("--zone-sizes", help="Kommagetrennte LED-Anzahl je OpenRGB-Zone")
     parser.add_argument("--no-custom-mode", action="store_true")
+    parser.add_argument("--protocol-max", type=int, choices=(4, 5, 6), default=SDK_PROTOCOL_VERSION)
     return parser
 
 
@@ -838,12 +1003,12 @@ def main(argv: list[str] | None = None) -> int:
         if arguments.worker:
             if arguments.inspect or arguments.device is not None or arguments.colors:
                 raise ValueError("Der Worker-Modus kann nicht mit Einzelgeräteoptionen kombiniert werden.")
-            return run_worker(arguments.address, arguments.port)
+            return run_worker(arguments.address, arguments.port, max_protocol=arguments.protocol_max)
         if arguments.device is None:
             raise ValueError("Für Einzelgeräteaufträge wird --device benötigt.")
         if arguments.inspect:
             protocol, controller = inspect_device(
-                arguments.address, arguments.port, arguments.device
+                arguments.address, arguments.port, arguments.device, max_protocol=arguments.protocol_max
             )
             print(json.dumps({
                 "protocol": protocol,
@@ -883,6 +1048,7 @@ def main(argv: list[str] | None = None) -> int:
             arguments.colors.split(","),
             set_custom_mode=not arguments.no_custom_mode,
             zone_sizes=requested_zone_sizes,
+            max_protocol=arguments.protocol_max,
         )
     except (OSError, ValueError, OpenRGBSDKError) as exc:
         print(f"OpenRGB-SDK: {exc}", file=sys.stderr)

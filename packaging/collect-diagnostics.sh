@@ -8,7 +8,7 @@ trap 'rm -f "$TMP"' EXIT
 
 {
   echo "Open Hardware Control by Frelidon diagnostics"
-  echo "Version: 3.4.21 INTERN"
+  echo "Version: $(tr -d '\r\n' < "$SOURCE_DIR/VERSION" 2>/dev/null || echo unknown)"
   echo "Generated: $(date --iso-8601=seconds 2>/dev/null || date)"
   echo "Mode: diagnostics are read-only (application controls require explicit session approval)"
   echo
@@ -82,6 +82,12 @@ trap 'rm -f "$TMP"' EXIT
   echo
   echo "== Open Hardware Control startup/crash logs =="
   STATE_ROOT="${XDG_STATE_HOME:-$HOME/.local/state}/open-hardware-control"
+  for EXIT_LOG in shutdown.jsonl shutdown-stacks.log module-events.jsonl; do
+    if [ -f "$STATE_ROOT/$EXIT_LOG" ] && [ ! -L "$STATE_ROOT/$EXIT_LOG" ]; then
+      echo "-- $EXIT_LOG (last 200 lines) --"
+      tail -n 200 "$STATE_ROOT/$EXIT_LOG" 2>&1 || true
+    fi
+  done
   if [ -r "$STATE_ROOT/startup.log" ]; then
     echo "-- startup.log (last 120 lines) --"
     tail -n 120 "$STATE_ROOT/startup.log" 2>&1 || true
@@ -93,6 +99,12 @@ trap 'rm -f "$TMP"' EXIT
     cat "$STATE_ROOT/last-crash.log" 2>&1 || true
   else
     echo "last-crash.log: not present"
+  fi
+  if [ -r "$STATE_ROOT/errors.log" ]; then
+    echo "-- errors.log (last 400 lines) --"
+    tail -n 400 "$STATE_ROOT/errors.log" 2>&1 || true
+  else
+    echo "errors.log: not present"
   fi
   for SESSION_LOG in session.log previous-session.log; do
     if [ -r "$STATE_ROOT/$SESSION_LOG" ]; then

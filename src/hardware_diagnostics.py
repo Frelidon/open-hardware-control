@@ -25,6 +25,23 @@ class MetricIssue:
     reason: str
 
 
+GPU_CLOCK_RECOVERY_SAMPLES = 3
+
+
+def advance_gpu_clock_recovery_streak(
+    current: int,
+    reading: ClockReading,
+    *,
+    required_samples: int = GPU_CLOCK_RECOVERY_SAMPLES,
+) -> tuple[int, bool]:
+    """Require consecutive valid samples before restoring a guarded source."""
+    required = max(1, int(required_samples))
+    if reading.mhz is None or reading.issue:
+        return 0, False
+    streak = min(required, max(0, int(current)) + 1)
+    return streak, streak >= required
+
+
 def normalize_linux_clock(raw: object, *, maximum_mhz: float) -> tuple[float | None, str]:
     """Normalize a Linux clock that may be reported in Hz or MHz."""
     try:
@@ -79,7 +96,10 @@ def validate_metric_snapshot(values: Mapping[str, object]) -> tuple[MetricIssue,
     """Return only malformed or physically implausible common metrics."""
     bounds = {
         "cpuClock": (50.0, 10_000.0, "MHz"),
-        "gpuClock": (0.1, 5_000.0, "MHz"),
+        # AMDGPU may report an exact 0 MHz while the graphics engine is power
+        # gated.  That is a valid idle state, not a broken sensor.  Negative
+        # values and implausibly high clocks remain diagnostic issues.
+        "gpuClock": (0.0, 5_000.0, "MHz"),
         "cpuLoad": (0.0, 100.0, "%"),
         "gpuLoad": (0.0, 100.0, "%"),
         "ramLoad": (0.0, 100.0, "%"),

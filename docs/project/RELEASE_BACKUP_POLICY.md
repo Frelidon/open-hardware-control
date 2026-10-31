@@ -24,7 +24,9 @@ Ein nicht erzeugtes Paketformat wird nicht erfunden. Bei einer Veröffentlichung
 
 ## Automatik und Aufbewahrung
 
-`scripts/build_release.py` ruft nach einem vollständig erfolgreichen Paketbau `scripts/backup_release.py` auf. Die Sicherung wird zuerst in einem temporären Ordner aufgebaut und erst danach als vollständiger Versionsordner eingesetzt. Anschließend bleiben mindestens die zwei neuesten, semantisch sortierten Versionen erhalten.
+`scripts/build_release.py` ruft nach einem vollständig erfolgreichen Paketbau `scripts/backup_release.py` auf. Die Sicherung wird zuerst in einem temporären Ordner aufgebaut und erst danach als vollständiger Versionsordner eingesetzt. Anschließend bleiben mindestens die zwei neuesten vollständigen, semantisch sortierten Versionen erhalten; die normale Rotation behält genau zwei. Niemals weniger als zwei bereits vorhandene vollständige Sicherungen.
+
+**Dauerhafte Eigentümerfreigabe vom 13.09.26:** Bei angefordertem lokalem Versionsbau dürfen ältere erkannte Release-Sicherungen automatisch ohne erneute Rückfrage entfernt werden, sobald die neue vollständige Sicherung erstellt ist und die zwei neuesten Versionen erhalten bleiben. Diese eng begrenzte Freigabe gilt nur für die normale Rotation im festgelegten externen Sicherungsordner, nicht für beliebige Dateien, Profile, Quelldaten, Git-Historie oder andere Sicherungen. Bei unvollständigen/unsicheren Zielen oder wenn weniger als zwei vollständige Versionen verbleiben würden: nicht löschen, Ursache melden.
 
 Die Bereinigung darf ausschließlich Ordner mit dem exakten Schema `Version <Version> INTERN` oder `Version <Version> STABLE` entfernen. Fremde Dateien und Ordner bleiben unangetastet. Der Backup-Ordner darf niemals innerhalb des Repositorys oder eines Moduls liegen, damit Archive nicht rekursiv wachsen.
 
@@ -35,7 +37,7 @@ Die Sicherung ersetzt weder Git-Historie noch Tags und ist keine Freigabe oder V
 Falls die Pakete bereits in `dist/` liegen, kann die Sicherung wiederholt werden:
 
 ```bash
-python3 scripts/backup_release.py "$(cat VERSION)" "$(cat BUILD_CHANNEL)" --project-root . --dist dist
+python3 scripts/backup_release.py "$(cat packaging/VERSION)" "$(cat packaging/BUILD_CHANNEL)" --project-root . --dist dist
 ```
 
 Nach jedem Versionsbau muss geprüft werden, dass der neue Versionsordner und sein Vorgänger vorhanden sind und `sha256sum -c SHA256SUMS` in beiden Ordnern erfolgreich ist.

@@ -9,16 +9,17 @@ import shutil
 from pathlib import Path
 
 from nzxt_backend import SupportLevel
+from modules.backend_updates.v1_0.executables import resolve_liquidctl_executable
 
 
 APP_NAME = "Open Hardware Control"
 DISPLAY_NAME = "Open Hardware Control by Frelidon"
-APP_VERSION = "3.4.29.50"
+APP_VERSION = "3.4.29.158"
 BUILD_CHANNEL = "INTERN"
 APP_DISPLAY_VERSION = f"{APP_VERSION} {BUILD_CHANNEL}"
 ORG_NAME = "FloriLinuxTools"
 LEGACY_SETTINGS_APP_NAME = "Kraken Control"
-LIQUIDCTL = shutil.which("liquidctl") or "liquidctl"
+LIQUIDCTL = resolve_liquidctl_executable(shutil.which("liquidctl") or "liquidctl")
 KRAKEN_MATCH = "NZXT Kraken 2023"
 KRAKEN_PRODUCT_ID = "300e"
 KRAKEN_DISPLAY_NAME = "NZXT Kraken 2023"

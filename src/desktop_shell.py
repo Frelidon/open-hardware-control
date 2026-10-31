@@ -294,9 +294,9 @@ class CharmsBar(QWidget):
         self.clock = QLabel()
         self.clock.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.clock)
-        timer = QTimer(self)
-        timer.timeout.connect(self._update_clock)
-        timer.start(1000)
+        self.clock_timer = QTimer(self)
+        self.clock_timer.timeout.connect(self._update_clock)
+        self.clock_timer.setInterval(1000)
         self._update_clock()
         self.setStyleSheet(
             "QWidget#ohcCharmsBar { background: rgba(8, 8, 12, 245); color: white; } "
@@ -314,6 +314,15 @@ class CharmsBar(QWidget):
         self.show()
         self.raise_()
         self.activateWindow()
+
+    def showEvent(self, event) -> None:  # noqa: ANN001, N802
+        super().showEvent(event)
+        self._update_clock()
+        self.clock_timer.start()
+
+    def hideEvent(self, event) -> None:  # noqa: ANN001, N802
+        self.clock_timer.stop()
+        super().hideEvent(event)
 
     def _search(self) -> None:
         self.hide()

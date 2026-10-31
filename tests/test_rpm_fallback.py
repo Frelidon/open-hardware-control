@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
-from build_rpm_fallback import build_noarch_rpm  # noqa: E402
+from build_rpm_fallback import _package_entries, build_noarch_rpm  # noqa: E402
 
 
 def header(data: bytes, offset: int) -> tuple[int, dict[int, tuple[int, int, int]], int]:
@@ -63,6 +63,24 @@ def cpio_files(payload: bytes) -> dict[str, bytes]:
     return files
 
 
+def cpio_metadata(payload: bytes) -> dict[str, tuple[int, int, int]]:
+    """Actual newc mode, UID and GID, not the RPM writer's model values."""
+    entries = {}
+    position = 0
+    while position + 110 <= len(payload):
+        header_data = payload[position:position + 110]
+        assert header_data[:6] == b"070701"
+        fields = [int(header_data[6 + index * 8:14 + index * 8], 16) for index in range(13)]
+        name_size, size = fields[11], fields[6]
+        name = payload[position + 110:position + 110 + name_size - 1].decode("utf-8")
+        position = ((position + 110 + name_size + 3) & ~3)
+        position = ((position + size + 3) & ~3)
+        if name == "TRAILER!!!":
+            break
+        entries[name] = (fields[1] & 0o777, fields[2], fields[3])
+    return entries
+
+
 with tempfile.TemporaryDirectory(prefix="ohc-rpm-writer-test-") as temporary:
     base = Path(temporary)
     package = base / "root"
@@ -80,6 +98,20 @@ with tempfile.TemporaryDirectory(prefix="ohc-rpm-writer-test-") as temporary:
     metainfo = package / "usr/share/metainfo/io.github.Frelidon.OpenHardwareControl.metainfo.xml"
     metainfo.parent.mkdir(parents=True)
     metainfo.write_text("<component type=\"desktop-application\"><id>io.github.Frelidon.OpenHardwareControl</id></component>\n", encoding="utf-8")
+    fixed_files = {
+        "/usr/libexec/open-hardware-control-dmi-memory-helper": (0o755, b"#!/usr/bin/python3 -I\n"),
+        "/usr/libexec/open-hardware-control-snapshot-helper": (0o755, b"#!/usr/bin/python3\n# snapshot\n"),
+        "/usr/libexec/open-hardware-control-snapshot-admin-helper": (0o755, b"#!/usr/bin/python3\n# snapshot admin\n"),
+        "/usr/share/polkit-1/actions/io.github.Frelidon.OpenHardwareControl.dmi.policy": (0o644, b"<policyconfig/>\n"),
+        "/usr/share/polkit-1/actions/io.github.Frelidon.OpenHardwareControl.snapshot.policy": (0o644, b"<policyconfig/>\n"),
+    }
+    # A partial/fake stage must keep absent optional helpers absent.
+    assert not set(fixed_files).intersection(entry.package_path for entry in _package_entries(package, 1))
+    for relative, (mode, content) in fixed_files.items():
+        target = package / relative.lstrip("/")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(content)
+        target.chmod(mode)
     output = base / "test.rpm"
     build_noarch_rpm(package, output, version="3.1.0", release="0.intern1", channel="INTERN")
     data = output.read_bytes()
@@ -109,5 +141,19 @@ with tempfile.TemporaryDirectory(prefix="ohc-rpm-writer-test-") as temporary:
     assert files["./usr/bin/open-hardware-control"].startswith(b"#!/usr/bin/env bash")
     assert files["./usr/bin/open-hardware-control-desktop-shell"].startswith(b"#!/usr/bin/env bash")
     assert "./usr/share/metainfo/io.github.Frelidon.OpenHardwareControl.metainfo.xml" in files
+    metadata = cpio_metadata(raw_payload)
+    _type, position, count = main[1116]
+    directory_indexes = struct.unpack(">" + "I" * count, data[position:position + count * 4])
+    basenames, directories = strings(data, main[1117]), strings(data, main[1118])
+    paths = [directories[index] + name for index, name in zip(directory_indexes, basenames)]
+    _type, position, count = main[1030]
+    modes = struct.unpack(">" + "H" * count, data[position:position + count * 2])
+    users, groups = strings(data, main[1039]), strings(data, main[1040])
+    for path, (mode, content) in fixed_files.items():
+        index = paths.index(path)
+        assert modes[index] & 0o777 == mode
+        assert users[index] == groups[index] == "root"
+        assert files["." + path] == content
+        assert metadata["." + path] == (mode, 0, 0)
 
 print("Standard-library RPM structure, payload and digest checks passed.")

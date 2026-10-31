@@ -120,4 +120,7 @@ def closest_nzxt_mode(effect_id: str) -> str:
         "pulse": "pulse",
         "alternating": "fading",
         "sparkle": "starry-night",
+        "converge": "pulse",
+        "crossflow": "rainbow-flow",
+        "depthwave": "spectrum-wave",
     }.get(str(effect_id), "fixed")

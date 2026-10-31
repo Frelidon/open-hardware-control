@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.50 INTERN
+# Open Hardware Control by Frelidon 3.4.29.158 INTERN
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](../LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -51,16 +51,20 @@ Project repository: <https://github.com/Frelidon/open-hardware-control>
 
 ## Thermalright Levita Vision display
 
-**The 1600×720 display of the Thermalright Levita Vision 360 ARGB Black is supported.** The local display studio combines your own images and videos (layer 1) with a complete TRCC hardware design or freely movable OHC live values for CPU, GPU, RAM and clock (layer 2). Eleven original OHC backgrounds, two OHC data layouts and one 30-second animation ship with the app – all created by the project owner with OpenAI tools. Thermalright/TRCC catalog media is neither copied nor downloaded.
+**The 1600×720 display of the Thermalright Levita Vision 360 ARGB Black is supported.** The local display studio combines your own images and videos (layer 1) with a complete TRCC hardware design or freely movable OHC live values for CPU, GPU, RAM, clock and custom text (layer 2). Eleven original OHC backgrounds, seventeen editable data layouts, five original animations and 44 effect variants from 20 free sources plus two original OHC designs ship with the app. Thermalright/TRCC catalog media is neither copied nor downloaded.
 
-The safe preview-only test mode is active by default; real USB transfer happens only through the separately installed GPL backend **TRCC Linux** (9.9.12 recommended). Levita pump and radiator fans run through separately confirmed motherboard PWM headers (`PUMP_FAN`, `CPU_FAN`) with a safe 70 %/10 s test; CoolerControl blocks concurrent writes.
+The safe preview-only test mode is active by default; real USB transfer happens only through the separately installed GPL backend **TRCC Linux** (9.10.4 recommended). Levita pump and radiator fans run through separately confirmed motherboard PWM headers (`PUMP_FAN`, `CPU_FAN`) with a safe 70 %/10 s test; CoolerControl blocks concurrent writes.
 
-## New in 3.4.29.50 INTERN
+## New in 3.4.29.158 INTERN
 
-- The top cooling-profile selector now includes case fans. **Performance** immediately sets pump, radiator and every confirmed, active system-fan channel to a true 100%, even if a curve was active before.
-- Every case-fan card exposes a confirmed **0% / 10 s** stop test with automatic state restoration for safe physical identification.
-- When the driver exposes no `pwmN_mode`, OHC explains that PWM/DC remains a BIOS setting; an exposed mode switch still requires a warning and a new physical test.
-- Internal test build; no public GitHub release.
+- OpenRGB SDK v6 profile callbacks are handled as documented asynchronous
+  notifications and no longer interrupt MSI Mystic Light frames.
+- The TRCC GPU-clock boundary guard waits for three valid five-second samples
+  before switching from the corrected 1 MHz value back to the live source.
+- Missing or malformed GPU-clock readings no longer count as proof that the
+  live source has recovered.
+- OpenRGB packet validation, unknown messages and inventory changes remain
+  strictly bounded and fail closed.
 
 Older versions: [Version history](#version-history) · [CHANGELOG.md](CHANGELOG.md) · [docs/releases/](releases)
 
@@ -68,37 +72,37 @@ Older versions: [Version history](#version-history) · [CHANGELOG.md](CHANGELOG.
 
 ### Fedora and Nobara – RPM
 
-Download `open-hardware-control-3.4.29.50-0.intern2.noarch.rpm` to your Downloads folder and run:
+Download `open-hardware-control-3.4.29.158-0.intern2.noarch.rpm` to your Downloads folder and run:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.50-0.intern2.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.158-0.intern2.noarch.rpm
 ```
 
 ### Debian, Ubuntu and Linux Mint – DEB
 
-Download `open-hardware-control_3.4.29.50~intern2_all.deb` to your Downloads folder and run:
+Download `open-hardware-control_3.4.29.158~intern2_all.deb` to your Downloads folder and run:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.50~intern2_all.deb'
+sudo apt install './open-hardware-control_3.4.29.158~intern2_all.deb'
 ```
 
 ### Universal installer – ZIP
 
-For Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS and openSUSE. Download `open_hardware_control_v3_4_29_50_INTERN.zip` and run:
+For Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS and openSUSE. Download `open_hardware_control_v3_4_29_158_INTERN.zip` and run:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_50_INTERN.zip
-cd open-hardware-control-3.4.29.50
+unzip open_hardware_control_v3_4_29_158_INTERN.zip
+cd open-hardware-control-3.4.29.158-INTERN
 chmod +x install.sh
 ./install.sh
 ```
 
 An existing installation is updated in place. Afterwards **Open Hardware Control by Frelidon** appears in the application menu, or start `~/.local/bin/open-hardware-control` from a terminal (the legacy command `kraken-control` still works). The dependency check detects the common package managers automatically; every distro-specific command is listed in [INSTALL.md](INSTALL.md).
 
-Optional and installed separately according to their official guides: **OpenLinkHub** (Corsair), **TRCC Linux** (Levita display), **OpenRGB** (additional RGB devices), **CaptSilver Wallpaper Engine plugin** (KDE). OHC bundles none of these components and does not modify them.
+Optional **LACT** (GPU tuning) and **OpenRGB** (RGB devices) can be installed from the wizard or their own areas after confirmation when a supported package source is available. **OpenLinkHub** (Corsair), **TRCC Linux** (Levita display) and **CaptSilver Wallpaper Engine plugin** (KDE) remain separate components; OHC does not bundle them. OpenLinkHub has its own confirmed update path.
 
 ## Security
 
@@ -140,7 +144,7 @@ RGB, images, GIFs, clock, static and animated live hardware designs, CPU/GPU liv
 
 ### Thermalright Levita Vision
 
-Two-layer display studio (see above), import of local images, videos, `.zt` files and TRCC layout folders, TRCC categories Gallery/Tech/HUD/Light/Nature/Aesthetic, favourites, a custom design folder, autostart of both layers and cooling through confirmed motherboard PWM headers.
+Two-layer display studio (see above), new procedural smoke editor under Display Effects, import of local images, videos, `.zt` files and TRCC layout folders, TRCC categories Gallery/Tech/HUD/Light/Nature/Aesthetic, favourites, a custom design folder, autostart of both layers and cooling through confirmed motherboard PWM headers.
 
 ### Motherboard and case fans
 
@@ -148,7 +152,7 @@ Linux hwmon/NCT6687 (e.g. MSI X870 family). Every PWM channel is unlocked only a
 
 ### Corsair · OpenLinkHub
 
-Exclusively through the local API `http://127.0.0.1:27003`. Documented write commands for cooling, RGB/LCD, mouse, keyboard and headset; controls only for detected devices. User and system services are detected separately; system-wide changes are never made automatically.
+Exclusively through the local API `http://127.0.0.1:27003`. Documented write commands for cooling, RGB/LCD, mouse, keyboard and headset; controls only for detected devices. User and system services are detected separately. The version check updates package installations through existing sources or the safe user-service path including the web UI only after confirmation.
 
 ### RGB Studio · OpenRGB SDK
 
@@ -156,16 +160,16 @@ OHC starts a private windowless OpenRGB process on demand and uses only the loca
 
 ### Wallpaper Engine for KDE
 
-Reads only local Steam Workshop metadata, selects wallpapers through Plasma's official scripting configuration and controls playback through the local D-Bus object of the separately installed CaptSilver plugin. Guided setup for Steam, subscriptions and the plugin; on Fedora an optional verified RPM download with SHA256 comparison and a second confirmation before Polkit/DNF.
+Reads only local Steam Workshop metadata, selects wallpapers through Plasma's official scripting configuration and controls playback through the local D-Bus object of the separately installed CaptSilver plugin. Guided setup covers Steam, Workshop, KDE helpers and the plugin; on Fedora the optional RPM remains SHA256-verified and needs a second confirmation before Polkit/DNF.
 
 ## Version history
 
-**3.4.29.50** – True 100% case-fan Performance override, confirmed stop test and clear BIOS fallback when the driver cannot switch PWM/DC.
+**3.4.29.158** – Correct OpenRGB profile-callback synchronization and a stable GPU-clock boundary guard.
 
-**3.4.29.49** – Overview status hints follow confirmed PWM tests; RGB Studio expands devices/effects and native channels in-page.
+**3.4.29.157** – Programs/profiles, complete GitHub downloads and automatic recovery of OHC's own Levita daemon.
 
-**3.4.29.48** – Mandatory file-placement and short-README rule for all coding assistants with a guard test; fixed release workflow.
+**3.4.29.156** – Editable LED paths, corrected spatial direction and restored animated RGB fan previews.
 
-**3.4.29.47** – Application code moved to `src/`, installer/version files to `packaging/`, all documents to `docs/`; the root holds only README, LICENSE, CITATION and the AGENTS pointer.
+**3.4.29.155** – Ubuntu startup profile separated from legacy NZXT setup; occupied Levita USB stops OHC retries.
 
 All earlier versions back to 2.9.x: [CHANGELOG.md](CHANGELOG.md) and [docs/releases/](releases).

@@ -1,7 +1,1220 @@
 # Changelog
 
+## Unreleased
+
+## 3.4.29.158 INTERN · 31.10.26
+
+- Treat OpenRGB SDK v6 packet 157 as the documented asynchronous active-profile
+  callback after validating its bounded null-terminated payload. Continue to
+  reject malformed and unknown packets and invalidate cached inventory safely.
+- Prevent the valid callback from being misreported as an ACK-10 failure during
+  ENE-DRAM recovery while MSI Mystic Light and the remaining Direct devices run.
+- Keep the corrected 1 MHz TRCC boundary value until three consecutive valid
+  five-second AMD GPU clock samples prove that the dynamic source recovered.
+  Missing or malformed readings reset the recovery evidence instead of restoring
+  the unsafe live source.
+
+## 3.4.29.157 INTERN · 20.10.26
+
+- Replace the mixed historical roadmap with a current split between actionable
+  repository work, real-hardware/optical confirmation and long-term candidates.
+- Keep Python/PySide6 as the application architecture. Require profiling and a
+  Python fallback before considering Rust for an isolated pure CPU hotspot.
+- Make animated case-fan light rings slightly brighter and wider through a
+  bounded cached colour transform; preserve black/off segments, gradients,
+  effect timing, physical mapping and hidden-timer shutdown.
+- Keep package installation as phased follow-up work; no package-manager action
+  is claimed by this change.
+- Add Programs 1.0 with a bounded background inventory of desktop applications,
+  search, configurable absolute base folder and validated saved profiles for
+  System, Flatpak, Snap and AppImage. Add an explicit background GitHub release
+  check/download for all official assets and both source archives, with host and
+  size limits, SHA256SUMS, JSON manifest, atomic version folder and no overwrite.
+  It never executes a discovered desktop command; package actions require a
+  separately validated profile, exact preview and explicit confirmation.
+- Add manually saved installation targets with an exact confirmation preview:
+  per-user Flatpak from an existing Flathub remote, Snap through Polkit with an
+  optional validated channel, and local AppImage user-execute activation inside
+  the configured base folder. Use argument arrays, bounded output and no shell;
+  leave ambiguous distribution system packages disabled.
+- Persist a normalized GitHub owner/repository and source-release version on an
+  installation profile separately from its Flatpak branch or Snap channel;
+  selecting the profile restores the matching download source.
+- Allow an exact downloaded AppImage asset from the inspected release plan to
+  be selected for an AppImage profile only after the atomic version folder and
+  GitHub-reported byte count are present. Installation header/path checks remain
+  separate and mandatory.
+- Distinguish a Levita USB claim held by the exact TRCC daemon registered by the
+  current OHC session from a foreign owner. Recover the former once through the
+  existing bounded restart/design-restore path while leaving all untracked,
+  preexisting or PID-mismatched processes untouched.
+- Audit `.151`–`.156` against code, tests and later status evidence: repository
+  implementation is present; real Fedora coverage and optical case-RGB
+  brightness/direction/order confirmation remain explicitly open.
+- Ignore queued cooling-ownership probe requests after shutdown or Qt process
+  deletion, preventing a late Shiboken exception during full UI teardown.
+
+## 3.4.29.156 INTERN · 06.10.26
+
+- Keep fresh LED-path drafts editable even when no path was saved; handle
+  actual Qt child polish and inline reparenting without dismissing the editor.
+  Only explicit user gestures activate path saving. Opening, count-only changes
+  and cancelling do not invent geometry or authorize hardware.
+- Correct visible spatial wave travel, independent local effect reversal and
+  per-header projection when the overall case direction is local. Preserve
+  physical LED/fan numbering, explicit header overrides and unmapped legacy frames.
+- Restore animated case fan light rings using bounded samples from the same
+  confirmed effect clock. A single reported header can show schematic colours
+  without a saved physical path; ambiguous routes stay unresolved. No RPM simulation.
+- Preserve unfinished flow choices on ordinary refresh, reflect changed saved
+  profile directions and explain when a declared LED path is still needed.
+- Add real Qt mouse/keyboard, save/cancel, visible/hidden timer and temporal-frame
+  regressions, separate Fedora/Ubuntu fixtures and 2,154 four-language UI sources.
+  Existing device commands, profiles, counts, designs and ownership remain intact.
+
+## 3.4.29.155 INTERN · 06.10.26
+
+- Import the canonical Levita device key for successful playback-health
+  callbacks; cover real Qt class methods and globals on both distributions
+  so AST fixture injection cannot hide an undefined runtime symbol.
+- Separate a legacy NZXT assistant preset from an explicitly selected startup
+  PC/RGB/LCD profile only on confirmed Ubuntu/Levita systems without a ready
+  NZXT; preserve unknown pending values and other distribution/hardware lanes.
+- Retain the pending preset and the selected user's cooling payload without
+  inventing PWM intent, mappings, calibration or an automatic migration.
+- Classify an occupied Levita USB interface separately from daemon IPC/FPS
+  failure and trailing udev hints on Ubuntu; stop only OHC's own retries.
+- Preserve the saved design and immutable request, allowing explicit Apply
+  through the existing queue after the other owner is released; never
+  automatically terminate a foreign display application.
+- Add targeted startup and LCD ownership regressions, a translated dynamic
+  conflict status and 2,153 shared four-language message sources.
+- Make separate Fedora/Ubuntu guards, native commands and regressions mandatory
+  project rules; retain Fedora behavior and distinguish fixtures from live
+  hardware evidence. Preserve `.154` inventory, routing and authorization fixes.
+- Normalize real directories only inside the isolated DEB/RPM stage to 0755,
+  preventing group-writable helper ancestors on fresh installations under
+  umask 002. Preserve source/host/symlink-target permissions, file contents,
+  helper/policy file modes and RPM dependencies; add a real-stage regression.
+
+## 3.4.29.154 INTERN · 06.10.26
+
+- Request OpenRGB 1.0's detailed inventory only for the trusted Ubuntu backend;
+  preserve older OpenRGB/Fedora listing commands and complete device metadata.
+- Reject names-only inventory without device types before it can replace controller identities,
+  selected devices, physical routes or LED configuration.
+- Open GPU header setup for explicitly routed external lighting even without a
+  native GPU controller; reuse the reported Direct-header editor and guards.
+- Classify explicitly routed GPU blocks for their GPU effect group without
+  enabling native GPU hardware detectors or changing whole-device frames.
+- Distinguish the preserved narrow fan authorization from a TRCC daemon's
+  generic administrator prompt; do not grant general passwordless root access.
+- Launch the audited Ubuntu TRCC backend through an OHC-owned child adapter:
+  its exact RAM metadata query uses an argument-free read-only helper with a
+  dedicated active-session action. Other automatic metadata stays unprivileged;
+  upstream files, global PATH and independent TRCC processes are unchanged.
+- Force the dedicated metadata policy to read-only 0644 in both package
+  formats instead of inheriting checkout permissions; retain runtime trust
+  refusal for group/world-writable helpers or policies.
+- Keep the fallback RPM's explicit system-helper/policy manifest in sync with
+  the normal RPM spec, with real header/payload ownership and mode regressions.
+- Retain established designs, module switches, PC-profile topology and all
+  later Ubuntu responsiveness/crash guards.
+
+## 3.4.29.153 INTERN · 06.10.26
+
+- Prevent the Levita thumbnail scheduler from calling Qt methods on preview
+  cards whose C++ objects were already deleted during a rapid category change.
+- Prune stale weak references both while prioritizing visible thumbnail jobs
+  and when delivering a finished preview, so subsequent scroll signals cannot
+  repeat the same runtime exception.
+- Ignore delayed Snapshot Manager process-expiry callbacks after Qt has already
+  destroyed their QProcess object during application shutdown.
+- Replace the plain module-checkbox grid with synchronized two-column cards,
+  module icons, green/grey status dots, and direct toggle switches.
+- Add a deleted-card queue regression, deterministic gallery isolation, and a
+  full offscreen Settings render. Fedora-specific installation commands remain.
+- Recover missing `.148` feature/ownership controls, design automation,
+  snapshot setup/creation/filtering/resource controls, hardware overview cards,
+  GPU artwork, dashboard editing and four bundled original LCD animations.
+- Keep feature enablement separate from sidebar visibility and preserve each
+  PC profile's explicit pump/radiator wiring, including deliberate empty roles.
+- Move Ubuntu LACT reads into a cancellable bounded process; optional clocks
+  errors do not block stats, and stale device results cannot update a new GPU.
+- Restore explicit inline GPU power confirmation and fail-closed feature gates.
+- Audit optional backend versions using official sources and native package
+  metadata; add Ubuntu/Arch vkmark dependencies and preserve Fedora commands.
+- Add explicitly selected Ubuntu OpenRGB SDK 6 compatibility while retaining
+  protocol 4/5 support and Fedora's prior negotiation default.
+- Recognize OpenLinkHub user installs, require actual API write acknowledgement,
+  and correct Nexus touch-key casing, inclusive bounds and atomic backup safety.
+- Preserve Windows preview packaging and existing Linux/Windows platform paths.
+- Bind delayed GPU/Hardware Fix callbacks to QObject lifetimes and reject stale
+  Hardware Checker process replies; forbid OpenLinkHub redirects and proxies.
+- Scope all delayed LCD callbacks to window lifetime, preserving timer delays
+  and hardware/recovery semantics, with deleted-page and live-control tests.
+- Keep complete GPU fan labels/curves accessible at narrow sizes, restore the
+  automation navigation switch, and translate all fan-workflow states.
+- Recognize separately installed trusted Ubuntu OpenRGB 1.0/liquidctl 1.16.0
+  without replacing distro packages; four catalogs contain 2,152 messages.
+
+## 3.4.29.152 INTERN · 05.10.26
+
+- Detect the CPU at startup and load its verified default pump/radiator curves
+  while preserving every later user-selected CPU profile or edited curve.
+- Place the CPU automation directly below the cooling ownership/conflict guard.
+- Let PC profiles store CPU_FAN, PUMP_FAN, radiator, pump and chassis mappings;
+  require confirmation before replacing a conflicting mapping.
+- Migrate the owner-confirmed MSI MAG X870 TOMAHAWK WIFI connector layout once,
+  by exact reported connector labels and without writing PWM hardware.
+- Restore the explicit settings panel for sidebar module visibility and extend
+  all four language catalogs to 1,916 shared entries.
+
+## 3.4.29.151 INTERN · 05.10.26
+
+- Split Ubuntu's package-list refresh from dependency installation so a broken
+  third-party source no longer hides that the install step never ran. OHC
+  reports such sources but does not modify them automatically.
+- Reuse an existing `~/nct6687d` Git checkout with `pull --ff-only`, clone into
+  that fixed location only when absent, and stop safely if the path is not a
+  Git checkout.
+- Add the optional persistent NCT6687 fan-helper authorization as wizard step
+  five. Its actual system marker controls the state; package installation
+  remains an ordinary administrator action.
+- Extend all four language catalogs to 1,901 shared entries.
+
+## 3.4.29.150 INTERN · 05.10.26
+
+- Detect Ubuntu, Fedora, and Arch Linux in the guided NCT6687/DKMS/MOK setup
+  and copy a distribution-specific dependency command instead of always
+  presenting Fedora's `dnf` command.
+- Keep the common upstream clone/DKMS path shared, add the MSI-specific
+  `nct6683` blacklist and `msi_fan_brute_force=1` option only on detected MSI
+  X870 systems, and fail closed on unsupported distributions.
+- Show the detected distribution and mainboard in the wizard, localize the new
+  UI in DE/EN/ES/FR, and document matching Arch kernel headers.
+
+## 3.4.29.149 INTERN · 05.10.26
+
+- Add the Hardware Checker → Hardware Fix sub-page with a narrow MSI MAG
+  274QPF X30MV VRR profile, fixed-action job locking, status/adoption controls,
+  actual DRM measurement, and profile-scoped removal.
+- Anonymize the bundled EDID by removing its serial descriptor and omit all
+  personal metadata, local paths, and game history.
+- Add the prominent RGB startup/resume summary, LCD source manager, OpenRGB
+  profile library, and local iCUE NEXUS static design import.
+- Fix the DEB upgrade on current Ubuntu releases by accepting the split
+  `polkitd` and `pkexec` packages as the supported alternative to the legacy
+  `policykit-1` dependency. Fedora/RPM behavior is unchanged.
+
+## Unveröffentlichter RGB-/LCD-/NEXUS-Manager · 05.10.26
+
+- Show RGB startup profile, takeover state and automatic resume in a prominent
+  top panel. After the first explicit takeover confirmation, profile autostart
+  and passive reclaim default to enabled; session ownership and conflict checks
+  remain mandatory.
+- Extend the local LCD media manager to GIFs and connect it to the Kraken page
+  for multiple folders and individual files. Bundled OHC designs always remain
+  visible and removing a source never deletes user media.
+- Add a private, validated OpenRGB profile library. Legacy binary `.orp`
+  profiles can be applied only to their complete saved device scope; OHC does
+  not guess controller records to fake per-device filtering.
+- Add a backed-up, atomic iCUE NEXUS design bridge for local OpenLinkHub user
+  installations. Static 640×48 artwork and bounded manifest-defined touch
+  buttons are imported without a new USB driver; activation uses the documented
+  loopback `/api/lcd/profile` endpoint.
+- Extend all four localization catalogs to 1,888 messages. Fedora packaging and
+  runtime paths remain unchanged.
+
+## Unveröffentlichter RAM-/Levita-/Neustart-Hotfix · 05.10.26
+
+- Show every detected Direct RGB DIMM as one logical memory bank while retaining
+  one stable ID, LED count and SDK frame per physical module. The shared editor
+  applies a validated common count; fixed eight-LED ENE modules stay at eight,
+  while resizable hardware keeps the range reported by OpenRGB.
+- Run the existing bounded ENE Direct reclaim before the first manual RGB
+  design, not only during profile autostart, so accepted SDK frames do not leave
+  cold-started memory controllers asleep.
+- Default Levita to real TRCC control only when both the detected display and
+  backend are present. Missing hardware/backend remains preview-only. The
+  reference TRCC 9.10.4 installation passes all 11 doctor checks and sees USB
+  `87ad:70db`.
+- Add an orderly OHC restart action whose detached waiter validates the old PID
+  and waits for the single-instance owner to exit before relaunching.
+
+## Unveröffentlichte PC-Profil-/RGB-Topologiekorrektur · 05.10.26
+
+- Store a complete, bounded settings-only hardware snapshot in user-created PC
+  profiles: physical ARGB controller/header routes, fan and LED counts, manual
+  headers, LED paths, RAM/device grouping and aliases, selected devices, GPU
+  routes and known PWM-to-case assignments.
+- Restore that topology with stable identifiers and fail closed when a device
+  or header is absent. Loading a PC profile still performs no RGB, fan, GPU or
+  display write.
+- Keep the embedded Case inspector open across combo-box selection and outside
+  clicks; drafts now close only through Save, Cancel, Escape or the explicit
+  close button.
+- Evaluate the supplied runtime log: both ENE DRAM modules repeatedly accepted
+  complete eight-LED SDK frames; the remaining failure was the unconfigured MSI
+  header during intermediate tests, not a RAM transport failure.
+- Resolve stored personal fan defaults into the user snapshot and prevent a
+  legacy one-DIMM route from narrowing a multi-device RAM block to one module.
+
+## Unveröffentlichte Ubuntu-Backend-/Levita-Bibliothekskorrektur · 05.10.26
+
+- Offer the separately maintained TRCC Linux backend on the LCD page only when
+  a Thermalright Levita is detected and the backend is missing; expose the same
+  verified Ubuntu installation in the setup wizard.
+- Add an Ubuntu 26.04 path to the existing LACT installer while retaining the
+  established Fedora and Arch branches. The GPU page, setup wizard and RGB
+  Studio keep their existing LACT/OpenRGB installation actions.
+- Load bundled OHC Levita designs even on a fresh profile with no TRCC/custom
+  folder, and include TRCC's stock, downloaded catalog and user-media roots.
+- Pin the official TRCC 9.10.4 and LACT 0.10.1 Ubuntu packages and verify their
+  published SHA-256 digests before APT installation. No design is applied and
+  no GPU/RGB/fan value is changed by installation.
+- Extend all four localization catalogs to 1,851 messages and add focused
+  installer, media-root and UI regressions.
+
+## Unveröffentlichter OpenRGB-Start-Hotfix · 05.10.26
+
+- On Ubuntu only, prevent OpenRGB CLI clients used for SDK inventory and device
+  commands from performing a second local hardware detection by adding
+  `--nodetect`. Fedora retains its established command line unchanged.
+- On the affected RX 9070 XT system, disable only the matching Sapphire GPU
+  detector in OHC's private OpenRGB configuration after repeated amdgpu SMU
+  timeouts began six to seven seconds after OpenRGB startup. Six other RGB
+  devices remained available during the bounded verification run, with no new
+  SMU, GFX or ring timeout in the kernel log. The failed session had included
+  the Sapphire controller among all seven selected RGB devices.
+
+## 3.4.29.131 INTERN · 01.10.26
+
+- Recognize TRCC Linux 9.10.4's exact successful hand-off to its daemon-owned
+  VideoLoop and keep OHC's memory supervision active without retrying the
+  deliberately completed CLI helper.
+- Record daemon delegation as a healthy runtime transition instead of a ticker
+  failure and keep game/desktop status aligned with daemon-owned cadence.
+- Make the independent Levita shutdown helper restore the installed OHC module
+  root before importing its health model, fixing the observed standalone
+  `ModuleNotFoundError` after the parent process ended.
+- Confirm the official 9.10.4 backend on the reference display with continuing
+  1600×720 frame writes and stable RSS, thread and file-descriptor samples.
+
+## 3.4.29.130 INTERN · 01.10.26
+
+- Finish the responsive no-scroll GPU cockpit, direct five-point fan-curve
+  dragging, exact modern numeric controls and local custom artwork actions.
+- Route fan-only trials exclusively through LACT's reversible physical fan
+  check; graphics load remains exclusive to tuning or an explicit load test.
+- Keep RGB navigation aligned with the visible gallery, prevent the all-designs
+  counter from clipping and scale the compact gallery up to six columns.
+- Add settings-only case-space flow direction, speed and real LED-order editing,
+  plus user-measured fan/component distance or depth in millimetres or inches.
+- Defer SSD-cache maintenance while the user is active and run bounded work at
+  idle I/O priority with cooperative yields and timing telemetry.
+- Extend all four localization catalogs to 1,838 messages and add regression
+  coverage plus renewed GPU/case offscreen rendering evidence.
+
+## 3.4.29.129 INTERN · 01.10.26
+
+- Transfer ownership from the old TRCC daemon PID to the exactly identified
+  replacement after an OHC-controlled display-daemon restart.
+- Teach the independent shutdown watcher the same replacement event so normal
+  exit and crash cleanup stop the current OHC-owned child without touching an
+  unrelated TRCC instance.
+- Add regressions for replacement adoption, stale-old-PID rejection and
+  journal replay of the transferred ownership record.
+
+## 3.4.29.128 INTERN · 01.10.26
+
+- Redesign Snapshot Manager thresholds and Btrfs rate limits as compact cards
+  with synchronized sliders and exact numeric inputs.
+- Add an atomic JSON metadata-list export and explicitly confirmed deletion of
+  one Snapper snapshot through the fixed helper. Reject snapshot zero and keep
+  full rollback outside the one-click UI.
+- Refine the responsive GPU cockpit against the approved reference with a
+  visible device heading, compact live metrics, wide clock/power tracks and a
+  fan curve placed ahead of advanced ownership details.
+- Extend all four localization catalogs to 1,808 messages and add real
+  offscreen renderers for both revised pages.
+
+## 3.4.29.127 INTERN · 01.10.26
+
+- Add Snapshot Manager 1.0 as a configurable main page with Linux distribution,
+  filesystem, backend, Snapper configuration/timer and Btrfs discard discovery.
+- Pause new automatic Snapper work for Feral GameMode, Gamescope, configured
+  processes or KDE full-screen applications. Add an optional multi-core CPU
+  plus GPU heuristic with three-sample entry/release hysteresis.
+- Add separate bounded desktop/game Btrfs discard rates and manual blocking for
+  one hour, a chosen deadline or indefinitely. Already-running kernel work is
+  throttled rather than forcibly terminated.
+- Add a fixed root-owned Polkit helper with no arbitrary command, unit or path
+  input, plus automatic deadline resume and recoverable root-owned mode state.
+- List Snapper snapshots read-only and explain safe inspection. Keep destructive
+  rollback outside the application UI.
+- Extend all four localization catalogs to 1,791 shared messages and add model,
+  security, navigation, packaging, full-UI and rendering regressions.
+
+## 3.4.29.126 INTERN · 25.09.26
+
+- Rebuild the Graphics Card control surface as a responsive three-column GPU
+  cockpit inspired by the approved reference: overview/tuning, fan control and
+  load-test/presentation remain visible together on wide displays and reflow
+  to two or one column on narrower windows.
+- Add a direct-manipulation five-point fan graph, exact spin boxes and Quiet,
+  Balanced and Performance drafts while retaining LACT's reported bounds.
+- Add an explicit “test + apply” path. It performs the reversible physical fan
+  response test first and confirms exactly that candidate in LACT only after a
+  pass; test-only rollback and a separate post-test save remain available.
+- Make the fan workflow state visible and distinguish rollback success from a
+  permanent commit in both the status text and GPU log.
+- Add clipboard buttons for OHC events, LACT service messages or the combined
+  GPU diagnostic report. Keep the general Log copy action scoped to its active
+  category tab.
+- Add GPU cockpit offscreen rendering and interaction regressions without live
+  hardware I/O.
+
+## 3.4.29.125 INTERN · 25.09.26
+
+- Accept an exact 0 MHz AMD GPU clock as a normal power-gated idle sample,
+  while retaining anomaly reporting for negative and over-limit readings.
+- Coalesce repeated identical Qt helper-start diagnostics for five minutes and
+  summarize automatic mainboard-fan curve writes as one bounded batch line.
+- Redesign the Case device table around actual capabilities, hiding impossible
+  LED/PWM cells for display/pump blocks and adding a read-only mapping analysis.
+- Remove the redundant large RGB Studio live-preview panel and enlarge the
+  animated design cards. Add the Spatial category with six presets based on
+  3D Fusion, 3D Crossflow and 3D Depth Wave across saved case LED paths.
+- Keep ring paths individually addressable per fan and physical LED. Existing
+  start point, fan order, clockwise direction and case direction remain intact.
+- Add an optional, default-off GPU fan action that permanently stores a passed
+  fan-only LACT test. Mixed clock/power drafts still require the separate save;
+  a static 100% request remains 1.0 in LACT and failed tests never save.
+- Extend all four localization catalogs to 1,736 shared messages and retain the
+  strict 78,000-character data-file limit through lossless literal compression.
+
+## 3.4.29.124 INTERN · 22.09.26
+
+- Keep fan count and physical topology independent. New LED paths default to a
+  row, and forwarding the case fan count no longer overwrites a saved row or
+  explicitly selected ring layout.
+- Retain the known fan segmentation for both layouts. Ring rendering continues
+  to address each fan separately with its own LED order and clockwise setting.
+- Add a dedicated RGB/fan log view next to the complete and hardware-anomaly
+  views. Path saves and effect plans include layout, total LEDs, fan count,
+  LEDs per fan, endpoints, rotation, fan order and case-space direction.
+- Keep all three log views on the existing bounded 60-minute buffers, including
+  recovered crash-context RGB/fan events.
+
+## 3.4.29.123 INTERN · 22.09.26
+
+- Forward the physical fan count from each case component to its LED-path
+  editor and derive the total from the saved LEDs-per-fan model.
+- Forward unsaved fan-count changes from the open component dialog as well.
+- Upgrade a compatible legacy line path to a ring bank using the declared fan
+  count, so ring direction and fan order are immediately available.
+
+## 3.4.29.122 INTERN · 22.09.26
+
+- Store the case-space animation direction inside each declared LED path.
+  Horizontal and vertical fan groups, the GPU and the support bracket no
+  longer overwrite one shared direction value.
+- Keep the old global direction as a read-only migration fallback. Saving an
+  existing path upgrades only that component without changing any other one.
+- Validate ring-preview geometry before constructing a native Qt painter and
+  close every painter deterministically. Clockwise and fan-order changes no
+  longer paint through a transient combo-box state.
+
+## 3.4.29.121 INTERN · 22.09.26
+
+- Remove the delayed Qt callback that could race destruction of the RGB LED
+  path editor and cause the recorded native segmentation fault.
+- Preserve multi-fan zone shape, default declared fan banks to ring topology,
+  add a per-component animation reverse switch and animate configured fans in
+  the case preview.
+- Pace all Direct devices from one bounded visual clock. Slow 1080-LED batches
+  may reduce motion speed but no longer skip large animation phases, including
+  when only some components have a spatial path.
+- Keep rendering in the separate SDK worker and contain render failures per
+  device so healthy devices and the GUI continue.
+- Add a dedicated GPU navigation icon and an explicit two-step LACT fan test
+  and permanent OHC takeover flow.
+
+## 3.4.29.120 INTERN · 22.09.26
+
+- Add exact-device GPU subprofiles containing the complete LACT configuration,
+  fan/Zero-RPM state and 4K/8K stress-test choices. The selected GPU subprofile
+  is part of a main OHC profile; imported or modified payloads remain safe
+  drafts until locally verified for that GPU.
+- Add optional per-profile startup activation through the existing LACT
+  pending/confirm/revert transaction, power guard, health check and
+  CoolerControl ownership boundary.
+- Default the load test to a maximized KDE window with visible taskbar and add
+  minimized/full-screen choices. When Gamescope is installed, 4K/8K is rendered
+  internally and fitted to the monitor output instead of creating an oversized
+  window.
+- Add an AMD RX 9000/7000 and NVIDIA RTX 50/40 presentation catalog without
+  guessed clocks, power or fan limits. Add horizontal/vertical mounting,
+  original neutral GPU family artwork and a visibility-bound animated
+  fan/curve preview.
+- Redesign the real Qt GPU workspace to match the rendered dark control-deck
+  direction, including live GPU/hotspot, fan RPM and power cards, deeper
+  profile artwork panels and clearly separated primary safety actions.
+- Import transparent PNG/WebP GPU artwork into a private 0600 OHC copy with
+  strict size/type/alpha/path checks. Change/removal never touches the source.
+- Extend all four localization catalogs to 1,722 unique shared messages and add
+  regression coverage for profiles, artwork, PID-bound KWin presentation,
+  Gamescope scaling and the complete offscreen UI.
+
+## 3.4.29.119 INTERN · 22.09.26
+
+- Fix the GPU fan preview crash caused by intersecting change-dictionary data
+  directly with a set. Fan-mode and curve changes now enter the existing
+  bounded LACT preview and response verification path.
+- Stop and disconnect the case ARGB route inventory timer before its dialog
+  accepts and opens the LED editor. Preserve the live topology preview's Qt
+  ownership when moving it into the responsive component layout.
+- Keep a private, bounded crash-context ring containing the final five minutes
+  of already-redacted application log lines. After an incomplete exit, write
+  `last-crash-context.log` and replay it into the next visible/session log.
+  Enable all-thread Python tracebacks for fatal native signals and archive the
+  prior trace on restart.
+
+## 3.4.29.118 INTERN · 20.09.26
+
+- Add a ten-second, user-rated GPU/support LED smoothness wizard to the
+  existing motion editor. It changes bounded GPU approach, fade and tempo
+  only after the user requests another candidate, and saves only after
+  “Smooth · apply”.
+- During calibration, black out other selected Direct zones and compatible
+  native/NZXT lights. Restore the selected design when the wizard closes;
+  abort on lost hardware ownership or missing confirmed frames.
+- Keep the proven whole-device OpenRGB SDK path. A newly confirmed frame on
+  both paired controllers starts each ten-second observation period.
+- Use temporary blue/white on the paired strips during calibration. Pixel
+  and fan-zone tests light only the chosen pixel/zone white and turn other
+  selected OHC LEDs off, with guarded restoration after closing the dialog.
+
+## 3.4.29.117 INTERN · 20.09.26
+
+- Remove both zone-packet trial switches and the subsequent SDK zone-write
+  path after the owner's `.116` log showed timeouts and an OpenRGB process
+  crash when both trials were enabled. Saved trial settings are ignored.
+- Preserve the previously working whole-device frame path, existing Direct
+  preparation, LED counts, GPU/support motion controls and Case preview.
+  Record that a full OHC restart restored the owner's RGB devices; optical
+  fluidity remains a separate investigation.
+
+## 3.4.29.116 INTERN · 20.09.26
+
+- Restore complete OpenRGB device frames as the default for both GPU and
+  support after the owner's `.115` log showed timeouts and an OpenRGB engine
+  exit following the MSI zone-packet trial. Ignore the former saved trial key.
+- Offer separate explicit GPU and support comparisons, both initially off.
+  Disable an active trial on an SDK failure or managed-engine exit and log
+  component, packet path and fallback. The read-only animated Case schematic
+  remains unchanged.
+
+## 3.4.29.115 INTERN · 20.09.26
+
+- Compare OpenRGB's documented per-zone SDK packet with the previous whole-device
+  frame path on an explicitly routed MSI GPU controller. The GPU dialog can
+  return to the previous path; the log identifies the path used. SDK frame
+  acknowledgements remain distinct from visible hardware updates.
+- Animate configured GPU, support and RAM LEDs in the Case schematic while an
+  OHC effect runs. A missing saved path uses a stylized row rather than
+  inventing a physical LED direction; hidden views pause rendering.
+
+## 3.4.29.114 INTERN · 20.09.26
+
+- Apply GPU/support motion sliders live through the existing OpenRGB worker
+  when a design is running; Cancel restores saved values, Save persists, and
+  a Defaults button restores bounded draft values. The dialog now uses the
+  actual paced frame time during active output instead of free-running at
+  its own smooth 25-Hz preview clock.
+- Add a separate GPU white peak and brighter low-level transitions, based on
+  the owner's video of the saturated GPU strip. The support's light shape and
+  the shared head clock stay unchanged. Do not silently fall back to the old
+  sharp generic effect if GPU rendering fails.
+- Open GPU control from the Case page and GPU component editor. A known single
+  ARGB header goes directly to the LED editor; a distinct button changes its
+  routing. Every related editor names its component. Draw saved physical LED
+  paths as schematic points on case blocks without inferring missing paths.
+
+## 3.4.29.113 INTERN · 20.09.26
+
+- Widen the GPU strip's default approach/fade to 40%/38%, preserving the
+  support strip's 32%/36% and all explicit saved adjustments.
+- Use a fixed shared open-strip travel cycle so tuning either LED row changes
+  only that row's light shape, not the paired row's motion phase. The preview
+  and sole SDK worker calculate the same frame; optical validation remains.
+
+## 3.4.29.112 INTERN · 20.09.26
+
+- Add a live, per-LED GPU/support preview to the existing GPU routing dialog.
+  Approach and fade out are separate per strip, while motion speed stays
+  shared; cancelling leaves
+  the saved effect untouched. Both rows use their configured physical counts.
+- Pace GPU/support motion by dispatched OpenRGB frames. A delayed SDK write
+  cannot skip several virtual frames when the next one is sent. Show measured
+  per-controller transfer rates in the editor; optical output remains unreadable.
+- Keep the two strips on one motion clock, preserve the serial SDK writer and
+  include the motion settings in RGB profile data.
+
+## 3.4.29.111 INTERN · 20.09.26
+
+- Select the LACT GPU explicitly for both benchmark paths. The former
+  `DRI_PRIME=1` routed vkmark to the integrated GPU on the owner's system;
+  a bounded repeated 8K run reached 100% on the intended RX 9070 XT.
+- Keep vkmark's actual GPU banner and exit details, align the scene duration
+  with the selected test length and log GPU clock, power and throttling.
+- Give a newly enabled LACT fan more time to spin up inside the automatic
+  rollback window; require an observed RPM response before permanent save.
+  Disabled fan profiles no longer show a stored target as active.
+- Restrict OHC's default GPU power editor to LACT's device-reported stock
+  limit. A higher limit needs a confirmed unlock and remains below LACT's
+  reported maximum. Ten consecutive excessive-power samples stop an
+  un-unlocked long test and request the matching OHC snapshot rollback.
+- Soften the GPU/support moving-light front and tail with a wider cubic fade:
+  upcoming LEDs glow earlier, adjacent brightness steps shrink and both
+  strips retain the same motion clock and their separate real LED counts.
+
+## 3.4.29.110 INTERN · 20.09.26
+
+- Offer an 8K Phong-shaded vkmark load run with measured average/peak GPU
+  utilization; insufficient load no longer appears as a passed test.
+- Make the GPU fan test button execute LACT's bounded preview, with a
+  validated static-speed mode alongside the existing five-point curve.
+- Add separate input discard, OHC-snapshot restore and confirmed current
+  LACT-profile reset actions. Allow firmware fan release after external
+  LACT changes, without requiring an OHC snapshot.
+- Add a LACT diagnostic tab with OHC action/reading history, bounded
+  systemd journal retrieval and an explicit private local export.
+
+## 3.4.29.109 INTERN · 19.09.26
+
+- Enable the longer GPU load test for the currently active LACT values even
+  when no OHC tuning profile has been saved. Newly installed vkmark is
+  detected without an application restart.
+- Clarify that unsaved tuning inputs are excluded. A current-value test
+  writes no GPU configuration; matching OHC-saved profiles still support
+  rollback after a detected fault.
+
+## 3.4.29.108 INTERN · 19.09.26
+
+- Put the optional vkmark installer beside the GPU tuning preview. When no
+  supported graphics load helper is present, clicking the preview offers
+  the confirmed Fedora package installation before any LACT write.
+- Share installation completion and errors between the Tuning and Lasttest
+  tabs. A successful install leaves the GPU profile unchanged and requires
+  another explicit test click.
+
+## 3.4.29.107 INTERN · 19.09.26
+
+- Create and edit a five-point AMD GPU fan curve in OHC even when LACT has
+  no existing fan profile. CoolerControl ownership checks and LACT's timed
+  preview and explicit save remain required.
+- Add a cancellable 15–120 second GPU load test for settings OHC has already
+  confirmed. Monitor load, temperature and throttle reports; restore OHC's
+  previous LACT snapshot after an observed fault. An aborted or low-load run
+  is not reported as a successful test.
+- Prefer optional vkmark's larger Vulkan scene over the small vkcube helper
+  in Hardware Checker; offer a confirmed Fedora package installation from
+  configured sources.
+
+## 3.4.29.106 INTERN · 19.09.26
+
+- Read LACT's live RDNA4 clock limits, enabling the GPU offset and memory
+  clock controls even when those fields have not been saved in a GPU profile.
+  Changes still require a bounded load preview, verified rollback and a
+  separate permanent save.
+- Check the originally owned TRCC daemon PID directly at shutdown. If it has
+  already exited, another TRCC instance is left untouched and the completed
+  release no longer appears as a failed shutdown.
+
+## 3.4.29.105 INTERN · 19.09.26
+
+- Ask KWin for the actual Wayland output of OHC's own window and move it to
+  the selected primary output when KWin reports a mismatch; no permanent rule.
+- Add confirmed, asynchronous AMD Overdrive preparation through LACT's local
+  daemon, with clear restart guidance and unchanged GPU tuning gates.
+- Fix repeated LCD gallery input-filter exceptions caused by a host field
+  shadowing `QWidget.window()`; the live `.104` session logged this error.
+- The window X now always keeps OHC running in the tray, or minimized in the
+  taskbar without a tray. Only the tray context menu provides manual Quit;
+  the File/header actions close the window instead.
+
+## 3.4.29.104 INTERN · 19.09.26
+
+- Keep LACT GPU measurements and hardware details visible before a GPU profile
+  exists; prefer the dedicated GPU when first opening the page.
+- Explain disabled AMD Overdrive and provide a direct LACT GUI button for the
+  user's setup. Lock tuning until Overdrive and a saved baseline are present.
+- Clarify that an inactive CoolerControl service does not claim the GPU fan,
+  and treat a missing LACT fan profile as already released.
+
+## 3.4.29.103 INTERN · 19.09.26
+
+- Check LACT 0.10.1+ against installed RPM, Pacman or DEB package metadata;
+  LACT 0.10.1 does not implement the previously queried `lact --version`.
+- Finish a successful package installation whose daemon was not started,
+  without needlessly enabling the Fedora COPR again.
+- On Wayland, compare the mapped window surface with the requested output
+  before trusting a potentially stale Qt global rectangle, then check once
+  more shortly after mapping. Preserve a fixed monitor chosen in settings.
+
+## 3.4.29.102 INTERN · 19.09.26
+
+- Add a GPU page with LACT 0.10.1+ measurements, bounded tuning and fan trials,
+  automatic rollback, a separate permanent confirmation and a saved per-GPU
+  baseline for explicit later restoration.
+- Recheck CoolerControl GPU-fan ownership before LACT writes, provide fan
+  release/handoff controls, and keep GPU lighting with OpenRGB.
+- Show OpenRGB-detected GPU lighting controllers in the GPU page, including
+  compatible MSI I²C and ASUS Aura SMBus models without an external ARGB cable.
+  Actual model modes and zones remain authoritative.
+- Add an opt-in Fedora/Arch LACT installation path and an optional LACT/OpenRGB
+  step in first-run setup; other distributions link to official packages.
+- Track exact OHC-owned process identities through application lifetime,
+  attempt bounded cleanup after unexpected exit and log the previous result
+  when OHC starts again. Return a temporarily stopped CoolerControl service.
+- Update four complete language catalogs, dependency version references and
+  OpenRGB SDK regression coverage for protocol-6 servers negotiated at level 5.
+
+## 3.4.29.101 INTERN · 19.09.26
+
+- Diagnose am laufenden System: Der installierte `.98`-Fensterschluss wechselte
+  um 16:56 in den Infobereich. Das spätere echte Beenden schloss OHC sauber,
+  ließ aber den 1,3-GB-TRCC-Daemon nach `device disconnect` weiterlaufen.
+- Stoppe beim geordneten Ende nach der Levita-Firmware-Rückgabe den
+  nachweislich von OHC gestarteten TRCC-Daemon über dessen eigenen IPC-Befehl.
+  Ein bereits beim OHC-Start vorhandener oder inzwischen ersetzter Daemon bleibt
+  unangetastet.
+- Verhindere, dass eine Abschalt-Rückgabe ohne laufenden Daemon durch
+  `TRCC_DAEMON=1` unbeabsichtigt einen neuen startet.
+
+## 3.4.29.100 INTERN · 19.09.26
+
+- Let a direct GPU-test click perform its own initial inventory, then run the
+  bounded graphics test. Add a Vulkan `vkcube` fallback and explain missing
+  helpers. A link is judged under load only while the helper still runs.
+- Give the Hardware Checker, case device list and temperature statistics a
+  consistent adaptive table design; long mainboard names remain fully readable.
+- Use the same compact twelve-segment temperature display in Overview, Cooling
+  and Temperature Recording, with live CPU/GPU/coolant readings in the latter.
+- Refine the 30-LED GPU strip after inspecting the owner-supplied video: keep
+  the blue base visible and narrow the traveling white highlight. LED counts,
+  physical routing and hardware ownership stay governed by existing settings.
+
+
+## 3.4.29.99 INTERN
+
+- Make Display Effects save its selection as the canonical Levita startup
+  design instead of only staging it for a later profile update.
+- Treat minimize-to-tray as a saved minimization preference while every real
+  window/taskbar Close performs ordered cleanup and exits.
+- Unload hidden Qt/FFmpeg video sources and clear their retained frame buffers;
+  reload only when a preview becomes visible again.
+- Debounce idle Python collection and optional glibc heap trimming after page
+  switches/minimization, without a periodic CPU task or private-data swapping.
+- Add regressions for canonical startup persistence, close/minimize separation,
+  decoder release and optional idle heap reclaim.
+
+## 3.4.29.98 INTERN
+
+- Persist the first explicit "keep running in the tray" close choice and reuse
+  it without showing the close dialog again.
+- Migrate an existing explicit `.97` tray choice from the bounded private
+  shutdown journal when the new setting has not been created yet.
+- Keep explicit application/tray Quit, Cancel, disabled tray mode and desktop
+  session shutdown on their existing separate paths.
+- Add regressions proving the second close no longer prompts and that only an
+  actual recorded tray choice qualifies for migration.
+
+## 3.4.29.97 INTERN
+
+- Make window-manager close events unambiguous when tray continuation is enabled:
+  Quit, keep running in the tray, or Cancel.
+- Route the explicit Quit choice through the existing ordered hardware restore,
+  owned-process cleanup and direct Qt exit without waiting for another close event.
+- Add a bounded, read-only interpreter for the private shutdown journal. It
+  distinguishes clean exit, tray continuation, cancellation, incomplete exit
+  and a parent process still alive after the observer deadline.
+- Show the interpreted state in System Status and include the last unfinished
+  shutdown phase when one can be proven from paired phase records.
+- Preserve the existing tray preference, session-shutdown path, restoration
+  ordering and rule that process exit is not physical hardware confirmation.
+
+## 3.4.29.96 INTERN
+
+- Add one-click Hardware Checker page for CPU model, SMT/Hyper-Threading,
+  mainboard, PCIe GPUs, NVMe SSDs and RAM.
+- Run ordinary inventory in a bounded read-only helper process; use one fixed
+  Polkit/dmidecode request for RAM DMI without receiving or storing passwords.
+- Compare current and reported maximum PCIe generation/lanes with pass, warning,
+  failure and unavailable states; avoid false GPU failures from idle downshifts.
+- Add a bounded explicit glmark2 GPU-link load test; no clocks, fans, voltage,
+  firmware or BIOS settings are changed. SSD inspection performs no write test.
+- Support manual RAM model and expected MT/s when firmware data is incomplete.
+- Hardware Checker 1.0 with CPU virtualization state; 1,530 complete DE/EN/ES/FR messages.
+
+## 3.4.29.95 INTERN
+
+- Remove permanent Light Band outline/idle highlight stripes and abrupt faint glow.
+- Regenerate eight loops at real 4800×2160, downsample to native 1600×720, CRF 10.
+- Animate selected LCD layout videos without hover, only in exposed viewports.
+- Default effects preview to the last confirmed display composition; exploration is transient.
+- Clear selection on outside click/Escape/button/page hide; preserve active catalog effects.
+- Disable applying/staging an unselected effect; preserve saved defaults and hardware ownership.
+- Reserve gallery geometry and avoid rebuilding scenes for unchanged/empty motion frames.
+- Refresh current design category, variant, details and credits on live language changes.
+- Display Effects 1.11; 1,483 complete DE/EN/ES/FR messages.
+
+
+## 3.4.29.94 INTERN
+
+- Wider case properties; component/fan and LED-path fields reflow into columns or tabs.
+- Remove inner form scrollbars; retain drafts, validation and Save/Cancel visibility.
+- Refresh late tab captions on live language changes.
+- Broader quintic GPU/support spinner/comet fades, shared paired sampling at real LED counts.
+- PC Case Profiles 1.5 / RGB Studio 1.15; 1,483 atomic DE/EN/ES/FR messages.
+- Preserve physical counts, paths, PWM calibration, SDK ownership and existing LCD recovery.
+
+
+## 3.4.29.93 INTERN
+
+- One explicit Levita default wins over automatic profiles; preview browsing cannot overwrite it.
+- Explicit save/apply stages profile media, and superseded startup retries expire.
+- Daemon recovery replays accepted prepared commands instead of the current preview.
+- Stable large videos avoid periodic 1-GiB resets; growth, real pressure and 3-GiB emergency remain protected.
+- Cache identity includes effective config/source assets; profile motion/FPS persist completely.
+- LCD Runtime 1.1; 1,482 atomic DE/EN/ES/FR messages. No new hardware write protocol.
+
+## 3.4.29.92 INTERN
+
+- Keep static LCD designs alive through the existing daemon IPC ticker, alongside videos.
+- Observe confirmed transfers and finite command deadlines; detect SDK ready/frame stalls.
+- Recover concrete clients with bounded backoff and preserve native backend quarantine.
+- Private module journal retains PID, exit/request/runtime, failure details and retry decisions.
+- Read-only game detection outside Qt; sensor restart and LCD transfer age in System Status.
+- Process Runtime 1.1 / LCD Runtime 1.0; 1,481 atomic DE/EN/ES/FR messages.
+
+## 3.4.29.91 INTERN
+
+- First staged supervised read-only sensor process with shared fresh snapshots;
+  retain fail-safe cooling and existing hardware ownership.
+- Move pure RGB math into the existing bounded SDK worker; keep effects, paths,
+  paired GPU/support clocks and transport target unchanged.
+- Activate inline case properties from single-click side labels without moving.
+- Private exit journal, delayed stack trace and bounded independent parent
+  observation; stop remaining owned processes after restore, then direct Qt exit.
+- In-page actual process/sensor status, per-process CPU/RSS and 1,476 atomic
+  language messages. Autonomous cooling/core and further LCD migration deferred
+  to subsequent validated stages; no installation or new hardware write path.
+
+## 3.4.29.90 INTERN
+
+- Portion LCD card construction, reuse on resize and prepare after three idle
+  seconds without hidden playback or additional hardware workers.
+- Isolate precautionary RAM reclaim from other RGB clocks; drain the last
+  affected frame and invalidate stale leases without reapplying the whole effect.
+- Embed case component, ARGB route/count/path/test, GPU and PWM forms in one
+  right-side inspector; cancel and async-generation guards preserve intent.
+- Persist requested cooling startup independently of acquired control; use fresh
+  fail-closed owner results and retain quiet/individual calibrated profiles.
+- Idempotent explicit tray quit queues Qt exit after isolated cleanup. Restrict
+  overlays to left navigation, delete finished animations, retain live text.
+- UI Performance 1.1, PC Case Profiles 1.3, RGB Studio 1.13, Cooling State 1.0;
+  1,467 complete DE/EN/ES/FR messages. Carry all .89 features; no new hardware
+  write path or optical/native-desktop validation claim.
+
+## 3.4.29.89 INTERN
+
+- Smooth explicit GPU-strip spinner/comet heads with open-end fade, count-aware
+  rate, wider smooth heads/tails and bounded temporal/area sampling.
+- Optionally share GPU effect/clock/normalized progress with the explicitly
+  wired support block. Preserve 30 GPU / 12 support LEDs independently;
+  require selected, conflict-free, unambiguous existing routes. Missing or ring
+  partners remain independent; never auto-select or enable hardware writes.
+- Add localized GPU-setup synchronization checkbox, commit-only persistence and
+  complete-package retention. Log strip renderer/count/shared clock at effect
+  startup, not every frame. Other zones and 25-Hz sole-writer transport unchanged.
+- RGB Studio 1.12; 1,448 atomic DE/EN/ES/FR messages. Local internal packaging;
+  no physical-FPS, firmware-crash-fix or live-hardware compatibility claim.
+
+## 3.4.29.88 INTERN
+
+- Add reversed fan-ring chain order with top/left or bottom/right physical
+  LED 1, independent of per-ring clockwise order. Preview, saved physical paths,
+  complete ZIP packages and all spatial effect samplers share the declaration.
+  Counts, single-pixel tests and existing unmapped playback remain unchanged.
+- Harden complete imports: only exported media/theme/font asset extensions,
+  no file/directory conflicts or duplicate directories; validate before staging.
+- Quiesce owned timers and restart intentions before profile-worker cancellation;
+  a cancellation failure is logged without skipping later shutdown phases.
+- Carry corrected personal wiring, shared case/PWM mapping, count editing/testing,
+  custom fan library and complete profile packages from .87. RGB Studio 1.11;
+  1,446 complete DE/EN/ES/FR messages. Internal local RPM only.
+
+## 3.4.29.87 INTERN
+
+- Add a complete private ZIP export/import in Profiles: typed app settings,
+  all user profiles plus current full profile, case positions/scales, RGB/PWM
+  assignments, custom fan library and associated media/themes/fonts/LCD store.
+  Copy/hash work runs in an owned background worker; strict staged import
+  validates paths, types and checksums, relocates nested paths and restores
+  only on the next startup with rollback. Reconfirm hardware automation/PWM.
+  Existing simple profile JSON exchange remains available.
+- Declare physical LED order in the header editor's LED-path tab: strip
+  start/end, ring count/start/clockwise order and eight case-space directions,
+  including diagonals. Preserve actual physical pixel-test numbering and
+  existing local playback when no spatial mapping is configured.
+
+- Correct the owner's personal Airgoo topology: A1 front 2×8, B7 bottom
+  reverse intake 3×8, B8 rear exhaust 1×8, A8 Thermalright radiator 3×10,
+  B6 GPU support 1×12. Preserve geometry, PWM and unrelated channels.
+- Apply personal corrections once, pin complete saved zone counts against
+  design snapshots and stop inventory refresh forcing B6 back to 24 LEDs.
+- Add a bounded reusable custom manufacturer/model/color/LED fan library,
+  selectable in block and existing zone editors, with explicit model save.
+- RGB Studio 1.10; Profile Bundle 1.0; 1,442 complete DE/EN/ES/FR messages.
+  No new driver, physical LED detection or hardware write path. Local internal
+  packaging only; no installation or public publishing.
+
+## 3.4.29.86 INTERN
+
+- Stop the owned privileged fan-helper through existing stdin EOF before
+  bounded signal fallbacks; permission denial no longer aborts application exit.
+- Isolate orderly cleanup phases, stop owned timers/restart intentions and
+  suppress backend completion callbacks while quitting. Preserve close-to-tray.
+- Clear the clean LCD marker only after successful restoration, not before it.
+- Retain reported offline controller choices without bypassing actual device
+  ownership/quarantine. Refresh open selectors after explicit owned-engine
+  recovery; invalidate stale discovery generations and clear busy/reinit state.
+- Pause background inventory and automatic effect application during a header
+  preview. Prevent overlapping tests; refuse test writes after engine failure.
+- Restore the selected design once on editor close/save after completed tests,
+  never across changed intent, disabled writes, foreign ownership or shutdown.
+- Add bounded per-block brand/model/black-white/LED declarations. The owner's
+  TZMRIT ASIN reference has eight addressable LEDs per fan; two fans suggest 16
+  in the existing bounded header editor, never overwrite unrelated headers.
+- RGB Studio 1.8; Application Shutdown 1.0; 1,394 complete DE/EN/ES/FR entries.
+  These app-side guards do not establish a fix for a native OpenRGB crash.
+
+## 3.4.29.85 INTERN
+
+- Fix unassigned case blocks stopping at “No ARGB header assigned”: offer
+  direct controller/reported-zone selection without drag/drop or recursion.
+- Expose LED-count editing and individual-pixel testing in that selection;
+  reuse the existing bounded SDK editor, ownership guards and serial queue.
+- Persist bounded stable block/header bindings separately from effect and
+  position snapshots. Revalidate inventory; missing ports never reroute.
+- Allow explicit rebinding/unassignment without erasing global LED counts or
+  changing PWM, groups or geometry. GPU blocks retain one GPU-route authority.
+- RGB Studio 1.7; PC Case Profiles 1.2. Reuse all 1,390 DE/EN/ES/FR entries.
+
+## 3.4.29.84 INTERN
+
+- Add bounded visual-only corner resizing and a numerical preview-size editor;
+  preserve it in settings, case/design/full profiles, moves and fan splitting.
+- Keep synchronized or independent cooling scales without duplicating or
+  changing LED/PWM hardware topology. Escape/hide cancels preview gestures.
+- Fit proportional render/hit geometry within cases; improve explicit mounting
+  arrangements and add original 2.5-D projected edges/component shadows.
+- Prefer reported SYS_FAN connector names, retaining internal driver identities
+  in technical details without renumbering mappings or enabling regulation.
+- Open the component editor for double-clicked blocks without RGB assignments.
+- Add side callouts with configured LEDs and physical fan connectors, reserving
+  readable side gutters; unknown values show — and multi-zone lengths stay
+  separate. Read-only display hints do not modify electrical routing.
+- Default RGB selection to all writable devices; add an explicit persisted
+  individual mode with checkable inventory rows. Locked devices stay excluded.
+- PC Case Profiles 1.2; RGB Studio 1.6; 1,390 complete language entries.
+
+## 3.4.29.83 INTERN
+
+- Add a central Case page with shared RGB/LED/PWM mapping, direct block/header editing and optional independent cooling positions without a second hardware topology.
+- Extend bounded header/pixel testing to every reported Direct ARGB zone; protect explicit manual counts from design profiles and log declared/server sizes, offsets and SDK results without claiming physical readback.
+- Render all configured zones independently with count-adaptive sampling and soft spinner/comet, colour and sparkle transitions. Keep intentional flashes and the existing 25-Hz sole-writer transport target.
+- Add 30 detailed original case illustrations, PWM badges and a full-width readable transfer panel. No manufacturer photos or inferred electrical topology.
+- PC Case Profiles 1.1; RGB Studio 1.5; 1,387 shared DE/EN/ES/FR messages. Owner visually confirms 30 personal Sapphire LEDs on MSI JARGB 1; new effect fluidity remains optically unverified. Owner authorizes the local RPM build and standing automatic release-backup rotation without repeated questions, retaining the two newest complete versions (.82/.83).
+
+## 3.4.29.82 INTERN
+
+- Route external GPU ARGB by stable controller ID and reported zone, not controller alone. Render the routed strip with its own effect coordinates; preserve independent lengths and effects for other controller zones.
+- Add a single-header LED-count editor with one GPU = one device and a bounded explicit single-pixel visual test. Keep other saved headers unchanged; do not guess physical GPU LED counts.
+- Retain current physical GPU routes and manual header counts across old/new RGB design profiles and startup. Include route/size changes in effect-request deduplication.
+- Migrate only the owner's confirmed personal Sapphire RX 9070 XT wiring to MSI JARGB 1 once. Remove the accidental three-device multiplier from the owner's 80/90 test declaration; preserve explicit choices and unrelated layouts.
+- RGB Studio 1.4; DE/EN/ES/FR complete at 1,381 entries with mechanically compacted data-only catalogs. Internal packages only; optical hardware validation remains pending.
+
+## 3.4.29.81 INTERN
+
+- Remove automatic External Control selection for Sapphire/native-only GPU designs. Match the actually reported Rainbow Wave, Runway, Serial and Spectrum Cycle modes without inventing Direct LEDs.
+- Add GPU setup from the PC component editor and native controls. Explicitly associate the physically connected ARGB controller and delegate manual LED counts to the existing bounded zone editor.
+- Save stable-ID GPU routing with settings and RGB profiles. Existing profiles default to native effects; missing or unselected Direct sources cannot implicitly activate External Control. Preserve the personal PC layout and other LED counts.
+- Keep DE/EN/ES/FR complete at 1,372 shared entries. Internal packages and rolling backup only; hardware-free checks do not establish optical compatibility.
+
+## 3.4.29.80 INTERN
+
+- Replace the NCT6687 setup sheet with a status-gated step-by-step wizard. Parse affirmative `mokutil --test-key` output even when an unrelated kernel-keyring warning produces exit code 1, run read-only checks asynchronously and enable only the fixed action needed for the current step.
+- Simplify case-fan cards to a friendly System Fan name plus one separate `PWM N` channel caption. Add a confirmed all-assignment reset that stops active OHC control, returns channels to firmware/BIOS and retains saved curves.
+- Let the fan-mapping wizard return directly to the next unassigned or unconfirmed channel from its summary page so every fan can be processed in sequence.
+- Hide unavailable coolant status and coolant curve sources for Thermalright Levita. Give the safe PWM lower-limit warning its own full-width, high-contrast panel.
+- Open the assigned RGB device from a double-clicked PC-view component and launch LED-zone editing for Direct devices. For the supplied Sapphire GPU, preserve the honest one-logical-LED hardware-mode boundary reported by OpenRGB instead of inventing addressable LEDs.
+- Treat KDE/Wayland's visible StatusNotifier tray icon as reachable even when Qt reports no icon rectangle. The X button hides OHC from the task manager again; explicit Quit remains the only close path that performs hardware shutdown.
+- Keep German, English, Spanish and French complete with 1,365 shared message entries. Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.79 INTERN
+
+- Add application-wide lightweight page transitions with fade, slide and glow choices. They animate only a transparent overlay, never capture or double-render a page, and stop as soon as the target page is hidden.
+- Add a central bounded SSD cache with disabled, 0.5, 1, 2 and 4 GiB presets. LCD/Wallpaper catalogs and scaled previews use it; low-priority maintenance removes the oldest regenerable files first without touching originals.
+- Defer multi-second ENE-DRAM recovery work while page navigation is active and suppress detailed startup diagnostics for ordinary hidden Qt surfaces.
+- Keep the case-fan automatic-control button synchronized with the real persisted controller state, including its full blue active presentation and rollback after an ownership failure.
+- Replace the static NCT6687 setup text with a localized staged assistant for the driver, DKMS certificate, fixed `mokutil --import /var/lib/dkms/mok.pub` terminal action, physical MOK Manager enrollment and post-restart module load. Passwords remain exclusively in the terminal/UEFI and Secure Boot is never disabled or bypassed.
+- Complete the localized Wallpaper Engine setup flow with an explicit KDE/Qt D-Bus helper-package step from configured repositories, separate from the SHA256-verified CaptSilver plugin flow.
+- Fix the supplied close-button regression: with close-to-tray enabled, transiently invalid tray geometry now minimizes visibly and leaves LCD/RGB/cooling running. Explicit exit still performs orderly hardware cleanup and always terminates the process.
+- Extend the close target to 48×42 pixels through the top-right corner and keep window-resize handling from stealing that corner click.
+- Keep German, English, Spanish and French complete with 1,353 shared message IDs. Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.78 INTERN
+
+- Correct the RGB gallery's inherited painter-font growth, use fixed pixel sizes, elide long titles and reserve the favourite area so lower cards no longer become oversized or overlap.
+- Reorder RGB Studio around top actions, full-width live preview, a separated design gallery, the PC layout and lower device/effect details; render the visual preview with at least 24 LEDs without changing physical device writes.
+- Reuse Display Effects cards and cached posters during responsive relayout, defer playback until the page shell has painted, cap local composition at 20 FPS and keep bundled video playback active only while visible.
+- Extend visibility-bound presentation work across menus: pause LCD movies and the animated app background outside their visible surface, stop Thermalright preview timers and thumbnail workers outside the actual gallery viewport, load Wallpaper thumbnails only for visible cards and stop the optional desktop-shell clock while hidden. Hardware output, monitoring and cooling loops remain independent.
+- Close normally whenever the configured tray icon is not actually reachable, preventing an invisible surviving process; the existing single-instance activation remains available when the tray is valid.
+- Keep German, English, Spanish and French complete with 1,292 shared message IDs. Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.77 INTERN
+
+- Stop high-frequency RGB and Levita preview painting whenever the corresponding page is hidden; defer hidden Levita gallery-card and thumbnail work until the LCD page is opened, and reduce idle GameMode process polling from three to ten seconds.
+- Recognize the reproduced TRCC “interface is in use by another process” failure as recoverable. Try the existing IPC release first and, only if it fails, signal an exactly revalidated same-user `trcc daemon`; add an explicit “Display freigeben” action for a deeply stuck daemon.
+- Restore the saved motherboard/case-fan master state and global curve template visibly after startup, including the blue active state of both automatic control and the chosen preset.
+- Keep the main window surface suppressed until its requested normal or maximized state has been applied, so the first visible frame already matches the saved startup mode.
+- Summarize hidden Qt helper surfaces in the startup window snapshot instead of synchronously writing roughly 160 detailed entries into both persistent and visible logs.
+- Recheck official external underpinnings: retain current stable TRCC Linux 9.9.12, OpenLinkHub 0.9.1 and liquidctl 1.16.0; document OpenRGB 1.0-rc3.1 SDK-5 compatibility, update the Qt/PySide reference to 6.11.2 and retain security-fixed Pillow 12.3.0 as the image baseline without silently replacing system packages.
+- Keep German, English, Spanish and French complete with 1,292 shared message IDs. Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.76 INTERN
+
+- Diagnose the supplied long-running Levita failure as a TRCC daemon memory leak: the kernel OOM-killed it at roughly 15.5 GB RSS, leaving a newly spawned daemon holding USB while the old video ticker had lost IPC.
+- Monitor only the exact current-user `trcc daemon` process once per minute and, at 1 GiB RSS, stop the ticker, release the daemon through its IPC kill command and reapply the selected design through the existing sole-writer queue.
+- Use the same bounded, five-minute-cooled recovery immediately when the video ticker reports a lost daemon connection; do not signal foreign processes or open a second USB owner.
+- Replace the visible 10,000-character log truncation with 60-minute application/hardware ring buffers and hard 30,000-line/4-MiB safety caps.
+- Persist redacted runtime and uncaught-exception failures in a private bounded `errors.log`; include its latest 400 lines in explicit diagnostic collections.
+- Keep German, English, Spanish and French complete with 1,291 shared message IDs. Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.75 INTERN
+
+- Guard the temporary normal mapping used during startup so it cannot be saved as a user window-state change; delayed startup profiles no longer apply stored window geometry or trigger a second placement pass.
+- Reflow LCD Layer-1 backgrounds, Layer-2 data surfaces, free effect cards and Display Effects sensor layouts from their actual viewport width, distributing up to twelve cards per row while preserving selection.
+- Add a non-destructive LCD media manager for up to 32 folders and 500 individual images/videos, per-item display aliases and exclusions. It never renames, moves or deletes source files and does not bundle external TRCC media.
+- Present TRCC catalog IDs with readable category names and clearer OHC cyber/layout names while keeping stable source paths and profile references.
+- Show local date plus time on temperature chart axes, hover details and the readings table; add resizable split views and explicit CSV/JSON exports for a selected absolute range and any recorded sensor set.
+- Continue recording all available read-only hwmon temperatures regardless of which series are currently visible. No background report file is created and no tuning/hardware ownership is taken.
+- Keep German, English, Spanish and French complete with 1,291 shared message IDs. Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.74 INTERN
+
+- Map the main window in its normal state on the selected screen before applying a requested maximized state in the following Qt event-loop cycle.
+- Verify the screen actually chosen by KWin after the first Wayland mapping and correct a Discover/start-token override only when the observed screen differs from the saved target.
+- Record the post-mapping screen and final geometry so future multi-monitor diagnostics distinguish the compositor result from OHC's requested target.
+- Show a minimized tray window before applying its target screen and run the same delayed confirmation after tray activation.
+- Keep all hardware, profile and display paths unchanged. Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.73 INTERN
+
+- Make the tray restore action cooler-model aware: Thermalright Levita releases the single TRCC owner and returns to the built-in firmware screen, while NZXT Kraken retains its liquid-temperature action.
+- Add prominent Thermalright original-display controls to the LCD page and Display Effects without creating another USB owner; test mode remains strictly write-free and an already-detached daemon is treated idempotently.
+- Make the tray Quit action final on its first click by bypassing close-to-tray only for an explicit quit and running the existing cleanup path once.
+- Re-render all eight original OHC Light Bands from 3200×1440 supersampled sources and encode the native 1600×720 output at higher quality for sharper LCD playback.
+- Keep German, English, Spanish and French complete with 1,277 shared message IDs. Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.72 INTERN
+
+- Move Spectrum Ring, Neon Double Arc, Prism Segments and Aurora Radar animation exclusively into editable Layer 2, each with an enabled-by-default on/off control and original glow, particle and motion rendering.
+- Compose a chosen Layer-1 background and animated decoration locally into one validated cached 1600×720 stream beneath the live data; the existing TRCC daemon remains the sole USB owner.
+- Separate preview FPS from physical LCD FPS, retain 15 FPS as the default, and expose 60 LCD FPS only through an explicit experimental Settings opt-in with automatic 60→30→20→15 fallback.
+- Detect games conservatively through Feral GameMode, Gamescope, an explicit process allow-list or manual mode; do not infer games from system load or inspect arbitrary Wayland windows.
+- Restore the real normal/maximized main-window state before first display and clear every frame-resize cursor on leave, hide, close, deactivation and state change.
+- Remove the obsolete Layer-1 Spectrum Ring catalog entry and automatic Layer-1/Layer-2 coupling; keep selection/profile staging and all hardware ownership boundaries unchanged.
+- Keep German, English, Spanish and French complete with 1,268 shared message IDs. Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.71 INTERN
+
+- Replace the hidden Layer-1 design combo with a graphical preview-card gallery while retaining category/colour filters and visible creator, original-source and licence links.
+- Add the original deterministic OHC Spectrum Ring loop and automatically pair it with the matching editable live-data layout; no reference frame, manufacturer logo or copied product geometry is included.
+- Polish original OHC Layer-2 themes with consistent local DejaVu typography, compact glass clock frames and a deliberately subtle static ring beneath the moving design.
+- List the dynamic primary screen and every fixed connector in Settings, and place maximized windows normally on the requested output before re-maximizing to prevent KWin restoring the old monitor.
+- Rename the owner's eight cyber images and retained high-quality corridor video descriptively; move the two lower-quality duplicate encodes to a recoverable folder outside the scanned library.
+- Keep profile-update staging, the single TRCC queue and every cooling/hardware ownership boundary unchanged; DE/EN/ES/FR contain 1,250 shared message IDs. Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.70 INTERN
+
+- Add four original editable rainbow telemetry layouts: Spectrum Ring, Neon Double Arc, Prism Segments and Aurora Radar, with no manufacturer logo or copied product artwork.
+- Extend the layer-2 editor to manage up to twelve custom text elements with text, locally installed font, size, colour, visibility and free position.
+- Stage custom fonts and text through a private validated native theme while preserving the existing single TRCC queue and hardware ownership boundary.
+- Fix the Levita canvas at 880×396 (the exact 1600:720 ratio) so expanding, collapsing, switching or scrolling adjacent controls cannot resize the preview.
+- Record the non-destructive multi-folder and individual-file LCD Design Manager as committed work for one of the next two or three versions.
+- Keep German, English, Spanish and French complete with 1,226 shared message IDs. Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.69 INTERN
+
+- Add synchronized browser-like tabs for `Display & layout` and `Display effects` to both LCD child pages while keeping the existing expandable sidebar.
+- Introduce reusable Section Tabs 1.0 so future multi-page sections use the same stable page-ID navigation pattern.
+- Make Display Effects 1.7 mirror an active bundled Levita medium through its exact validated path, including category, design and colour variant.
+- Add the original, reproducibly rendered OHC Light Ribbons design as eight seamless 1600×720 directional variants; no reference-video frames, cooler geometry or product logo are included.
+- Block user-change signals during synchronization; opening the page does not stage a profile or call the TRCC/hardware path.
+- Keep German, English, Spanish and French complete with 1,220 shared message IDs. Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.68 INTERN
+
+- Expose Cooling as an expandable sidebar section with fixed `Control & profiles` and `Temperature recording` child entries, matching the established LCD navigation.
+- Synchronize sidebar selection and the internal Cooling view in both directions and preserve both children through navigation customization/reset.
+- Confirm from the supplied log and installed RPM query that 3.4.29.67 was running; the recorder existed but was insufficiently discoverable. No sensor, cooling or hardware-write path changed.
+
+## 3.4.29.67 INTERN
+
+- Added a dedicated Cooling temperature recorder for all plausible read-only Linux-hwmon sources, with group/series filters, long session windows, hover values and current/minimum/maximum statistics.
+- Added conservative model-aware Levita PWM floors (50% pump, 25% radiator) at every control and final-write boundary because Thermalright publishes maximum RPM but no minimum duty.
+- Fixed the profile table shrinking after update, preserved selection, exposed stored content in a tree and added freely combinable profile sections.
+- Kept sensor sampling strictly read-only so monitoring does not take GPU/CPU tuning ownership from Open Radeon Control Center or other tools.
+
+## 3.4.29.66 INTERN
+
+- Replace the ambiguous manual state after Quiet/Balanced/Performance with an explicit fixed-profile state. Pump and radiator values remain fixed and case fans continue receiving the matching curve template; no cooling policy or duty value changed.
+- Add Hardware Backends 1.0 with persisted, fail-closed Automatic/TRCC Linux and Automatic/OHC Linux-hwmon choices. Native Levita and CoolerControl adapters are visible but disabled until a validated implementation exists.
+- Add Temperature History 1.0 to Overview: selectable CPU, GPU and genuine coolant series, 5/15/60-minute or full-session windows, and an interactive hover cursor with timestamp and readings.
+- Keep at most one hour/1,800 validated readings in memory only. No telemetry is written to disk and no coolant value is synthesized for Levita.
+- Extend German, English, Spanish and French atomically to 1,182 stable messages; preserve calibration, CoolerControl ownership, watchdog, firmware return and all existing transport boundaries. Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.65 INTERN
+
+- Compare the photographed application preview with the physical 1600×720 Levita output and isolate the mismatch to TRCC's wider/taller live-value font rather than block positions.
+- Add an automatic per-value TRCC safety calculation using the configured text and font size with 22 percent width and 12 percent height reserves.
+- Regenerate all three Nebula Drift presets; depending on the value, their frames are approximately 16–18 percent wider and 10–12 percent taller.
+- Preserve the faint translucent artwork, video visibility, live-data definitions, positions, single-owner TRCC queue and all hardware-write paths. Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.64 INTERN
+
+- Restore the original faint RGBA Nebula Drift artwork so the selected Layer-1 video remains visible beneath the complete data surface.
+- Replace the broad opaque clock and metric cards with compact dark pills sized only around each live value.
+- Bundle three editable presets with different data densities: Minimal, System and Performance.
+- Composite the gallery previews over a bundled landscape thumbnail to make the actual two-layer result visible before applying it.
+- Add alpha/transparency, theme discovery and distinct metric-set regressions. Preserve the single-owner TRCC queue, display transfer, cooling curves and every hardware-write path. Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.63 INTERN
+
+- Replace the ambiguous motherboard/case-fan card state captions with explicit next actions: “Automatik einschalten” while inactive and “Automatik ausschalten” while active.
+- Update German, English, Spanish and French together without changing the existing 1,151 stable message IDs.
+- Add an offscreen regression that toggles a simulated calibrated channel in both directions and verifies the matching action label after each rebuild.
+- Preserve every curve, calibration, channel assignment, ownership boundary, watchdog, firmware-return rule and hardware write path.
+- Add dark translucent clock/metric cards to Nebula Drift while preserving its original source background, and separate the project-owned Orbit, Aqua Pulse, Horizon Glass and Split Core layouts into orbital, wave, glass-bar and angular visual styles.
+- Make the Layer-2 renderer selectively reproducible per theme and refresh all generated previews with a real scalable Noto/DejaVu font instead of an undersized bitmap fallback.
+- Correct the release-backup note lookup to the canonical `docs/releases/` directory. Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.62 INTERN
+
+- Raise Display Effects to 1.6 and add 15 locally bundled, silent 1600×720 videos in Space & Earth, Landscape & sky, and Water & underwater; retain the five abstract designs and add a four-category filter.
+- Review every selected excerpt for visible people, title cards and technical overlays. The rejected Saturn-tech, artificial 3D galaxy fly-through and Grand Canyon people clips are not included.
+- Add five editable Layer-2 themes derived from individually named CC0 Kenney components and four original OHC Layer-2 themes, each with live metric blocks and notch-safe geometry.
+- Preserve strict packaged-media validation, profile-start staging and the sole existing Levita/TRCC hardware writer; the new catalog performs no runtime network access.
+- Extend German, English, Spanish and French together to 1,151 stable messages and document each media source, creator and license. Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.61 INTERN
+
+- Split application styling into versioned UI Themes 1.0 with independent light/dark definitions, an allowlisted registry and a shared controller suitable for future theme additions.
+- Rework light-mode semantic surfaces so cards, navigation, status panels, editor overlays and Layer-2 choices retain readable contrast without dark-only fragments.
+- Raise Display Effects to 1.5 and decode the selected validated bundled MP4 in the large local preview. Dark Smoke begins at its visible three-second motion point.
+- Pause preview decoding on Pause, page changes, window minimization/hiding and controlled shutdown; keep the existing Layer-2 composition and sole Levita/TRCC hardware hand-off.
+- Selecting a library effect now automatically stages its media and Layer 2 for the next LCD/full profile update; generated effects are staged once their video exists, and a dedicated button plus translated hint expose the same workflow. The chosen startup profile restores that Levita design before the existing delayed start, while selection alone remains hardware-write-free.
+- Add Qt Multimedia to GUI dependency detection and Debian package metadata. Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.60 INTERN
+
+- Reject a maximized monitor work-area rectangle as normal window geometry, persist the floating rectangle separately, clamp every edge to the selected monitor and adapt minimum bounds on small logical HiDPI desktops.
+- Add a 60–95% windowed-size preference and a `Ctrl+Alt+0` safe-fit action that restores accessible title-bar controls without changing KDE monitor configuration.
+- Rebuild the PC/case area as a compact two-column workspace with model-family OHC silhouettes, selectable AIO/air visualization, direct airflow reversal and fan-block splitting into individually draggable objects.
+- Remove the personal Retro 360 Amazon action while retaining each manufacturer source; migrate Devices and Effects to collapsed once for existing installations.
+
+## 3.4.29.59 INTERN
+
+- Add an OHC-drawn accessible title bar whose move and edge-resize operations are delegated to Qt/KWin on Wayland and X11; preserve maximize/restore, tray-aware close behavior and minimized-autostart suppression.
+- Nest Display & Layout and Display Effects below LCD and collapse the subtree when another main area is selected.
+- Make RGB Studio compact by default, show four suggestions, add persistent favorites and categorized full-library views, and append Nebula Pulse, Liquid Metal, Ember Flow and Arctic Halo without changing saved older indices.
+- Add PC Case Profiles 1.0 with 30 original schematic templates, an exact Thermaltake Retro 360 TG default, official/Amazon links and bounded local custom profiles. No manufacturer artwork or additional hardware writer is included.
+- Extend German, English, Spanish and French together. Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.58 INTERN
+
+- Fix the supplied-trace reproduction where every Display Effects library Apply click ended before any `THERMALRIGHT` command: packaged assets were incorrectly sent through the generated-cache-only path check.
+- Add Display Effects 1.3 with a shared strict handoff validator and separate explicit roots for generated cache videos and packaged offline library videos. Symlinks, outside paths and non-MP4 files remain rejected.
+- Route bundled choices through the dedicated Levita Studio entry point, retain the existing Layer-2/apply/USB ownership path, and log both accepted selections and pre-apply failures.
+- Update the renamed smoke worker imports so procedural rendering remains available under the sole current module folder. Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.57 INTERN
+
+- Confirm from the supplied trace that the daemon-side Levita `display play` ticker ended unexpectedly after a long run and left the selected display effect frozen as a still frame.
+- Restart only that daemon IPC ticker with bounded 1/2/4-second backoff. A run lasting at least 30 seconds renews the retry budget; three rapid failures stop without an infinite loop, USB reconnect or second hardware owner.
+- Retain the last bounded, privacy-filtered TRCC stdout/stderr tail in the status log so a future backend exit has actionable evidence instead of discarded output.
+- Raise the Levita data-surface/runtime module to 1.5 and add pure restart-policy plus UI-wiring regressions. Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.56 INTERN
+
+- Add five attributed free-media Display Effects—Seamless Smoke, Dark Smoke, Particle Fog, Fluid Waves and Digital Wave—with Original, Ice Blue, Plasma Violet and Ember Orange 1600×720 H.264 variants.
+- Separate the main design and colour subcategory, show creator/source/license as clickable links in the app, and record every source in the bundled asset README and central third-party notices.
+- Keep the new library fully offline and pass selected media through the established Levita Studio, Layer-2 composition, reconnect barrier and sole TRCC owner.
+- Repair the blank `FENSTERDIAGNOSE:` lines found in the supplied trace by restoring the accidentally unreachable native-window summary; the QColorDialog entries themselves are expected user-visible colour-picker events.
+- Extend German, English, Spanish and French together and add catalog, asset, attribution and diagnostics regressions. Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.55 INTERN
+
+- Make startup responsive by scheduling hardware initialisation after the first Qt event turn, replacing the shell-based dependency probe with direct runtime-capability checks, and deferring Levita media-card construction until the window can paint.
+- Add Responsive Startup 1.0: CoolerControl service/process inspection runs in a bounded, coalesced `QProcess` helper instead of the GUI thread. Unknown or failed state remains fail-closed and active OHC fan control is released if a competing daemon appears.
+- Replace the Display Effects Layer-2 combo with graphical LCD-Studio preview cards and move effect type to the top of the Effect settings panel.
+- Speed first-time effect encoding with the compatible ffmpeg `veryfast` preset and avoid rebuilding the entire Levita gallery when a cached generated effect is already present. The established reconnect barrier, single TRCC owner and ten-second hardware-change cooldown remain unchanged.
+- Extend all four modular language files together and add focused startup/effect-selection regression coverage. Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.54 INTERN
+
+- Add a modular Display Effects 1.0 page next to LCD with a deterministic procedural smoke renderer, live Layer-2 sensor-layout composition, persisted presets and bounded ffmpeg export through the existing Levita Studio apply path.
+- Add OpenLinkHub Update 1.0: bounded official release metadata, published SHA-256 verification for user-space archives, safe extraction, recoverable installation backup/rollback, and fixed pkexec DNF/APT commands for package-managed installations. The bundled web UI updates together with OpenLinkHub.
+- Complete the German/English/Spanish/French switch for icon-prefixed navigation, runtime fan cards, page headers and About content; require every new Display Effects/OpenLinkHub control in the same four per-language files.
+- Suppress desktop startup feedback for tray-only autostart and route a second launcher invocation to the running instance through a private local activation socket while retaining the hardware process lock.
+- Keep Levita/Kraken shutdown safety intact and remove a QProcess shutdown race that could dereference the cleared current process after a synchronous finished signal.
+- Internal build only; no GitHub push, tag or public release.
+
+## 3.4.29.53 INTERN
+
+- Gibt die Levita beim echten Programmende, beim Tray-„Beenden“, bei Logout und bei behandeltem System-Shutdown nicht mehr nur an das aktive TRCC-Theme, sondern vollständig aus dem TRCC-Daemon frei. Dadurch endet auch dessen Live-Neurendering; nach dem dokumentierten Firmware-Zeitlimit von etwa zwei bis drei Sekunden erscheint wieder das eingebaute Thermalright-Standardbild statt des letzten OHC-Frames.
+- Startet nach jedem bestätigten echten Levita-Schreibzugriff einen kleinen prozessgetrennten Pipe-Wächter. Verschwindet der OHC-Hauptprozess unerwartet, sendet dieser genau einen auf drei Sekunden begrenzten, offscreen ausgeführten `trcc device disconnect 87ad:70db`-Aufruf an den vorhandenen Daemon. Ein sauber bestätigter Rückfall beendet den Wächter ohne doppelten Zugriff.
+- Behält Testmodus und USB-Besitzgrenzen bei: reine Vorschau startet keinen Wächter, der Wächter verwendet kein eigenes USB-Protokoll und validiert den absoluten ausführbaren `trcc`-Pfad sowie die feste Levita-ID.
+- Bestätigt den bestehenden Kraken-Abschaltpfad erneut: laufender CAM-Raw-Stream stoppt zuerst, danach setzt liquidctl synchron die originale Flüssigkeitstemperaturanzeige; eine unsaubere experimentelle LCD-Sitzung bleibt über den vorhandenen Startmarker abgesichert.
+- Ergänzt fokussierte Regressionstests für den shellfreien, zeitbegrenzten Daemon-Disconnect, Pfadvalidierung, Wächter-Lebenszyklus sowie Levita-/Kraken-Integration.
+- Interne Version; kein GitHub-Push, Tag oder öffentliches Release.
+
+## 3.4.29.52 INTERN
+
+- Verschiebt den vollständigen Sprachbestand in das versionierte Modul `src/modules/localization/v1_0/`.
+- Hält Deutsch, Englisch, Spanisch und Französisch jeweils in genau einer eigenen Datei; jede Datei enthält UI-, Einrichtungsassistent- und Hilfetexte der Sprache.
+- Ersetzt den bisherigen großen Mischkatalog und die drei fachlich gruppierten Zusatzkataloge durch einen kleinen Katalog-Assembler. Dieser lehnt doppelte deutsche Quellen sowie fehlende oder zusätzliche stabile Nachrichten-IDs sofort ab.
+- Behält `src/localization_catalog.py` als dünne kompatible Importoberfläche bei, sodass Hauptfenster und bestehende Integrationen unverändert auf den Katalog zugreifen.
+- Aktualisiert KI-Regeln, Modulregister, Architektur, Installer, Paketbau sowie Offscreen- und Sicherheitstests auf die Ein-Datei-pro-Sprache-Struktur.
+- Interne Version; kein GitHub-Push, Tag oder öffentliches Release.
+
+## 3.4.29.51 INTERN
+
+- Repariert den Sprachwechsel für die vollständig aufgebaute Oberfläche: Schaltflächen, Auswahlfelder, Kontrollkästchen, Gruppen, Reiter, Menüs, Tabellenköpfe und Platzhalter besitzen jetzt atomare deutsche, englische, spanische und französische Einträge.
+- Übersetzt dynamische Galerieangaben werttreu: persönliche Dateinamen bleiben erhalten, während Bild-/Video-/Live-Layout-Typen, Galerie-Zähler und Farbbeschriftungen in der gewählten Sprache erscheinen.
+- Ergänzt hervorgehobene Seiten- und Statustexte für Übersicht, Kühlung, Gehäuselüfter, Levita, RGB, Profile, Einstellungen und Hilfe.
+- Teilt den Sprachbestand in kleine Fachdateien auf und nimmt diese in Installer, ZIP, RPM, Release-Prüfung und Sicherheitstests auf.
+- Macht die gleichzeitige Pflege von Deutsch, Englisch, Spanisch und Französisch für jede künftige sichtbare UI-Änderung in allen KI-Anleitungen verbindlich. Der vollständige Offscreen-UI-Test lehnt neue unübersetzte Bedienelemente ab.
+- Interne Version; kein GitHub-Push, Tag oder öffentliches Release.
+
 ## 3.4.29.50 INTERN
 
+- Ergänzt die Levita-Galerie um drei projekt-eigene, nahtlose 10-Sekunden-3D-Loops in 1600×720: **Orbital Ring** (Weltraumtor und Planet), **Neon Apex** (futuristischer Sportwagen) und **Quantum Core** (pulsierender Reaktor). Die stummen H.264-Dateien enthalten keine Hersteller-/Stockmedien; `tools/render_levita_loops.py` hält Geometrie und Bewegung reproduzierbar.
 - Synchronisiert die obere Kühlprofilwahl und gespeicherte Kühlprofile mit den Gehäuselüfterprofilen. **Leistung** wird von einer temperaturabhängigen Kurve zum konstanten 100-%-Override für Pumpe, Radiator und Gehäuselüfter; bei laufender OHC-Regelung werden bestätigte, aktivierte und schreibbare Kanäle sofort aktualisiert.
 - Ergänzt direkt auf jeder System-Fan-Karte den vorhandenen bestätigungspflichtigen 0-%-/10-s-Stopptest. Vorherige Firmware-/hwmon-Zustände werden nach dem begrenzten Test wiederhergestellt.
 - Erklärt bei NCT6687-Treibern ohne `pwmN_mode`, dass der elektrische PWM-/DC-Modus im BIOS festgelegt bleibt. OHC nutzt weiterhin ausschließlich dokumentierte sysfs-Knoten und erzwingt keine unbekannten Register; meldet der Treiber `pwmN_mode`, bleibt die sichere Umschaltung mit Warnung und erneuter Kalibrierung verfügbar.

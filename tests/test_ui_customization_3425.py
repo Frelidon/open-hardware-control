@@ -3,8 +3,13 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parents[1] / "src"
 code = (root / "kraken_control.py").read_text(encoding="utf-8")
+theme_controller = (root / "modules/ui_themes/v1_0/controller.py").read_text(encoding="utf-8")
+theme_controller += "".join((root / "modules/ui_themes/v1_0" / name).read_text(encoding="utf-8")
+                            for name in ("style_base.py", "style_controls.py"))
+light_theme = (root / "modules/ui_themes/v1_0/light.py").read_text(encoding="utf-8")
 privacy = (root / "privacy_logging.py").read_text(encoding="utf-8")
 fan = (root / "mainboard_fan_control.py").read_text(encoding="utf-8")
+module_panel = (root / "modules/navigation_settings/v1_0/panel.py").read_text(encoding="utf-8")
 
 # Fixed navigation anchors and editable middle modules.
 for token in (
@@ -18,6 +23,14 @@ for token in (
     'navigation/order',
 ):
     assert token in code, token
+assert "build_module_visibility_settings(self)" in code
+assert "MODULE_ROWS" in module_panel
+assert "show_all_navigation_modules" in module_panel
+assert 'setObjectName("moduleVisibilityCard")' in module_panel
+assert 'setObjectName("moduleVisibilitySwitch")' in module_panel
+assert 'setObjectName("moduleVisibilityDotOn" if enabled else "moduleVisibilityDotOff")' in module_panel
+assert "QFrame#moduleVisibilityCard" in theme_controller
+assert "QCheckBox#moduleVisibilitySwitch::indicator:checked" in theme_controller
 
 # Overview stays fixed and Help/customization stay outside the movable tree.
 assert 'page_item("overview", "⌂   Übersicht", 0, fixed=True)' in code
@@ -28,11 +41,11 @@ assert 'self.tabs.addTab(self.make_wallpaper_engine_tab(), "Wallpaper Engine")' 
 assert '"cooling", "rgb_studio", "lcd", "wallpaper_engine", "openlinkhub"' in code
 assert '"profiles", "settings", "about", "log", "desktop_designs"' in code
 assert 'NAVIGATION_LEGACY_DEFAULTS' in code
-assert 'rail_bg = "rgba(255, 255, 255, 252)"' in code
-assert 'nav_item_color = "#18202a"' in code
-assert "QTreeWidget#hardwareNavigation::item {{" in code
-assert "self.navigation.setPalette(nav_palette)" in code
-assert "QPushButton#navigationCustomizeButton, QPushButton#helpNavigationButton" in code
+assert '"rail_bg": "rgba(255, 255, 255, 255)"' in light_theme
+assert '"nav_item_color": "#17212b"' in light_theme
+assert "QTreeWidget#hardwareNavigation::item {{" in theme_controller
+assert "self.navigation.setPalette(nav_palette)" in theme_controller
+assert "QPushButton#navigationCustomizeButton, QPushButton#helpNavigationButton" in theme_controller
 
 # Cooling icon adapts to AIO / chassis-fan detection.
 assert 'icon = "▥◉" if has_aio and has_case_fans' in code
@@ -67,7 +80,7 @@ for token in (
     'QHeaderView::section',
     'background: {panel_rgba};',
 ):
-    assert token in code, token
+    assert token in theme_controller, token
 
 # Version-like four-part numbers are not blindly redacted as IPv4 addresses.
 assert 'Four-part application versions' in privacy

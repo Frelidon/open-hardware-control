@@ -1,6 +1,7 @@
 [Desktop Entry]
 Type=Application
-Name=Open Hardware Control
+Name=OHC
+GenericName=Open Hardware Control by Frelidon
 Comment=NZXT Kraken, Corsair/OpenLinkHub, RGB, LCD und Kühlung unter Linux steuern
 Exec=@EXEC@
 Icon=@ICON@

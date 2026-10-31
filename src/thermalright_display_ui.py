@@ -7,15 +7,17 @@ from __future__ import annotations
 from dataclasses import asdict, replace
 import hashlib
 import json
+import os
 from pathlib import Path
 import shutil
+import signal
 import subprocess
 import time
 from typing import Callable, Iterable
 import weakref
 
-from PySide6.QtCore import QProcess, QProcessEnvironment, QSize, QTimer, Qt
-from PySide6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap, QResizeEvent
+from PySide6.QtCore import QPoint, QProcess, QProcessEnvironment, QRect, QSize, QTimer, Qt, Signal
+from PySide6.QtGui import QColor, QFontDatabase, QIcon, QPainter, QPen, QPixmap, QResizeEvent
 from PySide6.QtWidgets import (
     QButtonGroup,
     QCheckBox,
@@ -39,6 +41,7 @@ from PySide6.QtWidgets import (
     QWidget,
     QToolButton,
 )
+from shiboken6 import isValid
 
 from thermalright_display import (
     DEFAULT_BACKGROUND_OFFSET_X,
@@ -58,14 +61,17 @@ from thermalright_display import (
     OverlaySpec,
     SUPPORTED_IMAGE_SUFFIXES,
     SUPPORTED_VIDEO_SUFFIXES,
+    THERMALRIGHT_DEVICE_KEY,
     ThermalrightCli,
     bounded_layer_intensity,
     bounded_notch_width,
     build_apply_sequence,
     clamp_overlay_outside_cutout,
+    collapse_catalog_previews,
     create_hardware_design_preview,
     deduplicate_media_entries,
     default_trcc_design_directory,
+    default_trcc_media_directories,
     create_layered_mask,
     media_category_key,
     media_catalog_sort_key,
@@ -73,16 +79,26 @@ from thermalright_display import (
     parse_detect_output,
     prepare_shifted_media,
     scan_media_directory,
+    stage_custom_overlay_theme,
     trcc_theme_is_supported,
 )
 from window_diagnostics import track_qprocess
-from modules.lcd_levita.v1_4.layout_canvas import ThermalrightCanvas
-from modules.lcd_levita.v1_4.panel_geometry import (
+from privacy_logging import redact_private_text
+from modules.ui_performance.v1_1 import (
+    cache_budget_mb, cached_catalog_records, preview_cache_path, save_catalog_records,
+)
+from modules.lcd_levita_shutdown.v1_0 import (
+    LevitaFirmwareGuard,
+    restore_firmware_logo,
+    stop_owned_daemon,
+)
+from modules.lcd_levita.v1_7.layout_canvas import ThermalrightCanvas
+from modules.lcd_levita.v1_7.panel_geometry import (
     DEFAULT_INNER_CORNER_RADIUS,
     MAX_INNER_CORNER_RADIUS,
     bounded_inner_corner_radius,
 )
-from modules.lcd_levita.v1_4.layout_model import (
+from modules.lcd_levita.v1_7.layout_model import (
     EditableLayout,
     LayoutBlock,
     MAX_FONT_SIZE,
@@ -92,12 +108,53 @@ from modules.lcd_levita.v1_4.layout_model import (
     serialize_layout_overrides,
     restore_explicit_format_units,
 )
-from hardware_diagnostics import read_primary_amd_gpu_clock
-from modules.lcd_levita.v1_4.runtime_policy import safe_split_mode
-from modules.lcd_levita.v1_4.theme_adapter import (
+from hardware_diagnostics import advance_gpu_clock_recovery_streak, read_primary_amd_gpu_clock
+from modules.lcd_levita.v1_7.runtime_policy import safe_split_mode
+from modules.lcd_levita.v1_7.stream_recovery import StreamRestartPolicy
+from modules.lcd_runtime.v1_1.progress import daemon_owns_playback
+from modules.backend_updates.v1_0.executables import is_ubuntu_runtime
+from modules.levita_daemon_health.v1_1.model import backend_failure_detail, is_usb_owner_conflict
+from modules.levita_daemon_health.v1_1 import (
+    DAEMON_RECOVERY_COOLDOWN_SECONDS,
+    PLAYBACK_HEALTH_INTERVAL_MS,
+    PLAYBACK_RECOVERY_COOLDOWN_SECONDS,
+    PlaybackHealth,
+    PlaybackRecoveryPolicy,
+    find_trcc_daemon_memory,
+    is_probable_daemon_failure,
+    is_owned_trcc_daemon_pid,
+    parse_playback_status,
+    parse_video_playback_status,
+    recent_trcc_cause,
+    replacement_owned_trcc_pid,
+    signal_trcc_daemon,
+)
+from modules.lcd_levita.v1_7.motion_renderer import render_layer2_motion_frame
+from modules.lcd_levita.v1_7.motion_compositor import compose_motion_video
+from modules.lcd_levita.v1_7.theme_adapter import (
     ThemeLayoutError,
     load_editable_layout,
     stage_editable_theme,
+)
+from modules.display_effects.v1_11.handoff import validate_effect_handoff
+from modules.lcd_media_manager.v1_0 import (
+    DesignLibraryDialog,
+    friendly_media_name,
+    load_library_state,
+    save_library_state,
+)
+from modules.responsive_gallery.v1_0 import ViewportResizeRelay, responsive_column_count
+from modules.snapshot_manager.v1_0.program_manager import ProgramManagerPanel
+from modules.levita_performance.v1_1 import (
+    GAME_ACTIVITY_POLL_MS,
+    SAFE_LCD_FPS,
+    GameSignals,
+    fallback_lcd_fps,
+    normalize_lcd_fps,
+    normalize_process_names,
+    parse_gamemode_status,
+    process_game_signal,
+    resolve_game_activity,
 )
 
 
@@ -107,8 +164,32 @@ READABLE_SPIN_WIDTH = 148
 READABLE_COMBO_WIDTH = 320
 DESIGN_CARD_WIDTH = 180
 DESIGN_CARD_GAP = 8
-MEDIA_GALLERY_COLUMNS = (4, 8)
-HARDWARE_GALLERY_COLUMNS = (4, 8)
+MEDIA_GALLERY_COLUMNS = (1, 12)
+HARDWARE_GALLERY_COLUMNS = (1, 12)
+MAX_CUSTOM_TEXT_OVERLAYS = 12
+BUILTIN_LEVITA_THEMES = (
+    ("ohc-nebula-drift", "Nebelberg · System"),
+    ("ohc-nebula-drift-minimal", "Nebelberg · Minimal"),
+    ("ohc-nebula-drift-performance", "Nebelberg · Leistung"),
+    ("ohc-orbital-command", "Orbitalzentrale"),
+    ("kenney-space-console", "Weltraumkonsole"),
+    ("kenney-orbital-reticle", "Orbital-Fadenkreuz"),
+    ("kenney-navigator-grid", "Navigationsraster"),
+    ("kenney-ambient-glow", "Atmosphärenleuchten"),
+    ("kenney-clean-telemetry", "Klare Telemetrie"),
+    ("ohc-orbit", "OHC Umlaufbahn"),
+    ("ohc-aqua-pulse", "OHC Wasserpuls"),
+    ("ohc-horizon-glass", "OHC Horizontglas"),
+    ("ohc-split-core", "OHC Geteilter Kern"),
+    ("ohc-spectrum-ring", "OHC Spektrumring"),
+    ("ohc-neon-double-arc", "OHC Neon-Doppelbogen"),
+    ("ohc-prism-segments", "OHC Prismensegmente"),
+    ("ohc-aurora-radar", "OHC Polarlicht-Radar"),
+)
+BUILTIN_LEVITA_THEME_NAMES = frozenset(directory for directory, _title in BUILTIN_LEVITA_THEMES)
+ANIMATED_LAYER2_THEMES = frozenset({
+    "ohc-spectrum-ring", "ohc-neon-double-arc", "ohc-prism-segments", "ohc-aurora-radar",
+})
 
 
 def gallery_column_count(
@@ -121,9 +202,9 @@ def gallery_column_count(
 ) -> int:
     """Fit as many Levita cards as the gallery width allows, within bounds."""
 
-    usable = max(card_width, int(width) - 24)
-    columns = max(1, (usable + gap) // (card_width + gap))
-    return max(minimum, min(maximum, columns))
+    return responsive_column_count(
+        width, card_width=card_width, gap=gap, minimum=minimum, maximum=maximum,
+    )
 
 
 def _readable_value_widget(widget: QWidget, *, min_width: int = READABLE_SPIN_WIDTH) -> None:
@@ -163,12 +244,15 @@ class _PreviewCardButton(QToolButton):
 class ThermalrightDisplayStudio(QGroupBox):
     """Integrated local-first Levita design editor and TRCC CLI frontend."""
 
+    library_ready = Signal()
+
     def __init__(
         self,
         settings,
         cache_dir: Path,
         *,
         log_callback: Callable[[str], None] | None = None,
+        device_present: bool = False,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__("Thermalright Levita Vision · Display-Studio", parent)
@@ -176,12 +260,21 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.cache_dir = cache_dir / "thermalright-preview"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.log_callback = log_callback
+        self.device_present = bool(device_present)
         # The LCD page is built before the main Log page. Restoring a saved
         # media directory renders its first preview synchronously, so logging
         # must stay muted until this widget has finished constructing.
         self.log_ready = False
+        self.hardware_io_disabled = os.environ.get("OHC_DISABLE_HARDWARE_IO") == "1"
+        self.ubuntu_runtime = is_ubuntu_runtime()
         self.cli = ThermalrightCli()
+        self.firmware_guard = LevitaFirmwareGuard(self.cli.executable)
+        existing_daemon = find_trcc_daemon_memory()
+        self.preexisting_trcc_daemon_pid = existing_daemon.pid if existing_daemon else None
+        self.owned_trcc_daemon_pid: int | None = None
+        self.awaiting_owned_trcc_replacement = False
         self.media_entries: list[MediaEntry] = []
+        self.library_loaded = False
         self.media_duplicate_map: dict[Path, Path] = {}
         self.media_duplicate_count = 0
         self.overlay_specs = self._load_overlays()
@@ -211,6 +304,45 @@ class ThermalrightDisplayStudio(QGroupBox):
             for key, value in saved_intensities.items()
             if isinstance(key, str)
         } if isinstance(saved_intensities, dict) else {}
+        try:
+            saved_motion = json.loads(str(
+                self.settings.value("thermalright/layer2_motion_overrides", "{}") or "{}"
+            ))
+        except (json.JSONDecodeError, TypeError):
+            saved_motion = {}
+        self.layer2_motion_overrides = {
+            str(key): bool(value) for key, value in saved_motion.items() if isinstance(key, str)
+        } if isinstance(saved_motion, dict) else {}
+        self.experimental_60_fps = self.settings.value(
+            "thermalright/experimental_60_fps", False, type=bool,
+        )
+        self.desktop_lcd_fps = normalize_lcd_fps(
+            self.settings.value("thermalright/desktop_fps", 15),
+            experimental_60=self.experimental_60_fps,
+        )
+        self.game_lcd_fps = normalize_lcd_fps(
+            self.settings.value("thermalright/game_fps", 15),
+            experimental_60=self.experimental_60_fps,
+        )
+        self.preview_fps = 60 if int(self.settings.value("thermalright/preview_fps", 60)) >= 60 else 30
+        self.game_auto_detection = self.settings.value(
+            "thermalright/game_auto_detection", True, type=bool,
+        )
+        self.game_manual = False
+        self.game_active = False
+        self.game_reason = "Desktop"
+        self.game_process_names = normalize_process_names(
+            self.settings.value("thermalright/game_process_names", "")
+        )
+        self.game_fullscreen_detection = self.settings.value(
+            "thermalright/game_fullscreen_detection", True, type=bool,
+        )
+        self.game_borderless_detection = self.settings.value(
+            "thermalright/game_borderless_detection", True, type=bool,
+        )
+        self.gamemode_active = False
+        self.active_lcd_fps = self.desktop_lcd_fps
+        self.session_fps_limit: int | None = None
         self.command_queue: list[tuple[tuple[str, ...], bool]] = []
         self.command_outputs: list[str] = []
         self.current_tolerates_failure = False
@@ -224,10 +356,19 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.media_card_buttons: dict[str, QToolButton] = {}
         self.hardware_card_buttons: dict[str, QToolButton] = {}
         self.category_buttons: dict[str, QToolButton] = {}
+        from modules.lcd_runtime.v1_1.design_state import DesignState
+        from modules.lcd_runtime.v1_1.memory_guard import MemoryGuard
+        self.design_state = DesignState(self.settings)
+        self.daemon_memory_guard = MemoryGuard()
+        self.playback_recovery_policy = PlaybackRecoveryPolicy()
+        self.playback_health_probe_active = False
+        self.playback_last_confirmed_at = 0.0
+        self.last_playback_reapply_at = float("-inf")
         self.startup_apply_active = False
         self.startup_retry_count = 0
         self.startup_apply_requested = False
         self.restoring_startup_selection = False
+        self.remember_design_after_apply = False
         standard_directory = default_trcc_design_directory()
         custom_value = str(self.settings.value("thermalright/custom_media_directory", "") or "")
         legacy_value = str(self.settings.value("thermalright/media_directory", "") or "")
@@ -240,6 +381,14 @@ class ThermalrightDisplayStudio(QGroupBox):
             Path(custom_value).expanduser().resolve()
             if custom_value and Path(custom_value).expanduser().is_dir()
             else None
+        )
+        self.design_library_state = load_library_state(
+            self.settings.value("thermalright/design_library_v1", ""),
+            self.custom_media_directory,
+        )
+        self.custom_media_directory = (
+            self.design_library_state.folders[0]
+            if self.design_library_state.folders else None
         )
         try:
             layer_values = json.loads(str(self.settings.value("thermalright/background_theme_overrides", "[]") or "[]"))
@@ -259,6 +408,7 @@ class ThermalrightDisplayStudio(QGroupBox):
         } if isinstance(favorite_values, list) else set()
 
         self.command_process = track_qprocess(QProcess(self))
+        self.command_process.setObjectName('ohcLCDCommand')
         self.command_process.setProcessChannelMode(QProcess.ProcessChannelMode.SeparateChannels)
         command_environment = QProcessEnvironment.systemEnvironment()
         # TRCC's documented daemon mode is the single USB owner.  Each CLI
@@ -273,19 +423,43 @@ class ThermalrightDisplayStudio(QGroupBox):
         # finite command queue so masks/settings remain adjustable while a
         # video is playing.
         self.stream_process = track_qprocess(QProcess(self))
+        self.stream_process.setObjectName('ohcLCDTicker')
         self.stream_process.setProcessChannelMode(QProcess.ProcessChannelMode.SeparateChannels)
         self.stream_process.setProcessEnvironment(command_environment)
-        self.stream_process.readyReadStandardOutput.connect(
-            lambda: self.stream_process.readAllStandardOutput()
-        )
-        self.stream_process.readyReadStandardError.connect(
-            lambda: self.stream_process.readAllStandardError()
-        )
+        self.stream_process.readyReadStandardOutput.connect(self._capture_stream_output)
+        self.stream_process.readyReadStandardError.connect(self._capture_stream_output)
         self.stream_process.started.connect(self._on_stream_started)
         self.stream_process.errorOccurred.connect(self._on_stream_error)
         self.stream_process.finished.connect(self._on_stream_finished)
+        self.gamemode_process = track_qprocess(QProcess(self))
+        self.gamemode_process.setObjectName('ohcGameProbe')
+        self.gamemode_process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
+        self.gamemode_process.finished.connect(self._gamemode_status_finished)
+        from modules.lcd_runtime.v1_1.controller import LCDRuntime
+        self.lcd_runtime = LCDRuntime(self)
+        from modules.lcd_runtime.v1_1.game_activity import GameActivity
+        self.game_activity = GameActivity(self)
         self.stream_stop_requested = False
         self.stream_should_run = False
+        self.stream_delegated = False
+        self._fps_restart_pending = False
+        self.stream_started_at = 0.0
+        self.stream_output_tail = ""
+        self.stream_restart_policy = StreamRestartPolicy()
+        self.stream_restart_timer = QTimer(self)
+        self.stream_restart_timer.setSingleShot(True)
+        self.stream_restart_timer.timeout.connect(self._restart_stream_client)
+        self.daemon_restart_in_progress = False
+        self.last_daemon_recovery_at = float("-inf")
+        self.daemon_restart_timer = QTimer(self)
+        self.daemon_restart_timer.setSingleShot(True)
+        self.daemon_restart_timer.timeout.connect(self._perform_daemon_restart)
+        self.daemon_health_timer = QTimer(self)
+        self.daemon_health_timer.setInterval(PLAYBACK_HEALTH_INTERVAL_MS)
+        self.daemon_health_timer.timeout.connect(self._poll_trcc_daemon_health)
+        self.firmware_guard_timer = QTimer(self)
+        self.firmware_guard_timer.setInterval(5_000)
+        self.firmware_guard_timer.timeout.connect(self._poll_firmware_guard_health)
         self.pending_apply_animated = False
         self.command_step_timer = QTimer(self)
         self.command_step_timer.setSingleShot(True)
@@ -324,6 +498,7 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.thumbnail_queued: set[str] = set()
         self.thumbnail_waiters: dict[str, list[weakref.ReferenceType[QToolButton]]] = {}
         self.thumbnail_active: dict[QProcess, tuple[str, Path, Path, Path]] = {}
+        self.thumbnail_paused_workers: set[QProcess] = set()
         self.thumbnail_workers: list[QProcess] = []
         self.thumbnail_worker_timeouts: dict[QProcess, QTimer] = {}
         self.thumbnail_total = 0
@@ -331,7 +506,12 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.thumbnail_generated = 0
         self.thumbnail_failed = 0
         self.thumbnail_shutting_down = False
+        self._media_cards_materialized = False
+        self._hardware_cards_materialized = False
+        self._gallery_materialize_pending = False
         self.shutdown_started = False
+        from modules.ui_performance.v1_1.gallery_preparation import GalleryPreparation
+        self.gallery_preparation = GalleryPreparation(self)
         for _worker_number in range(2):
             worker = track_qprocess(QProcess(self))
             worker.setProcessChannelMode(QProcess.ProcessChannelMode.SeparateChannels)
@@ -352,18 +532,62 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.apply_start_timer.timeout.connect(self._begin_pending_apply)
         self.hardware_design_active = False
         self.gpu_clock_guard_state = ""
+        self.gpu_clock_plausible_streak = 0
         self.gpu_clock_guard_timer = QTimer(self)
         self.gpu_clock_guard_timer.setInterval(5000)
         self.gpu_clock_guard_timer.timeout.connect(self._guard_gpu_clock)
+        self.game_detection_timer = QTimer(self)
+        self.game_detection_timer.setInterval(GAME_ACTIVITY_POLL_MS)
+        self.game_detection_timer.timeout.connect(self._poll_game_activity)
+        self.layer2_motion_started = time.monotonic()
+        self.layer2_motion_timer = QTimer(self)
+        self.layer2_motion_timer.timeout.connect(self._advance_layer2_motion_preview)
 
         self._build_ui()
-        if self.custom_media_directory is not None and self.custom_media_enabled.isChecked():
-            self.load_media_directory(self.custom_media_directory, quiet=True, remember_custom=False)
-        else:
-            self.load_default_trcc_designs(quiet=True)
+        for area in (self.media_cards_scroll, self.hardware_cards_scroll):
+            area.verticalScrollBar().valueChanged.connect(lambda _value: self._start_thumbnail_workers())
+            area.horizontalScrollBar().valueChanged.connect(lambda _value: self._start_thumbnail_workers())
         self.refresh_backend_status()
         self.log_ready = True
         self.gpu_clock_guard_timer.start()
+        self.game_detection_timer.start()
+        self.daemon_health_timer.start()
+        self.firmware_guard_timer.start()
+        self._preview_fps_changed()
+        QTimer.singleShot(0, self, self._poll_game_activity)
+        if os.environ.get("OHC_DISABLE_HARDWARE_IO") == "1":
+            self.load_initial_library()
+        else:
+            # Let the main window paint and accept input before scanning local
+            # TRCC/custom media and constructing all preview cards.
+            QTimer.singleShot(80, self, self.load_initial_library)
+
+    def load_initial_library(self) -> None:
+        if self.library_loaded:
+            return
+        if self.design_library_state.has_sources and self.custom_media_enabled.isChecked():
+            self._reload_managed_library()
+        else:
+            self.load_default_trcc_designs(quiet=True)
+
+    def install_backend(self) -> None:
+        host = self.window()
+        installer = getattr(host, "install_optional_backend", None)
+        if callable(installer):
+            installer("trcc")
+            return
+        self._status(
+            "TRCC Linux für diese Distribution anhand der offiziellen Anleitung installieren.",
+            error=True,
+        )
+
+    def reload_backend_availability(self) -> None:
+        """Refresh CLI availability and local catalogs after installation."""
+
+        self.refresh_backend_status()
+        self.firmware_guard = LevitaFirmwareGuard(self.cli.executable)
+        self.library_loaded = False
+        self.load_initial_library()
 
     def _build_ui(self) -> None:
         outer = QVBoxLayout(self)
@@ -376,9 +600,29 @@ class ThermalrightDisplayStudio(QGroupBox):
         intro.setObjectName("infoText")
         outer.addWidget(intro)
 
+        display_recovery_row = QHBoxLayout()
+        self.restore_firmware_button = QPushButton("Thermalright-Originalanzeige wiederherstellen")
+        self.restore_firmware_button.setObjectName("primaryAction")
+        self.restore_firmware_button.setMinimumHeight(44)
+        self.restore_firmware_button.setToolTip(
+            "Beendet die OHC-Übertragung und gibt das Display an die eingebaute Thermalright-Firmware zurück"
+        )
+        self.restore_firmware_button.clicked.connect(self.restore_firmware_display)
+        display_recovery_row.addWidget(self.restore_firmware_button, 1)
+        self.force_recovery_button = QPushButton("Display freigeben")
+        self.force_recovery_button.setMinimumHeight(44)
+        self.force_recovery_button.clicked.connect(self.force_recover_display)
+        display_recovery_row.addWidget(self.force_recovery_button, 1)
+        outer.addLayout(display_recovery_row)
+
         status_row = QHBoxLayout()
         self.test_mode = QCheckBox("Testmodus · nur Vorschau, keine USB-Schreibzugriffe")
-        self.test_mode.setChecked(self.settings.value("thermalright/test_mode", True, type=bool))
+        # A present Levita with an installed backend should work immediately.
+        # Missing device/backend remains fail-closed in preview-only mode.
+        default_test_mode = not (self.device_present and self.cli.available)
+        self.test_mode.setChecked(
+            self.settings.value("thermalright/test_mode", default_test_mode, type=bool)
+        )
         self.test_mode.toggled.connect(self._on_test_mode_changed)
         self.backend_status = QLabel()
         self.backend_status.setWordWrap(True)
@@ -387,8 +631,20 @@ class ThermalrightDisplayStudio(QGroupBox):
         detect_button.clicked.connect(self.detect_backend_and_device)
         status_row.addWidget(self.test_mode)
         status_row.addWidget(self.backend_status, 1)
+        self.install_backend_button = QPushButton("TRCC Linux für Thermalright-LCD installieren")
+        self.install_backend_button.clicked.connect(self.install_backend)
+        status_row.addWidget(self.install_backend_button)
         status_row.addWidget(detect_button)
         outer.addLayout(status_row)
+
+        self.playback_health_status = QLabel("Wiedergabe noch nicht geprüft")
+        self.playback_health_status.setWordWrap(True)
+        self.playback_health_status.setObjectName("muted")
+        self.playback_health_status.setToolTip(
+            "Open Hardware Control prüft regelmäßig, ob TRCC das ausgewählte Design noch wirklich wiedergibt."
+        )
+        outer.addWidget(self.playback_health_status)
+
 
         library_toolbar = QHBoxLayout()
         standard_button = QPushButton("TRCC-Standarddesigns")
@@ -397,20 +653,20 @@ class ThermalrightDisplayStudio(QGroupBox):
             "config1.dc übernimmt Positionen, Farben und Live-Sensorwerte direkt."
         )
         standard_button.clicked.connect(self.load_default_trcc_designs)
-        import_button = QPushButton("Eigene Designs importieren · Ordner")
+        import_button = QPushButton("LCD-Manager")
         import_button.setToolTip(
             "Liest Bilder, Videos und vollständige Layoutordner ein. Über das Kartenmenü legst du Ebene 1 oder 2 fest."
         )
         import_button.clicked.connect(self.choose_media_directory)
         self.remembered_media_button = QPushButton("Gemerkten Ordner anzeigen")
         self.remembered_media_button.clicked.connect(self.show_remembered_media_directory)
-        self.remembered_media_button.setEnabled(self.custom_media_directory is not None)
+        self.remembered_media_button.setEnabled(self.design_library_state.has_sources)
         self.custom_media_enabled = QCheckBox("Eigenen Designordner einbeziehen")
         self.custom_media_enabled.setChecked(
-            self.custom_media_directory is not None
+            self.design_library_state.has_sources
             and self.settings.value("thermalright/custom_media_enabled", True, type=bool)
         )
-        self.custom_media_enabled.setEnabled(self.custom_media_directory is not None)
+        self.custom_media_enabled.setEnabled(self.design_library_state.has_sources)
         self.custom_media_enabled.setToolTip(
             "Haken entfernen: Ordner nur aus OHC ausblenden; Dateien auf der Festplatte bleiben unverändert."
         )
@@ -466,6 +722,7 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.media_combo.currentIndexChanged.connect(self._show_selected_media_preview)
         self.media_combo.currentIndexChanged.connect(self._remember_media_selection)
         self.media_category = QComboBox()
+        self.media_category.setProperty("i18nTranslateItems", False)
         self.media_category.hide()
         self.media_category.addItem("Alle Kategorien", "all")
         self.media_category.currentIndexChanged.connect(self._apply_media_filter)
@@ -519,6 +776,8 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.media_cards_scroll.setFrameShape(QFrame.Shape.NoFrame)
         self.media_cards_scroll.setMinimumHeight(310)
         self.media_cards_scroll.setWidget(self.media_cards_widget)
+        self._media_resize_relay = ViewportResizeRelay(self._relayout_design_galleries, self)
+        self.media_cards_scroll.viewport().installEventFilter(self._media_resize_relay)
         background_layout.addWidget(self.media_cards_scroll)
         galleries.addWidget(background_box, 1)
 
@@ -551,6 +810,13 @@ class ThermalrightDisplayStudio(QGroupBox):
         layer2_intensity_row.addWidget(self.layer2_intensity_slider, 1)
         layer2_intensity_row.addWidget(self.layer2_intensity_label)
         hardware_layout.addLayout(layer2_intensity_row)
+        self.layer2_motion_checkbox = QCheckBox("Dekor-Animation")
+        self.layer2_motion_checkbox.setChecked(True)
+        self.layer2_motion_checkbox.setToolTip(
+            "Animiert Ring, Bögen, Segmente oder Aurora lokal unter den weiterhin editierbaren Live-Daten"
+        )
+        self.layer2_motion_checkbox.toggled.connect(self._layer2_motion_changed)
+        hardware_layout.addWidget(self.layer2_motion_checkbox)
         self.hardware_cards_widget = QWidget()
         self.hardware_cards_grid = QGridLayout(self.hardware_cards_widget)
         self.hardware_cards_grid.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
@@ -560,6 +826,8 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.hardware_cards_scroll.setFrameShape(QFrame.Shape.NoFrame)
         self.hardware_cards_scroll.setMinimumHeight(310)
         self.hardware_cards_scroll.setWidget(self.hardware_cards_widget)
+        self._hardware_resize_relay = ViewportResizeRelay(self._relayout_design_galleries, self)
+        self.hardware_cards_scroll.viewport().installEventFilter(self._hardware_resize_relay)
         hardware_layout.addWidget(self.hardware_cards_scroll)
         galleries.addWidget(hardware_box, 1)
         outer.addLayout(galleries)
@@ -619,10 +887,24 @@ class ThermalrightDisplayStudio(QGroupBox):
         )
         preview_stage_layout = QVBoxLayout(preview_stage)
         preview_stage_layout.setContentsMargins(12, 8, 12, 12)
+        preview_header = QHBoxLayout()
         preview_title = QLabel("Live-Vorschau · Levita 1600 × 720 · Hintergrund + Ebene 2")
         preview_title.setObjectName("muted")
         preview_title.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        preview_stage_layout.addWidget(preview_title)
+        preview_header.addWidget(preview_title, 1)
+        preview_header.addWidget(QLabel("Vorschau-FPS"))
+        self.preview_fps_combo = QComboBox()
+        self.preview_fps_combo.addItem("30 FPS", 30)
+        self.preview_fps_combo.addItem("60 FPS", 60)
+        self.preview_fps_combo.setCurrentIndex(max(0, self.preview_fps_combo.findData(self.preview_fps)))
+        self.preview_fps_combo.currentIndexChanged.connect(self._preview_fps_changed)
+        preview_header.addWidget(self.preview_fps_combo)
+        preview_header.addWidget(QLabel("LCD-FPS"))
+        self.lcd_fps_combo = QComboBox()
+        self._populate_lcd_fps_combo()
+        self.lcd_fps_combo.currentIndexChanged.connect(self._desktop_fps_changed)
+        preview_header.addWidget(self.lcd_fps_combo)
+        preview_stage_layout.addLayout(preview_header)
         self.preview_canvas_row = QHBoxLayout()
         self.preview_canvas_row.setSpacing(12)
         self.preview_canvas_row.addWidget(self.canvas, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
@@ -688,6 +970,57 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.layer2_inline_editor.hide()
         self.preview_canvas_row.addWidget(self.layer2_inline_editor, 0, Qt.AlignmentFlag.AlignTop)
         preview_stage_layout.addLayout(self.preview_canvas_row)
+        performance_box = QGroupBox("Leistungsmodus und Spielerkennung")
+        performance_layout = QGridLayout(performance_box)
+        self.game_auto_checkbox = QCheckBox("Spielmodus automatisch erkennen")
+        self.game_auto_checkbox.setChecked(self.game_auto_detection)
+        self.game_auto_checkbox.toggled.connect(self._game_policy_changed)
+        self.game_manual_checkbox = QCheckBox("Spielmodus manuell")
+        self.game_manual_checkbox.toggled.connect(self._game_policy_changed)
+        self.game_fullscreen_checkbox = QCheckBox("Vollbildanwendungen erkennen")
+        self.game_fullscreen_checkbox.setChecked(self.game_fullscreen_detection)
+        self.game_fullscreen_checkbox.toggled.connect(self._game_policy_changed)
+        self.game_borderless_checkbox = QCheckBox("Rahmenlose Vollbildfenster erkennen")
+        self.game_borderless_checkbox.setChecked(self.game_borderless_detection)
+        self.game_borderless_checkbox.toggled.connect(self._game_policy_changed)
+        self.game_fps_combo = QComboBox()
+        self._populate_game_fps_combo()
+        self.game_fps_combo.currentIndexChanged.connect(self._game_fps_changed)
+        self.game_process_input = QLineEdit(", ".join(self.game_process_names))
+        self.game_process_input.setReadOnly(True)
+        self.game_process_input.setPlaceholderText("Keine zusätzlichen Spiele ausgewählt")
+        self.game_program_manager_button = QPushButton("Spiele-Programmliste verwalten …")
+        self.game_program_manager_button.clicked.connect(self._toggle_game_program_manager)
+        self.game_status_label = QLabel("Desktop · LCD-Sollwert 15 FPS")
+        self.game_status_label.setObjectName("muted")
+        performance_layout.addWidget(self.game_auto_checkbox, 0, 0)
+        performance_layout.addWidget(self.game_manual_checkbox, 0, 1)
+        performance_layout.addWidget(QLabel("LCD-FPS im Spiel"), 0, 2)
+        performance_layout.addWidget(self.game_fps_combo, 0, 3)
+        performance_layout.addWidget(self.game_fullscreen_checkbox, 1, 0, 1, 2)
+        performance_layout.addWidget(self.game_borderless_checkbox, 1, 2, 1, 2)
+        performance_layout.addWidget(QLabel("Spiele-Programmliste"), 2, 0)
+        performance_layout.addWidget(self.game_process_input, 2, 1, 1, 2)
+        performance_layout.addWidget(self.game_program_manager_button, 2, 3)
+        self.game_program_manager = ProgramManagerPanel(
+            lambda text: text,
+            self.game_process_input.text(),
+            self.settings.value("thermalright/game_process_paths", ""),
+            self._game_program_selection_changed,
+            performance_box,
+        )
+        self.game_program_manager.close_button.clicked.connect(self._toggle_game_program_manager)
+        self.game_program_manager.hide()
+        performance_layout.addWidget(self.game_program_manager, 3, 0, 1, 4)
+        performance_layout.addWidget(self.game_status_label, 4, 0, 1, 4)
+        performance_note = QLabel(
+            "Erkennung: Feral GameMode, Gamescope, ausdrücklich eingetragene Programme oder – wenn aktiviert – "
+            "das aktive KDE-Vollbild beziehungsweise rahmenlose Vollbildfenster. Keine CPU-/GPU-Lastschätzung."
+        )
+        performance_note.setWordWrap(True)
+        performance_note.setObjectName("muted")
+        performance_layout.addWidget(performance_note, 5, 0, 1, 4)
+        preview_stage_layout.addWidget(performance_box)
         outer.addWidget(preview_stage)
 
         self.geometry_box = QGroupBox("Levita-Displayeinstellungen · unabhängig von der NZXT Kraken")
@@ -875,50 +1208,41 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.overlays_toggle.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         outer.addWidget(self.overlays_toggle)
         self.custom_overlays_box = QGroupBox("Eigene OHC-Hardware-Infos · Alternative zum kompletten Hardware-Design")
-        grid = QGridLayout(self.custom_overlays_box)
-        for column, title in enumerate(("Ein", "Element", "X", "Y", "Größe", "Farbe")):
-            grid.addWidget(QLabel(title), 0, column)
-        for row, spec in enumerate(self.overlay_specs, start=1):
-            visible = QCheckBox()
-            visible.setChecked(spec.visible)
-            label = QLabel(spec.label)
-            x_spin = QSpinBox()
-            x_spin.setRange(0, max(0, self._safe_right_x() - 1))
-            x_spin.setValue(spec.x)
-            y_spin = QSpinBox()
-            y_spin.setRange(0, LEVITA_HEIGHT - 1)
-            y_spin.setValue(spec.y)
-            size_spin = QSpinBox()
-            size_spin.setRange(12, 160)
-            size_spin.setValue(spec.size)
-            color_button = QPushButton(spec.color)
-            color_button.setStyleSheet(f"color: {spec.color};")
-            controls: dict[str, QWidget] = {
-                "visible": visible, "x": x_spin, "y": y_spin,
-                "size": size_spin, "color": color_button,
-            }
-            self.overlay_controls[spec.ident] = controls
-            visible.toggled.connect(lambda checked, ident=spec.ident: self._overlay_control_changed(ident, visible=checked))
-            x_spin.valueChanged.connect(lambda value, ident=spec.ident: self._overlay_control_changed(ident, x=value))
-            y_spin.valueChanged.connect(lambda value, ident=spec.ident: self._overlay_control_changed(ident, y=value))
-            size_spin.valueChanged.connect(lambda value, ident=spec.ident: self._overlay_control_changed(ident, size=value))
-            color_button.clicked.connect(lambda _checked=False, ident=spec.ident: self._choose_overlay_color(ident))
-            for column, widget in enumerate((visible, label, x_spin, y_spin, size_spin, color_button)):
-                grid.addWidget(widget, row, column)
+        overlay_box_layout = QVBoxLayout(self.custom_overlays_box)
+        overlay_note = QLabel(
+            "Hardwarewerte und mehrere eigene Texte lassen sich frei positionieren. "
+            "Die Schriftenliste stammt ausschließlich aus den lokal installierten Qt-Schriften."
+        )
+        overlay_note.setWordWrap(True)
+        overlay_note.setObjectName("muted")
+        overlay_box_layout.addWidget(overlay_note)
+        self.overlay_table_widget = QWidget()
+        self.overlay_grid = QGridLayout(self.overlay_table_widget)
+        self.overlay_grid.setContentsMargins(0, 0, 0, 0)
+        self.overlay_grid.setColumnStretch(1, 1)
+        self.overlay_grid.setColumnStretch(2, 1)
+        overlay_box_layout.addWidget(self.overlay_table_widget)
+        overlay_actions = QHBoxLayout()
+        add_text_button = QPushButton("+ Eigenen Text hinzufügen")
+        add_text_button.clicked.connect(self.add_custom_text_overlay)
+        overlay_actions.addWidget(add_text_button)
         reset_button = QPushButton("Hardware-Infos zurücksetzen")
         reset_button.clicked.connect(self.reset_overlays)
-        grid.addWidget(reset_button, len(self.overlay_specs) + 1, 0)
+        overlay_actions.addWidget(reset_button)
         undo_button = QPushButton("Letzten Zustand wiederherstellen")
         undo_button.clicked.connect(self.undo_overlay_change)
         self.overlay_undo_button = undo_button
         self.overlay_undo_button.setEnabled(False)
-        grid.addWidget(undo_button, len(self.overlay_specs) + 1, 1)
+        overlay_actions.addWidget(undo_button)
         two_rows_button = QPushButton("Zwei saubere Reihen")
         two_rows_button.clicked.connect(lambda: self.apply_overlay_layout("two_rows"))
-        grid.addWidget(two_rows_button, len(self.overlay_specs) + 1, 2, 1, 2)
+        overlay_actions.addWidget(two_rows_button)
         vertical_button = QPushButton("Untereinander")
         vertical_button.clicked.connect(lambda: self.apply_overlay_layout("vertical"))
-        grid.addWidget(vertical_button, len(self.overlay_specs) + 1, 4, 1, 2)
+        overlay_actions.addWidget(vertical_button)
+        overlay_actions.addStretch(1)
+        overlay_box_layout.addLayout(overlay_actions)
+        self._rebuild_overlay_controls()
         outer.addWidget(self.custom_overlays_box)
         self.custom_overlays_box.setVisible(False)
         self.overlays_toggle.toggled.connect(self.custom_overlays_box.setVisible)
@@ -968,6 +1292,9 @@ class ThermalrightDisplayStudio(QGroupBox):
             self.notch_bottom_radius.value(),
         )
 
+        from modules.lcd_levita.v1_7.media_preview import MediaPreview
+        self.media_preview = MediaPreview(self)
+
     def _load_overlays(self) -> list[OverlaySpec]:
         raw = str(self.settings.value("thermalright/overlays", "") or "")
         if not raw:
@@ -978,22 +1305,148 @@ class ThermalrightDisplayStudio(QGroupBox):
             return list(DEFAULT_OVERLAYS)
         defaults = {item.ident: item for item in DEFAULT_OVERLAYS}
         loaded: list[OverlaySpec] = []
+        custom_texts: list[OverlaySpec] = []
         if isinstance(values, list):
             for value in values:
-                if not isinstance(value, dict) or value.get("ident") not in defaults:
+                if not isinstance(value, dict):
                     continue
-                base = defaults[str(value["ident"])]
-                loaded.append(replace(
-                    base,
-                    x=int(value.get("x", base.x)), y=int(value.get("y", base.y)),
-                    size=int(value.get("size", base.size)), color=str(value.get("color", base.color)),
-                    visible=bool(value.get("visible", base.visible)),
-                ).bounded())
+                ident = str(value.get("ident") or "")
+                try:
+                    if ident in defaults:
+                        base = defaults[ident]
+                        loaded.append(replace(
+                            base,
+                            x=int(value.get("x", base.x)), y=int(value.get("y", base.y)),
+                            size=int(value.get("size", base.size)), color=str(value.get("color", base.color)),
+                            visible=bool(value.get("visible", base.visible)),
+                            font=str(value.get("font", base.font)),
+                            italic=bool(value.get("italic", base.italic)),
+                        ).bounded())
+                    elif (
+                        ident.startswith("ohc-text-")
+                        and str(value.get("kind") or "") == "text"
+                        and len(custom_texts) < MAX_CUSTOM_TEXT_OVERLAYS
+                    ):
+                        custom_texts.append(OverlaySpec(
+                            ident=ident,
+                            label=str(value.get("label") or f"Eigener Text {len(custom_texts) + 1}"),
+                            kind="text",
+                            text=str(value.get("text") or "Eigener Text"),
+                            sample=str(value.get("text") or "Eigener Text"),
+                            x=int(value.get("x", 760)),
+                            y=int(value.get("y", 180 + len(custom_texts) * 70)),
+                            size=int(value.get("size", 42)),
+                            color=str(value.get("color") or "#ffffff"),
+                            visible=bool(value.get("visible", True)),
+                            font=str(value.get("font") or ""),
+                            bold=bool(value.get("bold", True)),
+                            italic=bool(value.get("italic", False)),
+                        ).bounded())
+                except (TypeError, ValueError):
+                    continue
         by_id = {item.ident: item for item in loaded}
-        return [by_id.get(item.ident, item) for item in DEFAULT_OVERLAYS]
+        return [by_id.get(item.ident, item) for item in DEFAULT_OVERLAYS] + custom_texts
 
     def _save_overlays(self) -> None:
         self.settings.setValue("thermalright/overlays", json.dumps([asdict(item) for item in self.overlay_specs]))
+
+    def _rebuild_overlay_controls(self) -> None:
+        """Recreate the bounded editor rows after adding/removing text."""
+
+        while self.overlay_grid.count():
+            item = self.overlay_grid.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
+        self.overlay_controls.clear()
+        for column, title in enumerate(("Ein", "Element / Text", "Lokale Schrift", "X", "Y", "Größe", "Farbe", "")):
+            self.overlay_grid.addWidget(QLabel(title), 0, column)
+        font_families = tuple(QFontDatabase.families())
+        for row, spec in enumerate(self.overlay_specs, start=1):
+            visible = QCheckBox()
+            visible.setChecked(spec.visible)
+            if spec.kind == "text":
+                label: QWidget = QLineEdit(spec.text)
+                label.setToolTip("Text, der auf dem Display erscheinen soll")
+                label.setMaxLength(160)
+            else:
+                label = QLabel(spec.label)
+            font_combo = QComboBox()
+            font_combo.setProperty("i18nTranslateItems", False)
+            font_combo.addItem("Systemstandard", "")
+            for family in font_families:
+                font_combo.addItem(family, family)
+            font_combo.setCurrentIndex(max(0, font_combo.findData(spec.font)))
+            font_combo.setMinimumWidth(170)
+            font_combo.setMaxVisibleItems(18)
+            x_spin = QSpinBox()
+            x_spin.setRange(0, max(0, self._safe_right_x() - 1))
+            x_spin.setValue(spec.x)
+            y_spin = QSpinBox()
+            y_spin.setRange(0, LEVITA_HEIGHT - 1)
+            y_spin.setValue(spec.y)
+            size_spin = QSpinBox()
+            size_spin.setRange(12, 160)
+            size_spin.setValue(spec.size)
+            color_button = QPushButton(spec.color)
+            color_button.setStyleSheet(f"color: {spec.color};")
+            remove_button = QPushButton("Entfernen" if spec.kind == "text" else "—")
+            remove_button.setEnabled(spec.kind == "text")
+            controls: dict[str, QWidget] = {
+                "visible": visible, "label": label, "font": font_combo,
+                "x": x_spin, "y": y_spin, "size": size_spin,
+                "color": color_button, "remove": remove_button,
+            }
+            self.overlay_controls[spec.ident] = controls
+            visible.toggled.connect(lambda checked, ident=spec.ident: self._overlay_control_changed(ident, visible=checked))
+            if isinstance(label, QLineEdit):
+                label.editingFinished.connect(
+                    lambda ident=spec.ident, editor=label: self._overlay_control_changed(
+                        ident, text=editor.text(), sample=editor.text(),
+                    )
+                )
+            font_combo.currentIndexChanged.connect(
+                lambda _index, ident=spec.ident, combo=font_combo: self._overlay_control_changed(
+                    ident, font=str(combo.currentData() or ""),
+                )
+            )
+            x_spin.valueChanged.connect(lambda value, ident=spec.ident: self._overlay_control_changed(ident, x=value))
+            y_spin.valueChanged.connect(lambda value, ident=spec.ident: self._overlay_control_changed(ident, y=value))
+            size_spin.valueChanged.connect(lambda value, ident=spec.ident: self._overlay_control_changed(ident, size=value))
+            color_button.clicked.connect(lambda _checked=False, ident=spec.ident: self._choose_overlay_color(ident))
+            remove_button.clicked.connect(lambda _checked=False, ident=spec.ident: self.remove_custom_text_overlay(ident))
+            for column, widget in enumerate((visible, label, font_combo, x_spin, y_spin, size_spin, color_button, remove_button)):
+                self.overlay_grid.addWidget(widget, row, column)
+
+    def add_custom_text_overlay(self) -> None:
+        existing = {item.ident for item in self.overlay_specs}
+        custom_count = sum(item.kind == "text" for item in self.overlay_specs)
+        if custom_count >= MAX_CUSTOM_TEXT_OVERLAYS:
+            self._status(f"Maximal {MAX_CUSTOM_TEXT_OVERLAYS} eigene Texte sind möglich", error=True)
+            return
+        number = next(index for index in range(1, MAX_CUSTOM_TEXT_OVERLAYS + 1) if f"ohc-text-{index:02d}" not in existing)
+        self._remember_overlay_state()
+        text = f"Eigener Text {number}"
+        self.overlay_specs.append(OverlaySpec(
+            ident=f"ohc-text-{number:02d}", label=text, kind="text",
+            text=text, sample=text, x=760, y=min(650, 150 + custom_count * 70),
+            size=42, color="#ffffff", bold=True,
+        ).bounded(safe_right_x=self._safe_right_x()))
+        self._rebuild_overlay_controls()
+        self._save_overlays()
+        self.canvas.set_specs(self.overlay_specs if self.current_hardware_design_path() is None else ())
+        self._status(f"{text} hinzugefügt · Text, Schrift, Größe und Position sind jetzt bearbeitbar")
+
+    def remove_custom_text_overlay(self, ident: str) -> None:
+        index = self._overlay_index(ident)
+        if self.overlay_specs[index].kind != "text":
+            return
+        self._remember_overlay_state()
+        removed = self.overlay_specs.pop(index)
+        self._rebuild_overlay_controls()
+        self._save_overlays()
+        self.canvas.set_specs(self.overlay_specs if self.current_hardware_design_path() is None else ())
+        self._status(f"{removed.label} entfernt")
 
     def _log(self, message: str) -> None:
         if self.log_ready and self.log_callback:
@@ -1004,10 +1457,15 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.preview_status.setObjectName("warningText" if error else "muted")
         self.preview_status.style().unpolish(self.preview_status)
         self.preview_status.style().polish(self.preview_status)
-        self._log(message)
+        if error:
+            self._log(f"FEHLER: {message}")
+        else:
+            self._log(message)
 
     def refresh_backend_status(self) -> None:
         self.cli = ThermalrightCli()
+        if hasattr(self, "install_backend_button"):
+            self.install_backend_button.setVisible(self.device_present and not self.cli.available)
         if self.cli.available:
             self.backend_status.setText("TRCC-Linux-Backend gefunden · Gerät noch nicht geprüft")
         else:
@@ -1017,10 +1475,23 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.settings.setValue("thermalright/test_mode", checked)
         self._status("Testmodus aktiv · keine USB-Schreibzugriffe" if checked else "Hardwaremodus freigegeben · Aktionen benötigen TRCC Linux")
 
+    def _lcd_write_allowed(self) -> bool:
+        raw = self.settings.value("features/enabled", None)
+        if raw not in (None, ""):
+            try:
+                values = json.loads(raw) if isinstance(raw, str) else raw
+            except (TypeError, ValueError, json.JSONDecodeError):
+                values = ()
+            if isinstance(values, (list, tuple, set)) and "lcd" not in values:
+                return False
+        owner = str(self.settings.value("control_authority/lcd", "auto") or "auto")
+        return owner in {"auto", "ohc_trcc"}
+
+
     def _autostart_toggled(self, checked: bool) -> None:
         self.settings.setValue("thermalright/autostart_enabled", checked)
-        if checked:
-            self._sync_autostart_selection_if_enabled()
+        if checked and not self.design_state.has_standard():
+            self.remember_startup_design()
         self._refresh_startup_status()
         if checked and self.test_mode.isChecked():
             self._status(
@@ -1047,32 +1518,172 @@ class ThermalrightDisplayStudio(QGroupBox):
         if media is None:
             self._status("Für den Autostart zuerst einen Hintergrund auswählen", error=True)
             return
+        self._remember_startup_media(media)
+
+    def _remember_startup_media(self, media: Path, *, enable: bool = True) -> bool:
+        """Persist one canonical Levita start design from any trusted UI page."""
+
+        if not media.exists():
+            return False
+        self.design_state.invalidate_startup()
+        self.startup_apply_requested = True
+        self.startup_apply_active = False
         hardware = self.current_hardware_design_path()
         self.settings.setValue("thermalright/start_media", str(media.resolve()))
         self.settings.setValue(
             "thermalright/start_hardware_design", str(hardware.resolve()) if hardware else "",
         )
-        self.autostart_enabled.setChecked(True)
+        self.settings.setValue("thermalright/start_layer2_motion", self._layer2_motion_enabled(hardware))
+        self.settings.setValue("thermalright/start_desktop_fps", self.desktop_lcd_fps)
+        self.settings.setValue("thermalright/start_game_fps", self.game_lcd_fps)
+        if enable:
+            self.autostart_enabled.setChecked(True)
+        self.stage_profile_startup_design()
+        self.settings.sync()
         self._refresh_startup_status()
         self._status(
             "Aktuelle Ebenen als Levita-Startdesign gespeichert · globale Kraken-LCD-Aktionen bleiben getrennt"
         )
+        return True
 
-    def _sync_autostart_selection_if_enabled(self) -> None:
-        if (
-            self.restoring_startup_selection
-            or not hasattr(self, "autostart_enabled")
-            or not self.autostart_enabled.isChecked()
-        ):
-            return
+    def remember_effect_startup_design(self, path: Path, *, bundled: bool) -> bool:
+        """Save a validated Display Effects selection as the shared Levita standard."""
+
+        root = (
+            Path(__file__).resolve().parent / "assets" / "display-effects"
+            if bundled else self.generated_effect_directory()
+        )
+        candidate = validate_effect_handoff(path, root)
+        return self._remember_startup_media(candidate)
+
+    def stage_profile_startup_design(self) -> bool:
+        """Remember the current Levita layers for the next profile save only."""
+
         media = self.current_media_path()
+        if media is None or not media.exists():
+            return False
+        return self._store_pending_profile_startup(media)
+
+    def stage_profile_effect_media(self, path: Path, *, bundled: bool) -> bool:
+        """Stage validated effect media without selecting or applying it to hardware."""
+
+        root = (
+            Path(__file__).resolve().parent / "assets" / "display-effects"
+            if bundled else self.generated_effect_directory()
+        )
+        candidate = validate_effect_handoff(path, root)
+        return self._store_pending_profile_startup(candidate)
+
+    def _store_pending_profile_startup(self, media: Path) -> bool:
         hardware = self.current_hardware_design_path()
-        if media is None:
-            return
+        self.settings.setValue("thermalright/profile_pending_media", str(media.resolve()))
+        self.settings.setValue(
+            "thermalright/profile_pending_hardware_design",
+            str(hardware.resolve()) if hardware and hardware.exists() else "",
+        )
+        self.settings.setValue(
+            "thermalright/profile_pending_layer2_motion", self._layer2_motion_enabled(hardware),
+        )
+        self.settings.setValue("thermalright/profile_pending_desktop_fps", self.desktop_lcd_fps)
+        self.settings.setValue("thermalright/profile_pending_game_fps", self.game_lcd_fps)
+        self.settings.sync()
+        return True
+
+    def profile_startup_payload(self) -> dict[str, object] | None:
+        """Return a staged Levita startup choice for an LCD or full profile."""
+
+        media_value = str(self.settings.value("thermalright/profile_pending_media", "") or "")
+        if not media_value or not Path(media_value).exists():
+            return None
+        hardware_value = str(
+            self.settings.value("thermalright/profile_pending_hardware_design", "") or ""
+        )
+        if hardware_value and not Path(hardware_value).exists():
+            hardware_value = ""
+        return {
+            "media": str(Path(media_value).resolve()),
+            "hardware_design": str(Path(hardware_value).resolve()) if hardware_value else "",
+            "enabled": True,
+            "layer2_motion": self.settings.value(
+                "thermalright/profile_pending_layer2_motion", True, type=bool,
+            ),
+            "desktop_fps": normalize_lcd_fps(
+                self.settings.value("thermalright/profile_pending_desktop_fps", 15),
+                experimental_60=self.experimental_60_fps,
+            ),
+            "game_fps": normalize_lcd_fps(
+                self.settings.value("thermalright/profile_pending_game_fps", 15),
+                experimental_60=self.experimental_60_fps,
+            ),
+        }
+
+    def restore_profile_startup_payload(self, payload: dict[str, object], *, startup: bool = False) -> bool:
+        """An explicit profile load may replace the one shared Levita standard."""
+
+        if startup and self.design_state.has_standard():
+            self._log("LCD-START: gespeicherter Levita-Standard hat Vorrang vor dem automatischen Profil")
+            return False
+
+        media_value = str(payload.get("media", "") or "")
+        if not bool(payload.get("enabled", True)) or not media_value:
+            return False
+        media = Path(media_value)
+        if not media.exists():
+            self._log("LCD-START: Levita-Medium aus dem Profil ist nicht mehr vorhanden")
+            return False
+        hardware_value = str(payload.get("hardware_design", "") or "")
+        hardware = Path(hardware_value) if hardware_value else None
+        if hardware is not None and not hardware.exists():
+            hardware_value = ""
         self.settings.setValue("thermalright/start_media", str(media.resolve()))
         self.settings.setValue(
-            "thermalright/start_hardware_design", str(hardware.resolve()) if hardware else "",
+            "thermalright/start_hardware_design",
+            str(Path(hardware_value).resolve()) if hardware_value else "",
         )
+        self.settings.setValue("thermalright/profile_pending_media", str(media.resolve()))
+        self.settings.setValue(
+            "thermalright/profile_pending_hardware_design",
+            str(Path(hardware_value).resolve()) if hardware_value else "",
+        )
+        motion_enabled = bool(payload.get("layer2_motion", True))
+        if hardware_value:
+            key = self._layer2_key(Path(hardware_value))
+            self.layer2_motion_overrides[key] = motion_enabled
+            self.settings.setValue(
+                "thermalright/layer2_motion_overrides",
+                json.dumps(self.layer2_motion_overrides, ensure_ascii=False, sort_keys=True),
+            )
+        self.desktop_lcd_fps = normalize_lcd_fps(
+            payload.get("desktop_fps", 15), experimental_60=self.experimental_60_fps,
+        )
+        self.game_lcd_fps = normalize_lcd_fps(
+            payload.get("game_fps", 15), experimental_60=self.experimental_60_fps,
+        )
+        self.settings.setValue("thermalright/desktop_fps", self.desktop_lcd_fps)
+        self.settings.setValue("thermalright/game_fps", self.game_lcd_fps)
+        self._populate_lcd_fps_combo()
+        self._populate_game_fps_combo()
+        self.design_state.invalidate_startup()
+        self.settings.setValue("thermalright/start_layer2_motion", motion_enabled)
+        self.settings.setValue("thermalright/start_desktop_fps", self.desktop_lcd_fps)
+        self.settings.setValue("thermalright/start_game_fps", self.game_lcd_fps)
+        self.settings.setValue("thermalright/profile_pending_layer2_motion", motion_enabled)
+        self.settings.setValue("thermalright/profile_pending_desktop_fps", self.desktop_lcd_fps)
+        self.settings.setValue("thermalright/profile_pending_game_fps", self.game_lcd_fps)
+        self.settings.setValue("thermalright/autostart_enabled", True)
+        self.settings.sync()
+        self.autostart_enabled.blockSignals(True)
+        self.autostart_enabled.setChecked(True)
+        self.autostart_enabled.blockSignals(False)
+        self._refresh_startup_status()
+        self._log("LCD-START: Levita-Startdesign aus dem ausgewählten Profil vorgemerkt")
+        return True
+
+    def _sync_autostart_selection_if_enabled(self) -> None:
+        # Preview edits never rewrite the explicitly saved startup standard.
+        if getattr(self, "startup_apply_active", False) and not self.restoring_startup_selection:
+            self.design_state.invalidate_startup()
+            self.startup_apply_active = False
         self._refresh_startup_status()
 
     def _restore_startup_selection(self) -> bool:
@@ -1081,6 +1692,17 @@ class ThermalrightDisplayStudio(QGroupBox):
         if not media_value or not Path(media_value).exists():
             self._status("Gespeichertes Levita-Startdesign ist nicht mehr vorhanden", error=True)
             return False
+        self.desktop_lcd_fps = normalize_lcd_fps(
+            self.settings.value("thermalright/start_desktop_fps", self.desktop_lcd_fps),
+            experimental_60=self.experimental_60_fps,
+        )
+        self.game_lcd_fps = normalize_lcd_fps(
+            self.settings.value("thermalright/start_game_fps", self.game_lcd_fps),
+            experimental_60=self.experimental_60_fps,
+        )
+        self._populate_lcd_fps_combo()
+        self._populate_game_fps_combo()
+        self._register_saved_effect_media(Path(media_value))
         self.restoring_startup_selection = True
         try:
             self.media_filter.clear()
@@ -1091,6 +1713,11 @@ class ThermalrightDisplayStudio(QGroupBox):
             if hardware_index < 0:
                 hardware_index = 0
             self.hardware_design_combo.setCurrentIndex(hardware_index)
+            if hardware_value:
+                self.layer2_motion_overrides[self._layer2_key(Path(hardware_value))] = self.settings.value(
+                    "thermalright/start_layer2_motion", True, type=bool,
+                )
+                self._sync_layer2_motion_control()
             self._apply_media_filter()
             media_index = self.media_combo.findData(media_value)
             if media_index < 0:
@@ -1103,6 +1730,26 @@ class ThermalrightDisplayStudio(QGroupBox):
             return True
         finally:
             self.restoring_startup_selection = False
+
+    def _register_saved_effect_media(self, path: Path) -> None:
+        """Re-enrol one validated effect that is not part of the LCD gallery scan."""
+
+        try:
+            resolved = path.resolve()
+        except OSError:
+            return
+        if any(entry.path == resolved for entry in self.media_entries):
+            return
+        bundled_root = Path(__file__).resolve().parent / "assets" / "display-effects"
+        for root in (self.generated_effect_directory(), bundled_root):
+            try:
+                candidate = validate_effect_handoff(resolved, root)
+            except (OSError, ValueError):
+                continue
+            self.media_entries.append(
+                MediaEntry(candidate, f"Display-Effekte / {candidate.stem}", "video")
+            )
+            return
 
     def apply_startup_design_if_enabled(self, *, competing_lcd_action: bool = False) -> None:
         """Restore exactly one explicitly saved Levita design after desktop startup."""
@@ -1133,6 +1780,13 @@ class ThermalrightDisplayStudio(QGroupBox):
         self._log("LCD-START: gespeichertes Levita-Design wird nach der Desktop-Ruhezeit geladen")
         self.apply_design(startup=True)
 
+    def activate_staged_profile_design(self) -> None:
+        """Apply a profile-staged Levita design through the guarded startup pipeline."""
+
+        self.startup_apply_requested = False
+        self.apply_startup_design_if_enabled(competing_lcd_action=False)
+
+
     def _schedule_startup_retry(self, detail: str) -> None:
         if not self.startup_apply_active or self.startup_retry_count >= 1:
             self.startup_apply_active = False
@@ -1143,39 +1797,75 @@ class ThermalrightDisplayStudio(QGroupBox):
             "LCD-START: Display war noch nicht bereit · ein zweiter, begrenzter Versuch folgt in 3 Sekunden",
             error=True,
         )
-        QTimer.singleShot(3000, lambda: self.apply_design(startup=True))
+        generation = self.design_state.generation
+        QTimer.singleShot(3000, self, lambda: self.apply_design(startup=True)
+                          if generation == self.design_state.generation
+                          and self.startup_apply_active and not self.shutdown_started else None)
 
     def choose_media_directory(self) -> None:
-        current = str(self.custom_media_directory or Path.home())
-        selected = QFileDialog.getExistingDirectory(self, "Thermalright-Designordner auswählen", current)
-        if selected:
-            self.load_media_directory(Path(selected), remember_custom=True)
-            self._select_library_source(Path(selected), prefer_saved_custom=True)
-
-    def show_remembered_media_directory(self) -> None:
-        if self.custom_media_directory is None or not self.custom_media_directory.is_dir():
-            self._status("Der gemerkte Designordner ist nicht mehr vorhanden", error=True)
+        translator = getattr(self.window(), "tr_static", None)
+        dialog = DesignLibraryDialog(
+            self.design_library_state,
+            translator if callable(translator) else None,
+            self,
+        )
+        if not dialog.exec():
             return
+        self.design_library_state = dialog.state()
+        self.settings.setValue(
+            "thermalright/design_library_v1", save_library_state(self.design_library_state),
+        )
+        self.custom_media_directory = (
+            self.design_library_state.folders[0]
+            if self.design_library_state.folders else None
+        )
+        if self.custom_media_directory is not None:
+            self.settings.setValue("thermalright/custom_media_directory", str(self.custom_media_directory))
+            self.settings.setValue("thermalright/media_directory", str(self.custom_media_directory))
+        else:
+            self.settings.remove("thermalright/custom_media_directory")
+            self.settings.remove("thermalright/media_directory")
+        enabled = self.design_library_state.has_sources
+        self.custom_media_enabled.setEnabled(enabled)
         self.custom_media_enabled.blockSignals(True)
-        self.custom_media_enabled.setChecked(True)
+        self.custom_media_enabled.setChecked(enabled)
         self.custom_media_enabled.blockSignals(False)
-        self.settings.setValue("thermalright/custom_media_enabled", True)
-        self.load_media_directory(self.custom_media_directory, remember_custom=False)
-        self._select_library_source(self.custom_media_directory, prefer_saved_custom=True)
+        self.settings.setValue("thermalright/custom_media_enabled", enabled)
+        self.remembered_media_button.setEnabled(enabled)
+        self._reload_managed_library()
 
-    def _toggle_custom_media_directory(self, checked: bool) -> None:
-        self.settings.setValue("thermalright/custom_media_enabled", checked)
+    def _reload_managed_library(self) -> None:
         standard = default_trcc_design_directory()
-        source = self.custom_media_directory if checked and self.custom_media_directory else standard
+        source = self.custom_media_directory or standard
+        if source is None and self.design_library_state.files:
+            source = self.design_library_state.files[0].parent
         if source is None:
             self.media_entries = []
             self._populate_media_categories()
             self._populate_hardware_design_combo()
             self._apply_media_filter()
             return
-        self.load_media_directory(source, quiet=True, remember_custom=False)
-        if checked and self.custom_media_directory is not None:
-            self._select_library_source(self.custom_media_directory, prefer_saved_custom=True)
+        self.load_media_directory(source, quiet=True, remember_custom=False, force_catalog=False)
+
+    def show_remembered_media_directory(self) -> None:
+        if not self.design_library_state.has_sources:
+            self._status("Der gemerkte Designordner ist nicht mehr vorhanden", error=True)
+            return
+        self.custom_media_enabled.blockSignals(True)
+        self.custom_media_enabled.setChecked(True)
+        self.custom_media_enabled.blockSignals(False)
+        self.settings.setValue("thermalright/custom_media_enabled", True)
+        self._reload_managed_library()
+        source = self.custom_media_directory or self.design_library_state.files[0]
+        self._select_library_source(source, prefer_saved_custom=True)
+
+    def _toggle_custom_media_directory(self, checked: bool) -> None:
+        self.settings.setValue("thermalright/custom_media_enabled", checked)
+        standard = default_trcc_design_directory()
+        self._reload_managed_library()
+        if checked and self.design_library_state.has_sources:
+            source = self.custom_media_directory or self.design_library_state.files[0]
+            self._select_library_source(source, prefer_saved_custom=True)
             self._status("Eigener Designordner wieder eingeblendet · gespeicherte Auswahl wiederhergestellt")
         else:
             self._select_library_source(standard, prefer_theme=True)
@@ -1184,13 +1874,17 @@ class ThermalrightDisplayStudio(QGroupBox):
     def load_default_trcc_designs(self, _checked: bool = False, *, quiet: bool = False) -> None:
         directory = default_trcc_design_directory()
         if directory is None:
-            if not quiet:
-                self._status(
-                    "Keine installierten TRCC-Standarddesigns für Levita 1600×720 gefunden",
-                    error=True,
-                )
-            return
-        self.load_media_directory(directory, quiet=True, remember_custom=False)
+            directory = Path(__file__).resolve().parent / "assets" / "levita-designs"
+            if not directory.is_dir():
+                if not quiet:
+                    self._status(
+                        "Keine installierten TRCC-Standarddesigns für Levita 1600×720 gefunden",
+                        error=True,
+                    )
+                return
+        self.load_media_directory(
+            directory, quiet=True, remember_custom=False, force_catalog=not quiet,
+        )
         self._select_library_source(directory, prefer_theme=True)
         if not quiet:
             self._status(
@@ -1199,6 +1893,7 @@ class ThermalrightDisplayStudio(QGroupBox):
 
     def load_media_directory(
         self, directory: Path, *, quiet: bool = False, remember_custom: bool = True,
+        force_catalog: bool = True,
     ) -> None:
         try:
             requested = directory.expanduser().resolve()
@@ -1206,8 +1901,20 @@ class ThermalrightDisplayStudio(QGroupBox):
             standard = default_trcc_design_directory()
             if standard is not None:
                 roots.append(("TRCC-Standard", standard))
+            for media_root in default_trcc_media_directories():
+                label = "TRCC-Katalog" if ".trcc/data" in str(media_root) else "Eigene TRCC-Dateien"
+                roots.append((label, media_root))
             if remember_custom:
-                self.custom_media_directory = requested
+                folders = list(self.design_library_state.folders)
+                if requested not in folders:
+                    folders.append(requested)
+                self.design_library_state = replace(
+                    self.design_library_state, folders=tuple(folders[:32]),
+                )
+                self.settings.setValue(
+                    "thermalright/design_library_v1", save_library_state(self.design_library_state),
+                )
+                self.custom_media_directory = self.design_library_state.folders[0]
                 self.settings.setValue("thermalright/custom_media_directory", str(requested))
                 self.settings.setValue("thermalright/media_directory", str(requested))
                 self.settings.setValue("thermalright/custom_media_enabled", True)
@@ -1216,58 +1923,82 @@ class ThermalrightDisplayStudio(QGroupBox):
                 self.custom_media_enabled.blockSignals(False)
                 self.custom_media_enabled.setEnabled(True)
                 self.remembered_media_button.setEnabled(True)
-            custom = self.custom_media_directory
-            if self.custom_media_enabled.isChecked() and custom is not None and custom != standard:
-                roots.append(("Eigener Ordner", custom))
-            if not roots and requested.is_dir():
+            if self.custom_media_enabled.isChecked():
+                for number, custom in enumerate(self.design_library_state.folders, 1):
+                    if custom != standard:
+                        roots.append((f"Eigener Ordner {number}", custom))
+            if not roots and requested.is_dir() and not self.design_library_state.files:
                 roots.append(("Ausgewählter Ordner", requested))
             entries: list[MediaEntry] = []
             seen: set[Path] = set()
             builtin_dir = Path(__file__).resolve().parent / "assets" / "levita-designs"
             builtin_names = (
-                ("ohc-carbon-blue.png", "Carbon Blue"),
-                ("ohc-titanium-blue.png", "Titanium Blue"),
-                ("ohc-plasma-circuit.png", "Plasma Circuit"),
-                ("ohc-ai-neon-corridor.png", "Neon Corridor"),
-                ("ohc-ai-orbital-observatory.png", "Orbital Observatory"),
-                ("ohc-ai-neon-city.png", "Neon City"),
-                ("ohc-ai-azure-reactor.png", "Azure Reactor"),
-                ("ohc-ai-deep-space-command.png", "Deep Space Command"),
-                ("ohc-ai-quantum-portal.png", "Quantum Portal"),
-                ("ohc-ai-crystal-core.png", "Crystal Core"),
-                ("ohc-ai-command-deck.png", "Command Deck"),
+                ("ohc-carbon-blue.png", "Kohlefaserblau"),
+                ("ohc-titanium-blue.png", "Titanblau"),
+                ("ohc-plasma-circuit.png", "Plasmaschaltkreis"),
+                ("ohc-ai-neon-corridor.png", "Neon-Korridor"),
+                ("ohc-ai-orbital-observatory.png", "Orbital-Observatorium"),
+                ("ohc-ai-neon-city.png", "Neonstadt"),
+                ("ohc-ai-azure-reactor.png", "Azur-Reaktor"),
+                ("ohc-ai-deep-space-command.png", "Tiefenraum-Zentrale"),
+                ("ohc-ai-quantum-portal.png", "Quantenportal"),
+                ("ohc-ai-crystal-core.png", "Kristallkern"),
+                ("ohc-ai-command-deck.png", "Kommando-Deck"),
             )
             for filename, title in builtin_names:
                 path = (builtin_dir / filename).resolve()
                 if path.is_file():
                     entries.append(MediaEntry(path, f"OHC-Designs / {title}", "image"))
                     seen.add(path)
-            builtin_video = (builtin_dir / "ohc-ai-quantum-voyage-30s.mp4").resolve()
-            if builtin_video.is_file():
-                entries.append(MediaEntry(
-                    builtin_video,
-                    "OHC-Designs / Quantum Voyage · 30 s",
-                    "video",
-                ))
-                seen.add(builtin_video)
-            for dirname, title in (
-                ("ohc-nebula-drift", "Nebula Drift"),
-                ("ohc-orbital-command", "Orbital Command"),
+            for filename, title in (
+                ("ohc-ai-quantum-voyage-30s.mp4", "Cyberreise · 30 s"),
+                ("ohc-3d-orbital-ring-10s.mp4", "Orbitalring · 3D · 10 s"),
+                ("ohc-3d-neon-apex-10s.mp4", "Neonspitze · 3D · 10 s"),
+                ("ohc-3d-quantum-core-10s.mp4", "Quantenkern · 3D · 10 s"),
             ):
+                path = (builtin_dir / filename).resolve()
+                if path.is_file():
+                    entries.append(MediaEntry(path, f"OHC-Designs / {title}", "video"))
+                    seen.add(path)
+            effects_dir = self.generated_effect_directory()
+            for path in sorted(effects_dir.glob("*.mp4")) if effects_dir.is_dir() else ():
+                resolved = path.resolve()
+                if path.is_symlink() or not resolved.is_file() or resolved in seen:
+                    continue
+                entries.append(MediaEntry(resolved, f"Display-Effekte / {path.stem}", "video"))
+                seen.add(resolved)
+            for dirname, title in BUILTIN_LEVITA_THEMES:
                 path = (builtin_dir / dirname).resolve()
                 if trcc_theme_is_supported(path):
                     entries.append(MediaEntry(path, f"OHC-Designs / {title} · TRCC-Layout", "theme"))
                     seen.add(path)
             for label, root in roots:
-                for entry in scan_media_directory(root):
-                    if entry.path in seen:
+                root_entries = self._scan_media_root(root, force=force_catalog)
+                if label == "TRCC-Katalog":
+                    root_entries = collapse_catalog_previews(root_entries)
+                for entry in root_entries:
+                    if entry.path in seen or entry.path in self.design_library_state.excluded:
                         continue
                     seen.add(entry.path)
+                    title = friendly_media_name(
+                        entry.path,
+                        self.design_library_state.aliases.get(str(entry.path), ""),
+                    )
                     entries.append(MediaEntry(
                         path=entry.path,
-                        relative_name=f"{label} / {entry.relative_name}" if len(roots) > 1 else entry.relative_name,
+                        relative_name=f"{label} / {title}",
                         kind=entry.kind,
                     ))
+            if self.custom_media_enabled.isChecked():
+                for path in self.design_library_state.files:
+                    if path in seen or path in self.design_library_state.excluded:
+                        continue
+                    seen.add(path)
+                    title = friendly_media_name(
+                        path, self.design_library_state.aliases.get(str(path), ""),
+                    )
+                    kind = "image" if path.suffix.casefold() in SUPPORTED_IMAGE_SUFFIXES else "video"
+                    entries.append(MediaEntry(path, f"Eigene Datei / {title}", kind))
             entries, self.media_duplicate_map = deduplicate_media_entries(entries)
             self.media_duplicate_count = len(self.media_duplicate_map)
             self.media_entries = entries
@@ -1298,11 +2029,12 @@ class ThermalrightDisplayStudio(QGroupBox):
         catalog_count = sum(
             1 for entry in self.media_entries if media_category_key(entry) != "own"
         )
+        source_count = len(self.design_library_state.folders) + len(self.design_library_state.files)
         custom_text = (
-            f"eigener Ordner eingeblendet: {self.custom_media_directory}"
-            if self.custom_media_enabled.isChecked() and self.custom_media_directory
-            else f"eigener Ordner ausgeblendet: {self.custom_media_directory}"
-            if self.custom_media_directory else "kein eigener Ordner gespeichert"
+            f"{source_count} eigene Quellen eingeblendet"
+            if self.custom_media_enabled.isChecked() and source_count
+            else f"{source_count} eigene Quellen ausgeblendet"
+            if source_count else "keine eigenen Quellen gespeichert"
         )
         self.media_directory_label.setText(
             f"TRCC-Standard + {custom_text} · {len(self.media_entries)} lokale Designs · "
@@ -1329,6 +2061,36 @@ class ThermalrightDisplayStudio(QGroupBox):
                 )
                 + " · keine Dateien kopiert oder gelöscht"
             )
+        self.library_loaded = True
+        self.library_ready.emit()
+
+    def _scan_media_root(self, root: Path, *, force: bool) -> list[MediaEntry]:
+        budget = cache_budget_mb(self.settings)
+        namespace = "levita-" + hashlib.sha256(str(root.resolve()).encode()).hexdigest()[:16]
+        records = cached_catalog_records(namespace, (root,), budget, force=force)
+        if records is not None:
+            result: list[MediaEntry] = []
+            for record in records:
+                try:
+                    raw_path = Path(str(record["path"]))
+                    if raw_path.is_symlink():
+                        continue
+                    path = raw_path.resolve()
+                    path.relative_to(root.resolve())
+                    kind = str(record["kind"])
+                    valid_path = path.is_dir() if kind == "theme" else path.is_file()
+                    if kind not in {"image", "video", "theme"} or not valid_path:
+                        continue
+                    result.append(MediaEntry(path, str(record["name"])[:500], kind))
+                except (KeyError, OSError, ValueError):
+                    continue
+            return result
+        result = scan_media_directory(root)
+        save_catalog_records(namespace, (root,), [
+            {"path": str(entry.path), "name": entry.relative_name, "kind": entry.kind}
+            for entry in result
+        ], budget)
+        return result
 
     def _select_library_source(
         self, root: Path | None, *, prefer_saved_custom: bool = False, prefer_theme: bool = False,
@@ -1442,13 +2204,10 @@ class ThermalrightDisplayStudio(QGroupBox):
         for index in range(self.media_category.count()):
             key = str(self.media_category.itemData(index))
             button = QToolButton()
+            button.setObjectName("lcdCategoryButton")
             button.setText(self.media_category.itemText(index))
             button.setCheckable(True)
             button.setChecked(key == current)
-            button.setStyleSheet(
-                "QToolButton { padding: 7px 11px; border-radius: 9px; } "
-                "QToolButton:checked { background: rgba(25, 145, 230, 150); border: 1px solid #42b8ff; }"
-            )
             button.clicked.connect(lambda _checked=False, value=key: self._select_media_category(value))
             self.category_group.addButton(button)
             self.category_layout.addWidget(button)
@@ -1495,7 +2254,8 @@ class ThermalrightDisplayStudio(QGroupBox):
             source = entry.path
         elif entry is not None and entry.kind == "video":
             source = self._video_card_thumbnail(entry.path)
-        pixmap = QPixmap(str(source)) if source else QPixmap()
+        from modules.ui_performance.v1_1.thumbnails import card_source
+        pixmap = card_source(source, self.settings) if source else QPixmap()
         if pixmap.isNull():
             pixmap = QPixmap(320, 144)
             pixmap.fill(QColor("#071522"))
@@ -1511,6 +2271,13 @@ class ThermalrightDisplayStudio(QGroupBox):
         ).copy(0, 0, 176, 79)
 
     def _video_card_thumbnail(self, media: Path) -> Path | None:
+        catalog_preview = media.with_suffix(".png")
+        if (
+            not catalog_preview.is_symlink()
+            and catalog_preview.is_file()
+            and catalog_preview.parent == media.parent
+        ):
+            return catalog_preview
         cache_paths = self._thumbnail_cache_paths(media)
         if cache_paths is None:
             return None
@@ -1527,8 +2294,9 @@ class ThermalrightDisplayStudio(QGroupBox):
         fingerprint = hashlib.sha256(
             f"card:{media.resolve()}:{stat.st_size}:{stat.st_mtime_ns}".encode("utf-8")
         ).hexdigest()[:20]
-        target = self.cache_dir / f"card-{fingerprint}.jpg"
-        return fingerprint, target, self.cache_dir / f"card-{fingerprint}.failed"
+        target = preview_cache_path("levita-video", media, cache_budget_mb(self.settings))
+        target = target or self.cache_dir / f"card-{fingerprint}.jpg"
+        return fingerprint, target, target.with_suffix(".failed")
 
     @staticmethod
     def _thumbnail_failure_is_recent(failure: Path) -> bool:
@@ -1574,12 +2342,18 @@ class ThermalrightDisplayStudio(QGroupBox):
         return None
 
     def _start_thumbnail_workers(self) -> None:
-        if not self.thumbnail_ffmpeg or self.thumbnail_shutting_down:
+        if not self.thumbnail_ffmpeg or self.thumbnail_shutting_down or not self.isVisible():
             return
         for worker in self.thumbnail_workers:
             if worker in self.thumbnail_active or not self.thumbnail_queue:
                 continue
-            item = self.thumbnail_queue.pop(0)
+            visible_index = next(
+                (index for index, item in enumerate(self.thumbnail_queue) if self._thumbnail_job_visible(item[0])),
+                -1,
+            )
+            if visible_index < 0:
+                return
+            item = self.thumbnail_queue.pop(visible_index)
             _key, media, target, _failure = item
             self.thumbnail_active[worker] = item
             worker.start(self.thumbnail_ffmpeg, [
@@ -1588,6 +2362,48 @@ class ThermalrightDisplayStudio(QGroupBox):
             ])
             self.thumbnail_worker_timeouts[worker].start()
 
+    def _thumbnail_job_visible(self, key: str) -> bool:
+        # A Python weak reference can still return its PySide wrapper after
+        # Qt has already destroyed the underlying C++ card.  This happens
+        # when the user switches large design categories while thumbnail
+        # extraction is still queued.  Never call QWidget methods until the
+        # wrapper has passed shiboken's lifetime check.
+        waiters = []
+        for button_ref in self.thumbnail_waiters.get(key, ()):
+            button = button_ref()
+            if button is not None and isValid(button):
+                waiters.append(button_ref)
+        if waiters:
+            self.thumbnail_waiters[key] = waiters
+        else:
+            self.thumbnail_waiters.pop(key, None)
+        if not waiters:
+            return self.isVisible()
+        for button_ref in waiters:
+            button = button_ref()
+            if button is None or not isValid(button):
+                continue
+            try:
+                if not button.isVisibleTo(self):
+                    continue
+                for area in (self.media_cards_scroll, self.hardware_cards_scroll):
+                    if area.isAncestorOf(button):
+                        position = button.mapTo(area.viewport(), QPoint(0, 0))
+                        if QRect(position, button.size()).intersects(area.viewport().rect()):
+                            return True
+            except RuntimeError:
+                # A nested Qt event may invalidate the wrapper between the
+                # explicit isValid check and the visibility query.
+                continue
+        return False
+
+    def _pause_thumbnail_workers(self) -> None:
+        for worker in tuple(self.thumbnail_active):
+            self.thumbnail_paused_workers.add(worker)
+            self.thumbnail_worker_timeouts[worker].stop()
+            if worker.state() != QProcess.ProcessState.NotRunning:
+                worker.kill()
+
     def _cancel_thumbnail_worker(self, worker: QProcess) -> None:
         if worker in self.thumbnail_active and worker.state() != QProcess.ProcessState.NotRunning:
             worker.kill()
@@ -1595,11 +2411,16 @@ class ThermalrightDisplayStudio(QGroupBox):
     def _on_thumbnail_finished(
         self, worker: QProcess, exit_code: int, _status: QProcess.ExitStatus,
     ) -> None:
-        if self.thumbnail_shutting_down:
+        if self.thumbnail_shutting_down or not isValid(self) or not isValid(worker):
             return
         self.thumbnail_worker_timeouts[worker].stop()
         item = self.thumbnail_active.pop(worker, None)
         if item is None:
+            return
+        if worker in self.thumbnail_paused_workers:
+            self.thumbnail_paused_workers.discard(worker)
+            self.thumbnail_queue.insert(0, item)
+            self._start_thumbnail_workers()
             return
         key, media, target, failure = item
         pixmap = QPixmap(str(target)) if exit_code == 0 and target.is_file() else QPixmap()
@@ -1625,7 +2446,7 @@ class ThermalrightDisplayStudio(QGroupBox):
             ).copy(0, 0, 176, 79)
             for button_ref in self.thumbnail_waiters.pop(key, []):
                 button = button_ref()
-                if button is None:
+                if button is None or not isValid(button):
                     continue
                 try:
                     button.setIcon(QIcon(card_pixmap))
@@ -1661,13 +2482,14 @@ class ThermalrightDisplayStudio(QGroupBox):
             f"LCD-VORSCHAUCACHE: fertig · {self.thumbnail_generated} neu gespeichert · "
             f"{self.thumbnail_failed} nicht lesbar · dauerhafter Cache={self.cache_dir}"
         )
-        QTimer.singleShot(4_000, self._hide_thumbnail_progress_if_idle)
+        QTimer.singleShot(4_000, self, self._hide_thumbnail_progress_if_idle)
 
     def _hide_thumbnail_progress_if_idle(self) -> None:
         if not self.thumbnail_queue and not self.thumbnail_active:
             self.thumbnail_progress_panel.hide()
 
     def _design_card(self, entry: MediaEntry | None, *, hardware: bool = False) -> QToolButton:
+        translate = getattr(self.window(), "tr_static", lambda text: text)
         title = "Eigene OHC-Werte" if entry is None else entry.relative_name.rsplit("/", 1)[-1].replace(" · TRCC-Layout", "")
         subtitle = "frei verschiebbar" if entry is None else {
             "theme": "Live-Layout",
@@ -1680,20 +2502,15 @@ class ThermalrightDisplayStudio(QGroupBox):
             lambda value=entry, ref=holder: self._card_hover_leave(ref.get("button"), value),
         )
         holder["button"] = button
+        button.setObjectName("lcdDesignCard")
         button.setCheckable(True)
         button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         button.setIcon(QIcon(self._card_thumbnail(entry)))
         button.setIconSize(QSize(DESIGN_CARD_WIDTH - 16, 79))
         favorite_key = "ohc://overlays" if entry is None else str(entry.path)
         favorite = favorite_key in self.design_favorites
-        button.setText(f"{'★ ' if favorite else ''}{title[:23]}\n{subtitle}")
+        button.setText(translate(f"{'★ ' if favorite else ''}{title[:23]}\n{subtitle}"))
         button.setFixedSize(DESIGN_CARD_WIDTH, 126)
-        button.setStyleSheet(
-            "QToolButton { padding: 5px; border: 1px solid rgba(90,145,185,90); border-radius: 10px; "
-            "background: rgba(7,20,32,170); } "
-            "QToolButton:hover { border-color: #4dbdff; background: rgba(12,39,60,210); } "
-            "QToolButton:checked { border: 2px solid #20aaff; background: rgba(13,66,99,220); }"
-        )
         path = "" if entry is None else str(entry.path)
         if entry is not None and entry.kind == "video":
             self._queue_video_thumbnail(entry.path, button)
@@ -1706,7 +2523,10 @@ class ThermalrightDisplayStudio(QGroupBox):
             lambda point, value=entry, is_hardware=hardware, source=button:
             self._show_design_card_menu(source, point, value, is_hardware)
         )
-        button.setToolTip("Linksklick: auswählen · Rechtsklick: Favorit und Ebenenzuordnung")
+        button.setToolTip(translate("Linksklick: auswählen · Rechtsklick: Favorit und Ebenenzuordnung"))
+        from modules.ui_performance.v1_1.dynamic_text import remember
+        remember(self.window(), button, text=f"{'★ ' if favorite else ''}{title[:23]}\n{subtitle}",
+                 tooltip="Linksklick: auswählen · Rechtsklick: Favorit und Ebenenzuordnung")
         return button
 
     def _show_design_card_menu(
@@ -1769,55 +2589,81 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.hover_card_button = None
         self.hover_card_entry = None
 
-    def _rebuild_media_cards(self, entries: Iterable[MediaEntry]) -> None:
+    def _rebuild_media_cards(self, entries: Iterable[MediaEntry], *, reuse: bool = False) -> None:
         self._visible_media_entries = list(entries)[:300]
         self._media_gallery_columns = self._gallery_columns(
             self.media_cards_scroll, *MEDIA_GALLERY_COLUMNS,
         )
-        self._clear_grid(self.media_cards_grid)
-        self.media_card_buttons.clear()
-        current = str(self.current_media_path() or "")
         columns = self._media_gallery_columns
-        for position, entry in enumerate(self._visible_media_entries):
-            button = self._design_card(entry)
-            button.setChecked(str(entry.path) == current)
-            self.media_cards_grid.addWidget(button, position // columns, position % columns)
-            self.media_card_buttons[str(entry.path)] = button
+        for column in range(MEDIA_GALLERY_COLUMNS[1]):
+            self.media_cards_grid.setColumnStretch(column, 1 if column < columns else 0)
+        self.gallery_preparation.request(self._visible_media_entries, reuse=reuse)
 
-    def _rebuild_hardware_cards(self, themes: Iterable[MediaEntry]) -> None:
+    def _rebuild_hardware_cards(self, themes: Iterable[MediaEntry], *, reuse: bool = False) -> None:
         self._visible_hardware_themes = list(themes)
         self._hardware_gallery_columns = self._gallery_columns(
             self.hardware_cards_scroll, *HARDWARE_GALLERY_COLUMNS,
         )
-        self._clear_grid(self.hardware_cards_grid)
-        self.hardware_card_buttons.clear()
-        current = str(self.current_hardware_design_path() or "")
         entries: list[MediaEntry | None] = [*self._visible_hardware_themes]
         if not self.favorites_only.isChecked() or "ohc://overlays" in self.design_favorites:
             entries.insert(0, None)
         columns = self._hardware_gallery_columns
-        for position, entry in enumerate(entries[:160]):
-            button = self._design_card(entry, hardware=True)
-            path = "" if entry is None else str(entry.path)
-            button.setChecked(path == current)
-            self.hardware_cards_grid.addWidget(button, position // columns, position % columns)
-            self.hardware_card_buttons[path] = button
+        for column in range(HARDWARE_GALLERY_COLUMNS[1]):
+            self.hardware_cards_grid.setColumnStretch(column, 1 if column < columns else 0)
+        self.gallery_preparation.request(entries, hardware=True, reuse=reuse)
+
+    def _materialize_visible_galleries(self) -> None:
+        self._gallery_materialize_pending = False
+        if self.shutdown_started or not self.isVisible():
+            return
+        if not self._media_cards_materialized:
+            if "media" not in self.gallery_preparation.jobs:
+                self._rebuild_media_cards(getattr(self, "_visible_media_entries", ()), reuse=True)
+        if not self._hardware_cards_materialized:
+            if "hardware" not in self.gallery_preparation.jobs:
+                self._rebuild_hardware_cards(getattr(self, "_visible_hardware_themes", ()), reuse=True)
+        self.gallery_preparation.wake()
+        self._start_thumbnail_workers()
 
     def _gallery_columns(self, area: QScrollArea, minimum: int, maximum: int) -> int:
-        return gallery_column_count(max(area.viewport().width(), area.width()), minimum=minimum, maximum=maximum)
+        return gallery_column_count(area.viewport().width(), minimum=minimum, maximum=maximum)
 
     def resizeEvent(self, event: QResizeEvent) -> None:  # noqa: N802
         super().resizeEvent(event)
         if hasattr(self, "media_cards_scroll"):
             self._relayout_design_galleries()
 
+    def showEvent(self, event) -> None:  # type: ignore[no-untyped-def]  # noqa: N802
+        super().showEvent(event)
+        if self.shutdown_started:
+            return
+        if hasattr(self, 'media_preview'):
+            self.media_preview.observer.timer.start(40)
+        if len(self.hover_preview_frames) > 1 and not self.hover_preview_timer.isActive():
+            self.hover_preview_timer.start()
+        if not self._gallery_materialize_pending:
+            self._gallery_materialize_pending = True
+            # Paint the page shell first; constructing many local design cards
+            # then happens in the next event-loop turn.
+            QTimer.singleShot(0, self, self._materialize_visible_galleries)
+
+    def hideEvent(self, event) -> None:  # type: ignore[no-untyped-def]  # noqa: N802
+        self.layer2_motion_timer.stop()
+        self.hover_preview_timer.stop()
+        self.hover_preview_debounce.stop()
+        self._cancel_hover_extract()
+        self._pause_thumbnail_workers()
+        if hasattr(self, 'media_preview'):
+            self.media_preview.refresh()
+        super().hideEvent(event)
+
     def _relayout_design_galleries(self) -> None:
         media_columns = self._gallery_columns(self.media_cards_scroll, *MEDIA_GALLERY_COLUMNS)
         hardware_columns = self._gallery_columns(self.hardware_cards_scroll, *HARDWARE_GALLERY_COLUMNS)
         if media_columns != self._media_gallery_columns:
-            self._rebuild_media_cards(self._visible_media_entries)
+            self._rebuild_media_cards(self._visible_media_entries, reuse=True)
         if hardware_columns != self._hardware_gallery_columns:
-            self._rebuild_hardware_cards(self._visible_hardware_themes)
+            self._rebuild_hardware_cards(self._visible_hardware_themes, reuse=True)
 
     def _select_media_card(self, path: str) -> None:
         index = self.media_combo.findData(path)
@@ -1855,12 +2701,12 @@ class ThermalrightDisplayStudio(QGroupBox):
     def _remember_media_selection(self, _index: int = -1) -> None:
         path = str(self.current_media_path() or "")
         self.settings.setValue("thermalright/selected_media", path)
-        if path and self.custom_media_directory is not None:
-            try:
-                Path(path).resolve().relative_to(self.custom_media_directory)
+        if path:
+            resolved = Path(path).resolve()
+            if resolved in self.design_library_state.files or any(
+                resolved.is_relative_to(root) for root in self.design_library_state.folders
+            ):
                 self.settings.setValue("thermalright/custom_selected_media", path)
-            except ValueError:
-                pass
         for key, button in self.media_card_buttons.items():
             button.setChecked(key == path)
         self._sync_autostart_selection_if_enabled()
@@ -1911,6 +2757,76 @@ class ThermalrightDisplayStudio(QGroupBox):
         raw = self.hardware_design_combo.currentData() if hasattr(self, "hardware_design_combo") else None
         return Path(str(raw)) if raw else None
 
+    def generated_effect_directory(self) -> Path:
+        """Return the private cache root accepted for generated effect media."""
+
+        return self.cache_dir / "display-effects"
+
+    def select_generated_effect_media(self, path: Path, title: str = "Rauch") -> None:
+        """Select a generated Layer-1 video without changing the active Layer 2."""
+
+        candidate = validate_effect_handoff(path, self.generated_effect_directory())
+        self._select_effect_media(candidate, title)
+
+    def select_bundled_effect_media(self, path: Path, title: str) -> None:
+        """Select one packaged offline library video through an explicit root."""
+
+        bundled_root = Path(__file__).resolve().parent / "assets" / "display-effects"
+        candidate = validate_effect_handoff(path, bundled_root)
+        self._select_effect_media(candidate, title)
+
+    def _select_effect_media(self, candidate: Path, title: str) -> None:
+        known = any(entry.path == candidate for entry in self.media_entries)
+        if not known:
+            self.media_entries.append(MediaEntry(candidate, f"Display-Effekte / {title}", "video"))
+        self.settings.setValue("thermalright/selected_media", str(candidate))
+        self.settings.setValue("thermalright/custom_selected_media", str(candidate))
+        index = self.media_combo.findData(str(candidate))
+        if index < 0:
+            self.media_filter.clear()
+            all_index = self.media_category.findData("all")
+            if all_index >= 0:
+                self.media_category.setCurrentIndex(all_index)
+            self._apply_media_filter()
+            index = self.media_combo.findData(str(candidate))
+        if index < 0:
+            raise ValueError("Display-Effekt konnte nicht in den lokalen Katalog aufgenommen werden")
+        self.media_combo.setCurrentIndex(index)
+        self.update_preview()
+
+    def layer2_preview_choices(self) -> list[tuple[str, str, QPixmap]]:
+        """Expose the LCD Studio Layer-2 cards to sibling preview pages."""
+
+        entries = {str(entry.path): entry for entry in self.media_entries}
+        choices: list[tuple[str, str, QPixmap]] = []
+        for index in range(self.hardware_design_combo.count()):
+            path = str(self.hardware_design_combo.itemData(index) or "")
+            choices.append((
+                self.hardware_design_combo.itemText(index),
+                path,
+                self._card_thumbnail(entries.get(path) if path else None),
+            ))
+        return choices
+
+    def sync_effect_preview(self, target: ThermalrightCanvas, background: QPixmap) -> None:
+        """Copy the current Layer-2 state into an external effect preview canvas."""
+
+        source = self.canvas
+        target.set_layer_intensities(source._layer1_intensity, source._layer2_intensity)
+        target.set_hardware_layer(source._hardware_layer)
+        target.set_editable_layout(source._layout)
+        target.set_specs(source._specs)
+        target.set_background_offset(source._background_x, source._background_y)
+        target.set_notch_mask(
+            source._notch_visible,
+            source._notch_width,
+            source._notch_top_radius,
+            source._notch_bottom_radius,
+        )
+        target.set_split_mode(source._split_mode)
+        target.set_background(background)
+        target.set_motion_layer(self._current_motion_pixmap())
+
     @staticmethod
     def _layer2_key(design: Path) -> str:
         return str(design.expanduser().resolve())
@@ -1940,6 +2856,183 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.layer2_intensity_slider.setValue(value)
         self.layer2_intensity_slider.blockSignals(False)
         self.layer2_intensity_label.setText(f"{value} %")
+
+    def _layer2_motion_enabled(self, design: Path | None = None) -> bool:
+        selected = design if design is not None else self.current_hardware_design_path()
+        if selected is None or selected.name not in ANIMATED_LAYER2_THEMES:
+            return False
+        return self.layer2_motion_overrides.get(self._layer2_key(selected), True)
+
+    def _sync_layer2_motion_control(self) -> None:
+        design = self.current_hardware_design_path()
+        supported = design is not None and design.name in ANIMATED_LAYER2_THEMES
+        self.layer2_motion_checkbox.blockSignals(True)
+        self.layer2_motion_checkbox.setEnabled(supported)
+        self.layer2_motion_checkbox.setChecked(self._layer2_motion_enabled(design))
+        self.layer2_motion_checkbox.blockSignals(False)
+
+    def _layer2_motion_changed(self, enabled: bool) -> None:
+        design = self.current_hardware_design_path()
+        if design is None or design.name not in ANIMATED_LAYER2_THEMES:
+            return
+        self.layer2_motion_overrides[self._layer2_key(design)] = bool(enabled)
+        self.settings.setValue(
+            "thermalright/layer2_motion_overrides",
+            json.dumps(self.layer2_motion_overrides, ensure_ascii=False, sort_keys=True),
+        )
+        self._sync_autostart_selection_if_enabled()
+        self.update_preview()
+        state = "aktiv" if enabled else "aus"
+        self._status(f"Dekor-Animation für {design.name}: {state}")
+
+    def _populate_lcd_fps_combo(self) -> None:
+        current = self.desktop_lcd_fps
+        self.lcd_fps_combo.blockSignals(True)
+        self.lcd_fps_combo.clear()
+        for fps in SAFE_LCD_FPS:
+            self.lcd_fps_combo.addItem(f"{fps} FPS", fps)
+        if self.experimental_60_fps:
+            self.lcd_fps_combo.addItem("60 FPS · Experimentell", 60)
+        self.lcd_fps_combo.setCurrentIndex(max(0, self.lcd_fps_combo.findData(current)))
+        self.lcd_fps_combo.blockSignals(False)
+
+    def _populate_game_fps_combo(self) -> None:
+        current = self.game_lcd_fps
+        self.game_fps_combo.blockSignals(True)
+        self.game_fps_combo.clear()
+        for fps in SAFE_LCD_FPS:
+            self.game_fps_combo.addItem(f"{fps} FPS", fps)
+        if self.experimental_60_fps:
+            self.game_fps_combo.addItem("60 FPS · Experimentell", 60)
+        self.game_fps_combo.setCurrentIndex(max(0, self.game_fps_combo.findData(current)))
+        self.game_fps_combo.blockSignals(False)
+
+    def configure_experimental_60(self, enabled: bool) -> None:
+        """Expose 60 FPS only after the separate Settings opt-in."""
+        self.experimental_60_fps = bool(enabled)
+        self.settings.setValue("thermalright/experimental_60_fps", self.experimental_60_fps)
+        self.desktop_lcd_fps = normalize_lcd_fps(
+            self.desktop_lcd_fps, experimental_60=self.experimental_60_fps,
+        )
+        self.game_lcd_fps = normalize_lcd_fps(
+            self.game_lcd_fps, experimental_60=self.experimental_60_fps,
+        )
+        self._populate_lcd_fps_combo()
+        self._populate_game_fps_combo()
+        self._apply_fps_policy("Experimentelle Freigabe geändert")
+
+    def _preview_fps_changed(self, _index: int = -1) -> None:
+        self.preview_fps = 60 if int(self.preview_fps_combo.currentData() or 30) >= 60 else 30
+        self.settings.setValue("thermalright/preview_fps", self.preview_fps)
+        self.layer2_motion_timer.setInterval(max(16, round(1000 / self.preview_fps)))
+
+    def _desktop_fps_changed(self, _index: int = -1) -> None:
+        self.desktop_lcd_fps = normalize_lcd_fps(
+            self.lcd_fps_combo.currentData(), experimental_60=self.experimental_60_fps,
+        )
+        self.settings.setValue("thermalright/desktop_fps", self.desktop_lcd_fps)
+        self.session_fps_limit = None
+        self._apply_fps_policy("Desktop-Bildrate geändert")
+
+    def _game_fps_changed(self, _index: int = -1) -> None:
+        self.game_lcd_fps = normalize_lcd_fps(
+            self.game_fps_combo.currentData(), experimental_60=self.experimental_60_fps,
+        )
+        self.settings.setValue("thermalright/game_fps", self.game_lcd_fps)
+        self.session_fps_limit = None
+        self._apply_fps_policy("Spiel-Bildrate geändert")
+
+    def _game_process_list_changed(self) -> None:
+        self.game_process_names = normalize_process_names(self.game_process_input.text())
+        normalized = ", ".join(self.game_process_names)
+        self.game_process_input.setText(normalized)
+        self.settings.setValue("thermalright/game_process_names", normalized)
+        self._poll_game_activity()
+
+    def _toggle_game_program_manager(self) -> None:
+        visible = self.game_program_manager.isHidden()
+        if visible:
+            self.game_program_manager.ensure_loaded()
+        self.game_program_manager.setVisible(visible)
+        self.game_program_manager_button.setText(
+            "Manager schließen" if visible else "Spiele-Programmliste verwalten …"
+        )
+
+
+    def _game_program_selection_changed(self, names: tuple[str, ...]) -> None:
+        self.game_process_input.setText(", ".join(names))
+        self._game_process_list_changed()
+        self.settings.setValue(
+            "thermalright/game_process_paths", "\n".join(self.game_program_manager.paths())
+        )
+
+
+    def _game_policy_changed(self, _checked: bool = False) -> None:
+        self.game_auto_detection = self.game_auto_checkbox.isChecked()
+        self.game_manual = self.game_manual_checkbox.isChecked()
+        self.game_fullscreen_detection = self.game_fullscreen_checkbox.isChecked()
+        self.game_borderless_detection = self.game_borderless_checkbox.isChecked()
+        self.settings.setValue("thermalright/game_auto_detection", self.game_auto_detection)
+        self.settings.setValue("thermalright/game_fullscreen_detection", self.game_fullscreen_detection)
+        self.settings.setValue("thermalright/game_borderless_detection", self.game_borderless_detection)
+        self._poll_game_activity()
+
+    def _poll_game_activity(self) -> None:
+        self.game_activity.poll()
+
+    def _gamemode_status_finished(self, exit_code: int, status: QProcess.ExitStatus) -> None:
+        self.game_activity.finished(exit_code, status)
+
+    def _update_game_activity(self, process_signal: bool, process_reason: str) -> None:
+        active, reason = resolve_game_activity(GameSignals(
+            manual=self.game_manual,
+            gamemode=self.game_auto_detection and self.gamemode_active,
+            gamescope_or_process=self.game_auto_detection and process_signal,
+            process_reason=process_reason,
+        ))
+        changed = active != self.game_active or reason != self.game_reason
+        self.game_active, self.game_reason = active, reason
+        if changed:
+            self.session_fps_limit = None
+        self._apply_fps_policy(f"Spielstatus: {reason}")
+
+    def _wanted_lcd_fps(self) -> int:
+        wanted = self.game_lcd_fps if self.game_active else self.desktop_lcd_fps
+        return min(wanted, self.session_fps_limit) if self.session_fps_limit else wanted
+
+    def _apply_fps_policy(self, reason: str) -> None:
+        wanted = self._wanted_lcd_fps()
+        if getattr(self, "stream_delegated", False):
+            self.active_lcd_fps = wanted
+            self.game_status_label.setText(
+                f"{self.game_reason} · LCD-Takt durch TRCC-Daemon · Vorschau {self.preview_fps} FPS"
+            )
+            return
+        self.game_status_label.setText(
+            f"{self.game_reason} · LCD-Sollwert {wanted} FPS · Vorschau {self.preview_fps} FPS"
+        )
+        if wanted == self.active_lcd_fps:
+            return
+        self.active_lcd_fps = wanted
+        if self.stream_process.state() == QProcess.ProcessState.NotRunning or not self.stream_should_run:
+            return
+        self.stream_stop_requested = True
+        self._fps_restart_pending = True
+        self.lcd_runtime.stop_started = time.monotonic()
+        self.stream_process.terminate()
+        self._log(f"LCD-FPS: {reason} · Taktgeber wird ohne Theme-Neuübertragung auf {wanted} FPS gewechselt")
+
+    def _current_motion_pixmap(self) -> QPixmap:
+        design = self.current_hardware_design_path()
+        if not self._layer2_motion_enabled(design):
+            return QPixmap()
+        phase = ((time.monotonic() - self.layer2_motion_started) / 6.0) % 1.0
+        return QPixmap.fromImage(render_layer2_motion_frame(design.name, phase))
+
+    def _advance_layer2_motion_preview(self) -> None:
+        from modules.lcd_media_manager.v1_0.preview_visibility import exposed
+        if exposed(self.canvas):
+            self.canvas.set_motion_layer(self._current_motion_pixmap())
 
     def _layer1_intensity_changed(self, value: int) -> None:
         self.layer1_intensity_percent = bounded_layer_intensity(value)
@@ -1974,14 +3067,14 @@ class ThermalrightDisplayStudio(QGroupBox):
             except ThemeLayoutError as exc:
                 self.layer2_load_errors[key] = str(exc)
             else:
-                if design.name in {"ohc-nebula-drift", "ohc-orbital-command"}:
+                if design.name in BUILTIN_LEVITA_THEME_NAMES:
                     original = restore_explicit_format_units(original)
                 self.layer2_originals[key] = original
                 self.layer2_configs[key] = dict(config)
         if key in self.layer2_load_errors:
             return None
         selected = self.layer2_overrides.get(key, self.layer2_originals.get(key))
-        if selected is not None and design.name in {"ohc-nebula-drift", "ohc-orbital-command"}:
+        if selected is not None and design.name in BUILTIN_LEVITA_THEME_NAMES:
             migrated = restore_explicit_format_units(selected)
             if key in self.layer2_overrides and migrated != selected:
                 self.layer2_overrides[key] = migrated
@@ -2016,6 +3109,7 @@ class ThermalrightDisplayStudio(QGroupBox):
             widget.blockSignals(True)
             widget.setValue(value)
             widget.blockSignals(False)
+        self._sync_layer2_motion_control()
 
     def _layer2_offset_changed(self) -> None:
         layout = self._current_layer2_layout()
@@ -2161,6 +3255,7 @@ class ThermalrightDisplayStudio(QGroupBox):
         design = self.current_hardware_design_path()
         self.hardware_design_active = False
         self.gpu_clock_guard_state = ""
+        self.gpu_clock_plausible_streak = 0
         if hasattr(self, "layer2_inline_editor"):
             self._hide_layer2_inline_editor()
         self.settings.setValue("thermalright/hardware_design", str(design or ""))
@@ -2171,6 +3266,7 @@ class ThermalrightDisplayStudio(QGroupBox):
         self._sync_autostart_selection_if_enabled()
         self._sync_layer2_controls()
         self._sync_layer2_intensity_control()
+        self.canvas.set_motion_layer(self._current_motion_pixmap())
         self.reload_selected_preview()
         if design is None:
             self._status("Ebene 2: eigene frei verschiebbare OHC-Hardwarewerte")
@@ -2195,9 +3291,8 @@ class ThermalrightDisplayStudio(QGroupBox):
         self._show_media_preview_tile(self.pending_hover_index)
 
     def _show_selected_media_preview(self, index: int) -> None:
-        if self.media_combo.view().isVisible():
-            return
-        self._show_media_preview_tile(index)
+        if hasattr(self, 'media_preview'):
+            self.media_preview.refresh()
 
     def _show_hardware_design_preview(self, index: int) -> None:
         if not 0 <= int(index) < self.hardware_design_combo.count():
@@ -2255,8 +3350,10 @@ class ThermalrightDisplayStudio(QGroupBox):
         fingerprint = hashlib.sha256(
             f"selected-preview-v2:{media}:{media.stat().st_mtime_ns}".encode("utf-8")
         ).hexdigest()[:20]
+        seed = preview_cache_path("levita-hover", media, cache_budget_mb(self.settings))
+        directory = seed.parent if seed is not None else self.cache_dir
         targets = [
-            self.cache_dir / f"hover-{fingerprint}-{number:02d}.jpg"
+            directory / f"hover-{fingerprint}-{number:02d}.jpg"
             for number in range(1, 17)
         ]
         frames = self._fit_hover_preview_frames(
@@ -2264,7 +3361,7 @@ class ThermalrightDisplayStudio(QGroupBox):
         )
         if frames:
             return frames
-        pattern = self.cache_dir / f"hover-{fingerprint}-%02d.jpg"
+        pattern = directory / f"hover-{fingerprint}-%02d.jpg"
         self._start_hover_preview_extract(media, ffmpeg, pattern, targets)
         return []
 
@@ -2326,10 +3423,8 @@ class ThermalrightDisplayStudio(QGroupBox):
                 Qt.TransformationMode.SmoothTransformation,
             ).copy(0, 0, 176, 79)
             self.hover_card_button.setIcon(QIcon(card_frame))
-        media = self.current_media_path()
-        if media is None or media.resolve() != self.hover_preview_media:
-            return
-        self.canvas.set_background(frame)
+        # Hover affects the card only. The main canvas belongs to the selected
+        # video's independent visibility-bound decoder.
 
     def _advance_hover_preview(self) -> None:
         if len(self.hover_preview_frames) < 2:
@@ -2539,7 +3634,7 @@ class ThermalrightDisplayStudio(QGroupBox):
             (self.cli.brightness_args(brightness), False),
             (self.cli.orientation_args(orientation), False),
         ]
-        QTimer.singleShot(900, lambda: self._start_queue(
+        QTimer.singleShot(900, self, lambda: self._start_queue(
             commands, lambda ok, output: self._levita_display_settings_finished(
                 ok, output, brightness, orientation,
             ),
@@ -2645,16 +3740,19 @@ class ThermalrightDisplayStudio(QGroupBox):
         right = self._safe_right_x()
         if layout == "two_rows":
             columns = (max(150, right // 6), max(430, right // 2), max(760, right * 5 // 6))
-            positions = (
-                (columns[0], 550), (columns[0], 630),
-                (columns[1], 550), (columns[1], 630),
-                (columns[2], 550), (columns[2], 630),
+            row_count = max(1, (len(self.overlay_specs) + len(columns) - 1) // len(columns))
+            spacing = min(90, max(54, 540 // row_count))
+            start_y = max(72, 630 - (row_count - 1) * spacing)
+            positions = tuple(
+                (columns[index % len(columns)], start_y + (index // len(columns)) * spacing)
+                for index in range(len(self.overlay_specs))
             )
             size = 38
             message = "Hardware-Infos in zwei sauberen Reihen angeordnet"
         elif layout == "vertical":
             x = max(180, right - 230)
-            positions = tuple((x, 130 + index * 95) for index in range(len(self.overlay_specs)))
+            spacing = min(95, max(42, 600 // max(1, len(self.overlay_specs) - 1)))
+            positions = tuple((x, 60 + index * spacing) for index in range(len(self.overlay_specs)))
             size = 36
             message = "Hardware-Infos mit gleichmäßigem Abstand untereinander angeordnet"
         else:
@@ -2718,8 +3816,7 @@ class ThermalrightDisplayStudio(QGroupBox):
             self._status("Kein früherer Elementzustand vorhanden")
             return
         self.overlay_specs = list(self.overlay_undo_stack.pop())
-        for spec in self.overlay_specs:
-            self._sync_overlay_controls(spec.ident)
+        self._rebuild_overlay_controls()
         self._save_overlays()
         self.canvas.set_specs(
             self.overlay_specs if self.current_hardware_design_path() is None else (),
@@ -2744,6 +3841,16 @@ class ThermalrightDisplayStudio(QGroupBox):
         if isinstance(color_button, QPushButton):
             color_button.setText(spec.color)
             color_button.setStyleSheet(f"color: {spec.color};")
+        label = controls.get("label")
+        if isinstance(label, QLineEdit) and label.text() != spec.text:
+            label.blockSignals(True)
+            label.setText(spec.text)
+            label.blockSignals(False)
+        font_combo = controls.get("font")
+        if isinstance(font_combo, QComboBox):
+            font_combo.blockSignals(True)
+            font_combo.setCurrentIndex(max(0, font_combo.findData(spec.font)))
+            font_combo.blockSignals(False)
 
     def _choose_overlay_color(self, ident: str) -> None:
         spec = self.overlay_specs[self._overlay_index(ident)]
@@ -2757,8 +3864,7 @@ class ThermalrightDisplayStudio(QGroupBox):
             clamp_overlay_outside_cutout(item, safe_right_x=self._safe_right_x())
             for item in DEFAULT_OVERLAYS
         ]
-        for spec in self.overlay_specs:
-            self._sync_overlay_controls(spec.ident)
+        self._rebuild_overlay_controls()
         self._save_overlays()
         self.canvas.set_specs(
             self.overlay_specs if self.current_hardware_design_path() is None else (),
@@ -2783,6 +3889,19 @@ class ThermalrightDisplayStudio(QGroupBox):
             self._status("Backend vorhanden, aber das Display wurde nicht erkannt oder ist bereits belegt", error=True)
 
     def apply_design(self, _checked: bool = False, *, startup: bool = False) -> None:
+        if self.shutdown_started:
+            return
+        if hasattr(self, "_lcd_write_allowed") and not self._lcd_write_allowed():
+            self._status("LCD-Zuständigkeit liegt nicht bei OHC · keine Übertragung gestartet", error=True)
+            return
+        if not startup:
+            self.design_state.invalidate_startup()
+            self.startup_apply_requested = True
+            self.startup_apply_active = False
+            autostart_control = getattr(self, "autostart_enabled", None)
+            self.remember_design_after_apply = bool(
+                autostart_control is not None and autostart_control.isChecked()
+            )
         cooldown_remaining = self.next_hardware_apply_at - time.monotonic()
         if not startup and cooldown_remaining > 0:
             self.apply_cooldown_timer.start(max(1, round(cooldown_remaining * 1000)))
@@ -2836,6 +3955,17 @@ class ThermalrightDisplayStudio(QGroupBox):
                 scale_mode=str(self.media_scale_mode.currentData() or MEDIA_SCALE_CONTAIN),
                 intensity_percent=self.layer1_intensity_percent,
             )
+            layer1_source = prepared.path
+            motion_warning = ""
+            if hardware_design is not None and self._layer2_motion_enabled(hardware_design):
+                composed = compose_motion_video(
+                    layer1_source,
+                    hardware_design / "motion.mp4",
+                    self.cache_dir / "layer2-motion",
+                    fps=self._wanted_lcd_fps(),
+                )
+                layer1_source = composed.path
+                motion_warning = composed.warning
             mask_path = create_layered_mask(
                 self.cache_dir / "masks",
                 hardware_design=hardware_design,
@@ -2846,7 +3976,7 @@ class ThermalrightDisplayStudio(QGroupBox):
                 layer_intensity=self._current_layer2_intensity(),
             )
             apply_hardware_design = hardware_design
-            apply_media = prepared.path
+            apply_media = layer1_source
             apply_mask_path = mask_path
             replace_hardware_background: bool | None = None
             if hardware_design is not None:
@@ -2860,24 +3990,24 @@ class ThermalrightDisplayStudio(QGroupBox):
                         )
                     )
                 layout = adjust_layout_intensity(layout, self._current_layer2_intensity())
-                same_theme = media.resolve() == hardware_design.resolve()
+                same_theme = layer1_source.resolve() == hardware_design.resolve()
                 background_image: Path | None = None
                 background_video: Path | None = None
-                if not same_theme and prepared.path.is_file():
-                    if prepared.path.suffix.casefold() in SUPPORTED_IMAGE_SUFFIXES:
-                        background_image = prepared.path
+                if not same_theme and layer1_source.is_file():
+                    if layer1_source.suffix.casefold() in SUPPORTED_IMAGE_SUFFIXES:
+                        background_image = layer1_source
                     else:
-                        background_video = prepared.path
-                elif not same_theme and prepared.path.is_dir():
-                    candidate = prepared.path / "00.png"
+                        background_video = layer1_source
+                elif not same_theme and layer1_source.is_dir():
+                    candidate = layer1_source / "00.png"
                     if candidate.is_file():
                         background_image = candidate
                     else:
                         background_video = next((
-                            prepared.path / name for name in (
+                            layer1_source / name for name in (
                                 "Theme.zt", "Theme.mp4", "Theme.mov", "Theme.webm",
                                 "Theme.mkv", "Theme.avi",
-                            ) if (prepared.path / name).is_file()
+                            ) if (layer1_source / name).is_file()
                         ), None)
                 apply_hardware_design = stage_editable_theme(
                     hardware_design,
@@ -2893,6 +4023,23 @@ class ThermalrightDisplayStudio(QGroupBox):
                 # Loading adopts the edited live blocks; explicit daemon-side
                 # ApplyMask then makes the combined artwork/notch visible even
                 # if an earlier design persisted mask_visible=False.
+                apply_media = apply_hardware_design
+                apply_mask_path = mask_path
+                replace_hardware_background = False
+            elif any(
+                item.visible and (item.kind == "text" or bool(item.font))
+                for item in self.overlay_specs
+            ):
+                # A native cache theme is the only public TRCC path that
+                # currently carries per-element font families.  It also keeps
+                # all custom text and live metrics in one atomic composition.
+                apply_hardware_design = stage_custom_overlay_theme(
+                    prepared.path,
+                    self.cache_dir / "custom-overlay-themes",
+                    self.overlay_specs,
+                    mask_path=mask_path,
+                    safe_right_x=self._safe_right_x(),
+                )
                 apply_media = apply_hardware_design
                 apply_mask_path = mask_path
                 replace_hardware_background = False
@@ -2912,9 +4059,15 @@ class ThermalrightDisplayStudio(QGroupBox):
             else:
                 self._status(str(exc), error=True)
             return
-        self.pending_apply_warning = prepared.warning
+        self.pending_apply_warning = " · ".join(
+            warning for warning in (prepared.warning, motion_warning) if warning
+        )
         self.pending_apply_sequence = list(sequence)
-        self.pending_apply_animated = self._media_is_animated(prepared.path)
+        self.pending_apply_animated = self._media_is_animated(apply_hardware_design or apply_media)
+        self.design_state.capture(sequence, self.pending_apply_animated,
+                                  hardware=hardware_design is not None,
+                                  layout=self._current_layer2_layout())
+        if hasattr(self, 'media_preview'): self.media_preview.capture()
         self.hardware_design_active = False
         self._stop_stream_client()
         self.apply_retry_remaining = 1
@@ -2935,9 +4088,21 @@ class ThermalrightDisplayStudio(QGroupBox):
 
     def _apply_finished(self, ok: bool, output: str) -> None:
         if not ok:
-            detail = output.strip().splitlines()[-1] if output.strip() else "unbekannter Backendfehler"
+            if getattr(self, "ubuntu_runtime", False) and self._stop_for_usb_owner_conflict(output):
+                return
+            self.remember_design_after_apply = False
+            detail = (
+                backend_failure_detail(output) if getattr(self, "ubuntu_runtime", False)
+                else output.strip().splitlines()[-1] if output.strip() else ""
+            ) or "unbekannter Backendfehler"
             timeout = "timed out" in output.casefold() or "errno 110" in output.casefold()
             backend_crash = "trcc-prozess ist abgestürzt" in output.casefold()
+            if is_probable_daemon_failure(output) and self._request_daemon_restart(
+                "Levita-USB-Schnittstelle oder TRCC-Daemon ist festgefahren"
+            ):
+                self.pending_apply_sequence = []
+                self.apply_retry_remaining = 0
+                return
             if timeout and self.apply_retry_remaining > 0 and self.pending_apply_sequence:
                 self.apply_retry_remaining -= 1
                 self._status(
@@ -2972,12 +4137,104 @@ class ThermalrightDisplayStudio(QGroupBox):
             return
         self._daemon_stream_started()
 
+    def _stop_for_usb_owner_conflict(self, output: str) -> bool:
+        """Stop only OHC retries when another program holds the USB interface.
+
+        Keep the saved startup selection and immutable request. Once that
+        owner has been released, an explicit Apply uses the existing queue;
+        no polling, process signalling or new USB path is introduced here.
+        """
+
+        if not getattr(self, "ubuntu_runtime", False) or not is_usb_owner_conflict(output):
+            return False
+        self.remember_design_after_apply = False
+        self.pending_apply_sequence = []
+        self.apply_retry_remaining = 0
+        self.apply_start_timer.stop()
+        self.apply_cooldown_timer.stop()
+        self._stop_stream_client()
+        # A freshly spawned TRCC daemon can claim the USB interface before
+        # the next short-lived CLI process has completed its IPC hand-off.
+        # The backend then reports the same "another process" text used for a
+        # genuinely foreign owner.  Recover automatically only when the
+        # currently observed process is the exact daemon registered by this
+        # OHC session.  PID, command and UID are revalidated immediately; an
+        # untracked/preexisting daemon remains strictly untouched.
+        sample = find_trcc_daemon_memory()
+        owned_pid = getattr(self, "owned_trcc_daemon_pid", None)
+        owns_conflict = bool(
+            getattr(self, "preexisting_trcc_daemon_pid", None) is None
+            and owned_pid is not None
+            and sample is not None
+            and sample.pid == owned_pid
+            and is_owned_trcc_daemon_pid(owned_pid) is True
+        )
+        if owns_conflict:
+            reason = (
+                "Eigener TRCC-Daemon hat die Levita-Schnittstelle beim Start "
+                "nicht sauber an den IPC-Betrieb übergeben"
+            )
+            if self._request_daemon_restart(
+                reason,
+                cooldown_seconds=PLAYBACK_RECOVERY_COOLDOWN_SECONDS,
+            ):
+                self._log(
+                    f"Levita-USB-Konflikt gehört zum registrierten OHC-Daemon PID {owned_pid} · "
+                    "ein kontrollierter Neustart wird einmal automatisch ausgeführt"
+                )
+                return True
+            self.startup_apply_active = False
+            translate = getattr(self.window(), "tr_static", lambda text: text)
+            message = translate(
+                "Eigener Levita-Daemon ist erneut blockiert · automatische Reparatur ist bereits ausgeschöpft; "
+                "Display freigeben manuell ausführen"
+            )
+            if hasattr(self, "playback_health_status"):
+                self.playback_health_status.setText(message)
+            self._status(message, error=True)
+            return True
+
+        self.startup_apply_active = False
+        translate = getattr(self.window(), "tr_static", lambda text: text)
+        message = translate(
+            "Levita-Display ist durch ein anderes Programm belegt · keine automatische Freigabe; "
+            "das andere Programm schließen und das Design erneut anwenden"
+        )
+        if hasattr(self, "playback_health_status"):
+            self.playback_health_status.setText(message)
+        self._status(message, error=True)
+        return True
+
     def _daemon_stream_started(self) -> None:
         """Confirm the theme and start a daemon-safe video ticker if needed."""
 
+        if hasattr(self, 'media_preview'):
+            self.media_preview.confirm()
+
+        if getattr(self, "remember_design_after_apply", False):
+            media = self.current_media_path()
+            if media is not None:
+                self._remember_startup_media(media, enable=False)
+        self.remember_design_after_apply = False
+        if hasattr(self, "playback_recovery_policy"):
+            self.playback_recovery_policy.consecutive_failures = 0
+        if hasattr(self, "playback_health_status"):
+            self.playback_health_status.setText("Design übertragen · Wiedergabeprüfung folgt automatisch")
+
         animated = self.pending_apply_animated
-        self.hardware_design_active = self.current_hardware_design_path() is not None
-        if animated:
+        request = getattr(getattr(self, "design_state", None), "desired", None)
+        self.hardware_design_active = request.hardware if request else self.current_hardware_design_path() is not None
+        if not getattr(self, "hardware_io_disabled", False) and not self.firmware_guard.arm(self.cli.executable):
+            self._log(
+                "Levita-Absturzwächter konnte nicht gestartet werden · "
+                "kontrolliertes Programmende bleibt geschützt"
+            )
+        self.stream_animated = animated
+        if (
+            not getattr(self, "hardware_io_disabled", False)
+            and not self.test_mode.isChecked()
+            and not self.shutdown_started
+        ):
             self._start_stream_client()
 
         if animated:
@@ -3013,6 +4270,9 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.next_hardware_apply_at = time.monotonic() + LEVITA_APPLY_COOLDOWN_SECONDS
 
     def _active_gpu_clock_block(self) -> LayoutBlock | None:
+        request = getattr(getattr(self, "design_state", None), "desired", None)
+        if self.hardware_design_active and request is not None:
+            return request.gpu_clock_block
         layout = self._current_layer2_layout()
         if layout is None:
             return None
@@ -3034,10 +4294,12 @@ class ThermalrightDisplayStudio(QGroupBox):
         block = self._active_gpu_clock_block()
         if block is None:
             self.gpu_clock_guard_state = ""
+            self.gpu_clock_plausible_streak = 0
             return
         reading = read_primary_amd_gpu_clock()
         boundary_issue = "TRCC-9.9.11-Grenzfall" in reading.issue
         if boundary_issue and reading.mhz is not None:
+            self.gpu_clock_plausible_streak = 0
             if self.gpu_clock_guard_state == "boundary":
                 return
             try:
@@ -3065,6 +4327,16 @@ class ThermalrightDisplayStudio(QGroupBox):
             return
         if self.gpu_clock_guard_state != "boundary":
             return
+        # The AMD graphics engine can cross the exact 1 MHz idle boundary for
+        # only one or two 5-second samples.  Keep the corrected value stable
+        # until three consecutive, genuinely plausible samples prove that the
+        # dynamic TRCC source is safe again.  Missing/malformed readings never
+        # count as recovery evidence.
+        self.gpu_clock_plausible_streak, recovered = advance_gpu_clock_recovery_streak(
+            self.gpu_clock_plausible_streak, reading,
+        )
+        if not recovered:
+            return
         command = self.cli.overlay_update_format_args(
             block.ident, block.format, show_unit=True,
         )
@@ -3073,6 +4345,7 @@ class ThermalrightDisplayStudio(QGroupBox):
             if not ok:
                 return
             self.gpu_clock_guard_state = ""
+            self.gpu_clock_plausible_streak = 0
             message = "GPU-Taktquelle wieder plausibel · dynamische Live-Anzeige wiederhergestellt"
             self._status(message)
             if self.log_ready and self.log_callback:
@@ -3090,6 +4363,9 @@ class ThermalrightDisplayStudio(QGroupBox):
         self._start_queue(self.pending_apply_sequence, self._apply_finished)
 
     def run_display_test(self) -> None:
+        if not self._lcd_write_allowed():
+            self._status("LCD-Zuständigkeit liegt nicht bei OHC · kein Display-Test gestartet", error=True)
+            return
         if self.test_mode.isChecked():
             self.test_color_index = 0
             self.test_timer.start()
@@ -3116,6 +4392,8 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.test_color_index += 1
 
     def _test_finished(self, ok: bool, output: str) -> None:
+        if ok and not getattr(self, "hardware_io_disabled", False):
+            self.firmware_guard.arm(self.cli.executable)
         self._status("Display-Farbtest abgeschlossen" if ok else f"Display-Farbtest fehlgeschlagen: {output.strip()}", error=not ok)
 
     def stop_display(self) -> None:
@@ -3123,12 +4401,50 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.pending_apply_animated = False
         self.hardware_design_active = False
         self.gpu_clock_guard_state = ""
+        self.gpu_clock_plausible_streak = 0
         self._stop_stream_client()
         if self.test_mode.isChecked() or not self.cli.available:
             self.update_preview()
             self._status("Test-/Vorschaumodus angehalten")
             return
         self._start_queue([(self.cli.stop_video_args(), True)], lambda _ok, _out: self._status("Thermalright-Übertragung angehalten"))
+
+    def restore_firmware_display(self, _checked: bool = False) -> None:
+        """Release the sole TRCC owner so the cooler firmware redraws its original screen."""
+        self.test_timer.stop()
+        self.apply_start_timer.stop()
+        self.apply_cooldown_timer.stop()
+        self.pending_apply_sequence = []
+        self.pending_apply_animated = False
+        self.hardware_design_active = False
+        self._stop_stream_client()
+        if self.test_mode.isChecked():
+            self.update_preview()
+            self._status("Testmodus: Originalanzeige nicht gesendet · keine USB-Daten übertragen")
+            return
+        self.refresh_backend_status()
+        if not self.cli.available:
+            self._status("Thermalright-Originalanzeige benötigt das TRCC-Linux-Backend", error=True)
+            return
+        if self.command_process.state() != QProcess.ProcessState.NotRunning or self.command_step_timer.isActive():
+            self._status("Originalanzeige wartet · eine andere Levita-Übertragung läuft noch", error=True)
+            return
+        self.restore_firmware_button.setEnabled(False)
+
+        def restored(ok: bool, output: str) -> None:
+            self.restore_firmware_button.setEnabled(True)
+            if ok or "not attached" in output.casefold():
+                self.media_preview.release()
+                self.firmware_guard.finish(restored=True)
+                self._status(
+                    "Levita an die Thermalright-Firmware zurückgegeben · Originalanzeige erscheint nach dem Firmware-Zeitlimit"
+                )
+            else:
+                detail = output.strip().splitlines()[-1] if output.strip() else "unbekannter TRCC-Fehler"
+                self._status(f"Thermalright-Originalanzeige konnte nicht wiederhergestellt werden: {detail}", error=True)
+
+        self._start_queue([(self.cli.disconnect_args(), False)], restored)
+        self._status("OHC-Übertragung wird beendet · Thermalright-Originalanzeige wird wiederhergestellt …")
 
     @staticmethod
     def _media_is_animated(media: Path) -> bool:
@@ -3143,15 +4459,41 @@ class ThermalrightDisplayStudio(QGroupBox):
         )
 
     def _start_stream_client(self) -> None:
+        self.stream_restart_timer.stop()
+        self.stream_restart_policy.reset()
+        self.stream_should_run = True
+        self.stream_delegated = False
+        self.stream_stop_requested = False
+        self.active_lcd_fps = self._wanted_lcd_fps()
+        self._launch_stream_client()
+
+    def _launch_stream_client(self) -> None:
+        if (
+            getattr(self, "hardware_io_disabled", False)
+            or self.shutdown_started
+            or self.test_mode.isChecked()
+            or not self.stream_should_run
+        ):
+            return
         if self.stream_process.state() != QProcess.ProcessState.NotRunning:
             return
-        self.stream_should_run = True
-        self.stream_stop_requested = False
-        args = self.cli.play_args(0.15)
+        self.stream_output_tail = ""
+        self.stream_started_at = 0.0
+        self.lcd_runtime.stream_launch()
+        args = self.cli.play_args(1.0 / max(1, self.active_lcd_fps))
         self.stream_process.start(args[0], list(args[1:]))
+
+    def _restart_stream_client(self) -> None:
+        if not self.stream_should_run or self.shutdown_started:
+            return
+        self._launch_stream_client()
 
     def _stop_stream_client(self) -> None:
         self.stream_should_run = False
+        self.stream_delegated = False
+        self._fps_restart_pending = False
+        self.stream_restart_timer.stop()
+        self.stream_restart_policy.reset()
         if self.stream_process.state() == QProcess.ProcessState.NotRunning:
             return
         self.stream_stop_requested = True
@@ -3161,20 +4503,436 @@ class ThermalrightDisplayStudio(QGroupBox):
             self.stream_process.waitForFinished(500)
 
     def _on_stream_finished(self, exit_code: int, status: QProcess.ExitStatus) -> None:
+        self._capture_stream_output()
         requested = self.stream_stop_requested
+        delegated = bool(
+            not requested
+            and exit_code == 0
+            and status == QProcess.ExitStatus.NormalExit
+            and daemon_owns_playback(self.stream_output_tail)
+        )
+        self.lcd_runtime.stream_done(exit_code, status, requested, delegated)
         self.stream_stop_requested = False
+        if requested and getattr(self, "_fps_restart_pending", False) and self.stream_should_run:
+            self._fps_restart_pending = False
+            QTimer.singleShot(100, self, self._launch_stream_client)
+            return
         if requested or not self.stream_should_run:
             return
-        if status == QProcess.ExitStatus.CrashExit or exit_code != 0:
+        if delegated:
+            self.stream_delegated = True
+            self._fps_restart_pending = False
+            self.stream_restart_timer.stop()
+            self.stream_restart_policy.reset()
             self._status(
-                "Levita-Video-Taktgeber wurde beendet · Design bleibt sichtbar, Video steht",
+                "Levita-Dauerbetrieb aktiv · TRCC-Daemon übernimmt Video- und Sensor-Takt"
+            )
+            self.game_status_label.setText(
+                f"{self.game_reason} · LCD-Takt durch TRCC-Daemon · Vorschau {self.preview_fps} FPS"
+            )
+            return
+        if getattr(self, "ubuntu_runtime", False) and self._stop_for_usb_owner_conflict(self.stream_output_tail):
+            return
+        if self.stream_restart_timer.isActive():
+            return
+        runtime = time.monotonic() - self.stream_started_at if self.stream_started_at else 0.0
+        if (self.lcd_runtime.stream_reason or is_probable_daemon_failure(self.stream_output_tail)) and self._request_daemon_restart(
+            self.lcd_runtime.stream_reason or "Levita-Taktgeber hat die Verbindung zum TRCC-Daemon verloren"
+        ):
+            return
+        reduced = fallback_lcd_fps(self.active_lcd_fps)
+        if reduced < self.active_lcd_fps:
+            failed = self.active_lcd_fps
+            self.session_fps_limit = reduced
+            self.active_lcd_fps = reduced
+            self._status(
+                f"Levita-Taktgeber bei {failed} FPS beendet · automatische Rückstufung auf {reduced} FPS",
                 error=True,
             )
+            self.game_status_label.setText(
+                f"{self.game_reason} · LCD-Sollwert {reduced} FPS · automatisch von {failed} FPS zurückgestuft"
+            )
+            from modules.process_runtime.v1_1.diagnostics import record
+            record("lcd-ticker", "retry", reason="fps-fallback", retry_ms=1000, fps=reduced)
+            self.stream_restart_timer.start(1000)
+            return
+        confirmed_runtime = max(0.0, self.lcd_runtime.progress.last_sent - self.lcd_runtime.progress.started) if self.lcd_runtime.progress.frames else 0.0
+        delay_ms = self.stream_restart_policy.next_delay_ms(confirmed_runtime)
+        detail = f" · Backend: {self.stream_output_tail}" if self.stream_output_tail else ""
+        if delay_ms is None:
+            from modules.process_runtime.v1_1.diagnostics import record
+            record("lcd-ticker", "exhausted", reason="three automatic ticker restarts exhausted")
+            self.stream_should_run = False
+            self._status(
+                "Levita-Video-Taktgeber wiederholt beendet · automatische Wiederanläufe "
+                f"ausgeschöpft · Design bleibt als Standbild sichtbar{detail}",
+                error=True,
+            )
+            return
+        self._status(
+            "Levita-Video-Taktgeber unerwartet beendet "
+            f"(Code {exit_code}) · Wiederanlauf "
+            f"{self.stream_restart_policy.attempts}/{self.stream_restart_policy.max_attempts} "
+            f"in {delay_ms / 1000:g} s{detail}",
+            error=True,
+        )
+        from modules.process_runtime.v1_1.diagnostics import record
+        record("lcd-ticker", "retry", retry_ms=delay_ms, attempt=self.stream_restart_policy.attempts)
+        self.stream_restart_timer.start(delay_ms)
+
+
+
+
+
+
+
+
+
+    def _poll_firmware_guard_health(self) -> None:
+        """Recover quickly if the independent crash guard ever disappears."""
+
+        if (
+            getattr(self, "hardware_io_disabled", False)
+            or self.shutdown_started
+            or self.daemon_restart_in_progress
+            or not self.stream_should_run
+            or self.test_mode.isChecked()
+            or self.firmware_guard.armed
+        ):
+            return
+        reason = (
+            "Levita-Absturzwächter wurde unerwartet beendet; eine ungewollte "
+            "Display-Freigabe wird vorsorglich repariert"
+        )
+        self._log(f"Levita-Wiedergabeprüfung: {reason}")
+        from modules.process_runtime.v1_1.diagnostics import record
+        record("lcd-firmware-guard", "unexpected-exit", reason=reason)
+        if not self.firmware_guard.arm(self.cli.executable):
+            self._status(
+                "Levita-Absturzwächter konnte nicht neu gestartet werden · "
+                "Display bitte erneut anwenden",
+                error=True,
+            )
+            return
+        self.last_daemon_recovery_at = float("-inf")
+        self._request_daemon_restart(reason)
+
+
+    def _playback_health_finished(self, ok: bool, output: str) -> None:
+        """Confirm actual daemon playback and recover only after two failures."""
+
+        self.playback_health_probe_active = False
+        if not ok and getattr(self, "ubuntu_runtime", False) and self._stop_for_usb_owner_conflict(output):
+            return
+        if ok and self.stream_animated:
+            health = parse_video_playback_status(output, THERMALRIGHT_DEVICE_KEY)
+        else:
+            health = parse_playback_status(output, THERMALRIGHT_DEVICE_KEY) if ok else None
+        if health is not None and health.healthy:
+            self.playback_recovery_policy.observe(health)
+            self.playback_last_confirmed_at = time.time()
+            checked = time.strftime("%H:%M:%S", time.localtime(self.playback_last_confirmed_at))
+            self.playback_health_status.setText(
+                f"Wiedergabe aktiv · zuletzt geprüft {checked} · automatische Wiederherstellungen "
+                f"{self.playback_recovery_policy.recovery_attempts}/"
+                f"{self.playback_recovery_policy.max_recovery_attempts}"
+            )
+            return
+
+        reason = health.reason if health is not None else (
+            output.strip().splitlines()[-1] if output.strip() else "TRCC-Statusabfrage fehlgeschlagen"
+        )
+        sample = find_trcc_daemon_memory()
+        daemon_detail = (
+            f"PID={sample.pid} · RSS={sample.rss_bytes // (1024 * 1024)} MiB"
+            if sample is not None else "kein TRCC-Daemon in /proc gefunden"
+        )
+        confirmed_detail = (
+            f"letzte Bestätigung vor {max(0, round(time.time() - self.playback_last_confirmed_at))} s"
+            if self.playback_last_confirmed_at > 0 else "in dieser Sitzung noch nicht bestätigt"
+        )
+        trcc_cause = recent_trcc_cause(
+            Path.home() / ".trcc" / "trcc.log",
+            since_epoch=self.playback_last_confirmed_at,
+        )
+        from modules.process_runtime.v1_1.diagnostics import record
+        record(
+            "lcd-playback",
+            "unhealthy",
+            reason=reason,
+            consecutive_failures=self.playback_recovery_policy.consecutive_failures + 1,
+        )
+        self._log(
+            f"Levita-Wiedergabeprüfung: {reason} · {daemon_detail} · {confirmed_detail} · "
+            f"TRCC-Ursachenspur={trcc_cause}"
+        )
+        unhealthy = health or PlaybackHealth(False, reason)
+        should_recover = self.playback_recovery_policy.observe(unhealthy)
+        if should_recover:
+            attempt = self.playback_recovery_policy.recovery_attempts
+            started = self._request_playback_reapply(
+                f"Levita-Wiedergabe wurde nicht mehr bestätigt: {reason}"
+            )
+            if started:
+                self.playback_health_status.setText(
+                    f"Wiedergabe unterbrochen · automatische Wiederherstellung {attempt}/"
+                    f"{self.playback_recovery_policy.max_recovery_attempts} läuft"
+                )
+                return
+            self.playback_recovery_policy.defer_recovery()
+            self.playback_health_status.setText(
+                "Wiedergabe unterbrochen · Wiederherstellung kurz zurückgestellt · "
+                "erneute Prüfung folgt in 5 Sekunden"
+            )
+            QTimer.singleShot(5000, self, self._poll_trcc_daemon_health)
+            return
+        if self.playback_recovery_policy.recovery_attempts >= self.playback_recovery_policy.max_recovery_attempts:
+            self.playback_health_status.setText(
+                "Wiedergabe nicht bestätigt · automatische Wiederherstellungen ausgeschöpft · "
+                "über ‚Display freigeben‘ kann ein neuer Versuch gestartet werden"
+            )
+            return
+        self.playback_health_status.setText(
+            "Wiedergabe nicht bestätigt · zweite Prüfung folgt in 5 Sekunden"
+        )
+        QTimer.singleShot(5000, self, self._poll_trcc_daemon_health)
+
+
+    def _request_playback_reapply(self, reason: str) -> bool:
+        """Restore the accepted design without discarding a healthy daemon.
+
+        A missing TRCC playback object is not proof that the daemon itself is
+        dead.  Killing it on every video loss throws away the most useful
+        diagnostic state and lengthens the black-screen interval.  The saved
+        immutable design sequence already starts with a bounded reconnect, so
+        replaying that sequence is the narrow repair.  Its existing failure
+        path escalates to the full daemon restart when IPC or USB is genuinely
+        wedged.
+        """
+
+        now = time.monotonic()
+        if self.shutdown_started or self.daemon_restart_in_progress:
+            return False
+        remaining = max(
+            0.0,
+            PLAYBACK_RECOVERY_COOLDOWN_SECONDS - (now - self.last_playback_reapply_at),
+        )
+        if remaining > 0:
+            self._log(
+                f"Levita-Wiedergabe-Neuübertragung zurückgestellt · Schutzzeit noch "
+                f"{remaining:.1f} s · Grund={reason}"
+            )
+            return False
+        self.last_playback_reapply_at = now
+        self._stop_stream_client()
+        self.next_hardware_apply_at = 0.0
+        from modules.process_runtime.v1_1.diagnostics import record
+        sample = find_trcc_daemon_memory()
+        record(
+            "lcd-playback",
+            "reapply",
+            reason=reason,
+            pid=sample.pid if sample is not None else None,
+            rss_bytes=sample.rss_bytes if sample is not None else None,
+            retry_ms=0,
+        )
+        self._status(
+            f"{reason} · aktives Design wird gezielt neu übertragen; "
+            "der TRCC-Daemon bleibt für die Diagnose erhalten …",
+            error=True,
+        )
+        if self.design_state.recover(self):
+            return True
+        # This is only possible before the first accepted design.  Keep the
+        # old hard recovery as the bounded fallback for that exceptional path.
+        return self._request_daemon_restart(
+            reason,
+            cooldown_seconds=PLAYBACK_RECOVERY_COOLDOWN_SECONDS,
+        )
+
+
+    def _poll_trcc_daemon_health(self) -> None:
+        if (
+            self.shutdown_started
+            or self.daemon_restart_in_progress
+            or not self.stream_should_run
+            or self.test_mode.isChecked()
+            or self.pending_apply_sequence
+            or self.command_process.state() != QProcess.ProcessState.NotRunning
+            or self.command_step_timer.isActive()
+            or self.playback_health_probe_active
+        ):
+            return
+        from modules.lcd_runtime.v1_1.memory_guard import available_memory
+        sample = find_trcc_daemon_memory()
+        memory_reason = self.daemon_memory_guard.reason(sample, available_memory())
+        if memory_reason:
+            from modules.process_runtime.v1_1.diagnostics import record
+            record("lcd-daemon", "memory-limit", pid=sample.pid, rss_bytes=sample.rss_bytes,
+                   baseline_bytes=self.daemon_memory_guard.baseline, reason=memory_reason)
+            used_mib = sample.rss_bytes // (1024 * 1024) if sample is not None else 0
+            self._request_daemon_restart(
+                f"TRCC-Daemon belegt {used_mib} MiB Arbeitsspeicher und erreicht die Sicherheitsgrenze"
+            )
+            return
+        if not self.cli.available:
+            return
+        self.playback_health_probe_active = True
+        health_args = (
+            self.cli.video_status_args()
+            if self.stream_animated
+            else self.cli.status_args()
+        )
+        self._start_queue(
+            [(health_args, False)],
+            self._playback_health_finished,
+        )
+
+
+
+
+
+
+
+    def _request_daemon_restart(
+        self,
+        reason: str,
+        *,
+        cooldown_seconds: float = DAEMON_RECOVERY_COOLDOWN_SECONDS,
+    ) -> bool:
+        now = time.monotonic()
+        if self.shutdown_started:
+            self._log(f"Levita-Wiederherstellung verworfen · Programm wird beendet · Grund={reason}")
+            return False
+        if self.daemon_restart_in_progress:
+            self._log(f"Levita-Wiederherstellung zurückgestellt · Neustart läuft bereits · Grund={reason}")
+            return False
+        remaining = max(0.0, float(cooldown_seconds) - (now - self.last_daemon_recovery_at))
+        if remaining > 0:
+            self._log(
+                f"Levita-Wiederherstellung zurückgestellt · Schutzzeit noch {remaining:.1f} s · "
+                f"Grund={reason}"
+            )
+            return False
+        self.last_daemon_recovery_at = now
+        self.daemon_restart_in_progress = True
+        self.awaiting_owned_trcc_replacement = bool(
+            self.preexisting_trcc_daemon_pid is None
+            and self.owned_trcc_daemon_pid is not None
+        )
+        self._stop_stream_client()
+        self._status(
+            f"{reason} · kontrollierter Neustart und erneute Designübertragung laufen …",
+            error=True,
+        )
+        from modules.process_runtime.v1_1.diagnostics import record
+        record("lcd-daemon", "retry", reason=reason, retry_ms=0)
+        self.daemon_restart_timer.start(0)
+        return True
+
+    def force_recover_display(self, _checked: bool = False) -> None:
+        """Hard-release only OHC workers and an exact same-user TRCC daemon."""
+
+        if getattr(self, "hardware_io_disabled", False) or self.shutdown_started:
+            return
+        self.force_recovery_button.setEnabled(False)
+        self.playback_recovery_policy = PlaybackRecoveryPolicy()
+        self.last_daemon_recovery_at = float("-inf")
+        self.daemon_restart_in_progress = True
+        self.awaiting_owned_trcc_replacement = bool(
+            self.preexisting_trcc_daemon_pid is None
+            and self.owned_trcc_daemon_pid is not None
+        )
+        self.pending_apply_sequence = []
+        self.apply_retry_remaining = 0
+        self.apply_start_timer.stop()
+        self.apply_cooldown_timer.stop()
+        self.command_step_timer.stop()
+        self.command_queue.clear()
+        self.queue_done = None
+        self._stop_stream_client()
+        if self.command_process.state() != QProcess.ProcessState.NotRunning:
+            self.command_process.kill()
+            self.command_process.waitForFinished(500)
+        sample = find_trcc_daemon_memory()
+        if sample is not None and signal_trcc_daemon(sample.pid, signal.SIGTERM):
+            self._status(
+                "Eigener TRCC-Daemon wird freigegeben · falls nötig folgt ein begrenztes hartes Beenden …",
+                error=True,
+            )
+            QTimer.singleShot(1200, self, lambda pid=sample.pid: self._finish_hard_daemon_recovery(pid))
+            return
+        self._status("Kein eigener festgefahrener TRCC-Daemon gefunden · Design wird neu verbunden")
+        QTimer.singleShot(500, self, self._resume_after_daemon_restart)
+
+    def _finish_hard_daemon_recovery(self, pid: int) -> None:
+        if getattr(self, "hardware_io_disabled", False):
+            return
+        sample = find_trcc_daemon_memory()
+        if sample is not None and sample.pid == int(pid):
+            signal_trcc_daemon(sample.pid, signal.SIGKILL)
+        QTimer.singleShot(500, self, self._resume_after_daemon_restart)
+
+    def _perform_daemon_restart(self) -> None:
+        if self.shutdown_started or not self.daemon_restart_in_progress:
+            return
+        if self.command_process.state() != QProcess.ProcessState.NotRunning or self.command_step_timer.isActive():
+            self.daemon_restart_timer.start(1000)
+            return
+        self.refresh_backend_status()
+        if not self.cli.available:
+            self.daemon_restart_in_progress = False
+            self._status(
+                "TRCC-Daemon konnte nicht neu gestartet werden · Backend ist nicht verfügbar",
+                error=True,
+            )
+            return
+        # ``trcc kill`` closes the daemon through its IPC endpoint. The
+        # following apply starts a fresh daemon and reconstructs the selected
+        # design, without a second process touching the USB endpoints.
+        self._start_queue([(self.cli.daemon_kill_args(), False)], self._daemon_restart_finished)
+
+    def _daemon_restart_finished(self, ok: bool, _output: str) -> None:
+        if self.shutdown_started:
+            self.daemon_restart_in_progress = False
+            return
+        if not ok:
+            sample = find_trcc_daemon_memory()
+            if sample is not None and signal_trcc_daemon(sample.pid, signal.SIGTERM):
+                self._status(
+                    "TRCC-IPC reagiert nicht · eigener Daemon wird kontrolliert freigegeben …",
+                    error=True,
+                )
+                QTimer.singleShot(1200, self, lambda pid=sample.pid: self._finish_hard_daemon_recovery(pid))
+                return
+        QTimer.singleShot(1200, self, self._resume_after_daemon_restart)
+
+    def _resume_after_daemon_restart(self) -> None:
+        if self.shutdown_started:
+            self.daemon_restart_in_progress = False
+            return
+        self.daemon_restart_in_progress = False
+        if hasattr(self, "force_recovery_button"):
+            self.force_recovery_button.setEnabled(True)
+        self.next_hardware_apply_at = 0.0
+        self._status("TRCC-Daemon wurde freigegeben · ausgewähltes Levita-Design wird wiederhergestellt")
+        if not self.design_state.recover(self) and self.design_state.desired is None:
+            # Only explicit force-recovery can precede the first accepted design.
+            self.apply_design()
 
     def _on_stream_started(self) -> None:
         if not self.stream_should_run:
             return
-        if self.current_hardware_design_path() is not None:
+        self.stream_started_at = time.monotonic()
+        self.lcd_runtime.stream_did_start()
+        self.game_status_label.setText(
+            f"{self.game_reason} · LCD-Taktgeber {self.active_lcd_fps} FPS · Vorschau {self.preview_fps} FPS"
+        )
+
+    def _on_stream_progress(self) -> None:
+        if not getattr(self, "stream_animated", True):
+            self._status("Levita-Dauerbetrieb aktiv · statisches Design wird regelmäßig übertragen")
+        elif self.current_hardware_design_path() is not None:
             self._status(
                 "Levita-Video läuft · Hintergrund, Ebene-2-Grafik und Notch-Maske sind aktiv"
             )
@@ -3183,17 +4941,31 @@ class ThermalrightDisplayStudio(QGroupBox):
 
     def _on_stream_error(self, error: QProcess.ProcessError) -> None:
         if self.stream_should_run and error == QProcess.ProcessError.FailedToStart:
-            self.stream_should_run = False
-            self._status(
-                "Levita-Video-Taktgeber konnte nicht gestartet werden · Design bleibt als Standbild sichtbar",
-                error=True,
-            )
+            if not self.stream_restart_timer.isActive():
+                self._on_stream_finished(-1, QProcess.ExitStatus.CrashExit)
+
+    def _capture_stream_output(self) -> None:
+        stdout = bytes(self.stream_process.readAllStandardOutput()).decode("utf-8", "replace")
+        stderr = bytes(self.stream_process.readAllStandardError()).decode("utf-8", "replace")
+        first = self.lcd_runtime.progress.frames == 0
+        if self.lcd_runtime.progress.feed(stdout, time.monotonic()) and first and self.stream_should_run:
+            self._on_stream_progress()
+        # Keep warnings/startup/errors, never continuous successful-frame chatter.
+        from modules.lcd_runtime.v1_1.progress import SENT
+        lines = [line for line in stdout.splitlines() if not SENT.match(line)]
+        text = " ".join(lines) + " " + stderr
+        if text.strip():
+            combined = f"{self.stream_output_tail} {redact_private_text(text)}".strip()
+            self.stream_output_tail = " ".join(combined.split())[-1200:]
 
     def _start_queue(
         self,
         commands: Iterable[tuple[tuple[str, ...], bool]],
         done: Callable[[bool, str], None],
     ) -> None:
+        if getattr(self, "hardware_io_disabled", False):
+            done(False, "Hardware-I/O ist für diesen Prüf- oder Vorschaulauf deaktiviert")
+            return
         if self.command_process.state() != QProcess.ProcessState.NotRunning or self.command_step_timer.isActive():
             self._status("Levita-Befehl nicht gestartet · eine andere USB-Übertragung läuft noch", error=True)
             return
@@ -3209,19 +4981,52 @@ class ThermalrightDisplayStudio(QGroupBox):
                 done(True, "\n".join(self.command_outputs))
             return
         args, self.current_tolerates_failure = self.command_queue.pop(0)
+        self.lcd_runtime.command_launch(args)
         self.command_process.start(args[0], list(args[1:]))
 
     def _on_command_finished(self, exit_code: int, status: QProcess.ExitStatus) -> None:
         stdout = bytes(self.command_process.readAllStandardOutput()).decode("utf-8", errors="replace")
         stderr = bytes(self.command_process.readAllStandardError()).decode("utf-8", errors="replace")
         output = (stdout + "\n" + stderr).strip()
+        failed = self.lcd_runtime.command_done(exit_code, status, output)
+        if self.shutdown_started:
+            return
+        if self.preexisting_trcc_daemon_pid is None:
+            observed_daemon = find_trcc_daemon_memory()
+            event = ""
+            previous_pid = self.owned_trcc_daemon_pid
+            if previous_pid is None and observed_daemon is not None:
+                self.owned_trcc_daemon_pid = observed_daemon.pid
+                event = "owned-trcc-start"
+            elif self.awaiting_owned_trcc_replacement:
+                replacement = replacement_owned_trcc_pid(previous_pid, observed_daemon)
+                if replacement is not None:
+                    self.owned_trcc_daemon_pid = replacement
+                    self.awaiting_owned_trcc_replacement = False
+                    event = "owned-trcc-replaced"
+                    self._log(
+                        f"TRCC-Daemon-Neustart übernommen · PID {previous_pid} → {replacement}"
+                    )
+            if event and self.owned_trcc_daemon_pid is not None:
+                from modules.application_shutdown.v1_1.journal import record
+                from modules.application_shutdown.v1_1.watcher import identity
+                current = identity(self.owned_trcc_daemon_pid)
+                if current is not None:
+                    record(
+                        event,
+                        child_pid=self.owned_trcc_daemon_pid,
+                        previous_child_pid=previous_pid,
+                        starttime=current[0],
+                    )
+        if self.lcd_runtime.command_reason:
+            output += "\n" + self.lcd_runtime.command_reason
         if output:
             self.command_outputs.append(output)
         if status == QProcess.ExitStatus.CrashExit:
             self.command_outputs.append(
                 "TRCC-Prozess ist abgestürzt (externer Backend-/libusb-Fehler)"
             )
-        if exit_code != 0 and not self.current_tolerates_failure:
+        if failed and (self.lcd_runtime.command_reason or status == QProcess.ExitStatus.CrashExit or not self.current_tolerates_failure):
             self.command_queue.clear()
             done, self.queue_done = self.queue_done, None
             if done:
@@ -3234,12 +5039,22 @@ class ThermalrightDisplayStudio(QGroupBox):
         super().closeEvent(event)
 
     def shutdown(self) -> None:
-        """Stop workers and quickly return Levita to its active TRCC theme."""
+        """Stop workers and release Levita to its built-in firmware logo."""
         if self.shutdown_started:
             return
         self.shutdown_started = True
+        self.shutdown_errors = []
+        self.media_preview.shutdown()
+        self.lcd_runtime.shutdown()
+        self.game_activity.shutdown()
+        self.gallery_preparation.shutdown()
         self.test_timer.stop()
         self.gpu_clock_guard_timer.stop()
+        self.game_detection_timer.stop()
+        self.daemon_health_timer.stop()
+        self.firmware_guard_timer.stop()
+        self.daemon_restart_timer.stop()
+        self.layer2_motion_timer.stop()
         self.apply_start_timer.stop()
         self.apply_cooldown_timer.stop()
         self.command_step_timer.stop()
@@ -3248,6 +5063,9 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.hover_extract_timeout.stop()
         self.pending_apply_animated = False
         self._stop_stream_client()
+        if self.gamemode_process.state() != QProcess.ProcessState.NotRunning:
+            self.gamemode_process.kill()
+            self.gamemode_process.waitForFinished(300)
         if self.hover_extract_process.state() != QProcess.ProcessState.NotRunning:
             self.hover_extract_process.terminate()
             if not self.hover_extract_process.waitForFinished(500):
@@ -3256,6 +5074,7 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.thumbnail_shutting_down = True
         self.thumbnail_queue.clear()
         self.thumbnail_queued.clear()
+        self.thumbnail_paused_workers.clear()
         for worker in self.thumbnail_workers:
             self.thumbnail_worker_timeouts[worker].stop()
             if worker.state() != QProcess.ProcessState.NotRunning:
@@ -3268,14 +5087,38 @@ class ThermalrightDisplayStudio(QGroupBox):
             self.command_process.kill()
             self.command_process.waitForFinished(500)
         self.command_step_timer.stop()
-        if not self.test_mode.isChecked() and self.cli.available:
-            try:
-                result = self.cli.stop_video_now(timeout=1.5)
-            except (OSError, subprocess.SubprocessError) as exc:
-                self._log(f"Programmende: Originaldesign konnte nicht bestätigt werden: {exc}")
+        restored = not self.firmware_guard.armed and self.test_mode.isChecked()
+        if (
+            not getattr(self, "hardware_io_disabled", False)
+            and self.cli.available
+            and (self.firmware_guard.armed or not self.test_mode.isChecked())
+        ):
+            result = restore_firmware_logo(self.cli.executable or "", timeout=2.0)
+            restored = result.ok
+            if result.ok:
+                self._log(
+                    "Programmende: Levita aus TRCC freigegeben · "
+                    "Thermalright-Standardbild kehrt nach dem Firmware-Zeitlimit zurück"
+                )
             else:
-                if result.ok:
-                    self._log("Programmende: Übertragung angehalten · aktives TRCC-Originaldesign wiederhergestellt")
+                detail = result.message or "unbekannter TRCC-Fehler"
+                self._log(f"Programmende: Levita-Firmware-Rückgabe fehlgeschlagen: {detail}")
+                self.shutdown_errors.append("firmware restore: " + detail)
+        self.firmware_guard.finish(restored=restored)
+        if not getattr(self, "hardware_io_disabled", False) and self.owned_trcc_daemon_pid is not None:
+            stopped = stop_owned_daemon(self.cli.executable or "", self.owned_trcc_daemon_pid)
+            if stopped.ok:
+                if "replacement left untouched" in stopped.message:
+                    self._log("Programmende: ursprünglicher OHC-TRCC-Daemon bereits beendet · andere TRCC-Instanz unangetastet")
                 else:
-                    detail = result.message or f"Rückgabecode {result.returncode}"
-                    self._log(f"Programmende: Übertragung anhalten fehlgeschlagen: {detail}")
+                    self._log("Programmende: von OHC gestarteter TRCC-Daemon beendet")
+                from modules.application_shutdown.v1_1.journal import record
+                record("owned-trcc-stopped", child_pid=self.owned_trcc_daemon_pid)
+            else:
+                self._log(f"Programmende: TRCC-Daemon konnte nicht beendet werden: {stopped.message}")
+                self.shutdown_errors.append("TRCC daemon: " + stopped.message)
+
+    def verify_shutdown_result(self) -> None:
+        failures = getattr(self, "shutdown_errors", ())
+        if failures:
+            raise RuntimeError("; ".join(failures))

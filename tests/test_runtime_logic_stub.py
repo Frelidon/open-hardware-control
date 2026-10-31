@@ -6,7 +6,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 _PYSIDE_MODULE_NAMES = (
-    "PySide6", "PySide6.QtCore", "PySide6.QtGui", "PySide6.QtWidgets",
+    "PySide6", "PySide6.QtCore", "PySide6.QtGui", "PySide6.QtMultimedia", "PySide6.QtNetwork", "PySide6.QtWidgets", "shiboken6",
 )
 _PREVIOUS_PYSIDE_MODULES = {
     name: sys.modules.get(name) for name in _PYSIDE_MODULE_NAMES
@@ -30,24 +30,34 @@ class Dummy:
     def __float__(self): return 1.0
     def __iter__(self): return iter(())
 
+Dummy.Type = Dummy._Enum()
+
 class SignalDummy(Dummy):
     pass
 
 qtcore=types.ModuleType('PySide6.QtCore')
-for n in ['QChildEvent','QEvent','QMimeData','QObject','QProcess','QProcessEnvironment','QSettings','QSize','QTimer','QPoint','QPointF','QRectF','QUrl','QStandardPaths']:
+for n in ['QChildEvent','QDateTime','QEasingCurve','QEvent','QIODevice','QMimeData','QObject','QProcess','QProcessEnvironment','QPropertyAnimation','QSaveFile','QSettings','QSignalBlocker','QSize','QThread','QTime','QTimer','QPoint','QPointF','QRect','QRectF','QUrl','QStandardPaths','QVariantAnimation']:
     setattr(qtcore,n,Dummy)
 qtcore.Signal=SignalDummy
 qtcore.qVersion=lambda: 'test'
 qtcore.Qt=Dummy()
 qtgui=types.ModuleType('PySide6.QtGui')
-for n in ['QAction','QBrush','QColor','QCloseEvent','QDrag','QFont','QIcon','QImage','QImageReader','QPixmap','QMovie','QPainter','QPainterPath','QPen','QPalette','QMouseEvent','QKeyEvent','QDesktopServices','QKeySequence','QLinearGradient','QRadialGradient','QWindow']:
+for n in ['QAction','QBrush','QColor','QCloseEvent','QDrag','QFont','QFontMetrics','QIcon','QImage','QImageReader','QPixmap','QMovie','QPainter','QPainterPath','QPen','QPalette','QPolygonF','QMouseEvent','QKeyEvent','QDesktopServices','QKeySequence','QLinearGradient','QRadialGradient','QTransform','QWindow']:
     setattr(qtgui,n,Dummy)
+qtnetwork=types.ModuleType('PySide6.QtNetwork')
+for n in ['QLocalServer','QLocalSocket']:
+    setattr(qtnetwork,n,Dummy)
+qtmultimedia=types.ModuleType('PySide6.QtMultimedia')
+for n in ['QMediaPlayer','QVideoFrame','QVideoSink']:
+    setattr(qtmultimedia,n,Dummy)
 qtwidgets=types.ModuleType('PySide6.QtWidgets')
-for n in ['QApplication','QAbstractButton','QAbstractItemView','QCheckBox','QColorDialog','QComboBox','QDialog','QDialogButtonBox','QFileDialog','QFormLayout','QFrame','QGridLayout','QGroupBox','QHBoxLayout','QInputDialog','QLabel','QLineEdit','QListView','QListWidget','QListWidgetItem','QMainWindow','QMenu','QMessageBox','QProgressBar','QPushButton','QScrollArea','QSizePolicy','QSlider','QSpinBox','QStackedLayout','QStackedWidget','QSystemTrayIcon','QTabBar','QTabWidget','QTableWidget','QTableWidgetItem','QTreeWidget','QTreeWidgetItem','QVBoxLayout','QWidget','QPlainTextEdit','QTextBrowser','QWizard','QWizardPage']:
+for n in ['QApplication','QAbstractButton','QAbstractItemView','QAbstractSlider','QCheckBox','QColorDialog','QComboBox','QDateTimeEdit','QDialog','QDialogButtonBox','QDoubleSpinBox','QFileDialog','QFormLayout','QFrame','QGraphicsItem','QGraphicsOpacityEffect','QGraphicsPathItem','QGraphicsPixmapItem','QGraphicsRectItem','QGraphicsScene','QGraphicsSimpleTextItem','QGraphicsView','QGridLayout','QGroupBox','QHeaderView','QHBoxLayout','QInputDialog','QLabel','QLineEdit','QListView','QListWidget','QListWidgetItem','QMainWindow','QMenu','QMessageBox','QProgressBar','QPushButton','QScrollArea','QSizePolicy','QSlider','QSpinBox','QSplitter','QStackedLayout','QStackedWidget','QStyle','QStyleOptionButton','QStylePainter','QSystemTrayIcon','QTabBar','QTabWidget','QTableWidget','QTableWidgetItem','QToolButton','QTreeWidget','QTreeWidgetItem','QVBoxLayout','QWidget','QPlainTextEdit','QTextBrowser','QWizard','QWizardPage']:
     setattr(qtwidgets,n,Dummy)
 pyside=types.ModuleType('PySide6')
 pyside.__version__='test'
-sys.modules.update({'PySide6':pyside,'PySide6.QtCore':qtcore,'PySide6.QtGui':qtgui,'PySide6.QtWidgets':qtwidgets})
+shiboken=types.ModuleType('shiboken6')
+shiboken.isValid=lambda _object: True
+sys.modules.update({'PySide6':pyside,'PySide6.QtCore':qtcore,'PySide6.QtGui':qtgui,'PySide6.QtMultimedia':qtmultimedia,'PySide6.QtNetwork':qtnetwork,'PySide6.QtWidgets':qtwidgets,'shiboken6':shiboken})
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -55,7 +65,7 @@ spec=importlib.util.spec_from_file_location('kraken_v29',str(ROOT / 'src/kraken_
 mod=importlib.util.module_from_spec(spec)
 sys.modules[spec.name]=mod
 spec.loader.exec_module(mod)
-assert mod.APP_VERSION=='3.4.29.50'
+assert mod.APP_VERSION=='3.4.29.158'
 assert mod.BUILD_CHANNEL=='INTERN'
 assert mod.APP_NAME=='Open Hardware Control'
 assert len(mod.AM5_CPU_PROFILES)>=20
@@ -153,6 +163,10 @@ with tempfile.TemporaryDirectory() as state_temp:
         crash_text = crash_path.read_text(encoding='utf-8')
         assert 'RuntimeError: preview startup test' in crash_text
         assert crash_path.stat().st_mode & 0o777 == 0o600
+        error_path = Path(state_temp) / 'open-hardware-control/errors.log'
+        assert error_path.is_file()
+        assert 'ABSTURZ: RuntimeError: preview startup test' in error_path.read_text(encoding='utf-8')
+        assert error_path.stat().st_mode & 0o777 == 0o600
 assert mod.KrakenControl.classify_aspect_ratio(16/9) == '16:9'
 assert mod.KrakenControl.classify_aspect_ratio(32/9) == '32:9'
 
@@ -197,6 +211,7 @@ class RGBTestStateFake:
     rgb_test_color = 'ffffff'
     openrgb_external_server_detected = False
     openrgb_server_reachable = True
+    openrgb_stable_ids = {}
     openrgb_client = RGBTestClientFake()
     def rgb_logical_devices(self):
         return [
@@ -208,6 +223,13 @@ class RGBTestStateFake:
             {'id': 'blocked', 'title': 'Corsair', 'backend': 'openrgb', 'writable': False,
              'device': mod.OpenRGBDevice(11, 'Corsair')},
         ]
+    # Production presents grouped UI devices (for example both DIMMs as one
+    # controllable RAM group).  This focused command-builder fake intentionally
+    # keeps its devices ungrouped while exposing the same interface.
+    def rgb_ui_devices(self):
+        return self.rgb_logical_devices()
+    def rgb_ui_item_selected(self, item):
+        return str(item['id']) in self.rgb_selected_devices
 
 rgb_test_commands, rgb_test_blocked = mod.KrakenControl.build_rgb_device_test_commands(
     RGBTestStateFake(), 'openrgb:target'
@@ -217,6 +239,18 @@ assert rgb_test_commands[0][-3:] == ['3', '--colors', '000000']
 assert any(command[-1] == 'off' for command in rgb_test_commands[:-1])
 assert all(command.count('--device') <= 1 for command in rgb_test_commands)
 assert rgb_test_blocked == ['Corsair']
+blackout_commands, _ = mod.KrakenControl.build_rgb_device_test_commands(
+    RGBTestStateFake(), '', exclude_ids={'openrgb:target'}
+)
+assert all('--device' not in command or '7' not in command for command in blackout_commands)
+assert any(command[-1] == '000000' for command in blackout_commands)
+selected_state = RGBTestStateFake()
+selected_state.rgb_selected_devices = {'openrgb:target', 'nzxt:led1'}
+temporary_blackout, _ = mod.KrakenControl.build_rgb_device_test_commands(
+    selected_state, '', exclude_ids={'openrgb:target'}, only_selected=True
+)
+assert not any('--device' in command and '3' in command for command in temporary_blackout)
+assert any(command[-1] == 'off' for command in temporary_blackout)
 
 _, layout_slots = mod.flori_rgb_layout_profile()
 radiator_slot = next(slot for slot in layout_slots if slot.slot_id == 'radiator-top')
@@ -287,9 +321,11 @@ class ModeButtonFake:
     def polish(self, _button): self.repolished += 1
     def update(self): pass
     def setAccessibleDescription(self, text): self.description = text
+    def setText(self, text): self.text = text
 
 class ModeStateFake:
     cooling_mode_kind = staticmethod(mod.KrakenControl.cooling_mode_kind)
+    tr_static = staticmethod(lambda text: text)
     cooling_modes = {
         'pump': ('Temperaturkurve', '7 Punkte'),
         'fan': ('Feste Drehzahl', '52 %'),
@@ -313,6 +349,7 @@ class ProfileLabelFake:
     def setText(self, text): self.text = text
 
 class QuickProfileStateFake:
+    cooling_mode_kind = staticmethod(mod.KrakenControl.cooling_mode_kind)
     cooling_modes = {
         'pump': ('Feste Drehzahl', '75 % · Profil Leistung'),
         'fan': ('Feste Drehzahl', '75 % · Profil Leistung'),
@@ -325,14 +362,15 @@ class QuickProfileStateFake:
     }
     def update_cooling_quick_profile_state(self, name):
         mod.KrakenControl.update_cooling_quick_profile_state(self, name)
+    def tr_static(self, text): return text
 
 quick_state = QuickProfileStateFake()
 mod.KrakenControl.restore_cooling_quick_profile_state(quick_state)
-assert quick_state.cooling_cpu_active_profile.text == 'Leistung'
+assert quick_state.cooling_cpu_active_profile.text == 'Profil-Festwert · Leistung'
 assert quick_state.cooling_quick_profile_buttons['Leistung'].properties['profileState'] == 'active'
 assert quick_state.cooling_quick_profile_buttons['Leise'].properties['profileState'] == 'inactive'
 mod.KrakenControl.update_cooling_quick_profile_state(quick_state, '')
-assert quick_state.cooling_cpu_active_profile.text == 'Individuell'
+assert quick_state.cooling_cpu_active_profile.text == 'Eigener Festwert'
 assert all(button.properties['profileState'] == 'inactive' for button in quick_state.cooling_quick_profile_buttons.values())
 
 class ProfileSliderFake:
@@ -353,6 +391,7 @@ class QuickProfileApplyFake:
     confirmed = []
     modes = []
     def defer_cooling_action_for_gif(self, *_args): return False
+    def safe_cooling_duty(self, channel, duty): return mod.clamp_cooling_duty('nzxt', channel, duty)
     def has_kraken_write_access(self): return True
     def show_permission_error(self, message): raise AssertionError(message)
     def show_error(self, message): raise AssertionError(message)
@@ -371,8 +410,8 @@ assert len(apply_state.backend.callbacks) == 1
 apply_state.backend.callbacks.pop(0)(types.SimpleNamespace(ok=True, combined=''))
 assert apply_state.confirmed == ['Leise']
 assert apply_state.modes == [
-    ('pump', 'Feste Drehzahl', '45 % · Profil Leise'),
-    ('fan', 'Feste Drehzahl', '35 % · Profil Leise'),
+    ('pump', 'Profil-Festwert', '45 % · Profil Leise'),
+    ('fan', 'Profil-Festwert', '35 % · Profil Leise'),
 ]
 
 class ValueFake:

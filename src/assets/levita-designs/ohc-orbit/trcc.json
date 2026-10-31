@@ -1,0 +1,85 @@
+{
+  "name": "OHC Orbit",
+  "width": 1600,
+  "height": 720,
+  "overlay_enabled": true,
+  "elements": [
+    {
+      "id": "clock",
+      "type": "clock",
+      "x": 760,
+      "y": 106,
+      "source": "time",
+      "format": "{value}",
+      "color": "#ffffff",
+      "size": 58,
+      "bold": true,
+      "name": "DejaVu Sans"
+    },
+    {
+      "id": "cpu",
+      "type": "metric",
+      "x": 380,
+      "y": 338,
+      "metric": "cpu:temp",
+      "format": "CPU  {value:.0f}°C",
+      "color": "#56e5ff",
+      "size": 40,
+      "bold": true,
+      "name": "DejaVu Sans",
+      "show_unit": true
+    },
+    {
+      "id": "cpu-load",
+      "type": "metric",
+      "x": 380,
+      "y": 425,
+      "metric": "cpu:usage",
+      "format": "{value:.0f}% LOAD",
+      "color": "#ffffff",
+      "size": 28,
+      "bold": true,
+      "name": "DejaVu Sans",
+      "show_unit": true
+    },
+    {
+      "id": "gpu",
+      "type": "metric",
+      "x": 1140,
+      "y": 338,
+      "metric": "gpu:primary:temp",
+      "format": "GPU  {value:.0f}°C",
+      "color": "#a47cff",
+      "size": 40,
+      "bold": true,
+      "name": "DejaVu Sans",
+      "show_unit": true
+    },
+    {
+      "id": "gpu-load",
+      "type": "metric",
+      "x": 1140,
+      "y": 425,
+      "metric": "gpu:primary:usage",
+      "format": "{value:.0f}% LOAD",
+      "color": "#ffffff",
+      "size": 28,
+      "bold": true,
+      "name": "DejaVu Sans",
+      "show_unit": true
+    },
+    {
+      "id": "ram",
+      "type": "metric",
+      "x": 760,
+      "y": 607,
+      "metric": "memory:percent",
+      "format": "RAM  {value:.0f}%",
+      "color": "#73ffd5",
+      "size": 30,
+      "bold": true,
+      "name": "DejaVu Sans",
+      "show_unit": true
+    }
+  ]
+}

@@ -6,24 +6,38 @@ ROOT = Path(__file__).resolve().parents[1]
 main_code = (ROOT / "src/kraken_control.py").read_text(encoding="utf-8")
 module_names = (
     "app_constants.py", "command_backend.py", "cooling_card_state.py", "cooling_widgets.py",
-    "dashboard_layout.py", "localization_catalog.py", "privacy_logging.py", "temperature_utils.py",
+    "dashboard_layout.py", "localization_catalog.py", "log_view_support.py", "privacy_logging.py", "temperature_utils.py",
 )
 module_code = {name: (ROOT / "src" / name).read_text(encoding="utf-8") for name in module_names}
+localization_dir = ROOT / "src/modules/localization/v1_0"
+localization_code = {
+    name: (localization_dir / name).read_text(encoding="utf-8")
+    for name in ("de.py", "en.py", "es.py", "fr.py", "catalog.py", "policy.py")
+}
 rgb_gallery_code = (
-    ROOT / "src/modules" / "rgb_studio" / "v1_1" / "design_gallery.py"
+    ROOT / "src/modules" / "rgb_studio" / "v1_15" / "design_gallery.py"
+).read_text(encoding="utf-8")
+pc_case_code = (
+    ROOT / "src/modules" / "pc_case_profiles" / "v1_5" / "controller.py"
+).read_text(encoding="utf-8")
+pc_diagram_code = (
+    ROOT / "src/modules" / "pc_case_profiles" / "v1_5" / "diagram.py"
 ).read_text(encoding="utf-8")
 wallpaper_installer_code = (
-    ROOT / "src/modules" / "wallpaper_engine" / "v1_2" / "installer.py"
+    ROOT / "src/modules" / "wallpaper_engine" / "v1_3" / "installer.py"
+).read_text(encoding="utf-8")
+window_placement_code = (
+    ROOT / "src/modules" / "window_placement" / "v1_5" / "confirmation.py"
 ).read_text(encoding="utf-8")
 # Static guards search the complete runtime implementation even though the
 # former monolith is now split into focused modules.
-code = main_code + "\n" + "\n".join(module_code.values()) + "\n" + rgb_gallery_code
+code = main_code + "\n" + "\n".join(module_code.values()) + "\n" + "\n".join(localization_code.values()) + "\n" + rgb_gallery_code + "\n" + pc_case_code + "\n" + pc_diagram_code + "\n" + window_placement_code
 rule = (ROOT / "packaging/71-nzxt-kraken-2023.rules").read_text(encoding="utf-8")
 installer = (ROOT / "packaging/install.sh").read_text(encoding="utf-8")
 helper = (ROOT / "packaging/install-udev-rule.sh").read_text(encoding="utf-8")
 diagnostics = (ROOT / "packaging/collect-diagnostics.sh").read_text(encoding="utf-8")
 
-assert 'APP_VERSION = "3.4.29.50"' in code
+assert 'APP_VERSION = "3.4.29.158"' in code
 assert 'BUILD_CHANNEL = "INTERN"' in code
 assert 'APP_NAME = "Open Hardware Control"' in code
 assert "shell=True" not in wallpaper_installer_code
@@ -50,7 +64,7 @@ assert '"experimental/desktop_designs_enabled", False' in code
 assert "Experimentelle Desktop-Designs im Menü anzeigen" in code
 assert "if not self.experimental_desktop_designs_enabled" in code
 assert "make_rgb_tab" in code and "RGB-Studio" in code
-assert 'f"Frelidon PC · Thermaltake / 360-mm-Aufbau / {layout_aio_name}"' in code
+assert 'f"Frelidon PC · Thermaltake Retro 360 TG / {aio_name}"' in code
 assert 'LEVITA_DISPLAY_NAME if self.is_thermalright_cooling() else "Kraken 360"' in code
 assert '"Floris PC · Thermaltake / 360-mm-Aufbau / Kraken 360"' not in code
 assert "fan_order_changed" in code and "reorder_rgb_layout_slot_devices" in code
@@ -92,7 +106,7 @@ instance_acquire = code.index("instance_lock.acquire()", run_application)
 hardware_window = code.index("window = KrakenControl()", run_application)
 assert instance_acquire < hardware_window
 assert "class RGBDeviceTile" in code and "class RGBDropGroup" in code
-assert "class PCLayoutDiagram" in code and "load_builtin_rgb_layout_profile" in code
+assert "class PCLayoutDiagram" in pc_diagram_code and "load_builtin_rgb_layout_profile" in code
 assert "move_rgb_layout_slot" in code and "assign_rgb_device_to_layout_slot" in code
 assert "select_rgb_layout_slot" in code and "rename_rgb_device" in code
 assert "Thermaltake / 360-mm-Aufbau" in code
@@ -132,7 +146,7 @@ assert (ROOT / "src/nzxt_rgb.py").exists()
 assert (ROOT / "src/ui_layout.py").exists()
 assert "class ReorderableSectionArea" in code
 assert "Standardreihenfolge wiederherstellen" in code
-assert "devices_effects_layout.addWidget(openrgb_box)" in code
+assert "rgb_devices_effects_panel_layout.addWidget(openrgb_box)" in code
 assert '("engine", openrgb_box)' not in code
 assert 'editor_form.addRow("OHC-Modi", self.rgb_studio_mode_list)' in code
 assert 'editor_form.addRow("Modusfarben", colors)' in code
@@ -190,12 +204,18 @@ assert "WA_TransparentForMouseEvents" in code
 assert "ensure_background_layer_order" in code
 assert "self.background_widget.lower()" in code
 assert "self.content_root.raise_()" in code
-assert "content_rgba" in code
+theme_controller_code = (ROOT / "src/modules/ui_themes/v1_0/controller.py").read_text(encoding="utf-8")
+theme_controller_code += "".join((ROOT / "src/modules/ui_themes/v1_0" / name).read_text(encoding="utf-8")
+                                 for name in ("style_base.py", "style_controls.py"))
+assert "content_rgba" in theme_controller_code
+assert "resolve_theme" in theme_controller_code
+assert "class UiThemeMixin" in theme_controller_code
 assert "QStackedLayout.StackingMode.StackAll" in code
 assert "CPU-Offscreen-Renderer" in code
 assert "save_application_log" in code
-assert "self.log_char_limit = 10000" in code
+assert "Letzte 60 Minuten: {lines} Zeilen · {characters} Zeichen" in code
 assert "_trim_log_to_character_limit" in code
+assert "errors.log" in diagnostics
 assert "app.installEventFilter(self._interaction_audit)" in code
 assert "KLICK" in code and "ÄNDERUNG" in code and "NAVIGATION" in code
 assert "PROFILES" not in code or "PROFILE_SCHEMA_VERSION" in code
@@ -297,6 +317,8 @@ assert "send_clock_keepalive" in code
 assert (ROOT / "packaging/install-dependencies.sh").exists()
 dep_helper = (ROOT / "packaging/install-dependencies.sh").read_text(encoding="utf-8")
 assert "python3-pyside6" in dep_helper
+assert "PySide6.QtMultimedia" in dep_helper
+assert "pyside6multimedia" in dep_helper
 assert "python3-pillow" in dep_helper
 assert "qt6-qtsvg" in dep_helper
 assert "dnf:qdbus6" in dep_helper and 'echo "qt6-qttools"' in dep_helper
@@ -329,6 +351,8 @@ assert '"mainboard_fan_control.py"' in build_release_code
 assert '"ohc_fan_helper.py"' in build_release_code
 assert 'PACKAGING_DIR / "io.github.Frelidon.OpenHardwareControl.fan.policy"' in build_release_code
 assert '"nzxt_esc_profiles.py"' in build_release_code
+assert 'python3-pyside6.qtmultimedia' in build_release_code
+assert 'policykit-1 | polkitd, pkexec' in build_release_code
 assert "--check-gui-and-install" in installer
 assert "install_missing_dependencies" in code
 assert "install_desktop_design_dependencies" in code
@@ -336,7 +360,7 @@ assert "maybe_offer_desktop_design_dependencies" in code
 assert "Fehlende Pakete &installieren" in code
 
 readme = (ROOT / "README.md").read_text(encoding="utf-8")
-assert "# Open Hardware Control by Frelidon 3.4.29.50" in readme
+assert "# Open Hardware Control by Frelidon 3.4.29.158" in readme
 assert "Inoffizielles unabhängiges Community-Projekt" in readme
 assert "Corsair · OpenLinkHub" in readme
 assert "| NZXT 2023 RGB Controller | `1e71:2012`" in readme
@@ -414,7 +438,7 @@ assert 'LCD_FAILURE_LIMIT = 3' in code
 assert 'set", "lcd", "screen", "liquid"' in code
 assert 'Unsauber beendete experimentelle LCD-Sitzung erkannt' in code
 assert 'LCD-Bild-Fallback' in code
-assert 'self.setWindowTitle(f"{DISPLAY_NAME} {APP_DISPLAY_VERSION} — Linux")' in code
+assert 'self.setWindowTitle(f"{DISPLAY_NAME} {APP_DISPLAY_VERSION} — {platform_display_name()}")' in code
 assert 'experimental_autostart_blocked' in code
 
 
@@ -427,7 +451,7 @@ assert '"layers" if self.lcd_layer_active else "hardware_animation" if self.gif_
 assert 'def render_lcd_layer_file' in code
 assert 'def start_lcd_layers' in code
 assert 'class RGBDesignGallery' in code
-assert 'from modules.rgb_studio.v1_1 import (' in main_code
+assert 'from modules.rgb_studio.v1_15 import (' in main_code
 assert 'studio_autostart_enabled' in code
 assert 'gif/fps' in code
 assert 'Beim Systemstart minimiert/im Tray starten' in code
@@ -437,13 +461,15 @@ assert 'def should_start_minimized_from_autostart' in code
 assert 'window.apply_initial_window_state()' in code
 assert 'Qt.WidgetAttribute.WA_DontShowOnScreen' in code
 assert 'def release_autostart_window_surface' in code
-assert 'self.release_autostart_window_surface()' in code
+assert 'window.release_autostart_window_surface()' in code
 assert 'AUTOSTART_LCD_DELAY_MS = 5000' in code
 assert '"mode": self.current_lcd_profile_mode()' in code
 assert 'def resolve_profile_lcd_mode' in code
 assert 'self.apply_profile_by_id(profile_id, startup=True)' in code
-assert 'if not (startup and self.should_start_minimized_from_autostart())' in code
-assert 'QTimer.singleShot(0, self.apply_initial_window_state)' in code
+assert 'if not startup:' in code
+assert 'globale Bildschirm- und Startmodus-Einstellungen bleiben zuständig.' in code
+assert 'window.apply_initial_window_state()' in code
+assert 'finish_initial_window_mapping(window, maximize)' in code
 assert 'install_session_signal_handlers(window)' in code
 assert 'gif_force_stop_timer' in code
 assert 'Bewegungsglättung (Motion-Interpolation)' in code
@@ -530,8 +556,9 @@ assert 'mark_experimental_lcd_active("hardware")' in code
 assert 'def refresh_dynamic_translations' in code
 assert 'for menu in self.findChildren(QMenu)' in code
 assert code.index('self.restore_settings()') < code.index('self.capture_translation_sources()', code.index('self.restore_settings()'))
-for language in ('en', 'es', 'fr'):
-    assert f'UI_TRANSLATIONS["{language}"].update' in code
+for language in ('de', 'en', 'es', 'fr'):
+    assert (localization_dir / f"{language}.py").is_file()
+assert 'from . import de, en, es, fr' in localization_code['catalog.py']
 assert 'DEFAULT_ACCENT = "#00c8ff"' in (ROOT / "src/kraken_lcd_designs.py").read_text(encoding="utf-8")
 
 # 2.9.22: scalable text and generated animated sensor dashboards.
@@ -577,7 +604,7 @@ assert (ROOT / "tests" / "test_gif_cooling_handoff.py").exists()
 
 # 3.0.2: explicit per-channel switch between fixed/manual and hardware curve mode.
 assert 'Betriebsart umschalten' in code
-assert 'Manuell aktivieren' in code
+assert 'Eigenen Festwert anwenden' in code
 assert 'Pumpenkurve aktivieren' in code
 assert 'Lüfterkurve aktivieren' in code
 assert 'button.setObjectName("coolingModeButton")' in code
@@ -592,7 +619,7 @@ assert 'button.setProperty("coolingState", "inactive")' in code
 cooling_button_start = code.index('button.setObjectName("coolingModeButton")')
 cooling_button_end = code.index("switch_hint = QLabel", cooling_button_start)
 assert 'button.setCheckable(True)' not in code[cooling_button_start:cooling_button_end]
-assert 'QPushButton#coolingModeButton[coolingState="active"]' in code
+assert 'QPushButton#coolingModeButton[coolingState="active"]' in theme_controller_code
 assert 'button.style().unpolish(button)' in code
 assert 'button.style().polish(button)' in code
 
@@ -617,8 +644,10 @@ assert 'log_command=False' in code
 # 3.0.9: orderly LCD reset and original interactive mouse schematics.
 assert 'def restore_original_lcd_sync_on_quit' in code
 assert code.count('self.restore_original_lcd_sync_on_quit()') == 1
-assert 'self.perform_orderly_hardware_exit("Fenster/Programmende")' in code
-assert 'self.perform_orderly_hardware_exit("manuelles Programmende")' in code
+assert 'self.minimize_to_tray(force_tray=True)' in code
+assert 'self.perform_orderly_hardware_exit("Fenster/Programmende")' not in code
+assert 'def quit_app(self, _checked: bool = False, *, reason: str = "manuelles Programmende")' in code
+assert 'exit_run.run("hardware", lambda: self.perform_orderly_hardware_exit(reason))' in code
 assert 'self.perform_orderly_hardware_exit("System-Shutdown/Logout")' in code
 assert 'app.aboutToQuit.connect(lambda: window.perform_orderly_hardware_exit("Qt aboutToQuit"))' in code
 assert 'app.aboutToQuit.connect(diagnostics.detach_ui_sink)' in code

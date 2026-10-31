@@ -2,6 +2,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CODE = (ROOT / "src/kraken_control.py").read_text(encoding="utf-8")
+THEME_CONTROLLER = (ROOT / "src/modules/ui_themes/v1_0/controller.py").read_text(encoding="utf-8")
+THEME_CONTROLLER += "".join((ROOT / "src/modules/ui_themes/v1_0" / name).read_text(encoding="utf-8")
+                            for name in ("style_base.py", "style_controls.py"))
+RESPONSIVE = (ROOT / "src/modules/responsive_startup/v1_0/controller.py").read_text(encoding="utf-8")
 BUILD = (ROOT / "scripts/build_release.py").read_text(encoding="utf-8")
 INSTALL = (ROOT / "packaging/install.sh").read_text(encoding="utf-8")
 
@@ -19,10 +23,14 @@ def test_compact_dashboard_and_cards_exist():
 def test_kraken_quick_profile_highlight_tracks_confirmed_device_state():
     assert 'self.cooling_quick_profile_buttons' in CODE
     assert 'button.setProperty("profileState", "inactive")' in CODE
-    assert 'QPushButton#coolingQuickProfileButton[profileState="active"]' in CODE
+    assert 'QPushButton#coolingQuickProfileButton[profileState="active"]' in THEME_CONTROLLER
     assert 'self.update_cooling_quick_profile_state(name)' in CODE
     assert 'self.restore_cooling_quick_profile_state()' in CODE
     assert 'button.setObjectName("profilePrimary")' not in CODE
+    assert 'self.cooling_auto_case_button.setProperty("profileState", "inactive")' in CODE
+    assert 'self.cooling_auto_case_button.setCheckable(True)' in CODE
+    assert 'self.cooling_auto_case_button.setChecked(self.mainboard_control_active)' in CODE
+    assert 'state = "active" if self.mainboard_control_active else "inactive"' in CODE
 
 
 def test_cpu_and_pump_are_excluded_from_chassis_control():
@@ -32,16 +40,17 @@ def test_cpu_and_pump_are_excluded_from_chassis_control():
 
 
 def test_coolercontrol_ownership_is_exclusive():
-    assert 'detect_cooling_owner()' in CODE
-    assert 'Steuerung mit OHC übernehmen' in CODE
-    assert 'An CoolerControl zurückgeben' in CODE
+    assert 'detect_cooling_owner()' not in CODE
+    assert 'CoolingOwnershipProbe' in RESPONSIVE
+    assert 'CoolingOwnerStatus(True, True, False)' in RESPONSIVE
+    assert 'Lüftersteuerung mit OHC übernehmen' in RESPONSIVE
     assert 'CoolerControl besitzt aktuell die Mainboard-Lüftersteuerung' in CODE
-    assert 'stop_coolercontrol()' in CODE
-    assert 'start_coolercontrol()' in CODE
-    assert 'CoolerControl dauerhaft deaktivieren' in CODE
-    assert 'CoolerControl dauerhaft aktivieren' in CODE
-    assert 'disable_coolercontrol()' in CODE
-    assert 'enable_coolercontrol()' in CODE
+    assert 'stop_coolercontrol()' in RESPONSIVE
+    assert 'start_coolercontrol()' in RESPONSIVE
+    assert 'CoolerControl dauerhaft deaktivieren' in RESPONSIVE
+    assert 'CoolerControl dauerhaft aktivieren' in RESPONSIVE
+    assert 'disable_coolercontrol()' in RESPONSIVE
+    assert 'enable_coolercontrol()' in RESPONSIVE
 
 
 def test_guided_assistant_has_safe_contrast_and_layout():

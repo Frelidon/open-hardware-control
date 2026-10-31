@@ -11,9 +11,11 @@ sys.path.insert(0, str(ROOT / "src"))
 from ui_layout import (
     DASHBOARD_CARD_DEFAULTS,
     SECTION_DEFAULTS,
+    active_page_visible,
     dashboard_card_hardware_available,
     sanitize_dashboard_cards,
     sanitize_section_order,
+    sync_visible_page_timer,
 )
 from dashboard_layout import (
     DASHBOARD_HINT_FAULT,
@@ -23,16 +25,43 @@ from dashboard_layout import (
 
 
 class UILayoutTests(unittest.TestCase):
+    def test_presentation_timer_follows_page_visibility(self):
+        class Owner:
+            visible = True
+            minimized = False
+            def isVisible(self): return self.visible
+            def isMinimized(self): return self.minimized
+        class Tabs:
+            current = object()
+            def currentWidget(self): return self.current
+        class Timer:
+            active = False
+            def isActive(self): return self.active
+            def start(self): self.active = True
+            def stop(self): self.active = False
+        owner, tabs, timer, updates = Owner(), Tabs(), Timer(), []
+        target = tabs.current
+        assert active_page_visible(owner, tabs, target)
+        sync_visible_page_timer(owner, timer, tabs, target, lambda: updates.append(True))
+        assert timer.active and updates == [True]
+        owner.minimized = True
+        sync_visible_page_timer(owner, timer, tabs, target, lambda: updates.append(True))
+        assert not timer.active and updates == [True]
+
     def test_rgb_default_order_matches_product_request(self):
         self.assertEqual(
             SECTION_DEFAULTS["rgb"],
-            ("engine", "devices_effects", "pc_layout", "groups"),
+            ("pc_layout", "devices_effects", "groups"),
         )
 
     def test_saved_order_is_sanitized_and_completed(self):
         self.assertEqual(
             sanitize_section_order("rgb", ["groups", "engine", "groups", "removed"]),
-            ["groups", "engine", "devices_effects", "pc_layout"],
+            ["groups", "pc_layout", "devices_effects"],
+        )
+        self.assertEqual(
+            sanitize_section_order("rgb", "devices_effects,pc_layout,groups,engine"),
+            ["pc_layout", "devices_effects", "groups"],
         )
         self.assertEqual(sanitize_section_order("cooling", None), list(SECTION_DEFAULTS["cooling"]))
 
@@ -112,3 +141,4 @@ class UILayoutTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+    active_page_visible,

@@ -21,6 +21,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
+from modules.backend_updates.v1_0.executables import preferred_backend_version, resolve_openrgb_executable
 
 OPENRGB_DEFAULT_PORT = 6742
 MAX_OPENRGB_DEVICE_ID = 4096
@@ -219,7 +220,7 @@ def _parse_named_values(value: str) -> tuple[str, ...]:
     return tuple(item.strip() for item in values if item.strip())
 
 
-def parse_device_listing(output: str) -> list[OpenRGBDevice]:
+def parse_device_listing(output: str, *, require_details: bool = False) -> list[OpenRGBDevice]:
     devices: list[OpenRGBDevice] = []
     current: dict[str, object] | None = None
 
@@ -227,6 +228,12 @@ def parse_device_listing(output: str) -> list[OpenRGBDevice]:
         nonlocal current
         if current is None:
             return
+        # OpenRGB 1.0 changed --list-devices into a names-only list.  A missing
+        # Type field is not a zero-LED controller: detailed CLI inventories
+        # always include it, even for an unknown controller type.  Do not turn
+        # incomplete metadata into new stable IDs or persisted empty routes.
+        if require_details and "type" not in current:
+            raise OpenRGBError("OpenRGB konnte die Geräteliste nicht lesen.")
         devices.append(
             OpenRGBDevice(
                 index=int(current["index"]),
@@ -275,7 +282,14 @@ def parse_device_listing(output: str) -> list[OpenRGBDevice]:
 
 
 class OpenRGBClient:
-    def __init__(self, executable: str | None = None, address: str = "127.0.0.1", port: int = OPENRGB_DEFAULT_PORT):
+    def __init__(
+        self,
+        executable: str | None = None,
+        address: str = "127.0.0.1",
+        port: int = OPENRGB_DEFAULT_PORT,
+        *,
+        ubuntu_runtime: bool | None = None,
+    ):
         parsed_address = ipaddress.ip_address(address)
         if not parsed_address.is_loopback:
             raise ValueError("OpenRGB darf nur über eine lokale Loopback-Adresse angesprochen werden.")
@@ -286,6 +300,28 @@ class OpenRGBClient:
         self.sdk_helper = str(Path(__file__).with_name("openrgb_sdk.py").resolve())
         self.address = str(parsed_address)
         self.port = int(port)
+        if ubuntu_runtime is None:
+            try:
+                release = {
+                    key: value.strip().strip('"')
+                    for key, value in (
+                        line.split("=", 1)
+                        for line in Path("/etc/os-release").read_text(encoding="utf-8").splitlines()
+                        if "=" in line
+                    )
+                }
+            except OSError:
+                release = {}
+            identifiers = {release.get("ID", ""), *release.get("ID_LIKE", "").split()}
+            ubuntu_runtime = "ubuntu" in identifiers
+        self.ubuntu_runtime = bool(ubuntu_runtime)
+        if executable is None:
+            self.executable = resolve_openrgb_executable(self.executable, ubuntu_runtime=self.ubuntu_runtime)
+
+    @property
+    def sdk_protocol_arguments(self) -> list[str]:
+        """Opt Ubuntu into UUID-aware SDK6 without changing Fedora commands."""
+        return ["--protocol-max", "6"] if self.ubuntu_runtime else []
 
     @property
     def endpoint(self) -> str:
@@ -313,7 +349,12 @@ class OpenRGBClient:
 
     def client_command(self, *arguments: str) -> list[str]:
         self._require_client()
-        return [self.executable, "--client", self.endpoint, *arguments]
+        # Ubuntu's OpenRGB 0.9+ CLI otherwise probes local devices again even
+        # though this process is only an SDK client.  On the affected Ubuntu
+        # RX 9070 XT system that duplicate GPU-I2C access stalled amdgpu/SMU.
+        # Fedora keeps its established command line completely unchanged.
+        detection_guard = ["--nodetect"] if self.ubuntu_runtime else []
+        return [self.executable, "--client", self.endpoint, *detection_guard, *arguments]
 
     def managed_server_command(self, config_directory: str | Path) -> list[str]:
         """Build the private server command owned by Open Hardware Control.
@@ -339,7 +380,29 @@ class OpenRGBClient:
         ]
 
     def list_command(self) -> list[str]:
-        return self.client_command("--list-devices")
+        # release_1.0/cli.cpp: --list-devices is now only a simple name list;
+        # --list-detailed retains the metadata OHC needs.  Select the new flag
+        # only for the trusted, explicitly installed Ubuntu 1.0 backend.  Old
+        # 0.9 executables, explicit overrides and Fedora keep their old flag.
+        trusted = resolve_openrgb_executable("", ubuntu_runtime=self.ubuntu_runtime)
+        detailed = (
+            self.ubuntu_runtime and self.executable == trusted
+            and preferred_backend_version("openrgb", ubuntu_runtime=True) == "1.0"
+        )
+        return self.client_command("--list-detailed" if detailed else "--list-devices")
+
+    def profile_command(self, profile: str | Path) -> list[str]:
+        """Load one previously validated profile through the local SDK client."""
+
+        requested = Path(profile).expanduser()
+        if requested.is_symlink():
+            raise ValueError("OpenRGB-Profile dürfen keine symbolischen Links sein.")
+        path = requested.resolve(strict=True)
+        if not path.is_file() or path.suffix.casefold() not in {".orp", ".json"}:
+            raise ValueError("Ungültiger OpenRGB-Profilpfad.")
+        if path.stat().st_size > 32 * 1024 * 1024:
+            raise ValueError("Das OpenRGB-Profil ist größer als 32 MiB.")
+        return self.client_command("--profile", str(path))
 
     @staticmethod
     def _device_id(device_id: int) -> str:
@@ -395,6 +458,7 @@ class OpenRGBClient:
         ]
         if not direct:
             command.append("--no-custom-mode")
+        command += self.sdk_protocol_arguments
         if zone_sizes is not None:
             sizes = tuple(int(value) for value in zone_sizes)
             if not sizes or len(sizes) > MAX_OPENRGB_LEDS or any(
@@ -417,7 +481,7 @@ class OpenRGBClient:
             "--port", str(self.port),
             "--device", self._device_id(device_id),
             "--inspect",
-        ]
+        ] + self.sdk_protocol_arguments
 
     def sdk_color_commands(
         self,
@@ -516,7 +580,7 @@ class OpenRGBClient:
         if completed.returncode != 0:
             detail = (completed.stderr or completed.stdout).strip()
             raise OpenRGBError(detail or "OpenRGB konnte die Geräteliste nicht lesen.")
-        return parse_device_listing(completed.stdout)
+        return parse_device_listing(completed.stdout, require_details=True)
 
 
 def preferred_reset_mode(device: OpenRGBDevice) -> str:
@@ -546,16 +610,16 @@ def best_native_mode_for_effect(
         return available[preferred]
     candidates = {
         "static": ("static", "fixed"),
-        "breathing": ("breathing", "breathe", "pulse"),
+        "breathing": ("breathing", "breathe", "pulse", "spectrum cycle"),
         "rainbow": ("rainbow wave", "rainbow", "spectrum cycle", "color cycle"),
-        "lightning": ("random flicker", "flicker", "flashing", "flash"),
-        "spinner": ("visor", "chase", "marquee", "rainbow wave", "color cycle"),
-        "comet": ("visor", "chase", "marquee"),
+        "lightning": ("random flicker", "flicker", "flashing", "flash", "serial", "runway"),
+        "spinner": ("visor", "chase", "marquee", "runway", "rainbow wave", "color cycle"),
+        "comet": ("visor", "chase", "marquee", "serial", "runway"),
         "wave": ("rainbow wave", "wave", "spectrum cycle", "color cycle"),
-        "pulse": ("pulse", "breathing", "breathe"),
-        "alternating": ("alternating", "color cycle", "static"),
-        "sparkle": ("random flicker", "flicker", "starry night", "static"),
-    }.get(str(effect_id).casefold(), ("static",))
+        "pulse": ("pulse", "breathing", "breathe", "spectrum cycle"),
+        "alternating": ("alternating", "color cycle", "spectrum cycle", "static"),
+        "sparkle": ("random flicker", "flicker", "starry night", "serial", "static"),
+    }.get(str(effect_id).casefold(), ("rainbow wave", "spectrum cycle", "runway", "static"))
     for candidate in candidates:
         if candidate in available:
             return available[candidate]

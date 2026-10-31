@@ -14,20 +14,20 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from modules.wallpaper_engine.v1_2.installer import (
+from modules.wallpaper_engine.v1_3.installer import (
     PluginInstallError,
     installer_cache_directory,
     parse_os_release,
     privileged_install_command,
     select_release_asset,
 )
-from modules.wallpaper_engine.v1_2.library import (
+from modules.wallpaper_engine.v1_3.library import (
     is_unsafe_video_folder,
     previous_workshop_entry,
     scan_video_folder,
     scan_workshop_library,
 )
-from modules.wallpaper_engine.v1_2.plasma import (
+from modules.wallpaper_engine.v1_3.plasma import (
     DBUS_INTERFACE,
     DBUS_OBJECT,
     DISPLAY_MODES,
@@ -165,7 +165,7 @@ WallpaperWorkShopId=654321
     assert "d.screen!==1" in display_script
     assert 'd.writeConfig("DisplayMode",2)' in display_script
 
-    with patch("modules.wallpaper_engine.v1_2.plasma.qdbus_program", return_value="/usr/bin/qdbus-qt6"):
+    with patch("modules.wallpaper_engine.v1_3.plasma.qdbus_program", return_value="/usr/bin/qdbus-qt6"):
         command = playback_command("Pause")
     assert command == [
         "/usr/bin/qdbus-qt6",
@@ -212,10 +212,10 @@ WallpaperWorkShopId=654321
         package = cache / asset.name
         package.write_bytes(b"\xed\xab\xee\xdbverified official rpm fixture")
         digest = hashlib.sha256(package.read_bytes()).hexdigest()
-        with patch("modules.wallpaper_engine.v1_2.installer.shutil.which", side_effect=lambda name: f"/usr/bin/{name}"):
+        with patch("modules.wallpaper_engine.v1_3.installer.shutil.which", side_effect=lambda name: f"/usr/bin/{name}"):
             command = privileged_install_command(package, digest)
             assert command[:4] == ["/usr/bin/pkexec", "/usr/bin/dnf", "install", "-y"]
             assert command[-1] == str(package.resolve())
             assert privileged_install_command(package, "0" * 64) == []
 
-print("3.4.29.50 Wallpaper Engine playback, scaling, setup and integration regression guards passed.")
+print("3.4.29.71 Wallpaper Engine playback, scaling, setup and integration regression guards passed.")

@@ -1,0 +1,85 @@
+{
+  "name": "OHC Aqua Pulse",
+  "width": 1600,
+  "height": 720,
+  "overlay_enabled": true,
+  "elements": [
+    {
+      "id": "clock",
+      "type": "clock",
+      "x": 760,
+      "y": 105,
+      "source": "time",
+      "format": "{value}",
+      "color": "#ffffff",
+      "size": 58,
+      "bold": true,
+      "name": "DejaVu Sans"
+    },
+    {
+      "id": "cpu-temp",
+      "type": "metric",
+      "x": 285,
+      "y": 290,
+      "metric": "cpu:temp",
+      "format": "CPU  {value:.0f}°C",
+      "color": "#46f0ef",
+      "size": 38,
+      "bold": true,
+      "name": "DejaVu Sans",
+      "show_unit": true
+    },
+    {
+      "id": "gpu-temp",
+      "type": "metric",
+      "x": 285,
+      "y": 405,
+      "metric": "gpu:primary:temp",
+      "format": "GPU  {value:.0f}°C",
+      "color": "#76aaff",
+      "size": 38,
+      "bold": true,
+      "name": "DejaVu Sans",
+      "show_unit": true
+    },
+    {
+      "id": "cpu-power",
+      "type": "metric",
+      "x": 1170,
+      "y": 290,
+      "metric": "cpu:power",
+      "format": "CPU  {value:.0f} W",
+      "color": "#46f0ef",
+      "size": 32,
+      "bold": true,
+      "name": "DejaVu Sans",
+      "show_unit": true
+    },
+    {
+      "id": "gpu-power",
+      "type": "metric",
+      "x": 1170,
+      "y": 405,
+      "metric": "gpu:primary:power",
+      "format": "GPU  {value:.0f} W",
+      "color": "#76aaff",
+      "size": 32,
+      "bold": true,
+      "name": "DejaVu Sans",
+      "show_unit": true
+    },
+    {
+      "id": "ram",
+      "type": "metric",
+      "x": 760,
+      "y": 595,
+      "metric": "memory:percent",
+      "format": "MEMORY  {value:.0f}%",
+      "color": "#ffffff",
+      "size": 30,
+      "bold": true,
+      "name": "DejaVu Sans",
+      "show_unit": true
+    }
+  ]
+}

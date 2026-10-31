@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.50 INTERN
+# Open Hardware Control by Frelidon 3.4.29.158 INTERN
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -51,16 +51,20 @@ Projekt-Repository: <https://github.com/Frelidon/open-hardware-control>
 
 ## Thermalright Levita Vision Display
 
-**Das 1600×720-Display der Thermalright Levita Vision 360 ARGB Black wird unterstützt.** Das lokale Display-Studio kombiniert eigene Bilder und Videos (Ebene 1) mit einem vollständigen TRCC-Hardwaredesign oder frei verschiebbaren OHC-Live-Werten für CPU, GPU, RAM und Uhrzeit (Ebene 2). Mitgeliefert werden elf eigene OHC-Hintergründe, zwei OHC-Datenlayouts und eine 30-sekündige Animation – alle vom Projektinhaber mit OpenAI-Werkzeugen erstellt. Thermalright-/TRCC-Katalogmedien werden weder kopiert noch heruntergeladen.
+**Das 1600×720-Display der Thermalright Levita Vision 360 ARGB Black wird unterstützt.** Das lokale Display-Studio kombiniert eigene Bilder und Videos (Ebene 1) mit einem vollständigen TRCC-Hardwaredesign oder frei verschiebbaren OHC-Live-Werten für CPU, GPU, RAM, Uhrzeit und eigenen Text (Ebene 2). Mitgeliefert werden elf eigene OHC-Hintergründe, siebzehn editierbare Datenlayouts, fünf eigene Animationen sowie 44 Effektvarianten aus 20 freien Quellen und zwei originalen OHC-Designs. Thermalright-/TRCC-Katalogmedien werden weder kopiert noch heruntergeladen.
 
-Der sichere Testmodus ist standardmäßig aktiv; echte USB-Übertragung erfolgt nur über das separat installierte GPL-Backend **TRCC Linux** (9.9.12 empfohlen). Pumpe und Radiatorlüfter der Levita laufen über getrennt bestätigte Mainboard-PWM-Header (`PUMP_FAN`, `CPU_FAN`) mit sicherem 70-%-/10-s-Test; CoolerControl blockiert parallele Schreibzugriffe.
+Der sichere Testmodus ist standardmäßig aktiv; echte USB-Übertragung erfolgt nur über das separat installierte GPL-Backend **TRCC Linux** (9.10.4 empfohlen). Pumpe und Radiatorlüfter der Levita laufen über getrennt bestätigte Mainboard-PWM-Header (`PUMP_FAN`, `CPU_FAN`) mit sicherem 70-%-/10-s-Test; CoolerControl blockiert parallele Schreibzugriffe.
 
-## Neu in 3.4.29.50 INTERN
+## Neu in 3.4.29.158 INTERN
 
-- Die obere Kühlprofilwahl gilt jetzt auch für die Gehäuselüfter. **Leistung** setzt Pumpe, Radiator und alle bestätigten, aktiven System-Fan-Kanäle sofort auf echte 100 % – auch bei zuvor aktiver Kurve.
-- Jede Gehäuselüfterkarte besitzt einen bestätigungspflichtigen **0 % / 10 s**-Stopptest mit anschließender Zustandswiederherstellung zur sicheren physischen Zuordnung.
-- Fehlt wie beim Referenz-NCT6687 ein `pwmN_mode`, erklärt OHC, dass PWM/DC im BIOS festgelegt bleibt; vorhandene `pwmN_mode`-Umschaltung behält Warnung und erneuten Pflicht-Test.
-- Interne Testversion; kein öffentliches GitHub-Release.
+- OpenRGB-SDK-v6-Profilmeldungen werden als dokumentierte asynchrone
+  Benachrichtigungen verarbeitet und unterbrechen MSI-Mystic-Light-Frames nicht.
+- Der TRCC-GPU-Taktgrenzschutz wartet drei gültige 5-Sekunden-Messungen ab,
+  bevor er von der korrigierten 1-MHz-Anzeige zur Livequelle zurückschaltet.
+- Fehlende oder fehlerhafte GPU-Taktmessungen gelten nicht mehr versehentlich
+  als Beleg für eine wieder plausible Livequelle.
+- OpenRGB-Paketvalidierung, unbekannte Meldungen und Inventarwechsel bleiben
+  weiterhin streng begrenzt und fail-closed.
 
 Ältere Versionen: [Versionsverlauf](#versionsverlauf) · [docs/CHANGELOG.md](docs/CHANGELOG.md) · [docs/releases/](docs/releases/)
 
@@ -68,37 +72,37 @@ Der sichere Testmodus ist standardmäßig aktiv; echte USB-Übertragung erfolgt 
 
 ### Fedora und Nobara – RPM
 
-Lade `open-hardware-control-3.4.29.50-0.intern2.noarch.rpm` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control-3.4.29.158-0.intern2.noarch.rpm` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.50-0.intern2.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.158-0.intern2.noarch.rpm
 ```
 
 ### Debian, Ubuntu und Linux Mint – DEB
 
-Lade `open-hardware-control_3.4.29.50~intern2_all.deb` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control_3.4.29.158~intern2_all.deb` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.50~intern2_all.deb'
+sudo apt install './open-hardware-control_3.4.29.158~intern2_all.deb'
 ```
 
 ### Universelles Installationspaket – ZIP
 
-Für Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_50_INTERN.zip` herunter und führe aus:
+Für Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_158_INTERN.zip` herunter und führe aus:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_50_INTERN.zip
-cd open-hardware-control-3.4.29.50
+unzip open_hardware_control_v3_4_29_158_INTERN.zip
+cd open-hardware-control-3.4.29.158-INTERN
 chmod +x install.sh
 ./install.sh
 ```
 
 Eine vorhandene Version wird aktualisiert. Danach findest du **Open Hardware Control by Frelidon** im Anwendungsmenü oder startest im Terminal `~/.local/bin/open-hardware-control` (der alte Befehl `kraken-control` funktioniert weiterhin). Die Abhängigkeitsprüfung erkennt die gängigen Paketmanager automatisch; alle distributionsspezifischen Befehle stehen in [docs/INSTALL.md](docs/INSTALL.md).
 
-Optional und separat nach deren offiziellen Anleitungen: **OpenLinkHub** (Corsair), **TRCC Linux** (Levita-Display), **OpenRGB** (weitere RGB-Geräte), **CaptSilver Wallpaper-Engine-Plugin** (KDE). OHC liefert keine dieser Komponenten mit und verändert sie nicht.
+Optional: **LACT** (GPU-Tuning) und **OpenRGB** (RGB-Geräte) lassen sich im Assistenten oder ihrem Bereich nach Bestätigung installieren, sofern die Paketquelle unterstützt wird. **OpenLinkHub** (Corsair), **TRCC Linux** (Levita-Display) und **CaptSilver Wallpaper-Engine-Plugin** (KDE) bleiben getrennte Komponenten; OHC liefert sie nicht mit. OpenLinkHub kann im zugehörigen Bereich nach ausdrücklicher Bestätigung aktualisiert werden.
 
 ## Sicherheit
 
@@ -140,7 +144,7 @@ RGB, Bilder, GIFs, Uhr, statische und animierte Live-Hardwaredesigns, CPU-/GPU-L
 
 ### Thermalright Levita Vision
 
-Display-Studio mit zwei Ebenen (siehe oben), Import lokaler Bilder, Videos, `.zt`-Dateien und TRCC-Layoutordner, TRCC-Kategorien Gallery/Tech/HUD/Light/Nature/Aesthetic, Favoriten, eigener Designordner, Autostart beider Ebenen und Kühlung über bestätigte Mainboard-PWM-Header.
+Display-Studio mit zwei Ebenen (siehe oben), neuer prozeduraler Rauch-Editor unter Display-Effekte, Import lokaler Bilder, Videos, `.zt`-Dateien und TRCC-Layoutordner, TRCC-Kategorien Gallery/Tech/HUD/Light/Nature/Aesthetic, Favoriten, eigener Designordner, Autostart beider Ebenen und Kühlung über bestätigte Mainboard-PWM-Header.
 
 ### Mainboard- und Gehäuselüfter
 
@@ -148,7 +152,7 @@ Linux hwmon/NCT6687 (z. B. MSI X870-Familie). Jeder PWM-Kanal wird erst nach ein
 
 ### Corsair · OpenLinkHub
 
-Ausschließlich über die lokale API `http://127.0.0.1:27003`. Dokumentierte Schreibbefehle für Kühlung, RGB/LCD, Maus, Tastatur und Headset; Bedienfelder nur für erkannte Geräte. Benutzer- und Systemdienst werden getrennt erkannt, systemweite Änderungen nie automatisch durchgeführt.
+Ausschließlich über die lokale API `http://127.0.0.1:27003`. Dokumentierte Schreibbefehle für Kühlung, RGB/LCD, Maus, Tastatur und Headset; Bedienfelder nur für erkannte Geräte. Benutzer- und Systemdienst werden getrennt erkannt. Die neue Versionsprüfung aktualisiert Paketinstallationen über vorhandene Quellen oder den sicheren Benutzerdienst-Pfad einschließlich Web-UI erst nach Bestätigung.
 
 ### RGB-Studio · OpenRGB-SDK
 
@@ -156,16 +160,16 @@ OHC startet bei Bedarf einen privaten fensterlosen OpenRGB-Prozess und nutzt nur
 
 ### Wallpaper Engine for KDE
 
-Liest nur lokale Steam-Workshop-Metadaten, wählt Wallpaper über Plasmas offizielle Skript-Konfiguration und steuert die Wiedergabe über das lokale D-Bus-Objekt des separat installierten CaptSilver-Plugins. Assistent für Steam, Abonnements und Plugin; auf Fedora optional geprüfter RPM-Download mit SHA256-Vergleich und zweiter Zustimmung vor Polkit/DNF.
+Liest nur lokale Steam-Workshop-Metadaten, wählt Wallpaper über Plasmas offizielle Skript-Konfiguration und steuert die Wiedergabe über das lokale D-Bus-Objekt des separat installierten CaptSilver-Plugins. Der Assistent deckt Steam, Workshop, KDE-Hilfspakete und Plugin ab; auf Fedora bleibt der RPM-Download SHA256-geprüft und verlangt vor Polkit/DNF eine zweite Zustimmung.
 
 ## Versionsverlauf
 
-**3.4.29.50** – Echter 100-%-Leistungs-Override für aktive Gehäuselüfter; bestätigter 0-%-Stopptest; verständlicher BIOS-Hinweis, wenn der Treiber PWM/DC nicht umschaltbar meldet.
+**3.4.29.158** – OpenRGB-Profilmeldungen korrekt synchronisiert und GPU-Taktgrenzschutz stabilisiert.
 
-**3.4.29.49** – Übersicht Status & Hinweise folgt bestätigten PWM-Tests; RGB-Studio klappt Geräte/Effekte und native Kanäle in der Seite auf.
+**3.4.29.157** – Programme/Profile, vollständige GitHub-Downloads und automatische Wiederherstellung des eigenen Levita-Daemons.
 
-**3.4.29.48** – Verbindliche Ablage- und Kurz-README-Regel für alle Coding-KIs mit Wächtertest; korrigierter Release-Workflow.
+**3.4.29.156** – LED-Verlauf bedienbar, räumliche Richtung korrigiert und animierte RGB-Lüftervorschau wiederhergestellt.
 
-**3.4.29.47** – Anwendungscode nach `src/`, Installer/Versionsdateien nach `packaging/`, alle Dokumente nach `docs/`; Wurzelverzeichnis enthält nur noch README, LICENSE, CITATION und AGENTS-Wegweiser.
+**3.4.29.155** – Ubuntu-Startprofil von altem NZXT-Setup getrennt; belegtes Levita-USB stoppt eigene Wiederholungen.
 
 Alle früheren Versionen bis 2.9.x: [docs/CHANGELOG.md](docs/CHANGELOG.md) und [docs/releases/](docs/releases/).

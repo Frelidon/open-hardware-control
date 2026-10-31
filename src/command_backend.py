@@ -215,7 +215,7 @@ class Backend(QObject):
         if process is not None:
             process.deleteLater()
 
-        if command is not None:
+        if command is not None and not self._shutting_down:
             result = CommandResult(
                 args=command.args,
                 returncode=returncode,
@@ -246,8 +246,13 @@ class Backend(QObject):
         self._queue.clear()
         self._timeout_timer.stop()
         if self._process is not None:
-            self._process.kill()
-            self._process.waitForFinished(1000)
-            self._process.deleteLater()
-            self._process = None
+            # kill()/waitForFinished() may synchronously emit finished; that
+            # slot clears self._process. Keep the concrete QObject so shutdown
+            # remains race-free while the event is delivered.
+            process = self._process
+            process.kill()
+            process.waitForFinished(1000)
+            process.deleteLater()
+            if self._process is process:
+                self._process = None
         self._current = None

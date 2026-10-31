@@ -105,7 +105,7 @@ def backup_release(
         staging = Path(staging_name)
         for artifact in artifacts:
             shutil.copy2(artifact, staging / artifact.name)
-        notes = project / "docs" / f"RELEASE_NOTES_v{version}.md"
+        notes = project / "docs" / "releases" / f"RELEASE_NOTES_v{version}.md"
         if notes.is_file() and not notes.is_symlink():
             shutil.copy2(notes, staging / notes.name)
         info = (

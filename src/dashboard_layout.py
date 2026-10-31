@@ -6,8 +6,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from html import escape
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QAbstractItemView, QCheckBox, QFrame, QHBoxLayout, QLabel, QPushButton, QTreeWidget, QVBoxLayout, QWidget
 
-from ui_layout import DASHBOARD_CARD_DEFAULTS, dashboard_card_hardware_available
+from ui_layout import DASHBOARD_CARD_DEFAULTS, dashboard_card_hardware_available, sanitize_dashboard_cards
 
 
 DASHBOARD_HINT_OK = "OK"
@@ -139,8 +141,10 @@ class DashboardLayoutMixin:
             key for key, checkbox in getattr(self, "dashboard_card_checkboxes", {}).items()
             if checkbox.isChecked()
         }
+        entries = {key: (title, card) for key, title, card in getattr(self, "dashboard_card_entries", [])}
+        order = self.dashboard_card_order()
         visible = [
-            card for key, _title, card in getattr(self, "dashboard_card_entries", [])
+            entries[key][1] for key in order if key in entries
             if key in enabled_cards and dashboard_card_hardware_available(
                 key,
                 kraken_connected=bool(getattr(self, "devices_ready", False)),
@@ -149,6 +153,98 @@ class DashboardLayoutMixin:
         ]
         for index, card in enumerate(visible):
             self.dashboard_cards_layout.addWidget(card, index // columns, index % columns)
+
+    def install_dashboard_card_customization(self, page_layout, status_layout) -> None:
+        """Install the visible ordering editor while retaining the checkbox model."""
+        customize = QPushButton("Karten anpassen")
+        customize.setCheckable(True)
+        customize.setAccessibleName("Dashboard-Karten anpassen")
+        status_layout.addWidget(customize)
+        self.dashboard_card_checkboxes = {}
+        visible_cards = set(sanitize_dashboard_cards(self.settings.value("dashboard/visible_cards")))
+        self.dashboard_fields_hidden = QWidget()
+        hidden_layout = QVBoxLayout(self.dashboard_fields_hidden)
+        for key, title, _card in self.dashboard_card_entries:
+            checkbox = QCheckBox(title)
+            checkbox.setChecked(key in visible_cards)
+            checkbox.toggled.connect(lambda checked, value=key: self.set_dashboard_card_visible(value, checked))
+            self.dashboard_card_checkboxes[key] = checkbox
+            hidden_layout.addWidget(checkbox)
+        self.dashboard_fields_hidden.setVisible(False)
+
+        self.dashboard_editor_panel = QFrame()
+        self.dashboard_editor_panel.setObjectName("dashboardSection")
+        editor_layout = QVBoxLayout(self.dashboard_editor_panel)
+        editor_header = QHBoxLayout()
+        title = QLabel("Dashboard-Karten"); title.setObjectName("sectionTitle")
+        hint = QLabel("Ziehen zum Sortieren · Haken zum Ein- oder Ausblenden"); hint.setObjectName("muted")
+        editor_header.addWidget(title); editor_header.addWidget(hint, 1)
+        reset = QPushButton("Standard wiederherstellen")
+        reset.clicked.connect(self.reset_dashboard_card_editor)
+        editor_header.addWidget(reset); editor_layout.addLayout(editor_header)
+        self.dashboard_card_editor = QTreeWidget()
+        self.dashboard_card_editor.setHeaderHidden(True)
+        self.dashboard_card_editor.setRootIsDecorated(False)
+        self.dashboard_card_editor.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+        self.dashboard_card_editor.setDefaultDropAction(Qt.DropAction.MoveAction)
+        self.dashboard_card_editor.setMinimumHeight(220)
+        self.dashboard_card_editor.itemChanged.connect(self.dashboard_card_editor_changed)
+        self.dashboard_card_editor.model().rowsMoved.connect(self.dashboard_card_order_changed)
+        editor_layout.addWidget(self.dashboard_card_editor)
+        self.dashboard_editor_panel.setVisible(False)
+        customize.toggled.connect(self.dashboard_editor_panel.setVisible)
+        page_layout.addWidget(self.dashboard_editor_panel)
+        self.populate_dashboard_card_editor()
+
+    def dashboard_card_order(self) -> list[str]:
+        fallback = [key for key, _title, _card in getattr(self, "dashboard_card_entries", [])]
+        tree = getattr(self, "dashboard_card_editor", None)
+        if tree is not None and tree.topLevelItemCount():
+            order = [str(tree.topLevelItem(index).data(0, Qt.ItemDataRole.UserRole)) for index in range(tree.topLevelItemCount())]
+            if len(order) == len(fallback) and set(order) == set(fallback):
+                return order
+        saved = self.settings.value("dashboard/card_order") if hasattr(self, "settings") else None
+        if isinstance(saved, str):
+            saved = [part for part in saved.split(",") if part]
+        if isinstance(saved, (list, tuple)) and len(saved) == len(fallback) and set(map(str, saved)) == set(fallback):
+            return [str(part) for part in saved]
+        return fallback
+
+    def dashboard_card_editor_changed(self, item, _column: int = 0) -> None:
+        if getattr(self, "_dashboard_editor_syncing", False):
+            return
+        key = str(item.data(0, Qt.ItemDataRole.UserRole) or "")
+        self.set_dashboard_card_visible(key, item.checkState(0) == Qt.CheckState.Checked)
+
+    def dashboard_card_order_changed(self, *_args) -> None:
+        order = self.dashboard_card_order()
+        self.settings.setValue("dashboard/card_order", order)
+        self.settings.sync()
+        self.adapt_dashboard_layout()
+
+    def reset_dashboard_card_editor(self) -> None:
+        self.settings.remove("dashboard/card_order")
+        # A live reordered tree must not supersede the just-reset setting.
+        self.dashboard_card_editor.clear()
+        self.reset_dashboard_card_visibility()
+
+    def populate_dashboard_card_editor(self) -> None:
+        tree = getattr(self, "dashboard_card_editor", None)
+        if tree is None:
+            return
+        entries = {key: title for key, title, _card in self.dashboard_card_entries}
+        order = self.dashboard_card_order()
+        self._dashboard_editor_syncing = True
+        tree.clear()
+        from PySide6.QtWidgets import QTreeWidgetItem
+        for key in order:
+            item = QTreeWidgetItem([entries[key]])
+            item.setData(0, Qt.ItemDataRole.UserRole, key)
+            item.setFlags((item.flags() | Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsDragEnabled) & ~Qt.ItemFlag.ItemIsDropEnabled)
+            checkbox = self.dashboard_card_checkboxes[key]
+            item.setCheckState(0, Qt.CheckState.Checked if checkbox.isChecked() else Qt.CheckState.Unchecked)
+            tree.addTopLevelItem(item)
+        self._dashboard_editor_syncing = False
 
     def set_dashboard_card_visible(self, key: str, visible: bool) -> None:
         checkbox = getattr(self, "dashboard_card_checkboxes", {}).get(key)
@@ -186,6 +282,8 @@ class DashboardLayoutMixin:
                 checkbox.setChecked(True)
                 checkbox.blockSignals(False)
         self.apply_dashboard_card_visibility(save=True)
+        if hasattr(self, "dashboard_card_editor"):
+            self.populate_dashboard_card_editor()
 
     def update_dashboard_status_hints(self) -> None:
         widgets = getattr(self, "dashboard_hint_widgets", None)

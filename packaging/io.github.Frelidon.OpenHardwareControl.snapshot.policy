@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+  "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <vendor>Open Hardware Control</vendor>
+  <vendor_url>https://github.com/Frelidon/open-hardware-control</vendor_url>
+  <action id="io.github.Frelidon.OpenHardwareControl.snapshot-control">
+    <description>Control snapshot timers and bounded CPU/I/O limits</description>
+    <description xml:lang="de">Snapshot-Zeitpläne und begrenzte CPU-/I/O-Last steuern</description>
+    <message>Authentication is required to change snapshot scheduling</message>
+    <message xml:lang="de">Zum Ändern der Snapshot-Zeitplanung ist eine Authentifizierung erforderlich</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/libexec/open-hardware-control-snapshot-helper</annotate>
+    <annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
+  </action>
+  <action id="io.github.Frelidon.OpenHardwareControl.snapshot-admin">
+    <description>Create, delete or configure system snapshots</description>
+    <description xml:lang="de">System-Snapshots erstellen, löschen oder einrichten</description>
+    <message>Authentication is required for this manual snapshot action</message>
+    <message xml:lang="de">Für diese manuelle Snapshot-Aktion ist eine Administratorfreigabe erforderlich</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/libexec/open-hardware-control-snapshot-admin-helper</annotate>
+    <annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
+  </action>
+</policyconfig>

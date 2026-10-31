@@ -22,7 +22,7 @@ import struct
 import subprocess
 from typing import Callable, Iterable, Sequence
 
-from modules.lcd_levita.v1_4.panel_geometry import DEFAULT_INNER_CORNER_RADIUS
+from modules.lcd_levita.v1_7.panel_geometry import DEFAULT_INNER_CORNER_RADIUS
 
 
 THERMALRIGHT_DEVICE_KEY = "87ad:70db"
@@ -112,16 +112,34 @@ class OverlaySpec:
     visible: bool = True
     show_unit: bool = True
     bold: bool = True
+    italic: bool = False
+    text: str = ""
+    font: str = ""
 
     def bounded(self, *, safe_right_x: int = LEVITA_CUTOUT_X) -> "OverlaySpec":
         right = max(1, min(LEVITA_WIDTH, int(safe_right_x)))
+        ident = self.ident if re.fullmatch(r"ohc-[a-z0-9-]{1,48}", self.ident) else "ohc-text"
+        kind = self.kind if self.kind in {"text", "metric", "clock"} else "text"
+        clean_text = str(self.text).replace("\n", " ").replace("\r", " ").strip()[:160]
+        clean_font = str(self.font).replace("\n", " ").replace("\r", " ").strip()[:96]
         return replace(
             self,
+            ident=ident,
+            label=str(self.label).replace("\n", " ").replace("\r", " ").strip()[:80] or "Text",
+            kind=kind,
             x=max(0, min(right - 1, int(self.x))),
             y=max(0, min(LEVITA_HEIGHT - 1, int(self.y))),
             size=max(12, min(160, int(self.size))),
             color=normalize_color(self.color),
+            text=clean_text,
+            font=clean_font,
         )
+
+    @property
+    def display_text(self) -> str:
+        if self.kind == "text":
+            return self.text or self.sample or self.label
+        return self.sample or self.label
 
 
 DEFAULT_OVERLAYS: tuple[OverlaySpec, ...] = (
@@ -212,6 +230,38 @@ def default_trcc_design_directory(home: Path | None = None) -> Path | None:
         ):
             return candidate.resolve()
     return None
+
+
+def default_trcc_media_directories(home: Path | None = None) -> tuple[Path, ...]:
+    """Return validated Levita media roots maintained by TRCC Linux.
+
+    Stock layouts live below ``~/.trcc/data/theme1600720l`` while downloaded
+    catalog backgrounds live below ``~/.trcc/data/web/1600720l``. User-owned
+    imports use TRCC's separate ``~/.trcc-user`` tree. OHC reads these roots,
+    never follows a symlink and never modifies their contents.
+    """
+
+    base = (home or Path.home()).expanduser()
+    candidates = (
+        base / ".trcc" / "data" / "web" / "1600720l",
+        base / ".trcc-user" / "data" / "web" / "1600720",
+    )
+    roots: list[Path] = []
+    for candidate in candidates:
+        if candidate.is_symlink() or not candidate.is_dir():
+            continue
+        try:
+            has_media = any(
+                child.is_file()
+                and not child.is_symlink()
+                and child.suffix.casefold() in SUPPORTED_MEDIA_SUFFIXES
+                for child in candidate.iterdir()
+            )
+        except OSError:
+            continue
+        if has_media:
+            roots.append(candidate.resolve())
+    return tuple(roots)
 
 
 def _png_dimensions(path: Path) -> tuple[int, int] | None:
@@ -445,6 +495,23 @@ def deduplicate_media_entries(
     return retained, replacements
 
 
+def collapse_catalog_previews(entries: Iterable[MediaEntry]) -> list[MediaEntry]:
+    """Hide a catalog PNG when a same-stem video is the actual design.
+
+    TRCC stores preview PNGs beside downloaded MP4s. The preview remains on
+    disk for the card artwork, but must not appear as a second static design.
+    """
+
+    items = list(entries)
+    video_stems = {
+        entry.path.stem.casefold() for entry in items if entry.kind == "video"
+    }
+    return [
+        entry for entry in items
+        if not (entry.kind == "image" and entry.path.stem.casefold() in video_stems)
+    ]
+
+
 def bounded_notch_width(width: int) -> int:
     return max(LEVITA_CUTOUT_WIDTH, min(MAX_NOTCH_MASK_WIDTH, int(width)))
 
@@ -463,7 +530,7 @@ def create_black_notch_mask(
     """Create the right bar with separate inner image and outer panel radii."""
     from PIL import Image
 
-    from modules.lcd_levita.v1_4.panel_geometry import (
+    from modules.lcd_levita.v1_7.panel_geometry import (
         bounded_inner_corner_radius,
         fill_outside_levita_panel,
         fill_right_notch_mask,
@@ -683,7 +750,7 @@ def prepare_shifted_media(
                 if intensity > 100:
                     canvas = ImageEnhance.Color(canvas).enhance(1.0 + (intensity - 100) / 125.0)
                     canvas = ImageEnhance.Contrast(canvas).enhance(1.0 + (intensity - 100) / 250.0)
-                from modules.lcd_levita.v1_4.panel_geometry import fill_outside_levita_panel
+                from modules.lcd_levita.v1_7.panel_geometry import fill_outside_levita_panel
 
                 fill_outside_levita_panel(canvas, (0, 0, 0), radius=DEFAULT_NOTCH_CORNER_RADIUS)
                 canvas.save(target, format="PNG")
@@ -736,7 +803,7 @@ def overlay_intersects_cutout(
 ) -> bool:
     """Conservatively test a centered text element against the right cutout."""
     item = spec.bounded(safe_right_x=safe_right_x)
-    width = estimated_width if estimated_width is not None else max(item.size * 2, len(item.sample) * item.size // 2)
+    width = estimated_width if estimated_width is not None else max(item.size * 2, len(item.display_text) * item.size // 2)
     return item.x + max(1, int(width)) // 2 >= safe_right_x
 
 
@@ -748,7 +815,7 @@ def clamp_overlay_outside_cutout(
 ) -> OverlaySpec:
     right = max(1, min(LEVITA_WIDTH, int(safe_right_x)))
     item = spec.bounded(safe_right_x=right)
-    width = estimated_width if estimated_width is not None else max(item.size * 2, len(item.sample) * item.size // 2)
+    width = estimated_width if estimated_width is not None else max(item.size * 2, len(item.display_text) * item.size // 2)
     half = max(1, int(width)) // 2
     return replace(item, x=min(item.x, max(0, right - half - 8)))
 
@@ -772,7 +839,8 @@ class ThermalrightCli:
     def _command(self, *parts: object) -> tuple[str, ...]:
         if not self.executable:
             raise RuntimeError("TRCC-Linux-Backend ist nicht installiert.")
-        return (self.executable, *(str(part) for part in parts))
+        from modules.trcc_backend.v1_0.runtime import command_prefix
+        return (*command_prefix(self.executable), *(str(part) for part in parts))
 
     def run(self, *parts: object, timeout: float = 20.0) -> CommandResult:
         args = self._command(*parts)
@@ -792,6 +860,20 @@ class ThermalrightCli:
 
     def detect_args(self) -> tuple[str, ...]:
         return self._command("detect")
+
+    def daemon_kill_args(self) -> tuple[str, ...]:
+        """Ask TRCC to close its daemon and release the USB device cleanly."""
+        return self._command("kill")
+
+    def status_args(self) -> tuple[str, ...]:
+        """Read attached LCD state and the persisted active theme as JSON."""
+        return self._command("status", "--json")
+
+
+    def video_status_args(self) -> tuple[str, ...]:
+        """Read the daemon's actual in-memory video playback state."""
+        return self._command("display", "video-status", THERMALRIGHT_DEVICE_KEY)
+
 
     def disconnect_args(self) -> tuple[str, ...]:
         return self._command("device", "disconnect", THERMALRIGHT_DEVICE_KEY)
@@ -901,17 +983,21 @@ class ThermalrightCli:
             args.append("--show-unit" if item.show_unit else "--hide-unit")
         elif item.kind == "clock":
             args.extend(("--source", item.source or "time"))
+        elif item.kind == "text":
+            args.extend(("--text", item.text or item.label))
         else:
             raise ValueError(f"Nicht unterstützter Ebenentyp: {item.kind}")
         if item.bold:
             args.append("--bold")
+        if item.italic:
+            args.append("--italic")
         return self._command(*args)
 
     def overlay_enabled_args(self, enabled: bool) -> tuple[str, ...]:
         return self._command("display", "overlay", THERMALRIGHT_DEVICE_KEY, "on" if enabled else "off")
 
     def play_args(self, interval: float = 0.15) -> tuple[str, ...]:
-        refresh = max(0.10, min(5.0, float(interval)))
+        refresh = max(1.0 / 60.0, min(5.0, float(interval)))
         return self._command("display", "play", "--interval", f"{refresh:g}", THERMALRIGHT_DEVICE_KEY)
 
     def stop_video_args(self) -> tuple[str, ...]:
@@ -943,6 +1029,117 @@ class ThermalrightCli:
             stderr=completed.stderr or "",
             returncode=int(completed.returncode),
         )
+
+
+def stage_custom_overlay_theme(
+    media: Path,
+    cache_root: Path,
+    overlays: Iterable[OverlaySpec],
+    *,
+    mask_path: Path | None = None,
+    safe_right_x: int = LEVITA_CUTOUT_X,
+) -> Path:
+    """Stage OHC-owned text/metric blocks as a native local TRCC theme.
+
+    TRCC's public CLI can add free text, but its current ``overlay-add``
+    command does not expose the element font family.  A validated ``trcc.json``
+    does.  Staging the selected background with that JSON therefore keeps font
+    selection functional without patching the separately installed backend.
+    """
+
+    source = media.expanduser().resolve()
+    if not media_is_supported(source):
+        raise ValueError(f"Nicht unterstütztes Hintergrundmedium: {source}")
+    right = max(1, min(LEVITA_WIDTH, int(safe_right_x)))
+    items = [item.bounded(safe_right_x=right) for item in overlays if item.visible]
+    elements: list[dict[str, object]] = []
+    for item in items:
+        element: dict[str, object] = {
+            "id": item.ident,
+            "type": item.kind,
+            "x": item.x,
+            "y": item.y,
+            "color": item.color,
+            "size": item.size,
+            "bold": item.bold,
+            "italic": item.italic,
+        }
+        if item.font:
+            element["name"] = item.font
+        if item.kind == "text":
+            element["text"] = item.text or item.label
+        elif item.kind == "metric":
+            element.update(metric=item.metric, format=item.format or "{value}", show_unit=item.show_unit)
+        else:
+            element.update(source=item.source or "time", format=item.format or "{value}")
+        elements.append(element)
+
+    mask = mask_path.expanduser().resolve() if mask_path is not None else None
+    if mask is not None and (not mask.is_file() or mask.suffix.casefold() != ".png"):
+        raise ValueError(f"Keine unterstützte Levita-Maske: {mask}")
+
+    stat = source.stat()
+    mask_marker = "none"
+    if mask is not None:
+        mask_stat = mask.stat()
+        mask_marker = f"{mask}:{mask_stat.st_size}:{mask_stat.st_mtime_ns}"
+    marker = json.dumps(elements, ensure_ascii=False, sort_keys=True)
+    fingerprint = hashlib.sha256(
+        f"{source}:{stat.st_size}:{stat.st_mtime_ns}:{mask_marker}:{right}:{marker}".encode("utf-8")
+    ).hexdigest()[:24]
+    target = cache_root.expanduser().resolve() / f"custom-{fingerprint}"
+    target.mkdir(parents=True, exist_ok=True)
+
+    background_image: Path | None = None
+    background_video: Path | None = None
+    preview_image: Path | None = None
+    if source.is_file():
+        if source.suffix.casefold() in SUPPORTED_IMAGE_SUFFIXES:
+            background_image = source
+            preview_image = source
+        else:
+            background_video = source
+    else:
+        background_image = next((
+            source / name for name in ("00.png", "Theme.png") if (source / name).is_file()
+        ), None)
+        preview_image = source / "Theme.png" if (source / "Theme.png").is_file() else background_image
+        background_video = next((
+            source / name for name in ("Theme.zt", "Theme.mp4", "Theme.mov", "Theme.webm", "Theme.mkv", "Theme.avi")
+            if (source / name).is_file()
+        ), None)
+
+    def link(asset: Path | None, name: str) -> None:
+        if asset is None:
+            return
+        destination = target / name
+        if not destination.exists() and not destination.is_symlink():
+            destination.symlink_to(asset)
+
+    if background_video is not None:
+        link(background_video, f"Theme{background_video.suffix.casefold()}")
+    if background_image is not None:
+        link(background_image, "00.png")
+    if preview_image is not None:
+        link(preview_image, "Theme.png")
+    if mask is not None:
+        link(mask, "01.png")
+    if background_image is None and background_video is None:
+        raise ValueError("Das ausgewählte Theme enthält keinen nutzbaren Hintergrund")
+
+    config = {
+        "name": "OHC eigene Einblendungen",
+        "width": LEVITA_WIDTH,
+        "height": LEVITA_HEIGHT,
+        "overlay_enabled": bool(elements),
+        "elements": elements,
+    }
+    if mask is not None:
+        config.update(mask_position=[LEVITA_WIDTH // 2, LEVITA_HEIGHT // 2], mask_visible=True)
+    config_path = target / "trcc.json"
+    if not config_path.is_file():
+        config_path.write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return target
 
 
 def build_apply_sequence(

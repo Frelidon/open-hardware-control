@@ -29,17 +29,20 @@ from thermalright_display import (
     bounded_layer_intensity,
     build_apply_sequence,
     clamp_overlay_outside_cutout,
+    collapse_catalog_previews,
     create_hardware_design_preview,
     create_layered_mask,
     create_black_notch_mask,
     deduplicate_media_entries,
     default_trcc_design_directory,
+    default_trcc_media_directories,
     media_category_key,
     media_catalog_sort_key,
     notch_safe_right_x,
     parse_detect_output,
     prepare_shifted_media,
     scan_media_directory,
+    stage_custom_overlay_theme,
     trcc_theme_is_supported,
 )
 
@@ -56,6 +59,51 @@ def test_overlay_update_uses_daemon_safe_bounded_command() -> None:
     args = cli.overlay_update_format_args("ohc-layer2-07", "GPU 1 MHz", show_unit=True)
     assert args[1:5] == ("display", "overlay-update", "87ad:70db", "ohc-layer2-07")
     assert args[-1] == "--show-unit"
+
+
+def test_daemon_shutdown_command_is_shell_free() -> None:
+    assert ThermalrightCli("/usr/bin/trcc").daemon_kill_args() == (
+        "/usr/bin/trcc", "kill",
+    )
+
+
+def test_custom_text_overlay_uses_bounded_shell_free_arguments() -> None:
+    cli = ThermalrightCli("/usr/bin/trcc")
+    spec = OverlaySpec(
+        "ohc-text-01", "Eigener Text 1", "text", text="Hallo Rechner",
+        sample="Hallo Rechner", x=800, y=220, size=54, italic=True,
+    )
+
+    args = cli.overlay_add_args(spec)
+
+    assert args[:5] == ("/usr/bin/trcc", "display", "overlay-add", "87ad:70db", "text")
+    assert args[args.index("--text") + 1] == "Hallo Rechner"
+    assert "--italic" in args
+
+
+def test_custom_overlay_theme_persists_local_font_without_patching_trcc(tmp_path: Path) -> None:
+    from PIL import Image
+
+    background = tmp_path / "background.png"
+    Image.new("RGB", (1600, 720), "#020817").save(background)
+    mask = tmp_path / "mask.png"
+    Image.new("RGBA", (1600, 720), (0, 0, 0, 0)).save(mask)
+    text = OverlaySpec(
+        "ohc-text-01", "Eigener Text 1", "text", text="Mein Rechner",
+        sample="Mein Rechner", font="Noto Sans", x=700, y=180, size=52,
+    )
+
+    staged = stage_custom_overlay_theme(
+        background, tmp_path / "cache", (*DEFAULT_OVERLAYS, text), mask_path=mask,
+    )
+    payload = json.loads((staged / "trcc.json").read_text(encoding="utf-8"))
+    custom = next(item for item in payload["elements"] if item["id"] == "ohc-text-01")
+
+    assert custom["text"] == "Mein Rechner"
+    assert custom["name"] == "Noto Sans"
+    assert (staged / "00.png").resolve() == background.resolve()
+    assert (staged / "01.png").resolve() == mask.resolve()
+    assert trcc_theme_is_supported(staged)
 
 
 def test_levita_geometry_keeps_exact_right_cutout() -> None:
@@ -114,6 +162,39 @@ def test_default_trcc_designs_use_only_verified_levita_landscape_geometry(tmp_pa
     (theme / "00.png").write_bytes(b"png")
     assert default_trcc_design_directory(tmp_path) == expected.resolve()
 
+
+def test_default_trcc_media_roots_include_catalog_and_user_designs(tmp_path: Path) -> None:
+    catalog = tmp_path / ".trcc" / "data" / "web" / "1600720l"
+    catalog.mkdir(parents=True)
+    (catalog / "a001.mp4").write_bytes(b"video")
+    own = tmp_path / ".trcc-user" / "data" / "web" / "1600720"
+    own.mkdir(parents=True)
+    (own / "own.png").write_bytes(b"image")
+
+    assert default_trcc_media_directories(tmp_path) == (
+        catalog.resolve(), own.resolve(),
+    )
+
+    external = tmp_path / "external.mp4"
+    external.write_bytes(b"outside")
+    (catalog / "linked.mp4").symlink_to(external)
+    assert default_trcc_media_directories(tmp_path) == (
+        catalog.resolve(), own.resolve(),
+    )
+
+
+def test_trcc_catalog_preview_is_not_a_duplicate_static_design(tmp_path: Path) -> None:
+    video = tmp_path / "a001.mp4"
+    preview = tmp_path / "a001.png"
+    other = tmp_path / "own.png"
+    for path in (video, preview, other):
+        path.write_bytes(b"media")
+    entries = [
+        MediaEntry(preview, "TRCC-Katalog / a001", "image"),
+        MediaEntry(video, "TRCC-Katalog / a001", "video"),
+        MediaEntry(other, "Eigene Datei / own", "image"),
+    ]
+    assert collapse_catalog_previews(entries) == [entries[1], entries[2]]
 
 def test_theme_discovery_rejects_symlinked_config_and_artwork(tmp_path: Path) -> None:
     from PIL import Image
@@ -215,7 +296,7 @@ def test_overlay_is_clamped_outside_physical_cutout() -> None:
 
 def test_default_notch_mask_matches_the_rounded_80_px_levita_edge(tmp_path: Path) -> None:
     from PIL import Image
-    from modules.lcd_levita.v1_4.panel_geometry import DEFAULT_INNER_CORNER_RADIUS
+    from modules.lcd_levita.v1_7.panel_geometry import DEFAULT_INNER_CORNER_RADIUS
 
     mask = create_black_notch_mask(tmp_path, DEFAULT_NOTCH_MASK_WIDTH)
     with Image.open(mask) as image:
@@ -255,7 +336,7 @@ def test_right_image_corner_radii_can_be_independent(tmp_path: Path) -> None:
 def test_prepared_image_keeps_a_straight_inner_notch_and_rounded_outer_corners(tmp_path: Path) -> None:
     from PIL import Image
 
-    from modules.lcd_levita.v1_4.panel_geometry import pixel_is_outside_levita_panel
+    from modules.lcd_levita.v1_7.panel_geometry import pixel_is_outside_levita_panel
 
     source = tmp_path / "panel.png"
     Image.new("RGB", (1600, 720), (12, 80, 160)).save(source)

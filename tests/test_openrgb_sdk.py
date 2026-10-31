@@ -27,10 +27,49 @@ from openrgb_sdk import (
     color_payload,
     normalize_colors,
     parse_controller_data,
+    process_worker_frame,
     receive_packet,
     validate_loopback,
     write_device_colors,
 )
+
+
+def test_stale_zone_request_cannot_reenable_packet_path():
+    class Session:
+        def write_frame(self, device, count, colors, **kwargs):
+            assert "zone_updates" not in kwargs
+            return {"ok": True, "device": device, "led_count": count,
+                    "prepared": False, "write_path": "device", "protocol": 5}
+
+    response = process_worker_frame(Session(), {"id": 1, "devices": [
+        {"key": "gpu", "device": 3, "led_count": 2,
+         "colors": ["112233", "445566"], "zone_updates": True}
+    ]})
+    assert response["ok"] is True
+    assert response["devices"][0]["write_path"] == "device"
+
+
+def test_bad_render_plan_is_contained_to_one_device_and_worker_frame_continues():
+    calls = []
+
+    class Session:
+        def write_frame(self, device, count, colors, **kwargs):
+            calls.append((device, count, colors, kwargs))
+            return {"ok": True, "device": device, "led_count": count,
+                    "prepared": False, "write_path": "device", "protocol": 5}
+
+    response = process_worker_frame(Session(), {"id": 7, "devices": [
+        {"key": "broken-render", "device": 1, "led_count": 2,
+         "zone_sizes": [2], "render_plan": {"schema": 999}},
+        {"key": "healthy-device", "device": 2, "led_count": 2,
+         "colors": ["112233", "445566"]},
+    ]})
+    assert response["ok"] is False
+    assert response["devices"][0]["ok"] is False
+    assert response["devices"][1]["ok"] is True
+    assert calls == [(2, 2, ["112233", "445566"], {
+        "zone_sizes": None, "force_prepare": False,
+    })]
 
 
 def sdk_string(value: str) -> bytes:
@@ -40,7 +79,9 @@ def sdk_string(value: str) -> bytes:
 
 def sdk_mode(value: str, protocol: int) -> bytes:
     data = bytearray(sdk_string(value))
-    data += struct.pack("<iIII", 0, 1, 0, 0)
+    if protocol < 6:
+        data += struct.pack("<i", 0)
+    data += struct.pack("<III", 1, 0, 0)
     if protocol >= 3:
         data += struct.pack("<II", 0, 100)
     data += struct.pack("<III", 0, 4096, 0)
@@ -65,6 +106,9 @@ def sdk_zone(
         data += struct.pack("<H", 0)
     if protocol >= 5:
         data += struct.pack("<I", 0)
+    if protocol >= 6:
+        data += struct.pack("<iH", -1, 0)
+        data += sdk_string(value + " display")
     return bytes(data)
 
 
@@ -94,7 +138,8 @@ def controller_payload(
     data += struct.pack("<H", len(colors))
     for index in range(len(colors)):
         data += sdk_string(f"LED {index + 1}")
-        data += struct.pack("<I", index)
+        if protocol < 6:
+            data += struct.pack("<I", index)
     data += struct.pack("<H", len(colors))
     for color in colors:
         data += struct.pack(
@@ -105,6 +150,9 @@ def controller_payload(
         )
     if protocol >= 5:
         data += struct.pack("<HI", 0, 0)
+    if protocol >= 6:
+        data += sdk_string("Controller display")
+        data += struct.pack("<I", 3) + b"{}\0"
     data[0:4] = struct.pack("<I", len(data))
     return bytes(data)
 
@@ -256,6 +304,7 @@ class OpenRGBSDKTests(unittest.TestCase):
         *,
         expect_writes: bool = True,
         set_custom_mode: bool = True,
+        max_protocol: int = 5,
     ):
         received = []
         errors = []
@@ -274,40 +323,51 @@ class OpenRGBSDKTests(unittest.TestCase):
                         connection.sendall(SDKPacket(0, 40, struct.pack("<I", server_version)).pack())
                         if not expect_writes:
                             return
-                        protocol = min(server_version, 5)
+                        protocol = min(server_version, struct.unpack("<I", packet.payload)[0])
+                        wire_device = 0xF0010234 if protocol >= 6 else 6
+                        def acknowledge(request):
+                            if protocol >= 6:
+                                connection.sendall(SDKPacket(request.device_id, 10, struct.pack("<II", request.packet_type, 0)).pack())
                         active_mode = 1 if set_custom_mode else 0
                         colors = ["000000", "000000"]
 
                         packet = receive_packet(connection)
                         received.append(packet)
                         self.assertEqual(packet.packet_type, PACKET_SET_CLIENT_NAME)
+                        acknowledge(packet)
 
                         packet = receive_packet(connection)
                         received.append(packet)
                         self.assertEqual(packet.packet_type, PACKET_REQUEST_CONTROLLER_COUNT)
                         connection.sendall(
-                            SDKPacket(0, PACKET_REQUEST_CONTROLLER_COUNT, struct.pack("<I", 7)).pack()
+                            SDKPacket(0, PACKET_REQUEST_CONTROLLER_COUNT, struct.pack("<I", 7)
+                                      + (struct.pack("<7I", 10, 11, 12, 13, 14, 15, wire_device) if protocol >= 6 else b"")).pack()
                         )
+                        acknowledge(packet)
 
                         packet = receive_packet(connection)
                         received.append(packet)
                         self.assertEqual(packet.packet_type, PACKET_REQUEST_CONTROLLER_DATA)
+                        self.assertEqual(packet.device_id, wire_device)
                         connection.sendall(
-                            SDKPacket(6, PACKET_REQUEST_CONTROLLER_DATA, controller_payload(protocol, active_mode, colors)).pack()
+                            SDKPacket(wire_device, PACKET_REQUEST_CONTROLLER_DATA, controller_payload(protocol, active_mode, colors)).pack()
                         )
+                        acknowledge(packet)
 
                         if set_custom_mode:
                             packet = receive_packet(connection)
                             received.append(packet)
                             self.assertEqual(packet.packet_type, PACKET_SET_CUSTOM_MODE)
                             active_mode = 0
+                            acknowledge(packet)
 
                             packet = receive_packet(connection)
                             received.append(packet)
                             self.assertEqual(packet.packet_type, PACKET_REQUEST_CONTROLLER_DATA)
                             connection.sendall(
-                                SDKPacket(6, PACKET_REQUEST_CONTROLLER_DATA, controller_payload(protocol, active_mode, colors)).pack()
+                                SDKPacket(wire_device, PACKET_REQUEST_CONTROLLER_DATA, controller_payload(protocol, active_mode, colors)).pack()
                             )
+                            acknowledge(packet)
 
                         packet = receive_packet(connection)
                         received.append(packet)
@@ -317,6 +377,7 @@ class OpenRGBSDKTests(unittest.TestCase):
                                 "<BBBB", packet.payload[6 + offset * 4:10 + offset * 4]
                             )
                             colors[offset] = f"{red:02x}{green:02x}{blue:02x}"
+                        acknowledge(packet)
 
                         if set_custom_mode:
                             for expected_zone in range(2):
@@ -326,13 +387,15 @@ class OpenRGBSDKTests(unittest.TestCase):
                                 self.assertEqual(struct.unpack("<I", packet.payload[4:8])[0], expected_zone)
                                 red, green, blue, _padding = struct.unpack("<BBBB", packet.payload[10:14])
                                 colors[expected_zone] = f"{red:02x}{green:02x}{blue:02x}"
+                                acknowledge(packet)
 
                         packet = receive_packet(connection)
                         received.append(packet)
                         self.assertEqual(packet.packet_type, PACKET_REQUEST_CONTROLLER_DATA)
                         connection.sendall(
-                            SDKPacket(6, PACKET_REQUEST_CONTROLLER_DATA, controller_payload(protocol, active_mode, colors)).pack()
+                            SDKPacket(wire_device, PACKET_REQUEST_CONTROLLER_DATA, controller_payload(protocol, active_mode, colors)).pack()
                         )
+                        acknowledge(packet)
             except BaseException as exc:  # propagate thread failures to the test
                 errors.append(exc)
 
@@ -346,6 +409,7 @@ class OpenRGBSDKTests(unittest.TestCase):
                 2,
                 ["4c00e6", "102030"],
                 set_custom_mode=set_custom_mode,
+                max_protocol=max_protocol,
             )
         finally:
             server.join(timeout=2)
@@ -364,10 +428,25 @@ class OpenRGBSDKTests(unittest.TestCase):
         self.assertEqual(result.write_path, "device+zones")
         self.assertEqual(result.zone_count, 2)
 
+    def test_protocol_6_server_negotiates_legacy_protocol_5(self):
+        received, result = self.run_local_transaction(6)
+        self.assertEqual(struct.unpack("<I", received[0].payload)[0], 5)
+        self.assertEqual(result.protocol_version, 5)
+        self.assertEqual(result.write_path, "device+zones")
+
     def test_complete_local_transaction_remains_compatible_with_protocol_4(self):
         received, result = self.run_local_transaction(4)
         self.assertEqual(received[-1].packet_type, PACKET_REQUEST_CONTROLLER_DATA)
         self.assertEqual(result.protocol_version, 4)
+
+    def test_explicit_protocol_6_opt_in_maps_uuid_and_confirms_write_acks(self):
+        received, result = self.run_local_transaction(6, max_protocol=6)
+        self.assertEqual(struct.unpack("<I", received[0].payload)[0], 6)
+        self.assertEqual(result.protocol_version, 6)
+        self.assertEqual(result.device_id, 6)  # OHC still reports its inventory index
+        self.assertEqual(result.write_path, "device+zones")
+        self.assertTrue(all(packet.device_id == 0xF0010234 for packet in received
+                            if packet.packet_type in {1, 1100, 1050, 1051}))
 
     def test_followup_frame_updates_whole_device_without_repeating_zone_fallback(self):
         received, result = self.run_local_transaction(5, set_custom_mode=False)
@@ -426,7 +505,8 @@ class OpenRGBSDKTests(unittest.TestCase):
                         connection.sendall(
                             SDKPacket(6, PACKET_REQUEST_CONTROLLER_DATA, controller_payload(5, 0, colors)).pack()
                         )
-                        received.append(receive_packet(connection))  # second frame only
+                        received.append(receive_packet(connection))  # second frame, device path
+                        received.append(receive_packet(connection))  # third frame, device path
             except BaseException as exc:
                 errors.append(exc)
 
@@ -436,6 +516,7 @@ class OpenRGBSDKTests(unittest.TestCase):
         try:
             first = session.write_frame(6, 2, ["102030", "405060"])
             second = session.write_frame(6, 2, ["a0b0c0", "d0e0f0"])
+            third = session.write_frame(6, 2, ["010203", "040506"])
         finally:
             session.close()
             server.join(timeout=2)
@@ -444,9 +525,11 @@ class OpenRGBSDKTests(unittest.TestCase):
             raise errors[0]
         self.assertTrue(first["prepared"])
         self.assertFalse(second["prepared"])
+        self.assertEqual(second["write_path"], "device")
+        self.assertEqual(third["write_path"], "device")
         self.assertEqual(
             [packet.packet_type for packet in received],
-            [40, 50, 0, 1, 1100, 1, 1050, 1051, 1051, 1, 1050],
+            [40, 50, 0, 1, 1100, 1, 1050, 1051, 1051, 1, 1050, 1050],
         )
 
 

@@ -36,18 +36,21 @@ class RGBEffectTests(unittest.TestCase):
 
     def test_builtin_designs_reference_known_effects(self):
         known = {effect.effect_id for effect in EFFECTS}
-        self.assertGreaterEqual(len(BUILTIN_DESIGNS), 18)
+        self.assertGreaterEqual(len(BUILTIN_DESIGNS), 30)
         self.assertEqual(len(BUILTIN_DESIGN_CATEGORIES), len(BUILTIN_DESIGNS))
         self.assertGreaterEqual(len(set(BUILTIN_DESIGN_CATEGORIES)), 5)
         self.assertTrue(all(config.effect_id in known for _title, config in BUILTIN_DESIGNS))
         self.assertEqual(BUILTIN_DESIGNS[0][0], "Feste Farbe")
         self.assertEqual(BUILTIN_DESIGNS[0][1].effect_id, "static")
+        self.assertEqual(BUILTIN_DESIGN_CATEGORIES.count("Räumlich"), 6)
+        self.assertTrue({"converge", "crossflow", "depthwave"} <= known)
 
     def test_modes_expose_only_meaningful_color_fields(self):
         self.assertEqual(effect_color_count("rainbow"), 0)
         self.assertEqual(effect_color_count("static"), 1)
         self.assertEqual(effect_color_count("breathing"), 1)
-        for effect_id in ("lightning", "spinner", "comet", "wave", "pulse", "alternating", "sparkle"):
+        for effect_id in ("lightning", "spinner", "comet", "wave", "pulse", "alternating", "sparkle",
+                          "converge", "crossflow", "depthwave"):
             self.assertEqual(effect_color_count(effect_id), 2, effect_id)
 
 

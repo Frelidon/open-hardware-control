@@ -12,6 +12,7 @@ backends never write to the same controller at the same time.
 from __future__ import annotations
 
 import json
+from importlib import metadata
 import math
 import os
 import platform
@@ -38,7 +39,7 @@ except ImportError:  # handled in the GUI
     ImageFont = None
 
 from PySide6 import __version__ as PYSIDE_VERSION
-from PySide6.QtCore import QEvent, QMimeData, QObject, QPoint, QPointF, QProcess, QProcessEnvironment, QRectF, QSettings, QSize, Qt, QTimer, Signal, QStandardPaths, QUrl, qVersion
+from PySide6.QtCore import QEvent, QMimeData, QObject, QPoint, QPointF, QProcess, QProcessEnvironment, QRect, QRectF, QSettings, QSize, Qt, QTimer, Signal, QStandardPaths, QUrl, qVersion
 from PySide6.QtGui import QAction, QBrush, QColor, QCloseEvent, QDesktopServices, QDrag, QFont, QIcon, QImage, QImageReader, QKeyEvent, QKeySequence, QLinearGradient, QMouseEvent, QMovie, QPainter, QPainterPath, QPalette, QPen, QPixmap, QRadialGradient
 from PySide6.QtWidgets import (
     QApplication,
@@ -54,6 +55,7 @@ from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
     QGroupBox,
+    QHeaderView,
     QInputDialog,
     QHBoxLayout,
     QLabel,
@@ -95,28 +97,105 @@ from kraken_lcd_designs import (
 )
 from kraken_sensors import SystemMetricSampler, read_amd_cpu_temperature, read_amd_gpu_temperature
 from hardware_diagnostics import validate_metric_snapshot
-from log_view_support import LogViewActionsMixin
+from log_view_support import LogViewActionsMixin, build_log_category_tabs
 from nzxt_backend import KRAKEN_DEVICES, SupportLevel, detected_profile, nzxt_liquidctl_device_present
 from openlinkhub_mouse_visuals import mouse_schema, visual_button_rows
 from desktop_assets import CURSOR_THEMES, ICON_THEMES
 from desktop_designs import STYLE_TITLES, design_plan, desktop_status, recover_pending_transaction
 from branding import application_icon, branding_icon_path, create_sidebar_branding, system_tray_icon
 from dashboard_layout import DASHBOARD_HINT_KEYS, DashboardLayoutMixin
-from modules.rgb_studio.v1_1 import (
+from modules.rgb_studio.v1_15.argb_controls import build_slot_led_button, build_zone_test_controls
+from modules.rgb_studio.v1_15.argb_store import save_controller_diagnostics
+from modules.rgb_studio.v1_15.argb_diagnostics import log_effect_plan
+from modules.rgb_studio.v1_15.openrgb_profiles import (
+    import_openrgb_profile,
+    list_openrgb_profiles,
+)
+from modules.rgb_studio.v1_15.studio_panels import build_transfer_status
+from modules.pc_case_profiles.v1_5.workspace import build_case_workspace
+from modules.pc_case_profiles.v1_5.case_page import build_case_page, build_case_preview, refresh_case_views, cooling_slots, build_slot_pwm_button, open_spatial_editor
+from modules.pc_case_profiles.v1_5.diagram import CoolingLayoutDiagram
+from modules.pc_case_profiles.v1_5.case_geometry import arrange_case_slots
+from modules.pc_case_profiles.v1_5.channel_labels import channel_caption, channel_details
+from modules.pc_case_profiles.v1_5.view_state import resize_cooling_slot
+from modules.rgb_studio.v1_15.selection import build_selection_mode, choose_device, refresh_selection, set_individual, configure_selection_row, selection_item_changed, writable_ids
+from modules.rgb_studio.v1_15 import (
+    GpuLightingMixin, gpu_mode_for_effect, normalize_gpu_routes,
     ENE_DRAM_POST_START_RETRY_DELAYS_MS,
     EneDramStartRecoveryMixin,
     RGBDesignGallery,
+    build_category_selector,
     RgbStudioExpandMixin,
     build_native_hardware_channel_panel,
+    startup_profile_caption,
+    startup_status_summary,
 )
-from modules.wallpaper_engine.v1_2 import WallpaperEnginePage
-from modules.window_placement.v1_0 import (
+from modules.application_activation.v1_0 import (
+    ApplicationActivationServer,
+    request_existing_instance,
+    suppress_autostart_startup_feedback,
+)
+from modules.display_effects.v1_11 import DisplayEffectsPage
+from modules.display_settings.v1_0 import build_display_settings
+from modules.section_tabs.v1_0 import SectionTabsController
+from modules.openlinkhub_update.v1_0.controller import OpenLinkHubUpdateMixin
+from modules.lcd_media_manager.v1_0 import (
+    DesignLibraryDialog,
+    friendly_media_name,
+    library_media_items,
+    load_library_state,
+    save_library_state,
+)
+from modules.responsive_startup.v1_0 import ResponsiveStartupMixin
+from modules.ui_themes.v1_0 import UiThemeMixin
+from modules.ui_performance.v1_1 import build_performance_settings, install_ui_performance
+from modules.hardware_backends.v1_0 import (
+    DISPLAY_BACKENDS,
+    FAN_BACKENDS,
+    normalize_backend_choice,
+    resolve_backend,
+)
+from modules.temperature_history.v1_2 import (
+    TemperatureGauge,
+    TemperatureHistoryChart,
+    TemperatureRecordingMixin,
+)
+from modules.cooling_safety.v1_0 import clamp_cooling_duty, cooling_duty_policy
+from modules.cooling_state.v1_0.startup_policy import pending_setup_blocks_profile_start
+from modules.cooling_state.v1_0.cpu_defaults import (
+    AUTO_ORIGIN as CPU_CURVE_AUTO_ORIGIN,
+    USER_ORIGIN as CPU_CURVE_USER_ORIGIN,
+    infer_origin as infer_cpu_curve_origin,
+    should_load_detected_defaults,
+)
+from modules.window_chrome.v1_2 import FramelessResizeController, WindowChrome
+from modules.pc_case_profiles.v1_5 import (
+    DEFAULT_CASE_ID,
+    PCLayoutDiagram,
+    PcCaseProfilesMixin,
+    case_template,
+    decode_profiles,
+)
+from modules.wallpaper_engine.v1_3 import WallpaperEnginePage
+from modules.window_placement.v1_5 import (
+    activate_window_from_tray,
+    apply_initial_window_presentation,
+    DEFAULT_WINDOWED_SIZE_PERCENT,
     PRIMARY_SCREEN_PREFERENCE,
+    WINDOW_START_LAST,
+    WindowRect,
+    decode_window_rect,
+    encode_window_rect,
     normalize_screen_preference,
+    normalize_window_start_mode,
+    normalize_windowed_size_percent,
     preference_for_screen,
+    preferred_window_rect,
+    safe_window_rect,
     screen_option_label,
     select_preferred_screen,
 )
+from modules.navigation_settings.v1_0 import build_module_visibility_settings
 from openrgb_integration import (
     OpenRGBClient,
     OpenRGBDevice,
@@ -127,7 +206,6 @@ from openrgb_integration import (
     is_openrgb_configuration_error,
     is_suspicious_inventory_drop,
     parse_device_listing,
-    openrgb_subprocess_environment,
     preferred_reset_mode,
     running_ckb_next_process_ids,
     running_openrgb_process_ids,
@@ -142,7 +220,13 @@ from rgb_effects import (
     render_effect,
     render_hex_frame,
 )
-from ui_layout import SECTION_DEFAULTS, sanitize_dashboard_cards, sanitize_section_order
+from ui_layout import (
+    SECTION_DEFAULTS,
+    active_page_visible,
+    sanitize_dashboard_cards,
+    sanitize_section_order,
+    sync_visible_page_timer,
+)
 from rgb_devices import (
     ApplicationInstanceLock,
     RGB_FAN_MODELS,
@@ -181,6 +265,7 @@ from nzxt_esc_profiles import (
 )
 
 from hardware_request_coordinator import KrakenUsbCoordinator, RequestPriority, RgbRequestCoordinator
+from modules.mainboard_driver_setup.v1_1 import show_nct6687_setup_assistant
 from mainboard_fan_control import (
     CurvePolicy as MainboardCurvePolicy,
     CurveState as MainboardCurveState,
@@ -195,7 +280,6 @@ from mainboard_fan_control import (
     detect_dmi as detect_mainboard_dmi,
     disarm_fan_control_watchdog as disarm_mainboard_fan_watchdog,
     discover_hwmon_controllers,
-    fedora_nct6687_setup_commands,
     fan_preset as mainboard_fan_preset,
     MAINBOARD_FAN_PRESETS,
     preferred_nct6687_controller,
@@ -214,15 +298,8 @@ from mainboard_fan_control import (
     snapshot_channel as snapshot_mainboard_channel,
     stop_privileged_fan_helper_session as stop_mainboard_fan_helper_session,
     update_curve_state as update_mainboard_curve_state,
+    should_log_curve_batch as should_log_mainboard_curve_batch,
     validate_curve as validate_mainboard_curve,
-)
-
-from cooling_ownership import (
-    detect_cooling_owner,
-    disable_coolercontrol,
-    enable_coolercontrol,
-    start_coolercontrol,
-    stop_coolercontrol,
 )
 
 from nzxt_rgb import (
@@ -266,6 +343,7 @@ from app_constants import (
     SUPPORTED_UI_LANGUAGES,
 )
 from command_backend import Backend, CommandResult, PendingCommand
+from modules.application_shutdown.v1_1.sequence import ShutdownSequence, stop_owned_timers
 from cooling_card_state import normalize_expanded_channel, toggle_expanded_channel
 from cooling_widgets import CurveEditor, FanCurveMiniPreview
 from localization_catalog import (
@@ -274,6 +352,7 @@ from localization_catalog import (
     UI_TRANSLATIONS,
     _ABOUT_SUMMARY_TEXT,
     _GIF_SAFETY_TEXT,
+    translated_control_text,
 )
 from privacy_logging import (
     append_startup_event,
@@ -296,17 +375,35 @@ from thermalright_cooling import (
     suggest_aio_channels,
     thermalright_display_present,
 )
+from thermalright_display import find_trcc_executable
+from modules.hardware_checker.v1_0 import build_page as build_hardware_checker_page
+from modules.gpu_control.v1_0 import GpuControlPage
+from modules.snapshot_manager.v1_0 import build_page as build_snapshot_manager_page
+from modules.design_automation.v1_0 import build_page as build_design_automation_page
+from modules.programs.v1_0 import build_page as build_programs_page
+from modules.backend_updates.v1_0.controller import BackendUpdatesMixin
+from modules.setup_features.v1_0 import feature_choices, normalize_selection
+from modules.setup_features.v1_0.widgets import FeatureCard
+from modules.setup_features.v1_0.ownership import FeatureOwnershipMixin
+from modules.backend_updates.v1_0.executables import is_ubuntu_runtime, resolve_liquidctl_python
+from modules.setup_features.v1_0.settings_panel import build_feature_settings, refresh_feature_settings
+from modules.control_authority.v1_0 import authority_choices, normalize_authority
+from modules.control_authority.v1_0.model import ohc_may_write
+from modules.platform_support.v1_0 import IS_WINDOWS, platform_display_name, run_frozen_helper
 
 # Sidebar customization. Overview, the customization entry itself and Help are
 # intentionally fixed safety anchors; only the functional module rows between
 # them can be reordered or hidden.
 NAVIGATION_DEFAULT_ORDER = (
-    "cooling", "rgb_studio", "lcd", "wallpaper_engine", "openlinkhub",
+    "gpu", "case", "hardware_checker", "snapshot_manager", "automations", "programs", "cooling", "rgb_studio", "lcd", "display_effects", "wallpaper_engine", "openlinkhub",
     "profiles", "settings", "about", "log", "desktop_designs",
 )
 NAVIGATION_LEGACY_DEFAULTS = (
+    ("case", "cooling", "rgb_studio", "lcd", "display_effects", "wallpaper_engine", "openlinkhub", "profiles", "settings", "about", "log", "desktop_designs"),
+    ("cooling", "rgb_studio", "lcd", "display_effects", "wallpaper_engine", "openlinkhub", "profiles", "settings", "about", "log", "desktop_designs"),
     ("cooling", "rgb_studio", "lcd", "profiles", "log", "openlinkhub", "desktop_designs", "settings", "about"),
     ("cooling", "rgb_studio", "lcd", "profiles", "log", "openlinkhub", "wallpaper_engine", "desktop_designs", "settings", "about"),
+    ("cooling", "rgb_studio", "lcd", "wallpaper_engine", "openlinkhub", "profiles", "settings", "about", "log", "desktop_designs"),
 )
 
 # Eight original, reproducible OHC LCD background themes.  No third-party media
@@ -346,6 +443,7 @@ CHATGPT_URL = "https://chatgpt.com/"
 OPENAI_GITHUB_URL = "https://github.com/openai"
 PROJECT_GITHUB_URL = "https://github.com/Frelidon/open-hardware-control"
 OPENLINKHUB_URL = "https://github.com/jurkovic-nikola/OpenLinkHub"
+OPENLINKHUB_PAGE_TITLE = "Corsair · OpenLinkHub"
 OPENLINKHUB_API_DOCS_URL = "https://github.com/jurkovic-nikola/OpenLinkHub/blob/main/api/README.md"
 OPENLINKHUB_USER_INSTALL_URL = "https://github.com/jurkovic-nikola/OpenLinkHub/blob/main/install-user-space.sh"
 OPENLINKHUB_LICENSE_URL = "https://github.com/jurkovic-nikola/OpenLinkHub/blob/main/LICENSE"
@@ -480,6 +578,11 @@ class ValueCard(QFrame):
         layout.addLayout(header)
         layout.addWidget(self.value_label)
         layout.addWidget(self.hint_label)
+        self.temperature_gauge: TemperatureGauge | None = None
+
+    def enable_temperature_gauge(self, source: str) -> None:
+        self.temperature_gauge = TemperatureGauge(source, self)
+        self.layout().addWidget(self.temperature_gauge)
 
     def set_value(self, value: str, hint: str | None = None) -> None:
         self.value_label.setText(value)
@@ -1260,6 +1363,7 @@ class AnimatedBackgroundWidget(QWidget):
         self._pixmap = QPixmap()
         self._frame_dirty = True
         self._render_error_reported = False
+        self._window_active = False
         rng = random.Random(2900)
         self._particles = [
             (rng.random(), rng.random(), rng.uniform(0.25, 1.0), rng.uniform(0.4, 2.2), rng.random())
@@ -1276,13 +1380,21 @@ class AnimatedBackgroundWidget(QWidget):
         self._pause_inactive = bool(pause_inactive)
         self._timer.setInterval(max(16, round(1000 / self._fps)))
         self._frame_dirty = True
-        if self._enabled:
-            self._timer.start()
-        else:
-            self._timer.stop()
+        self._sync_timer()
+        if not self._enabled:
             self._frame = QImage()
             self._pixmap = QPixmap()
         self.update()
+
+    def set_window_active(self, active: bool) -> None:
+        self._window_active = bool(active)
+        self._sync_timer()
+
+    def _sync_timer(self) -> None:
+        if self._enabled and self._window_active and self.isVisible():
+            self._timer.start()
+        else:
+            self._timer.stop()
 
     def resizeEvent(self, event) -> None:  # noqa: ANN001, N802
         self._frame_dirty = True
@@ -1544,6 +1656,34 @@ class SetupWizard(QWizard):
         wl.addStretch()
         self.addPage(welcome)
 
+        features = QWizardPage()
+        self.features_page = features
+        feature_layout = QVBoxLayout(features)
+        self.features_intro = QLabel()
+        self.features_intro.setWordWrap(True)
+        feature_layout.addWidget(self.features_intro)
+        feature_grid = QGridLayout()
+        feature_grid.setSpacing(10)
+        translate = lambda source: translated_control_text(
+            source, UI_TRANSLATIONS.get(initial_language, {})
+        )
+        saved_features = owner.settings.value("features/enabled", None)
+        if isinstance(saved_features, str) and saved_features:
+            try:
+                saved_features = json.loads(saved_features)
+            except (TypeError, ValueError, json.JSONDecodeError):
+                saved_features = None
+        selected_features = set(normalize_selection(saved_features))
+        self.feature_cards: dict[str, FeatureCard] = {}
+        for index, feature in enumerate(feature_choices()):
+            card = FeatureCard(feature, translate)
+            card.toggle.setChecked(feature.key in selected_features)
+            self.feature_cards[feature.key] = card
+            feature_grid.addWidget(card, index // 2, index % 2)
+        feature_layout.addLayout(feature_grid)
+        feature_layout.addStretch()
+        self.addPage(features)
+
         design = QWizardPage()
         self.design_page = design
         df = QFormLayout(design)
@@ -1551,6 +1691,8 @@ class SetupWizard(QWizard):
         self.theme_combo.addItem("", "light")
         self.theme_combo.addItem("", "dark")
         self.theme_combo.addItem("", "system")
+        self.theme_combo.addItem("", "studio-light")
+        self.theme_combo.addItem("", "studio-dark")
         self.accent_input = QLineEdit(owner.accent_hex)
         self.accent_input.setPlaceholderText("#00aaff")
         self.background_combo = QComboBox()
@@ -1596,6 +1738,18 @@ class SetupWizard(QWizard):
         self.detect_after_label.setWordWrap(True)
         dl.addWidget(self.system_label)
         dl.addWidget(self.detect_after_label)
+        self.optional_backends_label = QLabel()
+        self.optional_backends_label.setWordWrap(True)
+        self.install_lact_checkbox = QCheckBox()
+        self.install_openrgb_checkbox = QCheckBox()
+        self.install_trcc_checkbox = QCheckBox()
+        self.install_trcc_checkbox.setVisible(
+            thermalright_display_present() and find_trcc_executable() is None
+        )
+        dl.addWidget(self.optional_backends_label)
+        dl.addWidget(self.install_lact_checkbox)
+        dl.addWidget(self.install_openrgb_checkbox)
+        dl.addWidget(self.install_trcc_checkbox)
         dl.addStretch()
         self.addPage(devices)
 
@@ -1650,11 +1804,23 @@ class SetupWizard(QWizard):
         self.setWindowTitle(f"{DISPLAY_NAME} · {t['window']}")
         self.welcome_page.setTitle(t["welcome"])
         self.intro_label.setText(t["welcome_text"])
+        translate = lambda source: translated_control_text(source, UI_TRANSLATIONS.get(language, {}))
+        self.features_page.setTitle(translate("Funktionen auswählen"))
+        self.features_intro.setText(translate(
+            "Wähle aus, welche Bereiche Open Hardware Control verwenden soll. "
+            "Bewege die Maus über eine Karte, um die Funktion genauer kennenzulernen."
+        ))
+        for card in self.feature_cards.values():
+            card.refresh_language(translate)
         self.design_page.setTitle(t["design"])
         self.design_appearance_label.setText(t["appearance"])
         self.design_accent_label.setText(t["accent"])
         self.design_background_label.setText(t["background"])
         self._set_combo_text(self.theme_combo, {"light": t["light"], "dark": t["dark"], "system": t["system"]})
+        self._set_combo_text(self.theme_combo, {
+            "studio-light": translate("Studio Hell · ohne Hintergrundanimation"),
+            "studio-dark": translate("Studio Schwarz · ohne Hintergrundanimation"),
+        })
         self.display_page.setTitle(t["display"])
         self.auto_scale.setText(t["auto_scale"])
         self.display_scale_label.setText(t["app_scale"])
@@ -1663,6 +1829,11 @@ class SetupWizard(QWizard):
         self.devices_page.setTitle(t["system_check"])
         self.system_label.setText(t["deps_ok"] if not self.missing_dependencies else t["deps_missing"].format(packages=", ".join(self.missing_dependencies)))
         self.detect_after_label.setText(t["detect_after"])
+        translate = lambda source: translated_control_text(source, UI_TRANSLATIONS.get(language, {}))
+        self.optional_backends_label.setText(translate("Optionale Hardware-Dienste können jetzt oder später in ihrem Bereich installiert werden."))
+        self.install_lact_checkbox.setText(translate("LACT für GPU-Tuning installieren oder aktualisieren"))
+        self.install_openrgb_checkbox.setText(translate("OpenRGB für RGB-Studio installieren"))
+        self.install_trcc_checkbox.setText(translate("TRCC Linux für Thermalright-LCD installieren"))
         self.cooling_page.setTitle(t["starter"])
         self.cooling_profile_label.setText(t["cooling_profile"])
         self._set_combo_text(self.cooling_combo, {"quiet": t["quiet"], "balanced": t["balanced"], "performance": t["performance"], "safe": t["safe"]})
@@ -1686,6 +1857,13 @@ class SetupWizard(QWizard):
             "layout": self.layout_combo.currentData(),
             "cooling": self.cooling_combo.currentData(),
             "show_help": self.open_help_checkbox.isChecked(),
+            "install_lact": self.install_lact_checkbox.isChecked(),
+            "install_openrgb": self.install_openrgb_checkbox.isChecked(),
+            "install_trcc": self.install_trcc_checkbox.isChecked(),
+            "features": tuple(
+                key for key, card in self.feature_cards.items()
+                if card.feature.available and card.toggle.isChecked()
+            ),
         }
 
 
@@ -1841,376 +2019,26 @@ class RGBDropGroup(QGroupBox):
         if device_id:
             self.device_dropped.emit(device_id, self.group_id)
             event.acceptProposedAction()
-
-
-class PCLayoutDiagram(QWidget):
-    """Original draggable Thermaltake-style PC layout canvas."""
-
-    slot_moved = Signal(str, float, float, str)
-    device_dropped = Signal(str, str)
-    slot_selected = Signal(str)
-    slot_focused = Signal(str)
-    fan_order_changed = Signal(str, object)
-
-    def __init__(self, parent: QWidget | None = None):
-        super().__init__(parent)
-        self.slots: list[RGBLayoutSlot] = []
-        self.drag_slot_id = ""
-        self.drag_offset = QPointF()
-        self.drag_position: QPointF | None = None
-        self.drag_fan_slot_id = ""
-        self.drag_fan_source_index = -1
-        self.drag_fan_target_index = -1
-        self.selected_slot_id = ""
-        self.setMinimumSize(760, 570)
-        self.setAcceptDrops(True)
-        self.setMouseTracking(True)
-        self.setAccessibleName("Verschiebbare Thermaltake-PC-Ansicht mit RGB- und Lüfterpositionen")
-
-    def set_slots(self, slots: Iterable[RGBLayoutSlot]) -> None:
-        self.slots = list(slots)
-        if self.selected_slot_id and not any(
-            (slot.slot_id or slot.position) == self.selected_slot_id for slot in self.slots
-        ):
-            self.selected_slot_id = ""
-        self.update()
-
-    def set_selected_slot(self, slot_id: str) -> None:
-        self.selected_slot_id = str(slot_id)
-        self.update()
-
-    def canvas_area(self) -> QRectF:
-        return QRectF(26, 26, max(180, self.width() - 52), max(180, self.height() - 52))
-
-    def slot_center(self, slot: RGBLayoutSlot) -> QPointF:
-        area = self.canvas_area()
-        if slot.slot_id == self.drag_slot_id and self.drag_position is not None:
-            return QPointF(
-                area.left() + area.width() * self.drag_position.x(),
-                area.top() + area.height() * self.drag_position.y(),
-            )
-        return QPointF(area.left() + area.width() * slot.x, area.top() + area.height() * slot.y)
-
-    def slot_rect(self, slot: RGBLayoutSlot) -> QRectF:
-        center = self.slot_center(slot)
-        if slot.position in {"top", "bottom"}:
-            width, height = max(92, slot.count * 50), 64
-        elif slot.position in {"front", "side", "rear"}:
-            width, height = 70, max(70, slot.count * 50)
-        elif slot.position == "gpu":
-            width, height = 230, 68
-        elif slot.position == "gpu-support":
-            width, height = 190, 42
-        elif slot.position == "ram":
-            width, height = 82, 126
-        else:
-            width, height = 96, 96
-        return QRectF(center.x() - width / 2, center.y() - height / 2, width, height)
-
-    def slot_at(self, point: QPointF) -> RGBLayoutSlot | None:
-        for slot in reversed(self.slots):
-            if self.slot_rect(slot).adjusted(-5, -5, 5, 5).contains(point):
-                return slot
-        return None
-
-    def normalized_point(self, point: QPointF) -> QPointF:
-        area = self.canvas_area()
-        return QPointF(
-            max(0.04, min(0.96, (point.x() - area.left()) / max(1.0, area.width()))),
-            max(0.04, min(0.96, (point.y() - area.top()) / max(1.0, area.height()))),
-        )
-
-    @staticmethod
-    def _fan_centers(rect: QRectF, count: int, horizontal: bool) -> list[QPointF]:
-        amount = max(1, count)
-        if horizontal:
-            step = rect.width() / amount
-            return [QPointF(rect.left() + step * (index + 0.5), rect.center().y()) for index in range(amount)]
-        step = rect.height() / amount
-        return [QPointF(rect.center().x(), rect.top() + step * (index + 0.5)) for index in range(amount)]
-
-    @staticmethod
-    def _draw_fan(
-        painter: QPainter,
-        center: QPointF,
-        color: QColor,
-        channel_label: str = "",
-        highlighted: bool = False,
-    ) -> None:
-        painter.setPen(QPen(color.lighter(145), 2))
-        painter.setBrush(QColor(color.red(), color.green(), color.blue(), 76 if highlighted else 38))
-        painter.drawEllipse(center, 20, 20)
-        painter.setBrush(QColor(color.red(), color.green(), color.blue(), 135))
-        painter.drawEllipse(center, 4, 4)
-        for angle in (0.0, math.pi / 2, math.pi, math.pi * 1.5):
-            blade = QPainterPath(center)
-            blade.cubicTo(
-                QPointF(center.x() + math.cos(angle + 0.3) * 7, center.y() + math.sin(angle + 0.3) * 7),
-                QPointF(center.x() + math.cos(angle + 0.8) * 18, center.y() + math.sin(angle + 0.8) * 18),
-                QPointF(center.x() + math.cos(angle + 1.25) * 12, center.y() + math.sin(angle + 1.25) * 12),
-            )
-            painter.drawPath(blade)
-        if channel_label:
-            painter.setPen(QPen(QColor("#f5fbff"), 1))
-            painter.setBrush(QColor("#142331"))
-            painter.drawEllipse(center, 10, 10)
-            old_font = painter.font()
-            label_font = QFont(old_font)
-            label_font.setBold(True)
-            label_font.setPointSize(max(8, old_font.pointSize()))
-            painter.setFont(label_font)
-            painter.drawText(
-                QRectF(center.x() - 10, center.y() - 10, 20, 20),
-                Qt.AlignmentFlag.AlignCenter,
-                channel_label,
-            )
-            painter.setFont(old_font)
-
-    @staticmethod
-    def _kraken_channel_label(device_id: str) -> str:
-        match = re.fullmatch(r"nzxt:led([1-9][0-9]*)", str(device_id))
-        return match.group(1) if match else ""
-
-    def fan_device_ids(self, slot: RGBLayoutSlot) -> tuple[str, ...]:
-        if slot.group_id != "kraken-radiator" or slot.position != "top":
-            return ()
-        if len(slot.device_ids) != slot.count:
-            return ()
-        ordered = tuple(device_id for device_id in slot.device_ids if self._kraken_channel_label(device_id))
-        return ordered if len(ordered) == slot.count else ()
-
-    def fan_index_at(self, slot: RGBLayoutSlot, point: QPointF) -> int | None:
-        device_ids = self.fan_device_ids(slot)
-        if not device_ids:
-            return None
-        centers = self._fan_centers(self.slot_rect(slot), slot.count, True)
-        return next(
-            (
-                index for index, center in enumerate(centers)
-                if (point - center).manhattanLength() <= 29
-            ),
-            None,
-        )
-
-    def paintEvent(self, _event) -> None:  # noqa: N802 - Qt API
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-        area = self.canvas_area()
-        painter.setPen(QPen(QColor("#6d849a"), 3))
-        painter.setBrush(QColor("#0c141e"))
-        painter.drawRoundedRect(area, 22, 22)
-        glass = area.adjusted(area.width() * 0.08, area.height() * 0.08, -area.width() * 0.10, -area.height() * 0.08)
-        painter.setPen(QPen(QColor("#294359"), 2))
-        painter.setBrush(QColor(17, 33, 46, 165))
-        painter.drawRoundedRect(glass, 16, 16)
-        painter.setPen(QPen(QColor("#263a4c"), 1))
-        painter.drawLine(area.left() + area.width() * 0.22, area.top(), area.left() + area.width() * 0.22, area.bottom())
-        painter.drawLine(area.left(), area.top() + area.height() * 0.74, area.right(), area.top() + area.height() * 0.74)
-        painter.setPen(QColor("#7790a6"))
-        painter.drawText(area.adjusted(12, 8, -12, -8), Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft, "THERMALTAKE · RETRO 360 TG · 120-mm-LAYOUT")
-
-        for slot in self.slots:
-            rect = self.slot_rect(slot)
-            selected = (slot.slot_id or slot.position) in {self.drag_slot_id, self.selected_slot_id}
-            accent = QColor("#42d8ff") if slot.airflow == "intake" else QColor("#ff9a52") if slot.airflow == "exhaust" else QColor("#8bb8ff")
-            painter.setPen(QPen(accent.lighter(145) if selected else accent, 3 if selected else 2))
-            painter.setBrush(QColor(accent.red(), accent.green(), accent.blue(), 28 if not selected else 52))
-            painter.drawRoundedRect(rect, 10, 10)
-            if slot.position in {"top", "front", "side", "bottom", "rear"}:
-                horizontal = slot.position in {"top", "bottom"}
-                ordered_devices = self.fan_device_ids(slot)
-                for index, center in enumerate(self._fan_centers(rect, slot.count, horizontal)):
-                    label = self._kraken_channel_label(ordered_devices[index]) if ordered_devices else ""
-                    highlighted = bool(
-                        (slot.slot_id or slot.position) == self.drag_fan_slot_id
-                        and index == self.drag_fan_target_index
-                    )
-                    self._draw_fan(painter, center, accent, label, highlighted)
-                if ordered_devices:
-                    painter.setPen(QColor("#93a9bb"))
-                    painter.drawText(
-                        rect.adjusted(5, 1, -5, -3),
-                        Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignLeft,
-                        "← HECK",
-                    )
-                    painter.drawText(
-                        rect.adjusted(5, 1, -5, -3),
-                        Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignRight,
-                        "FRONT →",
-                    )
-            elif slot.position == "gpu":
-                painter.drawRoundedRect(rect.adjusted(12, 16, -12, -16), 6, 6)
-                painter.drawEllipse(QPointF(rect.right() - 48, rect.center().y()), 17, 17)
-            elif slot.position == "gpu-support":
-                painter.drawLine(rect.left() + 14, rect.center().y(), rect.right() - 14, rect.center().y())
-            elif slot.position == "ram":
-                for offset in (-15, 15):
-                    painter.drawRoundedRect(QRectF(rect.center().x() + offset - 8, rect.top() + 12, 16, rect.height() - 24), 4, 4)
-            else:
-                painter.drawEllipse(rect.center(), 34, 34)
-                painter.drawEllipse(rect.center(), 20, 20)
-
-            painter.setPen(QColor("#e8f2fb"))
-            label_rect = QRectF(rect.left() - 45, rect.bottom() + 2, rect.width() + 90, 34)
-            painter.drawText(label_rect, Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop, slot.name)
-            if slot.airflow != "component":
-                painter.setPen(accent)
-                airflow = "IN →" if slot.airflow == "intake" else "← OUT"
-                painter.drawText(rect.adjusted(4, 3, -4, -3), Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight, airflow)
-
-    def mousePressEvent(self, event: QMouseEvent) -> None:  # noqa: N802 - Qt API
-        if event.button() != Qt.MouseButton.LeftButton:
-            return
-        slot = self.slot_at(event.position())
-        if slot is None:
-            return
-        fan_index = self.fan_index_at(slot, event.position())
-        if fan_index is not None:
-            self.drag_fan_slot_id = slot.slot_id or slot.position
-            self.drag_fan_source_index = fan_index
-            self.drag_fan_target_index = fan_index
-            self.selected_slot_id = self.drag_fan_slot_id
-            self.slot_focused.emit(self.selected_slot_id)
-            self.update()
-            event.accept()
-            return
-        self.drag_slot_id = slot.slot_id or slot.position
-        self.selected_slot_id = self.drag_slot_id
-        self.slot_focused.emit(self.selected_slot_id)
-        center = self.slot_center(slot)
-        self.drag_offset = event.position() - center
-        self.drag_position = QPointF(slot.x, slot.y)
-        self.update()
-        event.accept()
-
-    def mouseMoveEvent(self, event: QMouseEvent) -> None:  # noqa: N802 - Qt API
-        if self.drag_fan_slot_id:
-            slot = next(
-                (item for item in self.slots if (item.slot_id or item.position) == self.drag_fan_slot_id),
-                None,
-            )
-            if slot is not None:
-                centers = self._fan_centers(self.slot_rect(slot), slot.count, True)
-                self.drag_fan_target_index = min(
-                    range(len(centers)),
-                    key=lambda index: abs(event.position().x() - centers[index].x()),
-                )
-                self.setToolTip("Kraken-Kanal auf den gewünschten Platz ziehen · links = Heck · rechts = Front")
-                self.update()
-            event.accept()
-            return
-        if self.drag_slot_id:
-            self.drag_position = self.normalized_point(event.position() - self.drag_offset)
-            self.update()
-            event.accept()
-            return
-        slot = self.slot_at(event.position())
-        if slot is not None:
-            assignment = f"{len(slot.device_ids)} Gerät(e) zugeordnet" if slot.device_ids else "noch kein RGB-Gerät zugeordnet"
-            extra = "\nNummerierten Lüfter ziehen = Kraken-Kanal umordnen" if self.fan_device_ids(slot) else ""
-            self.setToolTip(
-                f"{slot.name}\n{slot.connection}\n{assignment}\n"
-                f"Ziehen = Position ändern · Doppelklick = Geräte auswählen{extra}"
-            )
-
-    def mouseReleaseEvent(self, event: QMouseEvent) -> None:  # noqa: N802 - Qt API
-        if event.button() == Qt.MouseButton.LeftButton and self.drag_fan_slot_id:
-            slot = next(
-                (item for item in self.slots if (item.slot_id or item.position) == self.drag_fan_slot_id),
-                None,
-            )
-            slot_id = self.drag_fan_slot_id
-            source_index = self.drag_fan_source_index
-            target_index = self.drag_fan_target_index
-            self.drag_fan_slot_id = ""
-            self.drag_fan_source_index = -1
-            self.drag_fan_target_index = -1
-            if slot is not None:
-                ordered = reorder_layout_device_ids(slot.device_ids, source_index, target_index)
-                if ordered != slot.device_ids:
-                    self.fan_order_changed.emit(slot_id, ordered)
-            self.update()
-            event.accept()
-            return
-        if event.button() != Qt.MouseButton.LeftButton or not self.drag_slot_id:
-            return
-        slot = next((item for item in self.slots if (item.slot_id or item.position) == self.drag_slot_id), None)
-        position = self.drag_position
-        slot_id = self.drag_slot_id
-        self.drag_slot_id = ""
-        self.drag_position = None
-        if slot is not None and position is not None:
-            inferred = infer_layout_position(slot, position.x(), position.y())
-            self.slot_moved.emit(slot_id, position.x(), position.y(), inferred)
-        self.update()
-        event.accept()
-
-    def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:  # noqa: N802 - Qt API
-        slot = self.slot_at(event.position())
-        if slot is not None:
-            self.slot_selected.emit(slot.slot_id or slot.position)
-            event.accept()
-
-    def dragEnterEvent(self, event) -> None:  # noqa: N802 - Qt API
-        if event.mimeData().hasFormat(RGBDeviceTile.MIME_TYPE):
-            event.acceptProposedAction()
-
-    def dropEvent(self, event) -> None:  # noqa: N802 - Qt API
-        slot = self.slot_at(event.position())
-        if slot is None:
-            return
-        try:
-            device_id = bytes(event.mimeData().data(RGBDeviceTile.MIME_TYPE)).decode("utf-8")
-        except (UnicodeDecodeError, ValueError):
-            return
-        if device_id:
-            self.device_dropped.emit(device_id, slot.slot_id or slot.position)
-            event.acceptProposedAction()
-
-
-class CoolingLayoutDiagram(PCLayoutDiagram):
-    """PC layout view with PWM-channel badges for cooling calibration."""
-
-    def __init__(self, parent: QWidget | None = None):
-        super().__init__(parent)
-        self.channel_assignments: dict[str, str] = {}
-        self.setMinimumSize(620, 440)
-        self.setAccessibleName("Gehäuseansicht zur Zuordnung von PWM-Lüfterkanälen")
-
-    def set_channel_assignments(self, assignments: dict[str, str]) -> None:
-        # Mapping is channel_id -> slot_id.  Invert once for rendering.
-        self.channel_assignments = {str(slot): str(channel) for channel, slot in assignments.items() if channel and slot}
-        self.update()
-
-    @staticmethod
-    def _short_channel(channel_id: str) -> str:
-        match = re.search(r"pwm(\d+)$", str(channel_id))
-        return f"PWM {match.group(1)}" if match else str(channel_id)
-
-    def paintEvent(self, event) -> None:  # noqa: N802 - Qt API
-        super().paintEvent(event)
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-        for slot in self.slots:
-            slot_id = slot.slot_id or slot.position
-            channel_id = self.channel_assignments.get(slot_id)
-            if not channel_id:
-                continue
-            rect = self.slot_rect(slot)
-            badge = QRectF(rect.left() + 5, rect.top() + 5, min(78, rect.width() - 10), 24)
-            painter.setPen(QPen(QColor("#86e7ff"), 1))
-            painter.setBrush(QColor(11, 37, 49, 225))
-            painter.drawRoundedRect(badge, 7, 7)
-            painter.setPen(QColor("#f4fbff"))
-            painter.drawText(badge, Qt.AlignmentFlag.AlignCenter, self._short_channel(channel_id))
-
-
-class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActionsMixin, QMainWindow):
+class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, GpuLightingMixin, TemperatureRecordingMixin, PcCaseProfilesMixin, ResponsiveStartupMixin, OpenLinkHubUpdateMixin, RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActionsMixin, QMainWindow):
     def __init__(self):
         super().__init__()
+        # The application draws its own accessible title bar. Window movement
+        # and resizing are still delegated to the compositor (Wayland/X11).
+        self.setWindowFlag(Qt.WindowType.FramelessWindowHint, True)
         self.settings = QSettings(ORG_NAME, APP_NAME)
+        from modules.profile_bundle.v1_0.restore import restore_pending
+        restore_pending(self.settings, Path(QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppConfigLocation)))
+        if not self.settings.value("migration/v342960_rgb_devices_collapsed", False, type=bool):
+            self.settings.setValue("rgb_studio/devices_effects_expanded", False)
+            self.settings.setValue("migration/v342960_rgb_devices_collapsed", True)
         self.window_screen_preference = normalize_screen_preference(
             self.settings.value("window/screen_preference", PRIMARY_SCREEN_PREFERENCE)
+        )
+        self.window_start_mode = normalize_window_start_mode(
+            self.settings.value("window/start_mode", WINDOW_START_LAST)
+        )
+        self.window_last_maximized = self.settings.value(
+            "window/last_maximized", False, type=bool
         )
         self.session_log_path: Path | None = None
         try:
@@ -2222,6 +2050,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             if current_log.is_file():
                 shutil.copy2(current_log, previous_log)
             current_log.write_text("", encoding="utf-8")
+            os.chmod(current_log, 0o600)
+            if previous_log.is_file(): os.chmod(previous_log, 0o600)
             self.session_log_path = current_log
         except OSError:
             self.session_log_path = None
@@ -2244,6 +2074,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         if self.autostart_window_surface_suppressed:
             self.setAttribute(Qt.WidgetAttribute.WA_DontShowOnScreen, True)
         self.session_shutdown_requested = False
+        self.explicit_quit_requested = False
         self.exit_hardware_cleanup_done = False
         self.ui_language = str(self.settings.value("ui/language", "de"))
         if self.ui_language not in SUPPORTED_UI_LANGUAGES:
@@ -2263,11 +2094,19 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.lcd_safety_reason = ""
         self.system_palette = QPalette(QApplication.palette())
         self.theme_mode = str(self.settings.value("design/theme", "dark"))
-        if self.theme_mode not in {"system", "light", "dark"}:
+        if self.theme_mode not in {"system", "light", "dark", "studio-light", "studio-dark"}:
             self.theme_mode = "dark"
         self.accent_hex = self.normalize_accent_hex(str(self.settings.value("design/accent", "#00aaff"))) or "#00aaff"
         self.base_font = QFont(QApplication.font())
         self.ui_scale_percent = max(75, min(160, int(self.settings.value("display/ui_scale", DEFAULT_UI_SCALE))))
+        self.windowed_size_percent = normalize_windowed_size_percent(
+            self.settings.value("window/normal_size_percent", DEFAULT_WINDOWED_SIZE_PERCENT)
+        )
+        self._last_windowed_rect = decode_window_rect(
+            self.settings.value("window/normal_geometry", "")
+        )
+        self._window_restore_pending = False
+        self._window_screen_repositioning = False
         self.display_auto = self.settings.value("display/auto", True, type=bool)
         self.display_layout = str(self.settings.value("display/layout", "auto"))
         self.background_enabled = self.settings.value("background/enabled", False, type=bool)
@@ -2282,6 +2121,14 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             "experimental/desktop_designs_enabled", False, type=bool
         )
         self.pending_setup_profile = str(self.settings.value("setup/pending_profile", ""))
+        self.enabled_features = set(self.load_enabled_features())
+        self.control_authority = {
+            domain: normalize_authority(
+                domain, self.settings.value(f"control_authority/{domain}", "auto")
+            )
+            for domain in ("rgb", "lcd", "cooling", "gpu", "wallpaper")
+        }
+        self.authority_status_labels: dict[str, QLabel] = {}
         self.user_profiles: list[dict[str, object]] = []
         self.current_profile_id = str(self.settings.value("profiles/current", ""))
         self._syncing_curve = False
@@ -2292,6 +2139,13 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.gpu_sensor_label = "Nicht erkannt"
         self.current_pump_rpm: float | None = None
         self.current_fan_rpm: float | None = None
+        self.initialize_temperature_recording()
+        self.display_backend_choice = normalize_backend_choice(
+            self.settings.value("hardware_backends/display", "auto"), DISPLAY_BACKENDS
+        )
+        self.fan_backend_choice = normalize_backend_choice(
+            self.settings.value("hardware_backends/fans", "auto"), FAN_BACKENDS
+        )
         self.cpu_curve_filtered_temp: float | None = None
         self.cpu_curve_last_write = 0.0
         self.cpu_curve_last_duties: dict[str, int | None] = {"pump": None, "fan": None}
@@ -2299,6 +2153,13 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.cpu_curve_fallback_active = False
         self.cpu_curve_force_update = True
         self.selected_cpu_profile: CPUProfile | None = None
+        self.cpu_curve_auto_detect_enabled = self.settings.value(
+            "cpu/auto_detect_curves", True, type=bool
+        )
+        self.cpu_curve_origin = str(
+            self.settings.value("cpu/curve_origin", "") or ""
+        )
+        self._loading_cpu_curve_defaults = False
         self.expert_mode_enabled = self.settings.value("safety/expert_mode", False, type=bool)
         self.permission_retry_after = 0.0
         self.permission_notice_last = 0.0
@@ -2317,6 +2178,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.mainboard_curve_states: dict[str, MainboardCurveState] = {}
         self.mainboard_sensor_failures: dict[str, int] = {}
         self.mainboard_control_active = False
+        self.mainboard_startup_pending = self.settings.value("mainboard_fans/master_enabled", False, type=bool)
         self.mainboard_calibration_channel_id = ""
         self.mainboard_calibration_snapshot = None
         self.mainboard_calibration_deadline = 0.0
@@ -2338,7 +2200,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.settings.value("thermalright_cooling/radiator_channel", "") or ""
         )
         self.thermalright_owned_channel_ids: set[str] = set()
-        self.cooling_owner_status = detect_cooling_owner()
+        self.initialize_responsive_startup(track_qprocess)
         self.coolercontrol_stopped_by_ohc = False
         self.cooling_layout_selected_slot_id = ""
         try:
@@ -2351,17 +2213,12 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         )
         self.backend = Backend(self)
         self.backend.log.connect(self.log_message)
-        # Central high-level request coordinators. They do not replace the proven
-        # liquidctl/CAM-raw transports; they arbitrate ownership, request IDs and
-        # latest-wins semantics above them and write every transition to the log.
         self.usb_coordinator = KrakenUsbCoordinator(self.log_message)
         self.rgb_request_coordinator = RgbRequestCoordinator(self.log_message)
         self.lcd_design_request_id = 0
         self.gif_cooling_request_id = 0
         self.shutdown_lcd_request_id = 0
         self.rgb_effect_request_id = 0
-        # Animated RGB transfers are only confirmed after both the persistent
-        # Direct-SDK frame and all native/NZXT fallbacks have completed.
         self.rgb_confirmation_snapshot: tuple[int, str, RGBEffectConfig] | None = None
         self.rgb_confirmation_need_direct = False
         self.rgb_confirmation_need_native = False
@@ -2428,8 +2285,11 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.rgb_reclaim_waiting = False
         self.rgb_ownership_conflict_active = False
         self.rgb_reclaim_retry_count = 0
+        self.rgb_control_consent_confirmed = self.settings.value(
+            "rgb_studio/control_consent_confirmed", False, type=bool
+        )
         self.rgb_auto_reclaim_enabled = self.settings.value(
-            "rgb_studio/auto_reclaim", False, type=bool
+            "rgb_studio/auto_reclaim", self.rgb_control_consent_confirmed, type=bool
         )
         self.rgb_active_design_index = -1
         self.rgb_active_design_title = ""
@@ -2480,6 +2340,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             if isinstance(raw_selected_devices, list) and str(device_id)
         } if isinstance(raw_selected_devices, list) else set()
         self.rgb_device_tiles: dict[str, RGBDeviceTile] = {}
+        self.rgb_individual_selection = self.settings.value("rgb_studio/individual_selection", False, type=bool)
         try:
             raw_aliases = json.loads(str(self.settings.value("rgb_studio/device_aliases", "{}")))
         except (TypeError, ValueError, json.JSONDecodeError):
@@ -2492,6 +2353,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         except (TypeError, ValueError, json.JSONDecodeError):
             raw_zone_configurations = {}
         self.rgb_zone_configurations = normalize_zone_configurations(raw_zone_configurations)
+        self.rgb_gpu_routes = self.load_gpu_routes()
         self.rgb_test_color = "ffffff"
         self.rgb_test_active_device = ""
         try:
@@ -2518,10 +2380,21 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             raw_layout_slots = []
         self.rgb_layout_slots = normalize_layout_slots(raw_layout_slots, self.rgb_groups)
         self.rgb_layout_selected_slot_id = ""
+        self.rgb_case_template_id = str(
+            self.settings.value("rgb_studio/case_template", DEFAULT_CASE_ID) or DEFAULT_CASE_ID
+        )
+        self.rgb_case_profiles = decode_profiles(
+            self.settings.value("rgb_studio/case_profiles", "[]")
+        )
         stored_layout_version = self.settings.value("rgb_studio/layout_profile_version", 0, type=int)
+        personal_layout_active = str(self.settings.value("rgb_studio/layout_profile", "")) == "flori"
+        cooler_name_refresh_required = self.personal_layout_needs_cooler_refresh(personal_layout_active)
         if (
-            str(self.settings.value("rgb_studio/layout_profile", "")) == "flori"
-            and stored_layout_version < THERMALTAKE_LAYOUT_VERSION
+            personal_layout_active
+            and (
+                stored_layout_version < THERMALTAKE_LAYOUT_VERSION
+                or cooler_name_refresh_required
+            )
         ):
             thermalright_layout = self.is_thermalright_cooling()
             preset_groups, preset_slots = flori_rgb_layout_profile(
@@ -2577,6 +2450,14 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             ),
         )
         try:
+            raw_favorites = json.loads(str(self.settings.value("rgb_studio/favorite_design_indices", "[]")))
+        except (TypeError, ValueError, json.JSONDecodeError):
+            raw_favorites = []
+        self.rgb_favorite_design_indices = {
+            int(index) for index in raw_favorites
+            if isinstance(index, int) and 0 <= index < len(BUILTIN_DESIGNS)
+        } if isinstance(raw_favorites, list) else set()
+        try:
             raw_design_overrides = json.loads(str(
                 self.settings.value("rgb_studio/design_color_overrides", "{}") or "{}"
             ))
@@ -2599,12 +2480,16 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         except Exception as exc:
             self.desktop_recovery_result = {"ok": False, "error": str(exc)}
         self.openlinkhub_last_status: dict[str, object] = {}
+        self.openlinkhub_update_status: dict[str, object] = {}
         self.show_undetected_modules = self.settings.value("navigation/show_undetected_modules", False, type=bool)
         self.navigation_edit_mode = False
         self.navigation_user_order = self.load_navigation_order()
         self.navigation_user_hidden = self.load_navigation_hidden()
         self.last_status_ok = False
         self.selected_lcd_file: Path | None = None
+        self.kraken_lcd_library_state = load_library_state(
+            self.settings.value("lcd/design_library_v1", "")
+        )
         self.prepared_lcd_file: Path | None = None
         self.temp_dir = Path(tempfile.gettempdir()) / "open-hardware-control"
         self.temp_dir.mkdir(parents=True, exist_ok=True)
@@ -2613,7 +2498,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         )
         self.rgb_engine_config_dir = self.app_config_dir / "rgb-engine"
         self.rgb_session_lock = RGBSessionLock(self.rgb_engine_config_dir / "ohc-rgb-owner.lock")
-        self.lcd_profile_store = LcdProfileStore(self.app_config_dir / "lcd-profiles")
+        from modules.profile_bundle.v1_0.restore import lcd_store_root
+        self.lcd_profile_store = LcdProfileStore(lcd_store_root(self.settings, self.app_config_dir))
         self.imported_lcd_profiles = self.lcd_profile_store.load()
         self.current_imported_lcd_profile_id = str(self.settings.value("lcd_profiles/current", ""))
         self.imported_lcd_active = False
@@ -2624,46 +2510,42 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.hardware_diagnostic_sampler = SystemMetricSampler()
         self.hardware_diagnostic_issue_keys: set[tuple[str, str]] = set()
 
-        self.setWindowTitle(f"{DISPLAY_NAME} {APP_DISPLAY_VERSION} — Linux")
+        self.setWindowTitle(f"{DISPLAY_NAME} {APP_DISPLAY_VERSION} — {platform_display_name()}")
         self.resize(1280, 880)
-        self.setMinimumSize(920, 620)
+        self.window_base_minimum_size = QSize(920, 620)
+        self.setMinimumSize(self.window_base_minimum_size)
         self.setWindowIcon(application_icon(Path(__file__).resolve().parent))
 
-        # The RGB tab renders its first preview while build_ui() is still
-        # running. Initialize the clock before any widget can request it.
         self.rgb_preview_started = time.monotonic()
         self.build_ui()
+        from modules.process_runtime.v1_1.controller import install as install_runtime
+        self.process_runtime = install_runtime(self)
+        self.ui_performance = install_ui_performance(self)
         self.build_menu_bar()
         self.update_navigation_visibility()
         self.configure_accessibility()
         self.apply_theme()
-
         self.rgb_preview_timer = QTimer(self)
         self.rgb_preview_timer.setInterval(40)
         self.rgb_preview_timer.timeout.connect(self.update_rgb_studio_preview)
-        self.rgb_preview_timer.start()
-
+        self.tabs.currentChanged.connect(self.sync_active_page_performance)
+        self.sync_active_page_performance(self.tabs.currentIndex())
         self.hardware_diagnostic_timer = QTimer(self)
         self.hardware_diagnostic_timer.setInterval(15_000)
         self.hardware_diagnostic_timer.timeout.connect(self.poll_hardware_diagnostics)
         self.hardware_diagnostic_timer.start()
-
-        # One persistent local SDK worker prepares all Direct devices once and
-        # writes a complete multi-device frame per tick. A single in-flight
-        # frame with latest-frame-wins coalescing prevents queue buildup.
         self.openrgb_effect_process = track_qprocess(QProcess(self))
+        self.openrgb_effect_process.setObjectName('ohcRGBSDKWorker')
         self.openrgb_effect_process.setProcessChannelMode(QProcess.ProcessChannelMode.SeparateChannels)
         self.openrgb_effect_process.started.connect(self.on_openrgb_worker_started)
         self.openrgb_effect_process.readyReadStandardOutput.connect(self.read_openrgb_worker_stdout)
         self.openrgb_effect_process.readyReadStandardError.connect(self.read_openrgb_worker_stderr)
         self.openrgb_effect_process.finished.connect(self.on_openrgb_worker_finished)
+        from modules.process_runtime.v1_1.sdk_supervisor import SDKSupervisor
+        self.sdk_supervisor = SDKSupervisor(self)
         self.openrgb_effect_timer = QTimer(self)
         self.openrgb_effect_timer.setInterval(40)
         self.openrgb_effect_timer.timeout.connect(self.send_openrgb_effect_frame)
-
-        # A low-frequency ownership watcher notices a separately launched
-        # OpenRGB without polling hardware.  It never terminates that process;
-        # an explicitly enabled auto-reclaim only runs after it disappeared.
         self.rgb_direct_apply_timer = QTimer(self)
         self.rgb_direct_apply_timer.setSingleShot(True)
         self.rgb_direct_apply_timer.setInterval(140)
@@ -2679,27 +2561,17 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.rgb_ownership_timer.setInterval(1000)
         self.rgb_ownership_timer.timeout.connect(self.monitor_rgb_ownership)
         self.rgb_ownership_timer.start()
-
-        # OpenRGB remains a separately licensed hardware driver, but OHC owns
-        # this private child process from start to shutdown.  Users do not have
-        # to launch an OpenRGB window or SDK server themselves.
         self.openrgb_server_process = track_qprocess(QProcess(self))
+        self.openrgb_server_process.setObjectName('ohcOpenRGBEngine')
         self.openrgb_server_process.setProcessChannelMode(QProcess.ProcessChannelMode.SeparateChannels)
         self.openrgb_server_process.started.connect(self.on_managed_rgb_engine_started)
         self.openrgb_server_process.finished.connect(self.on_managed_rgb_engine_finished)
-
         self.status_timer = QTimer(self)
         self.status_timer.setInterval(3000)
         self.status_timer.timeout.connect(self.refresh_status)
-
-        # CPU curves are evaluated independently from Kraken status polling.
-        # This timer deliberately keeps running during the exclusive LCD-GIF
-        # stream because reading Linux hwmon does not touch the Kraken USB
-        # device.  Actual duty writes use the coordinated short USB handoff.
         self.cpu_curve_timer = QTimer(self)
         self.cpu_curve_timer.setInterval(CPU_CURVE_SAMPLE_MS)
         self.cpu_curve_timer.timeout.connect(self.update_cpu_curve_control)
-
         self.mainboard_fan_timer = QTimer(self)
         self.mainboard_fan_timer.setInterval(1000)
         self.mainboard_fan_timer.timeout.connect(self.update_mainboard_fan_control)
@@ -2709,17 +2581,13 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.mainboard_calibration_sample_timer = QTimer(self)
         self.mainboard_calibration_sample_timer.setInterval(1000)
         self.mainboard_calibration_sample_timer.timeout.connect(self.sample_mainboard_fan_calibration)
-
         self.lcd_keepalive_timer = QTimer(self)
         self.lcd_keepalive_timer.timeout.connect(self.send_lcd_keepalive)
-
         self.clock_timer = QTimer(self)
         self.clock_timer.setSingleShot(True)
         self.clock_timer.timeout.connect(self.update_clock_lcd)
-
         self.clock_keepalive_timer = QTimer(self)
         self.clock_keepalive_timer.timeout.connect(self.send_clock_keepalive)
-
         self.hardware_lcd_timer = QTimer(self)
         self.hardware_lcd_timer.timeout.connect(self.update_hardware_lcd)
         self.hardware_lcd_active = False
@@ -2733,10 +2601,6 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.lcd_layer_preview_file = self.temp_dir / "lcd-layer-preview.gif"
         self.hardware_animation_movie: QMovie | None = None
         self.hardware_animation_warning_acknowledged = self.settings.value("hardware_animation/experimental_warning_ack", False, type=bool)
-
-        # GIF streaming runs in its own long-lived QProcess so the GUI remains
-        # responsive and only one liquidctl device connection is used for all
-        # frames.  No Python worker threads are introduced.
         self.gif_process = track_qprocess(QProcess(self))
         self.gif_process.setProcessChannelMode(QProcess.ProcessChannelMode.SeparateChannels)
         self.gif_process.readyReadStandardOutput.connect(self.on_gif_stream_stdout)
@@ -2793,9 +2657,6 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.capture_translation_sources()
         self.apply_ui_language(self.ui_language, persist=False, log_change=False)
         self.refresh_dynamic_translations()
-        app = QApplication.instance()
-        if app is not None:
-            app.aboutToQuit.connect(self.mark_clean_shutdown)
         self.setup_tray()
         self.enable_interaction_logging()
         self.log_message(f"START: Open Hardware Control {APP_DISPLAY_VERSION} gestartet · NZXT-Kraken-Modul vollständig geladen")
@@ -2806,7 +2667,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.log_message(f"DESKTOP-DESIGN: Automatische Wiederherstellungsprüfung fehlgeschlagen · {self.desktop_recovery_result.get('error')}")
         missing_dependencies = self.check_dependencies()
         if not missing_dependencies:
-            self.initialize_devices()
+            QTimer.singleShot(0, self.initialize_devices)
         else:
             self.connection_label.setText("● Abhängigkeiten fehlen")
             self.connection_label.setObjectName("connectionPending")
@@ -2821,10 +2682,14 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
     # ---------- UI ----------
     def build_menu_bar(self) -> None:
         file_menu = self.menuBar().addMenu("&Datei")
-        quit_action = QAction("&Beenden", self)
-        quit_action.setShortcut(QKeySequence.StandardKey.Quit)
-        quit_action.triggered.connect(self.quit_app)
-        file_menu.addAction(quit_action)
+        restart_action = QAction(self.tr_static("Open Hardware Control neu starten"), self)
+        restart_action.triggered.connect(self.request_application_restart)
+        file_menu.addAction(restart_action)
+        file_menu.addSeparator()
+        close_action = QAction(self.tr_static("Fenster schließen"), self)
+        close_action.setShortcut(QKeySequence.StandardKey.Close)
+        close_action.triggered.connect(self.close)
+        file_menu.addAction(close_action)
 
         device_menu = self.menuBar().addMenu("&Gerät")
         refresh_action = QAction("Geräte &aktualisieren", self)
@@ -2842,14 +2707,20 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.kraken_menu_actions = [safe_action, repair_action]
 
         view_menu = self.menuBar().addMenu("&Ansicht")
+        recover_window_action = QAction("Fenster sicher einpassen", self)
+        recover_window_action.setShortcut(QKeySequence("Ctrl+Alt+0"))
+        recover_window_action.triggered.connect(self.recover_window_to_preferred_screen)
+        view_menu.addAction(recover_window_action)
+        view_menu.addSeparator()
         tab_names = (
             "Übersicht", "Kühlung", "RGB-Studio", "LCD", "Einstellungen", "Profile",
             "Über", "Log", "OpenLinkHub", "Wallpaper Engine", "Desktop-Designs · Experimentell",
+            "Display-Effekte",
         )
         self.module_view_actions: dict[int, QAction] = {}
         for index, tab_name in enumerate(tab_names):
             action = QAction(tab_name, self)
-            shortcut = f"Alt+{index + 1}" if index < 9 else "Ctrl+Alt+W" if index == 9 else "Ctrl+Alt+D"
+            shortcut = f"Alt+{index + 1}" if index < 9 else "Ctrl+Alt+W" if index == 9 else "Ctrl+Alt+D" if index == 10 else "Ctrl+Alt+E"
             action.setShortcut(QKeySequence(shortcut))
             action.triggered.connect(lambda _checked=False, i=index: self.tabs.setCurrentIndex(i))
             view_menu.addAction(action)
@@ -2898,7 +2769,10 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             # legacy controls (e.g. profile categories and RGB modes) still use
             # currentText() as an internal identifier and must keep their German
             # canonical values until they are migrated to data-backed IDs.
-            has_stable_data = any(combo.itemData(i) is not None for i in range(combo.count()))
+            has_stable_data = (
+                any(combo.itemData(i) is not None for i in range(combo.count()))
+                and combo.property("i18nTranslateItems") is not False
+            )
             self._i18n_widget_sources[combo] = {
                 "items": [combo.itemText(i) for i in range(combo.count())],
                 "translate_items": has_stable_data,
@@ -2928,54 +2802,61 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
     def tr_static(self, source: str) -> str:
         if self.ui_language == "de":
             return source
-        return UI_TRANSLATIONS.get(self.ui_language, {}).get(source, source)
+        return translated_control_text(source, UI_TRANSLATIONS.get(self.ui_language, {}))
 
     def apply_ui_language(self, language: str, *, persist: bool = True, log_change: bool = True) -> None:
         if language not in SUPPORTED_UI_LANGUAGES:
             language = "de"
         self.ui_language = language
         translations = UI_TRANSLATIONS.get(language, {})
+        if hasattr(self, "window_chrome"):
+            self.window_chrome.set_translations(
+                self.tr_static("Fenster minimieren"),
+                self.tr_static("Fenster maximieren"),
+                self.tr_static("Fenster wiederherstellen"),
+                self.tr_static("Fenster schließen"),
+            )
         for obj, source in list(self._i18n_widget_sources.items()):
             try:
                 if isinstance(obj, QLabel) and "text" in source:
-                    obj.setText(translations.get(str(source["text"]), str(source["text"])))
+                    obj.setText(translated_control_text(str(source["text"]), translations))
                 elif isinstance(obj, QAbstractButton) and "text" in source:
-                    obj.setText(translations.get(str(source["text"]), str(source["text"])))
+                    obj.setText(translated_control_text(str(source["text"]), translations))
                 elif isinstance(obj, QGroupBox) and "title" in source:
-                    obj.setTitle(translations.get(str(source["title"]), str(source["title"])))
+                    obj.setTitle(translated_control_text(str(source["title"]), translations))
                 elif isinstance(obj, QLineEdit) and "placeholder" in source:
                     raw = str(source["placeholder"])
-                    obj.setPlaceholderText(translations.get(raw, raw))
+                    obj.setPlaceholderText(translated_control_text(raw, translations))
                 elif isinstance(obj, QComboBox) and "items" in source and bool(source.get("translate_items", False)):
                     current_data = obj.currentData()
                     current_index = obj.currentIndex()
                     obj.blockSignals(True)
                     for i, raw in enumerate(source["items"]):
                         if i < obj.count():
-                            obj.setItemText(i, translations.get(str(raw), str(raw)))
+                            obj.setItemText(i, translated_control_text(str(raw), translations))
                     data_index = obj.findData(current_data)
                     obj.setCurrentIndex(data_index if data_index >= 0 else current_index)
                     obj.blockSignals(False)
                 elif isinstance(obj, QAction) and "text" in source:
                     raw = str(source["text"])
-                    obj.setText(translations.get(raw, raw))
+                    obj.setText(translated_control_text(raw, translations))
                 elif isinstance(obj, QMenu) and "title" in source:
                     raw = str(source["title"])
-                    obj.setTitle(translations.get(raw, raw))
+                    obj.setTitle(translated_control_text(raw, translations))
                 elif obj is getattr(self, "tabs", None) and "tabs" in source:
                     for i, raw in enumerate(source["tabs"]):
                         if i < self.tabs.count():
-                            self.tabs.setTabText(i, translations.get(str(raw), str(raw)))
+                            self.tabs.setTabText(i, translated_control_text(str(raw), translations))
                 elif isinstance(obj, QTableWidget) and "headers" in source:
                     for col, raw in enumerate(source["headers"]):
                         item = obj.horizontalHeaderItem(col)
                         if item is not None:
-                            item.setText(translations.get(str(raw), str(raw)))
+                            item.setText(translated_control_text(str(raw), translations))
             except RuntimeError:
                 continue
         for item, raw in getattr(self, "_navigation_item_sources", []):
             try:
-                item.setText(0, translations.get(raw, raw))
+                item.setText(0, translated_control_text(raw, translations))
             except RuntimeError:
                 continue
         if hasattr(self, "language_combo"):
@@ -2988,8 +2869,20 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.settings.sync()
         if hasattr(self, "help_topic_tree"):
             self.populate_help_topics()
+        if hasattr(self, "tabs"):
+            self.update_page_header(self.tabs.currentIndex())
         if log_change and hasattr(self, "log_view"):
             self.log_message(f"SPRACHE: Oberfläche = {SUPPORTED_UI_LANGUAGES[language]} ({language})")
+        if hasattr(self, "log_counter_label"): self._update_log_counter()
+        from modules.ui_performance.v1_1.dynamic_text import refresh
+        refresh(self)
+        if hasattr(self, 'display_effects_page'): self.display_effects_page.refresh_language()
+        if hasattr(self, "hardware_checker_page"): self.hardware_checker_page.refresh_language()
+        if hasattr(self, "snapshot_manager_page"): self.snapshot_manager_page.refresh_language()
+        if hasattr(self, "programs_page"): self.programs_page.refresh_language()
+        if hasattr(self, "refresh_runtime_health"): self.refresh_runtime_health()
+        if hasattr(self, "feature_setting_cards"): refresh_feature_settings(self)
+        if hasattr(self, "refresh_backend_update_language"): self.refresh_backend_update_language()
 
     def on_language_changed(self, _index: int = -1) -> None:
         if not hasattr(self, "language_combo"):
@@ -3091,6 +2984,11 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.temp_card.set_value(self.format_temperature(self.current_liquid_temp))
             self.cpu_temp_card.set_value(self.format_temperature(self.current_cpu_temp))
             self.gpu_temp_card.set_value(self.format_temperature(self.current_gpu_temp))
+        if hasattr(self, "temperature_history_chart"):
+            self.temperature_history_chart.set_temperature_unit(self.temperature_unit)
+        if hasattr(self, "temperature_detail_chart"):
+            self.temperature_detail_chart.set_temperature_unit(self.temperature_unit)
+            self.refresh_temperature_detail_view()
         if hasattr(self, "cpu_profile_info"):
             self.update_cpu_profile_preview()
         if hasattr(self, "cpu_sources_text"):
@@ -3128,6 +3026,38 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.hardware_animation_status_label.setText(
                 f"{self.tr_static('Hardwareanimation aktiv')} · {self.animated_hardware_live_summary()}"
             )
+        if hasattr(self, "mainboard_fan_cards_layout"):
+            # Fan cards are rebuilt after detection and therefore do not exist
+            # in the initial static-widget snapshot on every system.
+            self.refresh_mainboard_fan_table(refresh_related=False)
+            self.refresh_cooling_dashboard_summary()
+        if hasattr(self, "navigation"):
+            self.update_navigation_visibility()
+        if hasattr(self, "display_effects_page"):
+            self.display_effects_page.refresh_language()
+        if hasattr(self, "lcd_section_tabs"):
+            self.lcd_section_tabs.refresh_language()
+        if hasattr(self, "temperature_history_chart"):
+            self.temperature_history_chart.set_empty_text(
+                self.tr_static("Noch keine Temperaturwerte in dieser Sitzung")
+            )
+            self.temperature_history_chart.set_series_labels(
+                {"cpu": "CPU", "gpu": "GPU", "liquid": self.tr_static("Kühlmittel")}
+            )
+        if hasattr(self, "temperature_detail_chart"):
+            self.temperature_detail_chart.set_empty_text(
+                self.tr_static("Noch keine Temperaturwerte in dieser Sitzung")
+            )
+            self.refresh_temperature_sensor_tree()
+        if hasattr(self, "window_screen_combo"):
+            self.populate_window_screen_combo()
+        if hasattr(self, "cooling_quick_profile_buttons"):
+            # These captions contain the currently active profile and are
+            # assembled dynamically, so regenerate them after a language
+            # change instead of leaving the startup-language text behind.
+            self.restore_cooling_quick_profile_state()
+            self.update_cooling_mode_label()
+        self.update_hardware_backend_status()
         self.update_dashboard_status_hints()
 
     def configure_accessibility(self) -> None:
@@ -3151,7 +3081,6 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             "Strg+Umschalt+R: Geräteberechtigungen reparieren\n"
             "Strg+P: Profile verwalten\n"
             "Strg+I: Über-Bereich\n"
-            "Strg+Q: Beenden\n\n"
             "Kurveneditor: Pfeiltasten ändern den gewählten Punkt. Strg+Links/Rechts wählt einen anderen "
             "Punkt, Pos1/Ende wählen ersten/letzten Punkt. Tab und Umschalt+Tab wechseln normal zum nächsten Element."
         )
@@ -3179,9 +3108,20 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.background_widget.lower()
         self.content_root.raise_()
 
-        shell = QHBoxLayout(self.content_root)
+        content_layout = QVBoxLayout(self.content_root)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(0)
+        self.window_chrome = WindowChrome(
+            self, f"{DISPLAY_NAME} {APP_DISPLAY_VERSION}", self.content_root
+        )
+        content_layout.addWidget(self.window_chrome)
+        body = QWidget(self.content_root)
+        body.setObjectName("windowBody")
+        content_layout.addWidget(body, 1)
+        shell = QHBoxLayout(body)
         shell.setContentsMargins(14, 12, 14, 12)
         shell.setSpacing(14)
+        self.frameless_resize_controller = FramelessResizeController(self)
 
         # Persistent product rail.  There is deliberately no "Community Edition"
         # subtitle: OHC has one edition and its open-source nature is already
@@ -3261,6 +3201,11 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
 
         self.tabs = QTabWidget()
         self.tabs.setDocumentMode(True)
+        self.lcd_section_tabs = SectionTabsController(
+            (("Display & Layout", 3), ("Display-Effekte", 11)),
+            self.tabs.setCurrentIndex,
+            self.tr_static,
+        )
         self.tabs.addTab(self.make_dashboard_tab(), "Übersicht")
         self.tabs.addTab(self.make_cooling_tab(), "Kühlung")
         self.tabs.addTab(self.make_rgb_tab(), "RGB-Studio")
@@ -3272,10 +3217,26 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.tabs.addTab(self.make_openlinkhub_tab(), "OpenLinkHub")
         self.tabs.addTab(self.make_wallpaper_engine_tab(), "Wallpaper Engine")
         self.tabs.addTab(self.make_desktop_designs_tab(), "Desktop-Designs")
+        self.display_effects_page_index = self.tabs.addTab(self.make_display_effects_tab(), "Display-Effekte")
         self.help_page_index = self.tabs.addTab(self.make_help_tab(), "Hilfe")
+        self.case_page_index = self.tabs.addTab(build_case_page(self), "Gehäuse")
+        self.hardware_checker_page = build_hardware_checker_page(self); self.hardware_checker_page_index = self.tabs.addTab(self.hardware_checker_page, "Hardware-Checker")
+        self.gpu_control_page = GpuControlPage(self); self.gpu_control_page_index = self.tabs.addTab(self.gpu_control_page, "Grafikkarte")
+        self.snapshot_manager_page = build_snapshot_manager_page(self); self.snapshot_manager_page_index = self.tabs.addTab(self.snapshot_manager_page, "Snapshot-Manager")
+        self.design_automation_page = build_design_automation_page(self)
+        self.design_automation_page_index = self.tabs.addTab(self.design_automation_page, "Automationszentrale")
+        self.navigation_items["automations"].setData(
+            0, Qt.ItemDataRole.UserRole, self.design_automation_page_index
+        )
+        self.programs_page = build_programs_page(self)
+        self.programs_page_index = self.tabs.addTab(self.programs_page, "Programme")
+        self.navigation_items["programs"].setData(
+            0, Qt.ItemDataRole.UserRole, self.programs_page_index
+        )
         self.tabs.tabBar().hide()
         self.tabs.currentChanged.connect(self.update_page_header)
         self.tabs.currentChanged.connect(self.sync_navigation_to_page)
+        self.tabs.currentChanged.connect(self.lcd_section_tabs.set_page)
         main_layout.addWidget(self.tabs, 1)
 
         footer = QHBoxLayout()
@@ -3297,6 +3258,12 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
 
     def update_page_header(self, page: int) -> None:
         titles = {
+            getattr(self, "gpu_control_page_index", -1): ("Grafikkarte", "LACT-Tuning, Lüfterbesitz und GPU-Hardware."),
+            getattr(self, "snapshot_manager_page_index", -1): ("Snapshot-Manager", "Snapshots erkennen, Aufräumlast begrenzen und Spiele schützen."),
+            getattr(self, "design_automation_page_index", -1): ("Automationszentrale", "Profile nach Zeit, Anwendung oder Spiel automatisch wechseln."),
+            getattr(self, "programs_page_index", -1): ("Programme", "Installierte Programme und wiederverwendbare Installationsprofile verwalten."),
+            13: ("Gehäuse", "PC-Ansicht · Gehäuse, Profile und Komponentenpositionen"),
+            14: ("Hardware-Checker", "CPU, SMT, PCIe, NVMe und RAM automatisch prüfen."),
             0: ("Übersicht", "Systemstatus und erkannte Hardware auf einen Blick."),
             1: ("Kühlungszentrale", "Überwache und steuere Pumpe, Radiator- und Gehäuselüfter."),
             2: ("RGB-Studio", "Beleuchtung, Geräte und räumliche RGB-Zuordnung."),
@@ -3308,14 +3275,15 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             8: ("OpenLinkHub", "Corsair-Geräte über die lokale OpenLinkHub-Schnittstelle."),
             9: ("Wallpaper Engine", "Workshop-Wallpaper, lokale Videos und Plasma-Wiedergabe."),
             10: ("Desktop-Designs", "Experimentelle Desktop-Designs und Wiederherstellung."),
+            11: ("Display-Effekte", "Dynamische Animationen für unterstützte Hardware-Displays gestalten und übertragen."),
         }
         if page == getattr(self, "help_page_index", -1):
             title, subtitle = "Hilfe", "Anleitungen und Erklärungen direkt in Open Hardware Control."
         else:
             title, subtitle = titles.get(page, (self.tabs.tabText(page) if 0 <= page < self.tabs.count() else "Open Hardware Control", ""))
         if hasattr(self, "page_title_label"):
-            self.page_title_label.setText(title)
-            self.page_subtitle_label.setText(subtitle)
+            self.page_title_label.setText(self.tr_static(title))
+            self.page_subtitle_label.setText(self.tr_static(subtitle))
 
     def make_module_hero(self, icon: str, title: str, text: str, badge: str = "") -> QFrame:
         """Shared compact module header used across all 3.4.25 pages."""
@@ -3359,8 +3327,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         about_action = menu.addAction("Über Open Hardware Control")
         about_action.triggered.connect(lambda: self.tabs.setCurrentIndex(6))
         menu.addSeparator()
-        quit_action = menu.addAction("Beenden")
-        quit_action.triggered.connect(self.quit_app)
+        close_action = menu.addAction(self.tr_static("Fenster schließen"))
+        close_action.triggered.connect(self.close)
         menu.exec(self.more_button.mapToGlobal(self.more_button.rect().bottomRight()))
 
     def make_help_tab(self) -> QWidget:
@@ -3493,6 +3461,9 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         if tuple(str(key) for key in saved) in NAVIGATION_LEGACY_DEFAULTS:
             return list(NAVIGATION_DEFAULT_ORDER)
         order = [str(key) for key in saved if str(key) in NAVIGATION_DEFAULT_ORDER]
+        if "gpu" not in order:
+            order.insert(0, "gpu")
+        if "case" not in order: order.insert(1 if order and order[0] == "gpu" else 0, "case")
         for key in NAVIGATION_DEFAULT_ORDER:
             if key not in order:
                 order.append(key)
@@ -3511,8 +3482,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         navigation.setObjectName("hardwareNavigation")
         navigation.setColumnCount(2)
         navigation.setHeaderHidden(True)
-        navigation.setIndentation(8)
-        navigation.setRootIsDecorated(False)
+        navigation.setIndentation(18)
+        navigation.setRootIsDecorated(True)
         navigation.setAccessibleName("Hardware- und Hauptnavigation")
         navigation.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         navigation.setDragDropMode(QAbstractItemView.DragDropMode.NoDragDrop)
@@ -3532,15 +3503,23 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 flags &= ~Qt.ItemFlag.ItemIsDragEnabled
                 flags &= ~Qt.ItemFlag.ItemIsDropEnabled
             item.setFlags(flags)
+            if key == "gpu": item.setIcon(0, QIcon(str(Path(__file__).resolve().parent / "assets" / "gpu" / "gpu-control.svg")))
             self.navigation_items[key] = item
             return item
 
         self.nav_overview = page_item("overview", "⌂   Übersicht", 0, fixed=True)
         navigation.addTopLevelItem(self.nav_overview)
         configurable = {
+            "gpu": ("Grafikkarte", 15),
+            "case": ("▥   Gehäuse", 13),
+            "hardware_checker": ("▣✓   Hardware-Checker", 14),
+            "snapshot_manager": ("◫   Snapshot-Manager", 16),
+            "automations": ("⌁   Automationszentrale", -1),
+            "programs": ("▦   Programme", -1),
             "cooling": ("▥◉   Kühlung", 1),
             "rgb_studio": ("◉   RGB-Studio", 2),
             "lcd": ("▣   LCD", 3),
+            "display_effects": ("✦   Display-Effekte", 11),
             "profiles": ("☷   Profile", 5),
             "log": ("▤   Log", 7),
             "openlinkhub": ("⇄   Corsair · OpenLinkHub", 8),
@@ -3550,12 +3529,19 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             "about": ("ⓘ   Über", 6),
         }
         for key in self.navigation_user_order:
+            if key == "display_effects": continue
             text, page = configurable[key]
             navigation.addTopLevelItem(page_item(key, text, page))
 
         self.nav_nzxt = self.navigation_items["cooling"]
+        self.install_temperature_recording_navigation(page_item)
         self.nav_rgb_studio = self.navigation_items["rgb_studio"]
         self.nav_lcd = self.navigation_items["lcd"]
+        self.nav_lcd_studio = page_item("lcd_studio", "Display & Layout", 3, fixed=True)
+        self.nav_display_effects = page_item("display_effects", "Display-Effekte", 11, fixed=True)
+        self.nav_lcd.addChild(self.nav_lcd_studio)
+        self.nav_lcd.addChild(self.nav_display_effects)
+        self.nav_lcd.setExpanded(False)
         self.nav_profiles = self.navigation_items["profiles"]
         self.nav_log = self.navigation_items["log"]
         self.nav_openlinkhub = self.navigation_items["openlinkhub"]
@@ -3595,6 +3581,38 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.settings.setValue("navigation/hidden", json.dumps(sorted(self.navigation_user_hidden), ensure_ascii=False))
         self.settings.sync()
 
+    def sync_navigation_module_settings(self) -> None:
+        for key, checkbox in getattr(self, "navigation_module_checkboxes", {}).items():
+            blocked = checkbox.blockSignals(True)
+            enabled = key not in self.navigation_user_hidden
+            checkbox.setChecked(enabled)
+            checkbox.blockSignals(blocked)
+            dot = getattr(self, "navigation_module_status_dots", {}).get(key)
+            if dot is not None:
+                dot.setText("●" if enabled else "○")
+                dot.setObjectName("moduleVisibilityDotOn" if enabled else "moduleVisibilityDotOff")
+                dot.style().unpolish(dot)
+                dot.style().polish(dot)
+
+    def set_navigation_module_enabled(self, key: str, enabled: bool) -> None:
+        key = str(key)
+        if key not in NAVIGATION_DEFAULT_ORDER:
+            return
+        if enabled:
+            self.navigation_user_hidden.discard(key)
+        else:
+            self.navigation_user_hidden.add(key)
+        self.save_navigation_preferences()
+        self.update_navigation_visibility()
+        self.sync_navigation_module_settings()
+
+    def show_all_navigation_modules(self) -> None:
+        self.navigation_user_hidden.clear()
+        self.save_navigation_preferences()
+        self.update_navigation_visibility()
+        self.sync_navigation_module_settings()
+        self.footer_status.setText(self.tr_static("Alle Module werden im Seitenmenü angezeigt"))
+
     def normalize_navigation_fixed_items(self) -> None:
         if not hasattr(self, "navigation"):
             return
@@ -3621,6 +3639,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         else:
             self.navigation_user_hidden.add(key)
         self.save_navigation_preferences()
+        self.sync_navigation_module_settings()
 
     def toggle_navigation_customization(self) -> None:
         self.navigation_edit_mode = not self.navigation_edit_mode
@@ -3633,20 +3652,30 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             )
             for key, item in self.navigation_items.items():
                 base = str(item.data(0, Qt.ItemDataRole.UserRole.value + 2) or item.text(0)).lstrip("≡ ")
+                translated_base = self.tr_static(base)
                 if key == "overview":
-                    item.setText(0, base)
+                    item.setText(0, translated_base)
                     item.setFlags((item.flags() | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled) & ~Qt.ItemFlag.ItemIsDragEnabled & ~Qt.ItemFlag.ItemIsDropEnabled)
+                    continue
+                if key in {"cooling_controls", "temperature_recording", "lcd_studio", "display_effects"}:
+                    item.setText(0, translated_base)
+                    item.setFlags(
+                        (item.flags() | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
+                        & ~Qt.ItemFlag.ItemIsDragEnabled
+                        & ~Qt.ItemFlag.ItemIsDropEnabled
+                        & ~Qt.ItemFlag.ItemIsUserCheckable
+                    )
                     continue
                 flags = item.flags() | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled
                 if self.navigation_edit_mode:
                     flags |= Qt.ItemFlag.ItemIsDragEnabled | Qt.ItemFlag.ItemIsDropEnabled | Qt.ItemFlag.ItemIsUserCheckable
-                    item.setText(0, "≡  " + base)
+                    item.setText(0, "≡  " + translated_base)
                     item.setCheckState(1, Qt.CheckState.Unchecked if key in self.navigation_user_hidden else Qt.CheckState.Checked)
                 else:
                     flags &= ~Qt.ItemFlag.ItemIsDragEnabled
                     flags &= ~Qt.ItemFlag.ItemIsDropEnabled
                     flags &= ~Qt.ItemFlag.ItemIsUserCheckable
-                    item.setText(0, base)
+                    item.setText(0, translated_base)
                 item.setFlags(flags)
         finally:
             self.navigation.blockSignals(False)
@@ -3655,6 +3684,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.update_navigation_visibility()
         if not self.navigation_edit_mode:
             self.save_navigation_preferences()
+        self.sync_navigation_module_settings()
 
     def reset_navigation_customization(self) -> None:
         self.navigation_user_hidden.clear()
@@ -3667,15 +3697,22 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 root.takeChild(0)
             root.addChild(self.nav_overview)
             for key in NAVIGATION_DEFAULT_ORDER:
+                if key == "display_effects":
+                    continue
                 item = movable.get(key) or self.navigation_items.get(key)
                 if item is not None:
                     root.addChild(item)
                     item.setCheckState(1, Qt.CheckState.Checked)
+            self.nav_lcd.addChild(self.nav_lcd_studio)
+            self.nav_lcd.addChild(self.nav_display_effects)
+            self.nav_lcd.setExpanded(False)
+            self.restore_temperature_recording_navigation()
         finally:
             self.navigation.blockSignals(False)
         self.save_navigation_preferences()
         self.update_cooling_navigation_icon()
         self.update_navigation_visibility()
+        self.sync_navigation_module_settings()
         self.log_message("NAVIGATION: Standardreihenfolge und Standardsichtbarkeit wiederhergestellt")
 
     def update_cooling_navigation_icon(self) -> None:
@@ -3689,31 +3726,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         icon = "▥◉" if has_aio and has_case_fans else "▥" if has_aio else "◉" if has_case_fans else "❄"
         text = f"{icon}   Kühlung"
         self.nav_nzxt.setData(0, Qt.ItemDataRole.UserRole.value + 2, text)
-        self.nav_nzxt.setText(0, ("≡  " if self.navigation_edit_mode else "") + text)
-
-    def on_navigation_changed(self, current: QTreeWidgetItem | None, _previous: QTreeWidgetItem | None) -> None:
-        if current is None:
-            return
-        page = current.data(0, Qt.ItemDataRole.UserRole)
-        if isinstance(page, int):
-            self.tabs.setCurrentIndex(page)
-
-    def sync_navigation_to_page(self, page: int) -> None:
-        if page != 2:
-            if hasattr(self, "rgb_selection_list"):
-                self.rgb_selection_list.collapseAll()
-        if not hasattr(self, "navigation"):
-            return
-        root = self.navigation.invisibleRootItem()
-        pending = [root.child(i) for i in range(root.childCount())]
-        while pending:
-            item = pending.pop(0)
-            if item.data(0, Qt.ItemDataRole.UserRole) == page and not item.isHidden():
-                self.navigation.blockSignals(True)
-                self.navigation.setCurrentItem(item)
-                self.navigation.blockSignals(False)
-                return
-            pending.extend(item.child(i) for i in range(item.childCount()))
+        self.nav_nzxt.setText(0, ("≡  " if self.navigation_edit_mode else "") + self.tr_static(text))
 
     def update_navigation_visibility(self) -> None:
         if not hasattr(self, "nav_nzxt"):
@@ -3721,9 +3734,13 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.update_cooling_navigation_icon()
         show_all = bool(self.show_undetected_modules)
         hardware_visible = {
+            "hardware_checker": True,
+            "snapshot_manager": True,
+            "programs": True,
             "cooling": True,
             "rgb_studio": True,
-            "lcd": show_all or bool(getattr(self, "devices_ready", False)) or thermalright_display_present(),
+            "lcd": IS_WINDOWS or show_all or bool(getattr(self, "devices_ready", False)) or thermalright_display_present(),
+            "display_effects": True,
             "profiles": True,
             "log": True,
             "openlinkhub": show_all or bool(getattr(self, "openlinkhub_detected", False)),
@@ -3732,6 +3749,13 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             "settings": True,
             "about": True,
         }
+        feature_navigation = {
+            nav_key: feature.key
+            for feature in feature_choices()
+            for nav_key in feature.navigation_keys
+        }
+        for nav_key, feature_key in feature_navigation.items():
+            hardware_visible[nav_key] = hardware_visible.get(nav_key, True) and self.feature_enabled(feature_key)
         for key in NAVIGATION_DEFAULT_ORDER:
             item = self.navigation_items.get(key)
             if item is None:
@@ -3819,108 +3843,6 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.tabs.setCurrentIndex(0)
         state = "eingeblendet" if enabled else "ausgeblendet"
         self.log_message(f"EXPERIMENTELL: Desktop-Designs {state}")
-
-    def make_openlinkhub_tab(self) -> QWidget:
-        page = QScrollArea()
-        page.setWidgetResizable(True)
-        page.setFrameShape(QFrame.Shape.NoFrame)
-        content = QWidget()
-        page.setWidget(content)
-        layout = QVBoxLayout(content)
-        layout.setSpacing(14)
-
-        layout.setContentsMargins(16, 14, 22, 22)
-        layout.addWidget(self.make_module_hero(
-            "⇄", "Corsair · OpenLinkHub",
-            "Lokale Corsair-Geräte, Dienststatus, Telemetrie und freigegebene Steuerfunktionen in einer gemeinsamen OHC-Oberfläche.",
-            "Lokale API",
-        ))
-
-        status_box = QGroupBox("OpenLinkHub-Status")
-        status_layout = QGridLayout(status_box)
-        self.openlinkhub_version_label = QLabel("Installation: wird geprüft …")
-        self.openlinkhub_service_label = QLabel("Dienstkontext: wird geprüft …")
-        self.openlinkhub_api_label = QLabel("Lokale API: wird geprüft …")
-        self.openlinkhub_warning_label = QLabel("")
-        self.openlinkhub_warning_label.setWordWrap(True)
-        self.openlinkhub_warning_label.setObjectName("warningText")
-        status_layout.addWidget(self.openlinkhub_version_label, 0, 0)
-        status_layout.addWidget(self.openlinkhub_service_label, 0, 1)
-        status_layout.addWidget(self.openlinkhub_api_label, 1, 0, 1, 2)
-        status_layout.addWidget(self.openlinkhub_warning_label, 2, 0, 1, 2)
-        layout.addWidget(status_box)
-
-        actions = QGridLayout()
-        self.openlinkhub_refresh_button = QPushButton("↻ OpenLinkHub aktualisieren")
-        self.openlinkhub_refresh_button.clicked.connect(self.refresh_openlinkhub_status)
-        dashboard = QPushButton("Web-Dashboard öffnen")
-        dashboard.clicked.connect(self.open_openlinkhub_dashboard)
-        self.openlinkhub_start_button = QPushButton("Benutzerdienst starten")
-        self.openlinkhub_start_button.clicked.connect(lambda: self.run_openlinkhub_user_action("start"))
-        self.openlinkhub_stop_button = QPushButton("Benutzerdienst stoppen")
-        self.openlinkhub_stop_button.clicked.connect(lambda: self.run_openlinkhub_user_action("stop"))
-        self.openlinkhub_restart_button = QPushButton("Benutzerdienst neu starten")
-        self.openlinkhub_restart_button.clicked.connect(lambda: self.run_openlinkhub_user_action("restart"))
-        self.openlinkhub_enable_button = QPushButton("Beim Login aktivieren")
-        self.openlinkhub_enable_button.clicked.connect(lambda: self.run_openlinkhub_user_action("enable"))
-        actions.addWidget(self.openlinkhub_refresh_button, 0, 0)
-        actions.addWidget(dashboard, 0, 1)
-        actions.addWidget(self.openlinkhub_enable_button, 0, 2)
-        actions.addWidget(self.openlinkhub_start_button, 1, 0)
-        actions.addWidget(self.openlinkhub_stop_button, 1, 1)
-        actions.addWidget(self.openlinkhub_restart_button, 1, 2)
-        actions.setColumnStretch(3, 1)
-        layout.addLayout(actions)
-
-        write_box = QGroupBox("Direkte Gerätesteuerung")
-        write_layout = QVBoxLayout(write_box)
-        self.openlinkhub_write_checkbox = QCheckBox(
-            "Direkte OpenLinkHub-Schreibzugriffe für diese Programmsitzung aktivieren"
-        )
-        self.openlinkhub_write_checkbox.toggled.connect(self.set_openlinkhub_writes_enabled)
-        self.openlinkhub_write_status_label = QLabel(
-            "Gesperrt · erst aktivieren, wenn genau eine OpenLinkHub-Instanz läuft."
-        )
-        self.openlinkhub_write_status_label.setWordWrap(True)
-        self.openlinkhub_write_status_label.setObjectName("warningText")
-        write_layout.addWidget(self.openlinkhub_write_checkbox)
-        write_layout.addWidget(self.openlinkhub_write_status_label)
-        layout.addWidget(write_box)
-
-        self.openlinkhub_devices_table = QTableWidget(0, 7)
-        self.openlinkhub_devices_table.setHorizontalHeaderLabels(
-            ["Gerät", "Kanal", "Temperatur", "Drehzahl", "Profil", "RGB", "Firmware"]
-        )
-        self.openlinkhub_devices_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.openlinkhub_devices_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.openlinkhub_devices_table.setAccessibleName("Von OpenLinkHub erkannte Corsair-Geräte")
-        self.openlinkhub_devices_table.setMinimumHeight(230)
-        layout.addWidget(self.openlinkhub_devices_table)
-
-        layout.addWidget(self.make_openlinkhub_control_tabs())
-
-        help_box = QGroupBox("Dienstkontext und Hilfe")
-        help_layout = QVBoxLayout(help_box)
-        help_text = QLabel(
-            "Für Medienwiedergabe und virtuelles Audio muss OpenLinkHub im Benutzerkontext laufen. "
-            "Open Hardware Control verändert oder entfernt den systemweiten Dienst nicht automatisch, damit niemals "
-            "zwei OpenLinkHub-Instanzen gleichzeitig auf dieselbe Hardware zugreifen. Dasselbe Corsair-Gerät darf "
-            "auch nicht gleichzeitig von OpenLinkHub und ckb-next gesteuert werden."
-        )
-        help_text.setWordWrap(True)
-        help_layout.addWidget(help_text)
-        migration_help = QPushButton("Migrationshilfe: System → Benutzer")
-        migration_help.clicked.connect(self.show_openlinkhub_migration_help)
-        help_layout.addWidget(migration_help)
-        links = QHBoxLayout()
-        links.addWidget(self.make_external_link("Offizielles OpenLinkHub-Projekt", OPENLINKHUB_URL))
-        links.addWidget(self.make_external_link("API-Dokumentation", OPENLINKHUB_API_DOCS_URL))
-        links.addWidget(self.make_external_link("Offizielle Benutzerinstallation", OPENLINKHUB_USER_INSTALL_URL))
-        links.addStretch()
-        help_layout.addLayout(links)
-        layout.addWidget(help_box)
-        layout.addStretch()
-        return page
 
     def make_openlinkhub_control_tabs(self) -> QWidget:
         self.openlinkhub_write_buttons: list[QPushButton] = []
@@ -4998,6 +4920,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             user_available and context not in {"system", "conflict"} and user.get("enabled") != "enabled"
         )
         self.populate_openlinkhub_devices(devices)
+        self.refresh_openlinkhub_nexus_widgets(devices)
         self.populate_openlinkhub_control_widgets(devices)
         self.update_openlinkhub_write_state()
         self.update_navigation_visibility()
@@ -5230,6 +5153,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.temp_card = ValueCard("Kraken", self.format_temperature(None), "Kühlmittel")
         self.cpu_temp_card = ValueCard("CPU", self.format_temperature(None), "Temperatur")
         self.gpu_temp_card = ValueCard("GPU", self.format_temperature(None), "AMD dediziert")
+        for card, source in ((self.temp_card, "liquid"), (self.cpu_temp_card, "cpu"), (self.gpu_temp_card, "gpu")):
+            card.enable_temperature_gauge(source)
         self.pump_card = ValueCard("Pumpe", "— rpm", "— % Leistung")
         self.fan_card = ValueCard("Radiator", "— rpm", "— % Leistung")
         self.firmware_card = ValueCard("LCD / Firmware", "—", "240 × 240")
@@ -5255,18 +5180,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             ("gpu_memory", "Grafikspeicher", self.gpu_memory_card),
         ]
         self.dashboard_cards = [card for _key, _title, card in self.dashboard_card_entries]
-        self.dashboard_card_checkboxes: dict[str, QCheckBox] = {}
-        visible_cards = set(sanitize_dashboard_cards(self.settings.value("dashboard/visible_cards")))
-        # Keep the customization state without consuming visible dashboard space.
-        self.dashboard_fields_hidden = QWidget()
-        hidden_layout = QVBoxLayout(self.dashboard_fields_hidden)
-        for key, title, _card in self.dashboard_card_entries:
-            checkbox = QCheckBox(title)
-            checkbox.setChecked(key in visible_cards)
-            checkbox.toggled.connect(lambda checked, value=key: self.set_dashboard_card_visible(value, checked))
-            self.dashboard_card_checkboxes[key] = checkbox
-            hidden_layout.addWidget(checkbox)
-        self.dashboard_fields_hidden.setVisible(False)
+        self.install_dashboard_card_customization(layout, status_layout)
         layout.addWidget(cards_frame)
 
         quick = QFrame()
@@ -5289,6 +5203,53 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             ql.addWidget(button, 1)
         qv.addLayout(ql)
         layout.addWidget(quick)
+
+        history = QFrame()
+        history.setObjectName("dashboardSection")
+        history_layout = QVBoxLayout(history)
+        history_layout.setContentsMargins(14, 12, 14, 12)
+        history_header = QHBoxLayout()
+        history_header.addWidget(QLabel("Kühlung & Temperaturverlauf", objectName="sectionTitle"))
+        history_header.addStretch()
+        history_header.addWidget(QLabel("Zeitraum"))
+        self.temperature_history_range_combo = QComboBox()
+        for title, seconds in (("Letzte 5 Minuten", 300), ("Letzte 15 Minuten", 900), ("Letzte 60 Minuten", 3600), ("Gesamte Sitzung", None)):
+            self.temperature_history_range_combo.addItem(title, seconds)
+        saved_history_range = int(self.settings.value("temperature_history/range_seconds", 900))
+        history_range_index = self.temperature_history_range_combo.findData(
+            None if saved_history_range <= 0 else saved_history_range
+        )
+        self.temperature_history_range_combo.setCurrentIndex(max(0, history_range_index))
+        self.temperature_history_range_combo.currentIndexChanged.connect(self.update_temperature_history_options)
+        history_header.addWidget(self.temperature_history_range_combo)
+        history_layout.addLayout(history_header)
+        history_note = QLabel(
+            "Fahre mit der Maus über das Diagramm, um Uhrzeit und Messwerte zu vergleichen. "
+            "Die Aufzeichnung bleibt in dieser Sitzung und wird nicht gespeichert."
+        )
+        history_note.setWordWrap(True)
+        history_note.setObjectName("muted")
+        history_layout.addWidget(history_note)
+        series_row = QHBoxLayout()
+        series_row.addWidget(QLabel("Hardware auswählen"))
+        self.temperature_history_checks: dict[str, QCheckBox] = {}
+        for key, title, color in (("cpu", "CPU", "#36c5ff"), ("gpu", "GPU", "#d06cff"), ("liquid", "Kühlmittel", "#52d6a8")):
+            checkbox = QCheckBox(title)
+            checkbox.setChecked(self.settings.value(f"temperature_history/show_{key}", True, type=bool))
+            checkbox.setStyleSheet(f"QCheckBox {{ color: {color}; font-weight: 600; }}")
+            checkbox.toggled.connect(self.update_temperature_history_options)
+            self.temperature_history_checks[key] = checkbox
+            series_row.addWidget(checkbox)
+        series_row.addStretch()
+        history_layout.addLayout(series_row)
+        self.temperature_history_chart = TemperatureHistoryChart(self.temperature_history)
+        self.temperature_history_chart.set_temperature_unit(self.temperature_unit)
+        self.temperature_history_chart.set_series_labels(
+            {"cpu": "CPU", "gpu": "GPU", "liquid": self.tr_static("Kühlmittel")}
+        )
+        history_layout.addWidget(self.temperature_history_chart)
+        layout.addWidget(history)
+        self.update_temperature_history_options()
 
         lower = QHBoxLayout()
         lower.setSpacing(12)
@@ -5365,6 +5326,9 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
     def make_cooling_tab(self) -> QWidget:
         page = QWidget()
         outer = QVBoxLayout(page)
+        self.cooling_subtabs = QTabWidget()
+        self.cooling_subtabs.setDocumentMode(True)
+        outer.addWidget(self.cooling_subtabs)
         scroll = QScrollArea()
         self.cooling_page_scroll = scroll
         scroll.setWidgetResizable(True)
@@ -5372,7 +5336,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         layout = QVBoxLayout(content)
         layout.setSpacing(14)
 
-        manual = QGroupBox("Manuelle Steuerung")
+        manual = QGroupBox("Direkte Werte & Profil-Festwerte")
         mg = QGridLayout(manual)
         self.pump_slider, self.pump_percent = self.make_percent_slider(20, 100, 52)
         self.fan_slider, self.fan_percent = self.make_percent_slider(0, 100, 52)
@@ -5411,6 +5375,19 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         radiator_test.clicked.connect(lambda: self.start_thermalright_channel_test("fan"))
         aio_form.addRow("Kühlsystem", self.cooling_hardware_combo)
         aio_form.addRow(self.cooling_hardware_status)
+        minimum_panel = QFrame()
+        minimum_panel.setObjectName("coolingSafetyNote")
+        minimum_layout = QVBoxLayout(minimum_panel)
+        minimum_layout.setContentsMargins(12, 10, 12, 10)
+        minimum_layout.setSpacing(4)
+        minimum_title = QLabel("Sichere Untergrenzen")
+        minimum_title.setObjectName("coolingSafetyTitle")
+        self.cooling_minimum_note = QLabel()
+        self.cooling_minimum_note.setWordWrap(True)
+        self.cooling_minimum_note.setObjectName("coolingSafetyText")
+        minimum_layout.addWidget(minimum_title)
+        minimum_layout.addWidget(self.cooling_minimum_note)
+        aio_form.addRow(minimum_panel)
         aio_form.addRow("Pumpe (4-Pin PWM)", self.thermalright_pump_channel_combo)
         aio_form.addRow(pump_test)
         aio_form.addRow("Radiatorlüfter (4-Pin PWM)", self.thermalright_radiator_channel_combo)
@@ -5430,8 +5407,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.cooling_mode_label.setWordWrap(True)
         self.cooling_mode_label.setObjectName("infoText")
         self.cooling_mode_hint = QLabel(
-            "CPU-Kurven werden von Open Hardware Control laufend berechnet. Ein manueller Wert oder ein Schnellprofil "
-            "deaktiviert die CPU-Kurve des jeweiligen Kanals."
+            "CPU-Kurven werden von Open Hardware Control laufend berechnet. Ein eigener Festwert oder ein Schnellprofil "
+            "deaktiviert die CPU-Kurve des jeweiligen Kanals. Schnellprofile bleiben als Profil-Festwert erkennbar."
         )
         self.cooling_mode_hint.setWordWrap(True)
         self.cooling_mode_hint.setObjectName("muted")
@@ -5451,7 +5428,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             row_layout.setContentsMargins(0, 0, 0, 0)
             row_label = QLabel(label)
             row_label.setMinimumWidth(145)
-            manual_button = QPushButton("Manuell aktivieren")
+            manual_button = QPushButton("Eigenen Festwert anwenden")
             curve_button = QPushButton(curve_text)
             for button in (manual_button, curve_button):
                 button.setObjectName("coolingModeButton")
@@ -5514,7 +5491,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 self.cpu_profile_combo.insertSeparator(self.cpu_profile_combo.count())
                 current_family = profile.family
             self.cpu_profile_combo.addItem(profile.model, profile.model)
-        self.cpu_profile_combo.currentIndexChanged.connect(self.update_cpu_profile_preview)
+        self.cpu_profile_combo.currentIndexChanged.connect(self.on_cpu_profile_selection_changed)
 
         detect_cpu = QPushButton("CPU &automatisch erkennen")
         detect_cpu.clicked.connect(self.detect_and_select_cpu)
@@ -5536,6 +5513,19 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         cpu_buttons_layout.addWidget(apply_cpu)
         cpu_form.addRow("Prozessor", self.cpu_profile_combo)
         cpu_form.addRow(cpu_buttons)
+        self.cpu_curve_auto_checkbox = QCheckBox(
+            "CPU beim Start automatisch erkennen und passende Standardkurven laden"
+        )
+        self.cpu_curve_auto_checkbox.setChecked(self.cpu_curve_auto_detect_enabled)
+        self.cpu_curve_auto_checkbox.toggled.connect(self.set_cpu_curve_auto_detection)
+        cpu_form.addRow(self.cpu_curve_auto_checkbox)
+        self.cpu_curve_auto_status = QLabel()
+        self.cpu_curve_auto_status.setWordWrap(True)
+        self.cpu_curve_auto_status.setObjectName("muted")
+        cpu_form.addRow(self.cpu_curve_auto_status)
+        restore_cpu_defaults = QPushButton("Erkannte CPU-Standardkurven erneut laden")
+        restore_cpu_defaults.clicked.connect(self.restore_detected_cpu_curve_defaults)
+        cpu_form.addRow(restore_cpu_defaults)
         cpu_form.addRow(self.cpu_profile_info)
         cpu_form.addRow(self.cpu_current_label)
 
@@ -5567,6 +5557,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         ownership_layout.addWidget(self.cooling_release_button)
         ownership_layout.addWidget(self.cooling_autostart_button)
         mb_layout.addWidget(ownership_box)
+        mb_layout.addWidget(cpu_box)
 
         mb_status_row = QHBoxLayout()
         self.mainboard_detection_label = QLabel("Mainboard-/PWM-Erkennung: noch nicht ausgeführt")
@@ -5616,8 +5607,11 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         cards_title.setObjectName("sectionTitle")
         assistant_button = QPushButton("Geführten Lüfter-Assistenten starten")
         assistant_button.clicked.connect(self.start_chassis_fan_assistant)
+        reset_assignments = QPushButton("Alle Lüfterzuordnungen zurücksetzen")
+        reset_assignments.clicked.connect(self.reset_chassis_fan_assignments)
         cards_header.addWidget(cards_title)
         cards_header.addStretch()
+        cards_header.addWidget(reset_assignments)
         cards_header.addWidget(assistant_button)
         mb_layout.addLayout(cards_header)
 
@@ -5636,7 +5630,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         layout_note.setWordWrap(True)
         layout_note.setObjectName("muted")
         self.cooling_layout_diagram = CoolingLayoutDiagram()
-        self.cooling_layout_diagram.set_slots(self.rgb_layout_slots)
+        self.cooling_layout_diagram.slot_resized.connect(lambda slot_id, scale: resize_cooling_slot(self, slot_id, scale))
+        self.cooling_layout_diagram.set_slots(cooling_slots(self))
         self.cooling_layout_diagram.set_channel_assignments(self.mainboard_layout_assignments)
         self.cooling_layout_diagram.slot_focused.connect(self.select_cooling_layout_slot)
         layout_group_box.addWidget(layout_note)
@@ -5665,14 +5660,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.mainboard_preset_recommendation.setWordWrap(True)
         self.mainboard_preset_recommendation.setObjectName("muted")
         self.mainboard_sensor_source = QComboBox()
-        for label, value in (
-            ("CPU-Temperatur", "cpu"),
-            ("GPU-Temperatur", "gpu"),
-            ("Kraken-Kühlmittel", "liquid"),
-            ("Maximum aus CPU/GPU/Kühlmittel", "max"),
-            ("Gewichtet CPU/GPU", "weighted"),
-        ):
-            self.mainboard_sensor_source.addItem(label, value)
+        self.refresh_mainboard_sensor_source_choices()
         self.mainboard_cpu_weight = QSpinBox()
         self.mainboard_cpu_weight.setRange(0, 100)
         self.mainboard_cpu_weight.setValue(60)
@@ -5808,9 +5796,11 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.cooling_cpu_summary_label.setObjectName("coolingMetrics")
         self.cooling_cpu_summary_label.setWordWrap(True)
         cpu_layout.addWidget(self.cooling_cpu_summary_label)
+        self.cooling_cpu_gauge = TemperatureGauge("cpu", cpu_card)
+        cpu_layout.addWidget(self.cooling_cpu_gauge)
         cpu_profiles = QHBoxLayout()
         self.cooling_quick_profile_buttons: dict[str, QPushButton] = {}
-        for title, pump, fan in (("Leise", 45, 35), ("Ausbalanciert", 55, 50), ("Leistung", 100, 100)):
+        for title, pump, fan in (("Leise", 55, 35), ("Ausbalanciert", 70, 50), ("Leistung", 100, 100)):
             button = QPushButton(title)
             button.setObjectName("coolingQuickProfileButton")
             button.setProperty("profileState", "inactive")
@@ -5818,6 +5808,12 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.cooling_quick_profile_buttons[title] = button
             cpu_profiles.addWidget(button)
         cpu_layout.addLayout(cpu_profiles)
+        self.cooling_profile_behavior_label = QLabel(
+            "Schnellprofile setzen Pumpe und Radiator auf feste Profilwerte; Gehäuselüfter erhalten die gleichnamige Kurvenvorlage."
+        )
+        self.cooling_profile_behavior_label.setWordWrap(True)
+        self.cooling_profile_behavior_label.setObjectName("muted")
+        cpu_layout.addWidget(self.cooling_profile_behavior_label)
         self.cooling_cpu_details_button = QPushButton("Details einblenden ⌄")
         self.cooling_cpu_details_button.setCheckable(True)
         self.cooling_cpu_details_button.clicked.connect(lambda checked: self.show_cooling_dashboard_section("cpu", checked))
@@ -5852,9 +5848,10 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             case_profiles.addWidget(button)
         case_layout.addLayout(case_profiles)
         automatic_row = QHBoxLayout()
-        automatic_row.addWidget(QLabel("Automatische Regelung"))
-        self.cooling_auto_case_button = QPushButton("Starten")
-        self.cooling_auto_case_button.setObjectName("primaryAction")
+        self.cooling_auto_case_button = QPushButton("Automatische Regelung")
+        self.cooling_auto_case_button.setObjectName("coolingQuickProfileButton")
+        self.cooling_auto_case_button.setCheckable(True)
+        self.cooling_auto_case_button.setProperty("profileState", "inactive")
         self.cooling_auto_case_button.clicked.connect(self.toggle_case_fan_control_from_dashboard)
         automatic_row.addWidget(self.cooling_auto_case_button, 1)
         case_layout.addLayout(automatic_row)
@@ -5881,7 +5878,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         cpu_details_layout = QVBoxLayout(cpu_details)
         cpu_details_layout.setContentsMargins(0, 2, 0, 0)
         cpu_details_layout.setSpacing(10)
-        for widget in (aio_box, mode_box, manual, curves_box, cpu_box, safety):
+        for widget in (aio_box, mode_box, manual, curves_box, safety):
             cpu_details_layout.addWidget(widget)
         cpu_details_layout.addStretch()
         case_details = QWidget()
@@ -5901,7 +5898,10 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         layout.addWidget(dashboard)
         layout.addStretch()
         scroll.setWidget(content)
-        outer.addWidget(scroll)
+        self.cooling_subtabs.addTab(scroll, "Steuerung & Profile")
+        self.cooling_subtabs.addTab(self.make_temperature_recording_page(), "Temperaturaufzeichnung")
+        self.cooling_subtabs.currentChanged.connect(self.sync_cooling_navigation_to_subtab)
+        self.update_cooling_duty_limits()
         return page
 
     def make_curve_group(
@@ -5924,12 +5924,24 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             table.setItem(row, 0, QTableWidgetItem(str(self.display_temperature_int(temp))))
             table.setItem(row, 1, QTableWidgetItem(str(duty)))
 
-        editor.pointsChanged.connect(lambda points, t=table: self.update_curve_table(t, points))
-        table.itemChanged.connect(lambda _item, t=table, e=editor: self.update_curve_editor_from_table(t, e))
+        editor.pointsChanged.connect(
+            lambda points, t=table: (
+                self.update_curve_table(t, points), self.mark_cpu_curve_user_override()
+            )
+        )
+        table.itemChanged.connect(
+            lambda _item, t=table, e=editor: (
+                self.update_curve_editor_from_table(t, e), self.mark_cpu_curve_user_override()
+            )
+        )
 
         buttons = QHBoxLayout()
         reset_btn = QPushButton("&Standardwerte")
-        reset_btn.clicked.connect(lambda _=False, e=editor, t=table, p=list(defaults): self.reset_curve_editor(e, t, p))
+        reset_btn.clicked.connect(
+            lambda _=False, e=editor, t=table, p=list(defaults): (
+                self.reset_curve_editor(e, t, p), self.mark_cpu_curve_user_override()
+            )
+        )
         apply_btn = QPushButton("Kurve &anwenden")
         apply_btn.clicked.connect(lambda: self.apply_curve(channel, table))
         buttons.addWidget(reset_btn)
@@ -5978,7 +5990,6 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         editor.set_points(points)
         self.update_curve_table(table, points)
 
-    # ---------- compact cooling dashboard / ownership ----------
     def show_cooling_dashboard_section(self, section: str, checked: bool = True) -> None:
         if not hasattr(self, "cooling_detail_stack"):
             return
@@ -5986,7 +5997,9 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.cooling_detail_stack.setCurrentIndex(0)
             self.cooling_detail_stack.setVisible(bool(checked))
             if hasattr(self, "cooling_cpu_details_button"):
-                self.cooling_cpu_details_button.setText("Details ausblenden ⌃" if checked else "Details einblenden ⌄")
+                self.cooling_cpu_details_button.setText(self.tr_static(
+                    "Details ausblenden ⌃" if checked else "Details einblenden ⌄"
+                ))
         else:
             self.cooling_detail_stack.setCurrentIndex(1)
             self.cooling_detail_stack.setVisible(bool(checked))
@@ -6002,198 +6015,44 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.cooling_layout_group.setFocus()
 
     def toggle_case_fan_control_from_dashboard(self) -> None:
-        self.refresh_cooling_ownership_status()
-        if self.cooling_owner_status.coolercontrol_active:
-            self.show_error("CoolerControl besitzt die Lüftersteuerung. Bitte zuerst die Steuerung ausdrücklich mit OHC übernehmen.")
-            return
-        if not hasattr(self, "mainboard_master_enable"):
-            return
-        self.mainboard_master_enable.setChecked(not self.mainboard_master_enable.isChecked())
+        from modules.cooling_state.v1_0.controller import toggle_dashboard
+        toggle_dashboard(self)
 
     def refresh_cooling_dashboard_summary(self) -> None:
-        liquid = self.format_temperature(self.current_liquid_temp) if self.current_liquid_temp is not None else (
-            "nicht vorhanden" if self.is_thermalright_cooling() else "—"
-        )
         cpu = self.format_temperature(self.current_cpu_temp) if self.current_cpu_temp is not None else "—"
         pump = f"{int(self.current_pump_rpm)} rpm" if self.current_pump_rpm is not None else "—"
         radiator = f"{int(self.current_fan_rpm)} rpm" if self.current_fan_rpm is not None else "—"
         if hasattr(self, "cooling_cpu_summary_label"):
-            self.cooling_cpu_summary_label.setText(f"CPU {cpu}  ·  Flüssigkeit {liquid}  ·  Pumpe {pump}  ·  Radiator {radiator}")
+            parts = [f"CPU {cpu}"]
+            if not self.is_thermalright_cooling():
+                liquid = self.format_temperature(self.current_liquid_temp) if self.current_liquid_temp is not None else "—"
+                parts.append(f"{self.tr_static('Flüssigkeit')} {liquid}")
+            parts.extend((
+                f"{self.tr_static('Pumpe')} {pump}",
+                f"{self.tr_static('Radiator')} {radiator}",
+            ))
+            self.cooling_cpu_summary_label.setText("  ·  ".join(parts))
         channels = self.chassis_mainboard_channels() if hasattr(self, "mainboard_channels") else []
         calibrated = sum(1 for channel in channels if bool(self.mainboard_fan_profiles.get(channel.stable_id, {}).get("calibrated", False)))
         active = sum(1 for channel in channels if bool(self.mainboard_fan_profiles.get(channel.stable_id, {}).get("enabled", False)))
         owner = "CoolerControl" if getattr(self, "cooling_owner_status", None) and self.cooling_owner_status.coolercontrol_active else "OHC / Firmware"
         if hasattr(self, "cooling_case_summary_label"):
-            self.cooling_case_summary_label.setText(f"{len(channels)} System-Fan-Kanäle  ·  {calibrated} zugeordnet  ·  {active} Profil aktiv")
+            self.cooling_case_summary_label.setText(
+                f"{len(channels)} {self.tr_static('System-Fan-Kanäle')}  ·  "
+                f"{calibrated} {self.tr_static('zugeordnet')}  ·  "
+                f"{active} {self.tr_static('Profil aktiv')}"
+            )
         if hasattr(self, "cooling_case_owner_label"):
             self.cooling_case_owner_label.setText(owner)
         if hasattr(self, "cooling_auto_case_button"):
-            self.cooling_auto_case_button.setText("Beenden" if self.mainboard_control_active else "Starten")
-
-    def refresh_cooling_ownership_status(self) -> None:
-        self.cooling_owner_status = detect_cooling_owner()
-        conflict = self.cooling_owner_status.coolercontrol_active
-        autostart = self.cooling_owner_status.coolercontrol_service_enabled
-        if hasattr(self, "cooling_ownership_label"):
-            if conflict:
-                startup_text = (
-                    "Der Dienst ist für den Systemstart aktiviert."
-                    if autostart
-                    else "Der Dienst wurde manuell gestartet; sein Systemstart ist deaktiviert."
-                )
-                self.cooling_ownership_label.setText(
-                    "⚠ Der CoolerControl-Hintergrunddienst coolercontrold ist aktiv – auch wenn das Programmfenster geschlossen ist. "
-                    f"{startup_text} OHC überwacht die Mainboardlüfter nur und schreibt keine PWM-Werte, bis du die Steuerung ausdrücklich übernimmst."
-                )
-                self.cooling_ownership_label.setObjectName("warningText")
-            else:
-                startup_text = (
-                    "Der Dienst ist momentan gestoppt, startet beim nächsten Systemstart aber erneut."
-                    if autostart
-                    else "Der automatische Systemstart von CoolerControl ist dauerhaft deaktiviert."
-                )
-                self.cooling_ownership_label.setText(
-                    "✓ Kein konkurrierender CoolerControl-Hintergrunddienst aktiv. "
-                    f"{startup_text} OHC darf nach Kalibrierung die bestätigten System-Fan-Kanäle übernehmen."
-                )
-                self.cooling_ownership_label.setObjectName("healthGood")
-            self.cooling_ownership_label.style().unpolish(self.cooling_ownership_label)
-            self.cooling_ownership_label.style().polish(self.cooling_ownership_label)
-        if hasattr(self, "cooling_takeover_button"):
-            self.cooling_takeover_button.setEnabled(conflict)
-        if hasattr(self, "cooling_release_button"):
-            self.cooling_release_button.setEnabled(not conflict)
-        if hasattr(self, "cooling_autostart_button"):
-            self.cooling_autostart_button.setText(
-                "CoolerControl dauerhaft deaktivieren"
-                if autostart
-                else "CoolerControl dauerhaft aktivieren"
-            )
-            self.cooling_autostart_button.setToolTip(
-                "Ändert nach ausdrücklicher Bestätigung den systemweiten Autostart von coolercontrold und benötigt Administratorrechte."
-            )
-        if hasattr(self, "mainboard_master_enable"):
-            self.mainboard_master_enable.setEnabled(not conflict)
-        if hasattr(self, "cooling_auto_case_button"):
-            self.cooling_auto_case_button.setEnabled(not conflict)
-        self.refresh_cooling_dashboard_summary()
-
-    def take_over_cooling_from_coolercontrol(self) -> None:
-        self.refresh_cooling_ownership_status()
-        if not self.cooling_owner_status.coolercontrol_active:
-            self.footer_status.setText("CoolerControl ist bereits inaktiv · OHC kann die bestätigten Lüfter übernehmen")
-            return
-        answer = QMessageBox.question(
-            self,
-            "Lüftersteuerung mit OHC übernehmen",
-            "CoolerControl läuft derzeit und kann dieselben hwmon/PWM-Kanäle bedienen. OHC wird niemals parallel dagegen schreiben.\n\n"
-            "CoolerControl jetzt über systemd/Polkit beenden und die Mainboard-Lüfter für Open Hardware Control freigeben? "
-            "Die OHC-Regelung startet dadurch noch nicht automatisch; du aktivierst sie anschließend bewusst.",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
-        )
-        if answer != QMessageBox.StandardButton.Yes:
-            return
-        ok, detail = stop_coolercontrol()
-        if not ok:
-            self.show_error("CoolerControl konnte nicht beendet werden: " + detail)
-            return
-        self.coolercontrol_stopped_by_ohc = True
-        self.log_message("KÜHLUNGSBESITZ: CoolerControl beendet · Mainboard-PWM für OHC freigegeben")
-        self.footer_status.setText("CoolerControl beendet · OHC kann bestätigte Gehäuselüfter übernehmen")
-        QTimer.singleShot(700, self.refresh_cooling_ownership_status)
-
-    def release_cooling_to_coolercontrol(self) -> None:
-        if self.mainboard_control_active:
-            self.mainboard_master_enable.setChecked(False)
-        self.restore_all_mainboard_fans_to_firmware(quiet=True)
-        ok, detail = start_coolercontrol()
-        if not ok:
-            self.show_error("CoolerControl konnte nicht gestartet werden: " + detail)
-            return
-        self.coolercontrol_stopped_by_ohc = False
-        self.log_message("KÜHLUNGSBESITZ: OHC hat alle Kanäle an Firmware zurückgegeben · CoolerControl gestartet")
-        self.footer_status.setText("Mainboard-Lüfter an CoolerControl zurückgegeben")
-        QTimer.singleShot(700, self.refresh_cooling_ownership_status)
-
-    def toggle_coolercontrol_autostart(self) -> None:
-        """Explicitly enable or disable CoolerControl's system service."""
-        self.refresh_cooling_ownership_status()
-        enable = not self.cooling_owner_status.coolercontrol_service_enabled
-        if enable:
-            title = "CoolerControl dauerhaft aktivieren"
-            message = (
-                "CoolerControl für den automatischen Systemstart aktivieren und den Hintergrunddienst jetzt starten?\n\n"
-                "Eine aktive OHC-Mainboardregelung wird vorher beendet und die Lüfter werden an Firmware/BIOS zurückgegeben. "
-                "Für diese systemweite Änderung ist eine Administrator-Bestätigung erforderlich."
-            )
-        else:
-            title = "CoolerControl dauerhaft deaktivieren"
-            message = (
-                "Den CoolerControl-Hintergrunddienst jetzt beenden und seinen automatischen Systemstart dauerhaft deaktivieren?\n\n"
-                "OHC startet dadurch keine Lüfterregelung automatisch. Bestätigte Kanäle können anschließend bewusst in OHC aktiviert werden. "
-                "Für diese systemweite Änderung ist eine Administrator-Bestätigung erforderlich."
-            )
-        answer = QMessageBox.question(
-            self,
-            title,
-            message,
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
-        )
-        if answer != QMessageBox.StandardButton.Yes:
-            return
-        if enable:
-            if self.mainboard_control_active:
-                self.mainboard_master_enable.setChecked(False)
-            self.restore_all_mainboard_fans_to_firmware(quiet=True)
-            ok, detail = enable_coolercontrol()
-        else:
-            ok, detail = disable_coolercontrol()
-        if not ok:
-            self.show_error(f"CoolerControl konnte nicht dauerhaft {'aktiviert' if enable else 'deaktiviert'} werden: {detail}")
-            return
-        self.coolercontrol_stopped_by_ohc = not enable
-        state = "dauerhaft aktiviert und gestartet" if enable else "beendet und dauerhaft deaktiviert"
-        self.log_message(f"KÜHLUNGSBESITZ: CoolerControl {state}")
-        self.footer_status.setText(f"CoolerControl {state}")
-        QTimer.singleShot(700, self.refresh_cooling_ownership_status)
-
-    def select_cooling_layout_slot(self, slot_id: str) -> None:
-        self.cooling_layout_selected_slot_id = str(slot_id)
-        if hasattr(self, "assistant_slot_label"):
-            slot = next((item for item in self.rgb_layout_slots if (item.slot_id or item.position) == slot_id), None)
-            self.assistant_slot_label.setText(f"Ausgewählter Einbauplatz: {slot.name}" if slot else f"Einbauplatz: {slot_id}")
-
-    def _fan_layout_slot(self, slot_id: str) -> RGBLayoutSlot | None:
-        slot = next((item for item in self.rgb_layout_slots if (item.slot_id or item.position) == slot_id), None)
-        if slot is None or slot.position not in {"front", "side", "bottom", "rear"}:
-            return None
-        return slot
-
-    def assign_selected_channel_to_cooling_slot(self) -> None:
-        channel = self.selected_mainboard_channel()
-        slot = self._fan_layout_slot(self.cooling_layout_selected_slot_id)
-        if channel is None or slot is None:
-            self.show_error("Bitte zuerst einen System-Fan-Kanal und anschließend einen Gehäuse-Lüfterplatz in der Grafik auswählen.")
-            return
-        # One PWM header can represent a fan group, but one chassis slot belongs
-        # to only one PWM header. Remove stale reverse assignments first.
-        for channel_id, slot_id in list(self.mainboard_layout_assignments.items()):
-            if slot_id == (slot.slot_id or slot.position) and channel_id != channel.stable_id:
-                self.mainboard_layout_assignments.pop(channel_id, None)
-        self.mainboard_layout_assignments[channel.stable_id] = slot.slot_id or slot.position
-        profile = self.mainboard_profile_for(channel)
-        if not str(profile.get("name", "")).strip() or str(profile.get("name", "")) == channel.display_name:
-            profile["name"] = slot.name
-        self.save_mainboard_fan_settings()
-        if hasattr(self, "cooling_layout_diagram"):
-            self.cooling_layout_diagram.set_channel_assignments(self.mainboard_layout_assignments)
-        if hasattr(self, "assistant_layout_diagram"):
-            self.assistant_layout_diagram.set_channel_assignments(self.mainboard_layout_assignments)
-        self.refresh_mainboard_fan_table()
-        self.log_message(f"MAINBOARD-FAN-LAYOUT: {channel.stable_id} → {slot.name} ({slot.slot_id or slot.position})")
-        self.footer_status.setText(f"Gehäusezuordnung gespeichert: {channel.stable_id} → {slot.name}")
+            button = self.cooling_auto_case_button
+            state = "active" if self.mainboard_control_active else "inactive"
+            self.cooling_auto_case_button.setChecked(self.mainboard_control_active)
+            if button.property("profileState") != state:
+                button.setProperty("profileState", state)
+                button.style().unpolish(button)
+                button.style().polish(button)
+                button.update()
 
     def chassis_fan_rgb_device_ids(self) -> list[str]:
         result: list[str] = []
@@ -6263,15 +6122,6 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.assistant_rgb_status.setText("RGB-Studio-Profil wird wiederhergestellt …")
         self.request_rgb_direct_apply(180)
 
-    def assistant_select_channel(self, channel_id: str) -> None:
-        self.mainboard_selected_channel_id = str(channel_id)
-        self.load_selected_mainboard_fan_editor()
-        if hasattr(self, "assistant_channel_status"):
-            channel = self.selected_mainboard_channel()
-            self.assistant_channel_status.setText(
-                f"Aktueller Testkanal: {channel.display_name}" if channel else "Kein Kanal ausgewählt"
-            )
-
     def assistant_test_selected_channel(self) -> None:
         if self.cooling_owner_status.coolercontrol_active:
             self.show_error("CoolerControl besitzt die Lüftersteuerung. Bitte zuerst mit dem Übernahme-Button auf OHC umschalten.")
@@ -6334,7 +6184,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         for channel in channels:
             profile = self.mainboard_profile_for(channel)
             rpm = channel.rpm if channel.rpm is not None else "—"
-            row = QLabel(f"●  {profile.get('name') or channel.display_name}  ·  pwm{channel.index}  ·  {rpm} RPM")
+            row = QLabel(f"●  {channel_caption(self, channel)}  ·  {rpm} RPM")
+            row.setToolTip(channel_details(channel))
             row.setObjectName("infoText")
             dl.addWidget(row)
         detect_layout.addWidget(detected_list)
@@ -6358,7 +6209,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.assistant_channel_combo = QComboBox()
         for channel in channels:
             profile = self.mainboard_profile_for(channel)
-            self.assistant_channel_combo.addItem(f"{profile.get('name', channel.display_name)} · pwm{channel.index}", channel.stable_id)
+            self.assistant_channel_combo.addItem(channel_caption(self, channel), channel.stable_id)
+            self.assistant_channel_combo.setItemData(self.assistant_channel_combo.count() - 1, channel_details(channel), Qt.ItemDataRole.ToolTipRole)
         self.assistant_channel_combo.currentIndexChanged.connect(
             lambda _index: self.assistant_select_channel(str(self.assistant_channel_combo.currentData() or ""))
         )
@@ -6392,7 +6244,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         dbl = QVBoxLayout(diagram_box)
         dbl.addWidget(QLabel("Gehäuseansicht", objectName="sectionTitle"))
         self.assistant_layout_diagram = CoolingLayoutDiagram()
-        self.assistant_layout_diagram.set_slots(self.rgb_layout_slots)
+        self.assistant_layout_diagram.slot_resized.connect(lambda slot_id, scale: resize_cooling_slot(self, slot_id, scale))
+        self.assistant_layout_diagram.set_slots(cooling_slots(self))
         self.assistant_layout_diagram.set_channel_assignments(self.mainboard_layout_assignments)
         self.assistant_layout_diagram.slot_focused.connect(self.select_cooling_layout_slot)
         dbl.addWidget(self.assistant_layout_diagram, 1)
@@ -6421,12 +6274,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         save_layout.addWidget(QLabel("Aktuelle Zuordnung", objectName="sectionTitle"))
         summary = QFrame(); summary.setObjectName("dashboardSection")
         summary_layout = QVBoxLayout(summary)
-        for channel in channels:
-            slot_id = self.mainboard_layout_assignments.get(channel.stable_id, "")
-            slot = next((item for item in self.rgb_layout_slots if (item.slot_id or item.position) == slot_id), None)
-            position = slot.name if slot else "noch nicht zugeordnet"
-            profile = self.mainboard_profile_for(channel)
-            summary_layout.addWidget(QLabel(f"pwm{channel.index}  ·  {profile.get('name') or channel.display_name}  →  {position}"))
+        self.assistant_summary_layout = summary_layout
+        self.refresh_chassis_assistant_summary()
         save_layout.addWidget(summary)
         save_text = QLabel(
             "Nach dem Speichern kann jeder bestätigte Kanal direkt in der Kühlungszentrale Leise, Ausbalanciert, "
@@ -6439,12 +6288,18 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         save_button.setMinimumHeight(50)
         save_button.clicked.connect(self.save_mainboard_fan_settings)
         save_layout.addWidget(save_button)
+        another_fan = QPushButton(self.tr_static("Nächsten Lüfter zuordnen"))
+        another_fan.clicked.connect(self.assistant_continue_with_next_fan)
+        save_layout.addWidget(another_fan)
         save_layout.addStretch()
 
         wizard.addPage(detect)
         wizard.addPage(test_page)
         wizard.addPage(mapping)
         wizard.addPage(save)
+        wizard.currentIdChanged.connect(
+            lambda page_id: self.refresh_chassis_assistant_summary() if page_id == 3 else None
+        )
         wizard.finished.connect(lambda _result: self.restore_rgb_after_chassis_assistant())
         wizard.finished.connect(lambda _result: self.refresh_mainboard_fan_table())
         self.assistant_select_channel(str(self.assistant_channel_combo.currentData() or ""))
@@ -6490,7 +6345,38 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         defaults = self.mainboard_default_profile(channel)
         for key, value in defaults.items():
             profile.setdefault(key, value)
+        legacy_default_name = f"{channel.display_name} · pwm{channel.index}"
+        if str(profile.get("name", "")).strip().casefold() == legacy_default_name.casefold():
+            profile["name"] = channel.display_name
+        if self.is_thermalright_cooling() and str(profile.get("source", "cpu")) == "liquid":
+            profile["source"] = "cpu"
         return profile
+
+    def refresh_mainboard_sensor_source_choices(self) -> None:
+        """Hide nonexistent coolant sources while retaining CPU/GPU maximum."""
+
+        active = self.is_thermalright_cooling()
+        for name in ("mainboard_sensor_source", "mainboard_curve_overlay_source"):
+            combo = getattr(self, name, None)
+            if combo is None:
+                continue
+            selected = str(combo.currentData() or "cpu")
+            combo.blockSignals(True)
+            combo.clear()
+            choices = [
+                ("CPU-Temperatur", "cpu"),
+                ("GPU-Temperatur", "gpu"),
+            ]
+            if not active:
+                choices.append(("Kraken-Kühlmittel", "liquid"))
+            choices.extend((
+                ("Maximum" if active else "Maximum aus CPU/GPU/Kühlmittel", "max"),
+                ("Gewichtet CPU/GPU", "weighted"),
+            ))
+            for label, value in choices:
+                combo.addItem(self.tr_static(label), value)
+            combo.setCurrentIndex(max(0, combo.findData(selected)))
+            combo.blockSignals(False)
 
     def is_thermalright_cooling(self) -> bool:
         selected = str(getattr(self, "cooling_hardware_kind", "auto") or "auto")
@@ -6518,6 +6404,43 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         )
         return self.mainboard_channels.get(str(channel_id))
 
+    def cooling_policy_key(self) -> str:
+        return LEVITA_COOLER_KEY if self.is_thermalright_cooling() else "nzxt"
+
+    def cooling_minimum_duty(self, channel: str) -> int:
+        return cooling_duty_policy(self.cooling_policy_key()).minimum(channel)
+
+    def safe_cooling_duty(self, channel: str, duty: int | float) -> int:
+        return clamp_cooling_duty(self.cooling_policy_key(), channel, duty)
+
+    def update_cooling_duty_limits(self) -> None:
+        """Apply the selected cooler's floor to every editable duty control."""
+        if not hasattr(self, "pump_slider") or not hasattr(self, "pump_curve_table"):
+            return
+        policy = cooling_duty_policy(self.cooling_policy_key())
+        self.pump_slider.setMinimum(policy.pump_minimum)
+        self.fan_slider.setMinimum(policy.fan_minimum)
+        for channel, bundle in (("pump", self.pump_curve_table), ("fan", self.fan_curve_table)):
+            minimum = policy.minimum(channel)
+            editor = bundle[2]
+            safe_points = [(temp, max(minimum, duty)) for temp, duty in editor.points()]
+            editor.set_minimum_duty(minimum)
+            if safe_points != editor.points():
+                editor.set_points(safe_points)
+                self.update_curve_table(bundle[1], safe_points)
+        if hasattr(self, "cooling_minimum_note"):
+            if self.is_thermalright_cooling():
+                self.cooling_minimum_note.setText(
+                    "Levita: OHC-Sicherheitsminimum Pumpe 50 % · Radiatorlüfter 25 %. "
+                    "Thermalright nennt 3000 rpm ±10 % beziehungsweise 2000 rpm ±10 % als Maximaldrehzahl, "
+                    "veröffentlicht aber keine Mindest-PWM-Leistung. Deshalb verwendet OHC vorsichtige eigene Untergrenzen."
+                )
+            else:
+                self.cooling_minimum_note.setText(
+                    "NZXT Kraken: validierter OHC-/liquidctl-Bereich · Pumpe mindestens 20 %; "
+                    "Radiatorlüfter können innerhalb des unterstützten Gerätebereichs bis 0 % eingestellt werden."
+                )
+
     def apply_cooling_hardware_selection(self, _index: int = -1) -> None:
         if not hasattr(self, "cooling_hardware_combo"):
             return
@@ -6526,12 +6449,15 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.settings.sync()
         self.discover_mainboard_fans(show_dialog=False)
         self.update_thermalright_cooling_ui()
+        self.update_cooling_duty_limits()
         self.update_cooling_quick_profile_state("")
 
     def update_thermalright_cooling_ui(self) -> None:
         if not hasattr(self, "cooling_hardware_status"):
             return
         active = self.is_thermalright_cooling()
+        self.update_cooling_duty_limits()
+        self.refresh_mainboard_sensor_source_choices()
         if hasattr(self, "cooling_cpu_title_label"):
             self.cooling_cpu_title_label.setText(
                 f"●  CPU / {LEVITA_DISPLAY_NAME}" if active else "●  CPU / Kraken"
@@ -6554,7 +6480,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         usb = "Display erkannt" if thermalright_display_present() else "Display-USB nicht erkannt"
         self.cooling_hardware_status.setText(
             f"{LEVITA_DISPLAY_NAME} · {usb} · Pumpe {'bestätigt' if pump_ok else 'noch testen'} · "
-            f"Radiator {'bestätigt' if radiator_ok else 'noch testen'} · kein Kühlmittelsensor gemeldet"
+            f"Radiator {'bestätigt' if radiator_ok else 'noch testen'}"
         )
         self.cooling_hardware_status.setObjectName("healthGood" if pump_ok and radiator_ok else "warningText")
         self.cooling_hardware_status.style().unpolish(self.cooling_hardware_status)
@@ -6566,9 +6492,9 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             return
         channels = list(self.mainboard_channels.values())
         suggestion = suggest_aio_channels(channels)
-        if self.thermalright_pump_channel_id not in self.mainboard_channels:
+        if not self.settings.contains("thermalright_cooling/pump_channel"):
             self.thermalright_pump_channel_id = suggestion.pump_channel_id
-        if self.thermalright_radiator_channel_id not in self.mainboard_channels:
+        if not self.settings.contains("thermalright_cooling/radiator_channel"):
             self.thermalright_radiator_channel_id = suggestion.radiator_channel_id
         for combo, selected in (
             (self.thermalright_pump_channel_combo, self.thermalright_pump_channel_id),
@@ -6580,12 +6506,15 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             for channel in channels:
                 rpm = self._mainboard_channel_rpm(channel)
                 combo.addItem(
-                    f"{channel.display_name} · {rpm if rpm is not None else '—'} rpm",
+                    f"{channel_caption(self, channel)} · {rpm if rpm is not None else '—'} rpm",
                     channel.stable_id,
                 )
             combo.setCurrentIndex(max(0, combo.findData(selected)))
             combo.blockSignals(False)
-        self.save_thermalright_channel_mapping()
+        # The UI may be built before the asynchronous mainboard inventory.
+        # Do not turn absent first-run keys into deliberate empty choices yet.
+        if channels:
+            self.save_thermalright_channel_mapping()
 
     @staticmethod
     def _mainboard_channel_rpm(channel: MainboardFanChannel) -> int | None:
@@ -6618,6 +6547,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.start_mainboard_fan_calibration()
 
     def write_thermalright_cooling(self, role: str, duty: int) -> None:
+        if not self.fan_backend_write_ready():
+            raise MainboardFanWriteError("Der gewählte Mainboard-Lüfter-Unterbau ist nicht verfügbar")
         channel = self.thermalright_channel(role)
         if channel is None:
             raise MainboardFanWriteError("Für diesen Levita-Kanal ist noch kein PWM-Header ausgewählt")
@@ -6628,7 +6559,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.refresh_cooling_ownership_status()
         if self.cooling_owner_status.coolercontrol_active:
             raise MainboardFanWriteError("CoolerControl besitzt aktuell die Mainboard-PWM-Steuerung")
-        set_mainboard_channel_percent(channel, int(duty))
+        safe_duty = clamp_cooling_duty(LEVITA_COOLER_KEY, role, duty)
+        set_mainboard_channel_percent(channel, safe_duty)
         self.thermalright_owned_channel_ids.add(channel.stable_id)
 
     def restore_thermalright_cooling_on_quit(self) -> None:
@@ -6667,6 +6599,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.apply_dashboard_card_visibility(save=False)
         self.refresh_cooling_dashboard_summary()
         self.update_thermalright_cooling_ui()
+        self.record_temperature_history()
 
     def discover_mainboard_fans(self, _checked: bool = False, *, show_dialog: bool = False) -> None:
         self.mainboard_dmi = detect_mainboard_dmi()
@@ -6708,8 +6641,11 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.log_message(f"MAINBOARD-FAN: Erkennung · {text}")
         self.mainboard_detection_label.style().unpolish(self.mainboard_detection_label)
         self.mainboard_detection_label.style().polish(self.mainboard_detection_label)
+        if controller is not None and hasattr(self, "migrate_reference_pc_fan_assignments"):
+            self.migrate_reference_pc_fan_assignments()
         self.refresh_mainboard_fan_table()
         self.update_thermalright_cooling_ui()
+        self.update_hardware_backend_status()
         self.refresh_persistent_mainboard_fan_authorization_ui()
         if show_dialog:
             if controller is None:
@@ -6754,7 +6690,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                     if nested.widget() is not None:
                         nested.widget().deleteLater()
 
-    def refresh_mainboard_fan_table(self) -> None:
+    def refresh_mainboard_fan_table(self, *, refresh_related: bool = True) -> None:
+        refresh_case_views(self)
         if not hasattr(self, "mainboard_fan_table"):
             return
         channels = self.chassis_mainboard_channels()
@@ -6785,7 +6722,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 channel.writable = os.access(channel.pwm_path, os.W_OK)
                 control_method = mainboard_channel_control_method(channel)
                 cells = [
-                    f"pwm{channel.index}",
+                    channel_caption(self, channel),
                     str(profile.get("name") or channel.display_name),
                     f"{rpm} rpm" if rpm is not None else "—",
                     f"{mainboard_pwm_to_percent(pwm_raw)} %" if pwm_raw >= 0 else "—",
@@ -6796,6 +6733,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 ]
                 for column, text in enumerate(cells):
                     item = QTableWidgetItem(text)
+                    if column == 0: item.setToolTip(channel_details(channel))
                     if column == 0:
                         item.setData(Qt.ItemDataRole.UserRole, channel.stable_id)
                     table.setItem(row, column, item)
@@ -6805,7 +6743,9 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         if hasattr(self, "mainboard_fan_cards_layout"):
             self._clear_layout(self.mainboard_fan_cards_layout)
             if not channels:
-                empty = QLabel("Keine System-Fan-Kanäle erkannt. CPU_FAN und PUMP_FAN bleiben absichtlich im CPU-/Kraken-Bereich.")
+                empty = QLabel(self.tr_static(
+                    "Keine System-Fan-Kanäle erkannt. CPU_FAN und PUMP_FAN bleiben absichtlich im CPU-/Kraken-Bereich."
+                ))
                 empty.setWordWrap(True)
                 empty.setObjectName("muted")
                 self.mainboard_fan_cards_layout.addWidget(empty)
@@ -6834,9 +6774,10 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 header.addWidget(icon)
                 title_box = QVBoxLayout()
                 title_box.setSpacing(0)
-                title = QLabel(str(profile.get("name") or channel.display_name))
+                title = QLabel(channel_caption(self, channel))
+                title.setToolTip(channel_details(channel))
                 title.setObjectName("fanCardTitle")
-                subtitle = QLabel(f"{channel.display_name} · pwm{channel.index}")
+                subtitle = QLabel(str(profile.get("name") or channel.name))
                 subtitle.setObjectName("muted")
                 title_box.addWidget(title)
                 title_box.addWidget(subtitle)
@@ -6844,27 +6785,35 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 rpm_label = QLabel(f"<b>{rpm if rpm is not None else '—'}</b><br><span style='color:#8f9cad'>RPM</span>")
                 rpm_label.setTextFormat(Qt.TextFormat.RichText)
                 pwm_percent = mainboard_pwm_to_percent(pwm_raw) if pwm_raw >= 0 else None
-                pwm_label = QLabel(f"<b>{str(pwm_percent) + ' %' if pwm_percent is not None else '—'}</b><br><span style='color:#8f9cad'>PWM</span>")
+                pwm_label = QLabel(self.tr_static(
+                    f"<b>{str(pwm_percent) + ' %' if pwm_percent is not None else '—'}</b>"
+                    "<br><span style='color:#8f9cad'>Leistung</span>"
+                ))
                 pwm_label.setTextFormat(Qt.TextFormat.RichText)
-                source_label = QLabel(f"<b>{self.mainboard_source_label(str(profile.get('source', 'cpu')))}</b><br><span style='color:#8f9cad'>Sensorquelle</span>")
+                source_label = QLabel(self.tr_static(
+                    f"<b>{self.mainboard_source_label(str(profile.get('source', 'cpu')))}</b>"
+                    "<br><span style='color:#8f9cad'>Sensorquelle</span>"
+                ))
                 source_label.setTextFormat(Qt.TextFormat.RichText)
                 header.addWidget(rpm_label, 1)
                 header.addWidget(pwm_label, 1)
                 header.addWidget(source_label, 1)
                 calibrated = bool(profile.get("calibrated"))
-                status = QLabel("● OK" if calibrated else "● Zuordnung offen")
+                status = QLabel(self.tr_static("● OK" if calibrated else "● Zuordnung offen"))
                 status.setObjectName("healthGood" if calibrated else "warningText")
                 header.addWidget(status)
-                test_btn = QPushButton("Testen")
+                test_btn = QPushButton(self.tr_static("Testen"))
                 test_btn.clicked.connect(lambda _checked=False, cid=channel.stable_id: self.test_mainboard_channel_from_card(cid))
-                stop_test_btn = QPushButton("0 % / 10 s testen")
-                stop_test_btn.setToolTip("Fordert diesen Gehäuselüfter nach Bestätigung kurz mit 0 % an und stellt danach den vorherigen Zustand wieder her.")
+                stop_test_btn = QPushButton(self.tr_static("0 % / 10 s testen"))
+                stop_test_btn.setToolTip(self.tr_static(
+                    "Fordert diesen Gehäuselüfter nach Bestätigung kurz mit 0 % an und stellt danach den vorherigen Zustand wieder her."
+                ))
                 stop_test_btn.clicked.connect(lambda _checked=False, cid=channel.stable_id: self.test_mainboard_channel_stop_from_card(cid))
                 curve_action_source = "Kurve & Details schließen" if expanded else "Kurve & Details bearbeiten"
                 curve_btn = QPushButton(self.tr_static(curve_action_source))
                 curve_btn.setObjectName("primaryAction" if expanded else "")
                 curve_btn.clicked.connect(lambda _checked=False, cid=channel.stable_id: self.toggle_mainboard_fan_card_details(cid))
-                assign_btn = QPushButton("Zuordnen")
+                assign_btn = QPushButton(self.tr_static("Zuordnen"))
                 assign_btn.clicked.connect(lambda _checked=False, cid=channel.stable_id: self.open_mainboard_assignment_from_card(cid))
                 header.addWidget(test_btn)
                 header.addWidget(stop_test_btn)
@@ -6875,26 +6824,31 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 slot_id = self.mainboard_layout_assignments.get(channel.stable_id, "")
                 slot = next((item for item in self.rgb_layout_slots if (item.slot_id or item.position) == slot_id), None)
                 footer = QHBoxLayout()
-                position_label = QLabel(f"Einbauplatz: {slot.name}" if slot else "Einbauplatz: noch nicht zugeordnet")
+                position_label = QLabel(
+                    f"{self.tr_static('Einbauplatz')}: {slot.name}"
+                    if slot else self.tr_static("Einbauplatz: noch nicht zugeordnet")
+                )
                 position_label.setObjectName("muted")
                 footer.addWidget(position_label)
                 footer.addStretch()
                 preset_name = mainboard_fan_preset(str(profile.get("preset", "balanced"))).name
-                preset_label = QLabel(f"Profil: {preset_name}")
+                preset_label = QLabel(f"{self.tr_static('Profil')}: {self.tr_static(preset_name)}")
                 preset_label.setObjectName("accentText")
                 footer.addWidget(preset_label)
                 enabled = bool(profile.get("enabled"))
-                enable_btn = QPushButton("Automatik aktiv" if enabled else "Automatik aus")
+                enable_btn = QPushButton(self.tr_static(
+                    "Automatik ausschalten" if enabled else "Automatik einschalten"
+                ))
                 enable_btn.setObjectName("profilePrimary" if enabled else "")
                 enable_btn.clicked.connect(lambda _checked=False, cid=channel.stable_id: self.toggle_mainboard_channel_enabled_from_card(cid))
                 footer.addWidget(enable_btn)
                 card.addLayout(footer)
 
                 quick_profiles = QHBoxLayout()
-                quick_profiles.addWidget(QLabel("Kurvenprofil:"))
+                quick_profiles.addWidget(QLabel(self.tr_static("Kurvenprofil:")))
                 for preset_key in ("quiet", "balanced", "performance"):
                     preset = MAINBOARD_FAN_PRESETS[preset_key]
-                    profile_button = QPushButton(preset.name)
+                    profile_button = QPushButton(self.tr_static(preset.name))
                     if str(profile.get("preset", "balanced")) == preset_key:
                         profile_button.setObjectName("mainboardFanPresetButton")
                     profile_button.clicked.connect(
@@ -6908,17 +6862,22 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                     mode_combo.addItem("PWM · 4-Pin", "pwm")
                     mode_combo.addItem("DC · 3-Pin", "dc")
                     mode_combo.setCurrentIndex(max(0, mode_combo.findData(actual_mode)))
-                    mode_combo.setToolTip("Elektrischen Lüftermodus dieses vom Kernel angebotenen pwmN_mode-Kanals umstellen")
+                    mode_combo.setToolTip(self.tr_static(
+                        "Elektrischen Lüftermodus dieses vom Kernel angebotenen pwmN_mode-Kanals umstellen"
+                    ))
                     mode_combo.currentIndexChanged.connect(
                         lambda _index, cid=channel.stable_id, combo=mode_combo: self.change_mainboard_control_mode_from_card(
                             cid, str(combo.currentData() or "")
                         )
                     )
                 else:
-                    mode_combo.addItem("PWM/DC wird im BIOS festgelegt", "unsupported")
+                    mode_combo.addItem(self.tr_static("PWM/DC wird im BIOS festgelegt"), "unsupported")
                     mode_combo.setEnabled(False)
-                    mode_combo.setToolTip("Der Kernel stellt kein pwmN_mode bereit. OHC regelt den vom BIOS festgelegten PWM- oder DC-Modus über pwmN; der 0-%-/10-s-Test bleibt verfügbar.")
-                quick_profiles.addWidget(QLabel("Anschlussmodus:"))
+                    mode_combo.setToolTip(self.tr_static(
+                        "Der Kernel stellt kein pwmN_mode bereit. OHC regelt den vom BIOS festgelegten PWM- oder DC-Modus über pwmN; "
+                        "der 0-%-/10-s-Test bleibt verfügbar."
+                    ))
+                quick_profiles.addWidget(QLabel(self.tr_static("Anschlussmodus:")))
                 quick_profiles.addWidget(mode_combo)
                 card.addLayout(quick_profiles)
 
@@ -6939,22 +6898,23 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                     curve.set_points(points)
                     detail_layout.addWidget(curve, 2)
                     meta = QLabel(
-                        f"Mindestleistung <b>{int(profile.get('minimum', 25))} %</b><br>"
-                        f"Hysterese <b>{int(profile.get('hysteresis', 2))} °C</b><br>"
-                        f"Reaktionszeit <b>{int(profile.get('delay', 3))} s</b>"
+                        f"{self.tr_static('Mindestleistung')} <b>{int(profile.get('minimum', 25))} %</b><br>"
+                        f"{self.tr_static('Hysterese')} <b>{int(profile.get('hysteresis', 2))} °C</b><br>"
+                        f"{self.tr_static('Reaktionszeit')} <b>{int(profile.get('delay', 3))} s</b>"
                     )
                     meta.setTextFormat(Qt.TextFormat.RichText)
                     detail_layout.addWidget(meta, 1)
                     card.addWidget(detail)
                 self.mainboard_fan_cards_layout.addWidget(frame)
 
-        if hasattr(self, "cooling_layout_diagram"):
-            self.cooling_layout_diagram.set_slots(self.rgb_layout_slots)
-            self.cooling_layout_diagram.set_channel_assignments(self.mainboard_layout_assignments)
-        self.update_cooling_case_profile_state(self.current_case_fan_global_preset())
-        self.refresh_cooling_dashboard_summary()
-        self.refresh_cooling_ownership_status()
-        self.load_selected_mainboard_fan_editor()
+        if refresh_related:
+            if hasattr(self, "cooling_layout_diagram"):
+                self.cooling_layout_diagram.set_slots(cooling_slots(self))
+                self.cooling_layout_diagram.set_channel_assignments(self.mainboard_layout_assignments)
+            self.update_cooling_case_profile_state(self.current_case_fan_global_preset())
+            self.refresh_cooling_dashboard_summary()
+            self.refresh_cooling_ownership_status()
+            self.load_selected_mainboard_fan_editor()
 
     def test_mainboard_channel_from_card(self, channel_id: str) -> None:
         self.select_mainboard_channel(str(channel_id))
@@ -6999,6 +6959,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         profile["enabled"] = not bool(profile.get("enabled"))
         self.save_mainboard_fan_settings()
         self.refresh_mainboard_fan_table()
+        self.update_cooling_case_profile_state(self.current_case_fan_global_preset())
+        self.refresh_cooling_dashboard_summary()
 
     def make_mainboard_curve_overlay(self) -> QFrame:
         panel = QFrame()
@@ -7048,8 +7010,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             preset = MAINBOARD_FAN_PRESETS[key]
             self.mainboard_curve_overlay_preset.addItem(preset.name, key)
         self.mainboard_curve_overlay_source = QComboBox()
-        for label, value in (("CPU-Temperatur", "cpu"), ("GPU-Temperatur", "gpu"), ("Kraken-Kühlmittel", "liquid"), ("Maximum", "max"), ("CPU/GPU gewichtet", "weighted")):
-            self.mainboard_curve_overlay_source.addItem(label, value)
+        self.refresh_mainboard_sensor_source_choices()
         self.mainboard_curve_overlay_minimum = QSpinBox()
         self.mainboard_curve_overlay_minimum.setRange(0, 100)
         self.mainboard_curve_overlay_minimum.setSuffix(" %")
@@ -7193,7 +7154,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.mainboard_curve_overlay_channel_id = channel.stable_id
         self.mainboard_curve_overlay_sync = True
         try:
-            self.mainboard_curve_overlay_title.setText(f"Lüfterkurve · {profile.get('name') or channel.display_name} · pwm{channel.index}")
+            self.mainboard_curve_overlay_title.setText(f"Lüfterkurve · {channel_caption(self, channel)}")
             self.mainboard_curve_overlay_name.setText(str(profile.get("name") or channel.display_name))
             self.mainboard_curve_overlay_preset.setCurrentIndex(max(0, self.mainboard_curve_overlay_preset.findData(str(profile.get("preset", "balanced")))))
             # Existing 3.4.24 default 'max' profiles are migrated to CPU on restore.
@@ -7216,9 +7177,9 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                     "Ein Wechsel wird erst beim Speichern nach ausdrücklicher Bestätigung geschrieben und setzt die Kalibrierung zurück."
                 )
             else:
-                self.mainboard_curve_overlay_control_mode.addItem("PWM/DC wird im BIOS festgelegt", "unsupported")
+                self.mainboard_curve_overlay_control_mode.addItem(self.tr_static("PWM/DC wird im BIOS festgelegt"), "unsupported")
                 self.mainboard_curve_overlay_control_mode.setEnabled(False)
-                self.mainboard_curve_overlay_control_mode.setToolTip("Der Kernel stellt kein pwmN_mode bereit. Der elektrische Modus bleibt im BIOS festgelegt; OHC kann den Kanal trotzdem über pwmN regeln und mit 0 % / 10 s testen.")
+                self.mainboard_curve_overlay_control_mode.setToolTip(self.tr_static("Der Kernel stellt kein pwmN_mode bereit. OHC regelt den vom BIOS festgelegten PWM- oder DC-Modus über pwmN; der 0-%-/10-s-Test bleibt verfügbar."))
             try:
                 points = validate_mainboard_curve([(int(x[0]), int(x[1])) for x in profile.get("curve", self._mainboard_default_curve())], 0)
             except (TypeError, ValueError, IndexError):
@@ -7546,6 +7507,10 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         return True
 
     def start_mainboard_fan_calibration(self, _checked: bool = False, *, stop_test: bool = False) -> None:
+        if not self.fan_backend_write_ready():
+            self.mainboard_assistant_contrast_requested = False
+            self.show_error("Der gewählte Mainboard-Lüfter-Unterbau ist nicht verfügbar.")
+            return
         self.refresh_cooling_ownership_status()
         if self.cooling_owner_status.coolercontrol_active:
             self.mainboard_assistant_contrast_requested = False
@@ -7789,9 +7754,25 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 if not quiet:
                     self.show_error(f"{channel_id}: {exc}")
 
-    def toggle_mainboard_master_control(self, enabled: bool, *, silent: bool = False) -> None:
+    def toggle_mainboard_master_control(self, enabled: bool, *, silent: bool = False, owner_checked: bool = False) -> None:
+        if not silent:
+            self.mainboard_startup_pending = False
+        if not enabled:
+            self.cooling_dashboard_request = getattr(self, "cooling_dashboard_request", 0) + 1
+        if enabled and not owner_checked:
+            from modules.cooling_state.v1_0.controller import checked_master
+            checked_master(self, silent=silent)
+            return
         if enabled:
-            self.refresh_cooling_ownership_status()
+            if not self.mainboard_channels:
+                self.discover_mainboard_fans(show_dialog=False)
+            if not self.fan_backend_write_ready():
+                self.mainboard_master_enable.blockSignals(True)
+                self.mainboard_master_enable.setChecked(False)
+                self.mainboard_master_enable.blockSignals(False)
+                self.mainboard_runtime_status.setText("Der gewählte Mainboard-Lüfter-Unterbau ist nicht verfügbar")
+                self.refresh_cooling_dashboard_summary()
+                return
             if self.cooling_owner_status.coolercontrol_active:
                 self.mainboard_master_enable.blockSignals(True)
                 self.mainboard_master_enable.setChecked(False)
@@ -7804,9 +7785,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                         "CoolerControl ist aktiv",
                         "OHC startet keine parallele PWM-Regelung. Nutze zuerst „Steuerung mit OHC übernehmen“.\n\nCPU-/Kraken-Steuerung bleibt davon getrennt.",
                     )
+                self.refresh_cooling_dashboard_summary()
                 return
-            if not self.mainboard_channels:
-                self.discover_mainboard_fans(show_dialog=False)
             ready = [
                 channel_id
                 for channel_id, channel in self.mainboard_channels.items()
@@ -7833,6 +7813,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                     self.log_message(
                         "MAINBOARD-FAN: gespeicherter Autostart übersprungen · kein bestätigter schreibbarer PWM-Kanal verfügbar"
                     )
+                self.refresh_cooling_dashboard_summary()
                 return
             self.mainboard_control_active = True
             self.mainboard_curve_states = {channel_id: MainboardCurveState() for channel_id in self.mainboard_channels}
@@ -7871,6 +7852,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.mainboard_runtime_status.style().polish(self.mainboard_runtime_status)
         self.save_mainboard_fan_settings()
         self.refresh_mainboard_fan_table()
+        self.update_cooling_case_profile_state(self.current_case_fan_global_preset())
+        self.refresh_cooling_dashboard_summary()
 
     def update_mainboard_fan_control(self) -> None:
         if not self.mainboard_control_active or self.mainboard_calibration_channel_id:
@@ -7879,10 +7862,13 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.discover_mainboard_fans(show_dialog=False)
             if not self.mainboard_channels:
                 return
+        if not self.fan_backend_write_ready():
+            self.mainboard_master_enable.setChecked(False)
+            return
         now_watchdog = time.monotonic()
         if now_watchdog - float(getattr(self, "cooling_owner_last_check", 0.0)) >= 5.0:
             self.cooling_owner_last_check = now_watchdog
-            self.cooling_owner_status = detect_cooling_owner()
+            self.refresh_cooling_ownership_status()
             if self.cooling_owner_status.coolercontrol_active:
                 self.log_message("KÜHLUNGSBESITZ: CoolerControl wurde während aktiver OHC-Regelung erkannt · OHC gibt PWM-Kanäle frei")
                 self.mainboard_master_enable.setChecked(False)
@@ -7898,6 +7884,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         gpu_temp, _gpu_label = self.read_amd_gpu_temperature()
         liquid_temp = self.current_liquid_temp
         writes: list[str] = []
+        logged_outputs: dict[str, int] = {}
+        emergency_write = False
         for channel_id, channel in list(self.mainboard_channels.items()):
             if not mainboard_channel_is_chassis_fan(channel):
                 continue
@@ -7956,16 +7944,30 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 self.log_message(f"MAINBOARD-FAN-FEHLER: {channel_id} · {exc}")
                 continue
             update_mainboard_curve_state(state, temperature, decision.percent)
+            logged_outputs[channel_id] = decision.percent
+            emergency_write = emergency_write or decision.reason == "emergency"
             writes.append(
                 f"{profile.get('name', channel_id)} {decision.percent} % · {self.mainboard_source_label(source)} {temperature:.1f} °C"
-            )
-            self.log_message(
-                f"MAINBOARD-FAN: {channel_id} · {decision.percent} % · Quelle {self.mainboard_source_label(source)} "
-                f"{temperature:.1f} °C · {decision.reason}"
             )
         if writes:
             self.mainboard_runtime_status.setText("✓ Mainboard-Regelung aktiv · " + " · ".join(writes[:3]))
         now = time.monotonic()
+        if logged_outputs:
+            previous = getattr(self, "mainboard_last_logged_outputs", {})
+            last_log = float(getattr(self, "mainboard_last_runtime_log", 0.0))
+            if should_log_mainboard_curve_batch(
+                previous,
+                logged_outputs,
+                elapsed_seconds=now - last_log,
+                emergency=emergency_write,
+            ):
+                summary = " · ".join(
+                    f"{channel_id} {percent} %"
+                    for channel_id, percent in sorted(logged_outputs.items())
+                )
+                self.log_message(f"MAINBOARD-FAN: {summary} · Kurvenregelung gebündelt")
+                self.mainboard_last_logged_outputs = dict(logged_outputs)
+                self.mainboard_last_runtime_log = now
         if now - float(getattr(self, "mainboard_last_table_refresh", 0.0)) >= 3.0:
             self.mainboard_last_table_refresh = now
             self.refresh_mainboard_fan_table()
@@ -8101,17 +8103,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.backend.run_async(command, callback=done, timeout=180, log_output=False)
 
     def show_nct6687_setup_help(self) -> None:
-        commands = fedora_nct6687_setup_commands()
-        text = "\n".join(commands)
-        QApplication.clipboard().setText(text)
-        QMessageBox.information(
-            self,
-            "NCT6687-Einrichtung · Fedora",
-            "Die geprüften Grundbefehle wurden in die Zwischenablage kopiert:\n\n"
-            + text
-            + "\n\nWichtig: Auf MSI-X870-Familien wird die passende alternative Fan-Konfiguration vom aktuellen nct6687d-Treiber erkannt. "
-            "OHC schreibt niemals blind feste PWM-Kanalzuordnungen. Nach Modulinstallation/Signierung neu starten und jeden Kanal einmal kalibrieren.",
-        )
+        show_nct6687_setup_assistant(self)
 
     def save_mainboard_fan_settings(self) -> None:
         if not hasattr(self, "settings"):
@@ -8120,7 +8112,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             "mainboard_fans/profiles",
             json.dumps(self.mainboard_fan_profiles, ensure_ascii=False, sort_keys=True),
         )
-        self.settings.setValue("mainboard_fans/master_enabled", bool(self.mainboard_control_active))
+        from modules.cooling_state.v1_0.controller import requested
+        self.settings.setValue("mainboard_fans/master_enabled", requested(self))
         self.settings.setValue(
             "mainboard_fans/layout_assignments",
             json.dumps(self.mainboard_layout_assignments, ensure_ascii=False, sort_keys=True),
@@ -8128,6 +8121,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.settings.sync()
 
     def restore_mainboard_fan_settings(self) -> None:
+        self.mainboard_startup_pending = self.settings.value("mainboard_fans/master_enabled", False, type=bool)
         raw = str(self.settings.value("mainboard_fans/profiles", "{}") or "{}")
         try:
             payload = json.loads(raw)
@@ -8161,12 +8155,13 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             if isinstance(layout_payload, dict) else {}
         )
         self.discover_mainboard_fans(show_dialog=False)
-        requested = self.settings.value("mainboard_fans/master_enabled", False, type=bool)
+        requested = self.mainboard_startup_pending
         self.mainboard_master_enable.blockSignals(True)
-        self.mainboard_master_enable.setChecked(bool(requested))
+        self.mainboard_master_enable.setChecked(bool(self.mainboard_control_active))
         self.mainboard_master_enable.blockSignals(False)
         if requested:
-            QTimer.singleShot(500, lambda: self.toggle_mainboard_master_control(True, silent=True))
+            from modules.cooling_state.v1_0.controller import restore_requested
+            QTimer.singleShot(500, lambda: restore_requested(self))
 
     def make_rgb_tab(self) -> QWidget:
         page = QScrollArea()
@@ -8192,16 +8187,16 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             "Stoppt alle Animationen, setzt verfügbare Hardwaremodi zurück und beendet die von OHC verwaltete RGB-Engine."
         )
         self.rgb_reset_button.clicked.connect(self.reset_all_rgb)
-        layout.addWidget(self.rgb_reset_button)
-
+        top_actions = QHBoxLayout()
+        top_actions.addWidget(self.rgb_reset_button, 2)
         self.rgb_setup_wizard_button = QPushButton("⚙ RGB-EINRICHTUNGSASSISTENT STARTEN")
         self.rgb_setup_wizard_button.setMinimumHeight(38)
         self.rgb_setup_wizard_button.setToolTip(
             "Führt Konfliktprüfung, Gerätezuordnung, Benennung, Einzeltest, LED-Zonen und PC-Aufbau Schritt für Schritt durch."
         )
         self.rgb_setup_wizard_button.clicked.connect(self.show_rgb_setup_wizard)
-        layout.addWidget(self.rgb_setup_wizard_button)
-
+        top_actions.addWidget(self.rgb_setup_wizard_button, 1)
+        layout.addLayout(top_actions)
         # Kept as an internal compatibility editor for old profiles only.  All
         # visible NZXT control now happens through the common device cards.
         box = QGroupBox("NZXT 2023 RGB Controller · liquidctl", content)
@@ -8261,7 +8256,6 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             btn = QPushButton(label)
             btn.clicked.connect(lambda _=False, c=color: self.apply_quick_color(c))
             qg.addWidget(btn)
-        layout.addWidget(quick)
 
         self.ene_dram_notice_box = QGroupBox("ℹ ENE-DRAM · zusätzliche Initialisierung")
         ene_notice_layout = QVBoxLayout(self.ene_dram_notice_box)
@@ -8286,10 +8280,27 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         ene_status_row.addWidget(self.ene_dram_reinitialize_button)
         ene_notice_layout.addLayout(ene_status_row)
         self.ene_dram_notice_box.setVisible(False)
-        layout.addWidget(self.ene_dram_notice_box)
 
         workspace = QGroupBox("Geräte und eigene Gruppen · Kacheln per Drag & Drop verschieben")
         workspace_layout = QVBoxLayout(workspace)
+        workspace_layout.addWidget(build_selection_mode(self))
+        self.rgb_groups_toggle = QPushButton("Geräte und Gruppen anzeigen ⌄")
+        self.rgb_groups_toggle.setCheckable(True)
+        self.rgb_groups_toggle.setChecked(False)
+        workspace_layout.addWidget(self.rgb_groups_toggle)
+        self.rgb_groups_panel = QWidget()
+        rgb_groups_panel_layout = QVBoxLayout(self.rgb_groups_panel)
+        rgb_groups_panel_layout.setContentsMargins(0, 0, 0, 0)
+        rgb_groups_panel_layout.setSpacing(10)
+        self.rgb_groups_panel.setVisible(False)
+        self.rgb_groups_toggle.toggled.connect(self.rgb_groups_panel.setVisible)
+        self.rgb_groups_toggle.toggled.connect(
+            lambda expanded: self.rgb_groups_toggle.setText(
+                self.tr_static("Geräte und Gruppen ausblenden ⌄")
+                if expanded else self.tr_static("Geräte und Gruppen anzeigen ⌄")
+            )
+        )
+        workspace_layout.addWidget(self.rgb_groups_panel)
         workspace_actions = QHBoxLayout()
         select_all = QPushButton("Alle schreibbereiten auswählen")
         select_all.clicked.connect(lambda: self.select_all_rgb_devices(True))
@@ -8308,78 +8319,22 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         workspace_actions.addWidget(rename_group)
         workspace_actions.addWidget(delete_group)
         workspace_actions.addStretch()
-        workspace_layout.addLayout(workspace_actions)
+        rgb_groups_panel_layout.addLayout(workspace_actions)
         self.rgb_group_picker = QComboBox()
         self.rgb_group_picker.setToolTip("Gruppe für Umbenennen oder Löschen auswählen")
-        workspace_layout.addWidget(self.rgb_group_picker)
+        rgb_groups_panel_layout.addWidget(self.rgb_group_picker)
         self.rgb_groups_container = QWidget()
         self.rgb_groups_layout = QVBoxLayout(self.rgb_groups_container)
         self.rgb_groups_layout.setContentsMargins(0, 0, 0, 0)
         self.rgb_groups_layout.setSpacing(12)
-        workspace_layout.addWidget(self.rgb_groups_container)
+        rgb_groups_panel_layout.addWidget(self.rgb_groups_container)
         self.rgb_select_all_bottom_button = QPushButton("✓ ALLE SCHREIBBAREN RGB-GERÄTE AUSWÄHLEN")
         self.rgb_select_all_bottom_button.setMinimumHeight(42)
         self.rgb_select_all_bottom_button.clicked.connect(lambda: self.select_all_rgb_devices(True))
-        workspace_layout.addWidget(self.rgb_select_all_bottom_button)
+        rgb_groups_panel_layout.addWidget(self.rgb_select_all_bottom_button)
 
-        pc_layout_box = QGroupBox("Thermaltake · 360-mm-Aufbau · verschiebbare PC-Ansicht")
-        pc_layout = QVBoxLayout(pc_layout_box)
-        layout_actions = QHBoxLayout()
-        self.rgb_layout_profile_combo = QComboBox()
-        # Keep the internal ``flori`` key for compatibility with already saved profiles.
-        layout_aio_name = LEVITA_DISPLAY_NAME if self.is_thermalright_cooling() else "Kraken 360"
-        self.rgb_layout_profile_combo.addItem(
-            f"Frelidon PC · Thermaltake / 360-mm-Aufbau / {layout_aio_name}", "flori"
-        )
-        load_layout_profile = QPushButton("Thermaltake-Profil neu laden")
-        load_layout_profile.clicked.connect(self.load_builtin_rgb_layout_profile)
-        layout_actions.addWidget(self.rgb_layout_profile_combo, 1)
-        layout_actions.addWidget(load_layout_profile)
-        layout_actions.addStretch()
-        pc_layout.addLayout(layout_actions)
-        layout_edit_actions = QHBoxLayout()
-        add_layout_slot = QPushButton("+ Lüfterblock hinzufügen")
-        add_layout_slot.clicked.connect(self.add_rgb_layout_slot)
-        edit_layout_slot = QPushButton("Ausgewählten Block bearbeiten")
-        edit_layout_slot.clicked.connect(self.edit_selected_rgb_layout_slot)
-        remove_layout_slot = QPushButton("Ausgewählten Block entfernen")
-        remove_layout_slot.clicked.connect(self.remove_selected_rgb_layout_slot)
-        arrange_layout = QPushButton("Automatisch anordnen")
-        arrange_layout.clicked.connect(self.auto_arrange_rgb_layout)
-        layout_edit_actions.addWidget(add_layout_slot)
-        layout_edit_actions.addWidget(edit_layout_slot)
-        layout_edit_actions.addWidget(remove_layout_slot)
-        layout_edit_actions.addWidget(arrange_layout)
-        layout_edit_actions.addStretch()
-        pc_layout.addLayout(layout_edit_actions)
-        self.rgb_layout_diagram = PCLayoutDiagram()
-        self.rgb_layout_diagram.slot_moved.connect(self.move_rgb_layout_slot)
-        self.rgb_layout_diagram.fan_order_changed.connect(self.reorder_rgb_layout_slot_devices)
-        self.rgb_layout_diagram.device_dropped.connect(self.assign_rgb_device_to_layout_slot)
-        self.rgb_layout_diagram.slot_selected.connect(self.select_rgb_layout_slot)
-        self.rgb_layout_diagram.slot_focused.connect(self.focus_rgb_layout_slot)
-        pc_layout.addWidget(self.rgb_layout_diagram, 1)
-        layout_note = QLabel(
-            "Lüfterblöcke und Komponenten direkt im Bild an ihre reale Position ziehen; OHC erkennt daraus automatisch "
-            "Oben, Front, Rückwand/Seite, Boden oder Heck und speichert die Lage. Eine Gerätekachel kann direkt aus "
-            "dem Gruppenbereich auf den passenden Block gezogen werden. Ein Klick markiert ihn zum Bearbeiten; "
-            "ein Doppelklick wählt dessen "
-            "zugeordnete RGB-Geräte aus. Cyan = Ansaugung, Orange = Abluft. Meldet ein Hub nur eine logische LED, "
-            "kann OHC alle daran gespiegelten Lüfter gemeinsam, aber nicht als getrennte Hardwarekanäle färben. "
-            + (
-                "Die Thermalright Levita Vision 360 wird als aktuelle Wasserkühlung mit eigenem Pumpen-/Displayblock angezeigt."
-                if self.is_thermalright_cooling()
-                else "Am Kraken-Radiator zeigt jede Lüftermitte ihre echte NZXT-Kanalnummer; diese Nummern lassen sich "
-                     "zwischen Heck, Mitte und Front ziehen und werden in Einstellungen sowie Profilen gespeichert."
-            )
-        )
-        layout_note.setWordWrap(True)
-        layout_note.setObjectName("muted")
-        pc_layout.addWidget(layout_note)
-        self.rgb_layout_status_label = QLabel("PC-Ansicht bereit · Positionen lassen sich direkt verschieben")
-        self.rgb_layout_status_label.setWordWrap(True)
-        self.rgb_layout_status_label.setObjectName("warningText")
-        pc_layout.addWidget(self.rgb_layout_status_label)
+        self.case_workspace = build_case_workspace(self)
+        pc_layout_box = build_case_preview(self)
 
         test_box = QGroupBox("Geräte-Testmodus · einzelne RGB-Komponenten identifizieren")
         test_layout = QVBoxLayout(test_box)
@@ -8501,10 +8456,16 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
 
         self.rgb_profile_autostart_checkbox = QPushButton("Startprofil-Automatik · AUS")
         self.rgb_profile_autostart_checkbox.setCheckable(True)
-        self.rgb_profile_autostart_checkbox.setChecked(False)
+        self.rgb_profile_autostart_checkbox.setChecked(
+            self.settings.value(
+                "rgb_studio/profile_autostart_default",
+                self.rgb_control_consent_confirmed,
+                type=bool,
+            )
+        )
         self.rgb_profile_autostart_checkbox.setToolTip(
-            "Standardmäßig aus. Wird nur wirksam, wenn diese Einstellung ausdrücklich in einem RGB- oder "
-            "Gesamtprofil gespeichert und dieses Profil als Startprofil gewählt wird. Fremdes OpenRGB blockiert "
+            "Nach der ersten bestätigten OHC-RGB-Übernahme standardmäßig ein. Wirksam wird die Einstellung, wenn "
+            "ein RGB- oder Gesamtprofil gespeichert und als Startprofil gewählt wird. Fremdes OpenRGB blockiert "
             "den Start weiterhin vollständig."
         )
         openrgb_details_layout.addWidget(self.rgb_profile_autostart_checkbox)
@@ -8514,19 +8475,67 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.rgb_auto_reclaim_checkbox.setChecked(self.rgb_auto_reclaim_enabled)
         self.rgb_auto_reclaim_checkbox.setToolTip(
             "Gewähltes Lichtmuster automatisch wieder anwenden, sobald separates OpenRGB beendet wurde. "
-            "Standardmäßig aus. OHC wartet nur beobachtend, bis kein fremder OpenRGB-Prozess und kein fremder "
+            "Nach der ersten bestätigten OHC-RGB-Übernahme standardmäßig ein. OHC wartet nur beobachtend, bis kein fremder OpenRGB-Prozess und kein fremder "
             "SDK-Server mehr vorhanden ist. OpenRGB wird nicht beendet. Die Option übernimmt nur eine in dieser "
             "Sitzung oder über das Startprofil bereits bestätigte RGB-Freigabe."
         )
         self.rgb_auto_reclaim_checkbox.toggled.connect(self.set_rgb_auto_reclaim_enabled)
-        self.rgb_profile_autostart_checkbox.toggled.connect(
-            lambda _checked: self.sync_rgb_engine_toggle_controls()
-        )
+        self.rgb_profile_autostart_checkbox.toggled.connect(self.set_rgb_profile_autostart_enabled)
         self.rgb_auto_reclaim_checkbox.toggled.connect(
             lambda _checked: self.sync_rgb_engine_toggle_controls()
         )
         openrgb_details_layout.addWidget(self.rgb_auto_reclaim_checkbox)
         openrgb_layout.addWidget(openrgb_details)
+
+        profile_import_box = QGroupBox("OpenRGB-Profile importieren")
+        profile_import_layout = QVBoxLayout(profile_import_box)
+        profile_import_note = QLabel(
+            "Importiert vorhandene .orp-Profile in eine private OHC-Bibliothek. Das alte binäre OpenRGB-Format "
+            "wirkt immer auf seinen vollständigen gespeicherten Geräteumfang; die Geräte- und Gruppen-Haken gelten "
+            "weiterhin für OHC-Designs. OpenRGB-1.0-JSON-Profile werden erkannt und für die künftige "
+            "Controllerfilterung gekennzeichnet."
+        )
+        profile_import_note.setWordWrap(True)
+        profile_import_note.setObjectName("muted")
+        profile_import_actions = QHBoxLayout()
+        self.openrgb_imported_profile_combo = QComboBox()
+        self.openrgb_imported_profile_combo.setMinimumWidth(320)
+        self.openrgb_imported_profile_combo.setProperty("i18nTranslateItems", False)
+        self.openrgb_profile_import_button = QPushButton("OpenRGB-Profil importieren")
+        self.openrgb_profile_import_button.clicked.connect(self.import_openrgb_profile_file)
+        self.openrgb_profile_apply_button = QPushButton("Profil vollständig laden")
+        self.openrgb_profile_apply_button.clicked.connect(self.apply_imported_openrgb_profile)
+        profile_import_actions.addWidget(self.openrgb_imported_profile_combo, 1)
+        profile_import_actions.addWidget(self.openrgb_profile_import_button)
+        profile_import_actions.addWidget(self.openrgb_profile_apply_button)
+        profile_import_layout.addWidget(profile_import_note)
+        profile_import_layout.addLayout(profile_import_actions)
+        self.openrgb_profile_import_status = QLabel("Noch kein OpenRGB-Profil importiert.")
+        self.openrgb_profile_import_status.setWordWrap(True)
+        self.openrgb_profile_import_status.setObjectName("infoText")
+        profile_import_layout.addWidget(self.openrgb_profile_import_status)
+        self.refresh_imported_openrgb_profiles()
+
+        self.rgb_startup_automation_panel = QFrame()
+        self.rgb_startup_automation_panel.setObjectName("rgbStartupAutomationPanel")
+        startup_panel_layout = QVBoxLayout(self.rgb_startup_automation_panel)
+        startup_panel_layout.setContentsMargins(16, 12, 16, 12)
+        startup_panel_layout.setSpacing(8)
+        self.rgb_startup_automation_title = QLabel("RGB-START UND WIEDERAUFNAHME")
+        self.rgb_startup_automation_title.setObjectName("rgbStartupAutomationTitle")
+        self.rgb_startup_automation_title.setWordWrap(True)
+        self.rgb_startup_automation_summary = QLabel()
+        self.rgb_startup_automation_summary.setObjectName("rgbStartupAutomationSummary")
+        self.rgb_startup_automation_summary.setWordWrap(True)
+        startup_buttons = QHBoxLayout()
+        startup_buttons.addWidget(self.openrgb_write_checkbox)
+        startup_buttons.addWidget(self.rgb_profile_autostart_checkbox)
+        startup_buttons.addWidget(self.rgb_auto_reclaim_checkbox)
+        startup_buttons.addStretch()
+        startup_panel_layout.addWidget(self.rgb_startup_automation_title)
+        startup_panel_layout.addWidget(self.rgb_startup_automation_summary)
+        startup_panel_layout.addLayout(startup_buttons)
+        layout.insertWidget(1, self.rgb_startup_automation_panel)
 
         design_gallery_box = QGroupBox("OHC-Designgalerie · eigene prozedurale Animationen")
         design_gallery_layout = QVBoxLayout(design_gallery_box)
@@ -8546,26 +8555,44 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         design_status_layout.addWidget(self.rgb_design_selection_label)
         design_status_layout.addWidget(self.rgb_design_active_label)
         design_gallery_layout.addWidget(self.rgb_design_status_panel)
-        category_row = QHBoxLayout()
-        self.rgb_design_category_buttons: dict[str, QPushButton] = {}
-        for category in ("Alle", "Ruhig", "Spektrum", "Bewegung", "Energie", "Impuls"):
-            button = QPushButton(category)
+        gallery_view_row = QHBoxLayout()
+        self.rgb_design_view_buttons: dict[str, QPushButton] = {}
+        for view_mode, caption in (
+            ("suggestions", "Vorschläge · 4"),
+            ("favorites", f"Favoriten · {len(self.rgb_favorite_design_indices)}"),
+            ("all", f"{self.tr_static('Alle Designs')} · {len(BUILTIN_DESIGNS)}"),
+        ):
+            button = QPushButton(caption)
+            button.setMinimumWidth(132)
             button.setCheckable(True)
-            button.setChecked(category == "Alle")
+            button.setChecked(view_mode == "suggestions")
             button.clicked.connect(
-                lambda _checked=False, value=category: self.select_rgb_design_category(value)
+                lambda _checked=False, value=view_mode: self.select_rgb_design_view(value)
             )
-            self.rgb_design_category_buttons[category] = button
-            category_row.addWidget(button)
-        category_row.addStretch()
-        design_gallery_layout.addLayout(category_row)
-        self.rgb_design_gallery = RGBDesignGallery()
+            self.rgb_design_view_buttons[view_mode] = button
+            gallery_view_row.addWidget(button)
+        gallery_view_row.addStretch()
+        design_gallery_layout.addLayout(gallery_view_row)
+        self.rgb_design_category_host, self.rgb_design_category_buttons = build_category_selector(
+            self.tr_static, self.select_rgb_design_category
+        )
+        design_gallery_layout.addWidget(self.rgb_design_category_host)
+        self.rgb_design_gallery = RGBDesignGallery(translator=self.tr_static)
         self.rgb_design_gallery.set_design_overrides(self.rgb_design_overrides)
+        self.rgb_design_gallery.set_favorite_indices(self.rgb_favorite_design_indices)
         self.rgb_design_gallery.design_selected.connect(self.activate_rgb_design_tile)
+        self.rgb_design_gallery.favorite_toggled.connect(self.toggle_rgb_design_favorite)
         self.rgb_design_gallery.design_context_requested.connect(
             self.show_rgb_design_color_menu
         )
         design_gallery_layout.addWidget(self.rgb_design_gallery)
+        spatial_row = QHBoxLayout()
+        self.rgb_spatial_editor_button = QPushButton(self.tr_static("Räumlichen Ablauf einstellen"))
+        self.rgb_spatial_editor_button.setObjectName("gpuCommitAction")
+        self.rgb_spatial_editor_button.clicked.connect(lambda: open_spatial_editor(self))
+        spatial_row.addWidget(self.rgb_spatial_editor_button)
+        spatial_row.addStretch()
+        design_gallery_layout.addLayout(spatial_row)
         gallery_note = QLabel(
             "Die Kacheln werden lokal aus OHC-Code animiert. Es werden keine Effekte, Bilder oder Profile "
             "kommerzieller RGB-Programme kopiert. Ein Klick wendet das Muster direkt auf die ausgewählten "
@@ -8626,7 +8653,9 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         for effect in EFFECTS:
             count = effect_color_count(effect.effect_id)
             color_text = "keine" if count == 0 else "1 Farbe" if count == 1 else f"{count} Farben"
-            item = QTreeWidgetItem([effect.title, color_text, effect.description])
+            item = QTreeWidgetItem([
+                self.tr_static(effect.title), color_text, self.tr_static(effect.description),
+            ])
             item.setData(0, Qt.ItemDataRole.UserRole, effect.effect_id)
             self.rgb_studio_mode_list.addTopLevelItem(item)
             self.rgb_studio_mode_items[effect.effect_id] = item
@@ -8730,6 +8759,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.rgb_selection_summary.setObjectName("warningText")
         selection_layout.addWidget(self.rgb_selection_summary)
         self.rgb_selection_list = QTreeWidget()
+        self.rgb_selection_list.itemChanged.connect(lambda item, column: selection_item_changed(self, item, column))
         self.rgb_selection_list.setHeaderLabels(["Gerät", "Steuerweg", "Status"])
         self.rgb_selection_list.setRootIsDecorated(True)
         self.rgb_selection_list.setAlternatingRowColors(True)
@@ -8761,6 +8791,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.openrgb_native_scope_label.setObjectName("muted")
         native_mode_layout.addWidget(self.openrgb_native_scope_label)
         native_mode_layout.addWidget(self.openrgb_native_mode_combo)
+        self.build_gpu_setup_button(native_mode_layout)
         editor_form.addRow("Grafikkarte / Hardwaremodus", native_mode_panel)
 
         buttons = QWidget()
@@ -8791,12 +8822,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.openrgb_effect_status.setWordWrap(True)
         self.openrgb_effect_status.setObjectName("warningText")
         editor_form.addRow(self.openrgb_effect_status)
-        self.openrgb_performance_label = QLabel(
-            "Animationsübertragung: bereit · noch keine gemessenen Hardwareframes"
-        )
-        self.openrgb_performance_label.setWordWrap(True)
-        self.openrgb_performance_label.setObjectName("muted")
-        editor_form.addRow("Übertragung", self.openrgb_performance_label)
+        build_transfer_status(self, editor_form)
 
         native_results_panel = build_native_hardware_channel_panel(self)
         editor_layout.addWidget(editor_form_host)
@@ -8825,51 +8851,43 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.rgb_issue_list.setColumnWidth(2, 300)
         issue_layout.addWidget(self.rgb_issue_list)
 
-        preview_group = QGroupBox("Live-Vorschau")
-        preview_layout = QVBoxLayout(preview_group)
-        self.rgb_studio_preview = RGBEffectPreview()
-        preview_layout.addWidget(self.rgb_studio_preview)
-        preview_note = QLabel(
-            "Die Vorschau läuft lokal. Die Hardwareanimation hält genau einen Mehrgeräte-Frame gleichzeitig offen; "
-            "veraltete Zwischenbilder werden zusammengefasst. Angezeigt wird die bestätigte SDK-Übertragung – die "
-            "physische ARGB-Ausgabe kann technisch nicht zurückgelesen werden."
-        )
-        preview_note.setWordWrap(True)
-        preview_note.setObjectName("muted")
-        preview_layout.addWidget(preview_note)
-
-        controls_row_layout.addWidget(editor, 3)
-        controls_row_layout.addWidget(preview_group, 2)
+        controls_row_layout.addWidget(editor)
         controls_layout.addWidget(controls_row)
         controls_layout.addWidget(native_results_panel)
-        self.rgb_devices_effects_panel = controls
+        self.rgb_devices_effects_panel = QWidget()
+        rgb_devices_effects_panel_layout = QVBoxLayout(self.rgb_devices_effects_panel)
+        rgb_devices_effects_panel_layout.setContentsMargins(0, 0, 0, 0)
+        rgb_devices_effects_panel_layout.setSpacing(14)
+        rgb_devices_effects_panel_layout.addWidget(openrgb_box)
+        rgb_devices_effects_panel_layout.addWidget(profile_import_box)
+        rgb_devices_effects_panel_layout.addWidget(self.ene_dram_notice_box)
+        rgb_devices_effects_panel_layout.addWidget(quick)
+        rgb_devices_effects_panel_layout.addWidget(test_box)
+        rgb_devices_effects_panel_layout.addWidget(controls)
+        rgb_devices_effects_panel_layout.addWidget(issue_box)
         self.rgb_devices_effects_toggle = QPushButton("Geräte und Effekte ausblenden ⌄")
         self.rgb_devices_effects_toggle.setCheckable(True)
         self.rgb_devices_effects_toggle.setChecked(True)
         self.rgb_devices_effects_toggle.setMinimumHeight(40)
         self.rgb_devices_effects_toggle.setToolTip(
-            "Blendet Auswahl, Modi, Native-Kanäle und Vorschau in dieser Seite ein. Kein Extra-Fenster."
+            "Blendet Auswahl, Modi und Native-Kanäle in dieser Seite ein. Kein Extra-Fenster."
         )
         self.rgb_devices_effects_toggle.toggled.connect(self.set_rgb_devices_effects_expanded)
         devices_effects_box = QGroupBox("Geräte und Effekte")
         devices_effects_layout = QVBoxLayout(devices_effects_box)
         devices_effects_layout.setSpacing(14)
-        devices_effects_layout.addWidget(openrgb_box)
-        devices_effects_layout.addWidget(quick)
-        devices_effects_layout.addWidget(test_box)
-        devices_effects_layout.addWidget(design_gallery_box)
         devices_effects_layout.addWidget(self.rgb_devices_effects_toggle)
-        devices_effects_layout.addWidget(controls)
-        devices_effects_layout.addWidget(issue_box)
+        devices_effects_layout.addWidget(self.rgb_devices_effects_panel)
         self.set_rgb_devices_effects_expanded(
-            self.settings.value("rgb_studio/devices_effects_expanded", True, type=bool)
+            self.settings.value("rgb_studio/devices_effects_expanded", False, type=bool)
         )
 
+        layout.addWidget(design_gallery_box)
         section_container, self.rgb_section_area = self.make_reorderable_sections(
             "rgb",
             [
-                ("devices_effects", devices_effects_box),
                 ("pc_layout", pc_layout_box),
+                ("devices_effects", devices_effects_box),
                 ("groups", workspace),
             ],
         )
@@ -8966,7 +8984,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         wizard_aio_name = LEVITA_DISPLAY_NAME if self.is_thermalright_cooling() else "Kraken 360"
         layout_page.setSubTitle(
             f"Das Grundprofil enthält {wizard_aio_name} oben, 2 Frontlüfter, 3 Reverse-Lüfter an der Rückwand/Seite, "
-            "3 Reverse-Lüfter unten, einen Heck-Abluftlüfter und die Jungle-Leopard-GPU-Halterung mit 24 LEDs."
+            "3 Reverse-Lüfter unten, einen Heck-Abluftlüfter und die Jungle-Leopard-GPU-Halterung mit 12 LEDs."
         )
         case_layout = QVBoxLayout(layout_page)
         case_tree = QTreeWidget()
@@ -8994,10 +9012,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             "vom Gerät gemeldeten Hardwaremodus."
         )
         gpu_layout = QVBoxLayout(gpu_page)
-        gpu_note = QLabel(
-            "Für die Sapphire-Grafikkarte wird bei OHC-Animationen automatisch „External Control“ bevorzugt, sofern "
-            "OpenRGB diesen Modus meldet. Hier kann der Modus vorab einzeln aktiviert und am Gerät geprüft werden."
-        )
+        gpu_note = QLabel(self.tr_static("Die interne GPU-Zone ist nicht frei skalierbar. Native Hardwareeffekte funktionieren ohne ARGB-Kabel. Für manuelle LED-Zahlen brauchst du den tatsächlich angeschlossenen 5-V-ARGB-Kanal."))
         gpu_note.setWordWrap(True)
         gpu_layout.addWidget(gpu_note)
         gpu_combo = QComboBox()
@@ -9049,12 +9064,21 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             current_id = str(inventory_combo.currentData() or "")
             inventory_combo.clear()
             inventory_table.clear()
-            for item in self.rgb_logical_devices():
+            for item in self.rgb_ui_devices():
                 device_id = str(item["id"])
                 device = item.get("device")
                 if item.get("backend") == "nzxt":
                     path = "NZXT-Modul · liquidctl"
                     shape = "ein Radiator-RGB-Kanal"
+                elif item.get("backend") == "openrgb-bank":
+                    devices = tuple(item.get("devices") or ())
+                    counts = [self.openrgb_device_write_shape(member)[0] for member in devices]
+                    path = "OpenRGB-SDK Direct · gemeinsame RAM-Bank"
+                    shape = (
+                        f"{len(devices)} Riegel · {counts[0]} LEDs je Riegel"
+                        if counts and len(set(counts)) == 1
+                        else f"{len(devices)} Riegel · LED-Zahl je Riegel"
+                    )
                 elif isinstance(device, OpenRGBDevice):
                     path = "OpenRGB-SDK Direct" if device.supports_direct else "OpenRGB-Hardwaremodus"
                     shape = f"{device.reported_led_count} LED(s) · {len(device.zones)} Zone(n)"
@@ -9083,9 +9107,15 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
 
         def refresh_case() -> None:
             case_tree.clear()
-            names = {str(item["id"]): str(item["title"]) for item in self.rgb_logical_devices()}
+            names: dict[str, str] = {}
+            for item in self.rgb_ui_devices():
+                title = str(item["title"])
+                names[str(item["id"])] = title
+                for member_id in self.rgb_ui_member_ids(item):
+                    names[member_id] = title
             for slot in self.rgb_layout_slots:
-                devices = ", ".join(names.get(item, item) for item in slot.device_ids) or "noch nicht zugeordnet"
+                device_names = list(dict.fromkeys(names.get(item, item) for item in slot.device_ids))
+                devices = ", ".join(device_names) or "noch nicht zugeordnet"
                 case_tree.addTopLevelItem(QTreeWidgetItem([
                     slot.name,
                     str(slot.count),
@@ -9190,6 +9220,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         layout = QVBoxLayout(content)
         layout.setContentsMargins(16, 14, 22, 22)
         layout.setSpacing(18)
+        layout.addWidget(self.lcd_section_tabs.create_bar())
         layout.addWidget(self.make_module_hero(
             "▣", "LCD",
             "Bilder, GIFs und Live-Hardwaredaten für unterstützte Displays vorbereiten, testen und sicher übertragen.",
@@ -9282,6 +9313,31 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         ofr.addWidget(choose, 1)
         ofr.addWidget(liquid)
         il.addWidget(own_file_row)
+
+        library_box = QGroupBox("Eigene LCD-Designs · Quellen und Dateien")
+        library_layout = QVBoxLayout(library_box)
+        library_note = QLabel(
+            "Die mitgelieferten OHC-Designs bleiben immer erhalten. Der Manager merkt zusätzliche lokale Ordner "
+            "und einzelne Dateien; Entfernen löscht niemals die Originaldatei. Videos werden auf Thermalright-"
+            "Displays direkt unterstützt, für die Kraken bitte GIF verwenden."
+        )
+        library_note.setWordWrap(True)
+        library_note.setObjectName("muted")
+        library_actions = QHBoxLayout()
+        self.kraken_lcd_library_combo = QComboBox()
+        self.kraken_lcd_library_combo.setMinimumWidth(320)
+        self.kraken_lcd_library_combo.setProperty("i18nTranslateItems", False)
+        self.kraken_lcd_library_button = QPushButton("LCD-Designmanager öffnen")
+        self.kraken_lcd_library_button.clicked.connect(self.open_kraken_lcd_library_manager)
+        self.kraken_lcd_library_load_button = QPushButton("Auswahl laden")
+        self.kraken_lcd_library_load_button.clicked.connect(self.load_selected_kraken_lcd_library_item)
+        library_actions.addWidget(self.kraken_lcd_library_combo, 1)
+        library_actions.addWidget(self.kraken_lcd_library_load_button)
+        library_actions.addWidget(self.kraken_lcd_library_button)
+        library_layout.addWidget(library_note)
+        library_layout.addLayout(library_actions)
+        il.addWidget(library_box)
+        self.refresh_kraken_lcd_library()
 
         gallery_title = QLabel("Mitgelieferte Animationen")
         gallery_title.setObjectName("cardTitle")
@@ -9768,6 +9824,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.settings,
             self.app_config_dir,
             log_callback=self.log_message,
+            device_present=thermalright_display_present(),
             parent=content,
         )
         self.kraken_clock_box = clock_box
@@ -10073,11 +10130,11 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.imported_lcd_table.selectRow(select_row)
 
     def lcd_profile_metric_snapshot(self) -> dict[str, float | None]:
-        values = self.system_metric_sampler.sample()
+        values = self.process_runtime.metrics() if hasattr(self, "process_runtime") else self.system_metric_sampler.sample()
         values.update(
             {
-                "cpuTemp": self.current_cpu_temp,
-                "gpuTemp": self.current_gpu_temp,
+                "cpuTemp": self.process_runtime.temperature("cpu")[0] if hasattr(self, "process_runtime") else self.current_cpu_temp,
+                "gpuTemp": self.process_runtime.temperature("gpu")[0] if hasattr(self, "process_runtime") else self.current_gpu_temp,
                 "liquidTemp": self.current_liquid_temp,
                 "pumpRpm": self.current_pump_rpm,
                 "fanRpm": self.current_fan_rpm,
@@ -10087,7 +10144,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
 
     def poll_hardware_diagnostics(self) -> None:
         """Log only new implausible telemetry states, never routine samples."""
-        values = self.hardware_diagnostic_sampler.sample()
+        values = self.process_runtime.metrics() if hasattr(self, "process_runtime") else self.hardware_diagnostic_sampler.sample()
         values.update(cpuTemp=self.current_cpu_temp, gpuTemp=self.current_gpu_temp)
         issues = validate_metric_snapshot(values)
         current = {(issue.metric, issue.reason) for issue in issues}
@@ -10511,6 +10568,18 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             settings=self.settings,
         )
         return self.wallpaper_engine_page
+
+    def make_display_effects_tab(self) -> QWidget:
+        self.display_effects_page = DisplayEffectsPage(
+            self.settings,
+            self.thermalright_display_studio,
+            hero_factory=self.make_module_hero,
+            translator=self.tr_static,
+            logger=self.log_message,
+            process_tracker=track_qprocess,
+            section_bar=self.lcd_section_tabs.create_bar(),
+        )
+        return self.display_effects_page
 
     def make_desktop_designs_tab(self) -> QWidget:
         page = QScrollArea()
@@ -11055,6 +11124,56 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             log_output=False,
         )
 
+    def apply_hardware_backend_selection(self, _index: int = -1) -> None:
+        if not hasattr(self, "display_backend_combo"):
+            return
+        self.display_backend_choice = normalize_backend_choice(
+            self.display_backend_combo.currentData(), DISPLAY_BACKENDS
+        )
+        self.fan_backend_choice = normalize_backend_choice(
+            self.fan_backend_combo.currentData(), FAN_BACKENDS
+        )
+        self.settings.setValue("hardware_backends/display", self.display_backend_choice)
+        self.settings.setValue("hardware_backends/fans", self.fan_backend_choice)
+        self.settings.sync()
+        self.update_hardware_backend_status()
+        self.log_message(
+            "HARDWARE-UNTERBAU: "
+            f"Display={self.display_backend_choice} · Lüfter={self.fan_backend_choice}"
+        )
+
+    def update_hardware_backend_status(self) -> None:
+        if not hasattr(self, "hardware_backend_status"):
+            return
+        display = resolve_backend(
+            self.display_backend_choice,
+            DISPLAY_BACKENDS,
+            {"trcc_linux": bool(find_trcc_executable())},
+        )
+        fans = resolve_backend(
+            self.fan_backend_choice,
+            FAN_BACKENDS,
+            {"ohc_hwmon": self.mainboard_hwmon_controller is not None},
+        )
+        display_text = "TRCC Linux aktiv" if display.active else "kein Display-Unterbau verfügbar"
+        fan_text = "OHC Linux-hwmon aktiv" if fans.active else "kein Lüfter-Unterbau verfügbar"
+        self.hardware_backend_status.setText(
+            f"{self.tr_static('Aktuell aufgelöst')}: {self.tr_static('Levita-Display')} · {self.tr_static(display_text)}\n"
+            f"{self.tr_static('Mainboard-Lüfter')} · {self.tr_static(fan_text)}"
+        )
+
+    def fan_backend_write_ready(self) -> bool:
+        if not self.feature_enabled("cooling") or not ohc_may_write(
+            "cooling", self.control_authority.get("cooling", "auto")
+        ):
+            return False
+        resolution = resolve_backend(
+            self.fan_backend_choice,
+            FAN_BACKENDS,
+            {"ohc_hwmon": self.mainboard_hwmon_controller is not None},
+        )
+        return resolution.active == "ohc_hwmon"
+
     def make_settings_tab(self) -> QWidget:
         page = QWidget()
         page.setObjectName("settingsPage")
@@ -11071,6 +11190,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         scroll.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         scroll.setAccessibleName("Scrollbare Einstellungen")
         scroll.viewport().setAutoFillBackground(False)
+        self.settings_page_scroll = scroll
 
         content = QWidget()
         content.setObjectName("settingsContent")
@@ -11085,12 +11205,16 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             "System",
         ))
 
+        build_feature_settings(self, layout)
+
         design_box = QGroupBox("Design")
         design_form = QFormLayout(design_box)
         self.theme_mode_combo = QComboBox()
         self.theme_mode_combo.addItem("Systemmodus", "system")
         self.theme_mode_combo.addItem("Hell", "light")
         self.theme_mode_combo.addItem("Dunkel", "dark")
+        self.theme_mode_combo.addItem("Studio Hell · ohne Hintergrundanimation", "studio-light")
+        self.theme_mode_combo.addItem("Studio Schwarz · ohne Hintergrundanimation", "studio-dark")
         mode_index = max(0, self.theme_mode_combo.findData(self.theme_mode))
         self.theme_mode_combo.setCurrentIndex(mode_index)
 
@@ -11149,6 +11273,40 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.language_combo.currentIndexChanged.connect(self.on_language_changed)
         layout.addWidget(language_box)
 
+        layout.addWidget(build_module_visibility_settings(self))
+
+        backend_box = QGroupBox("Hardware-Unterbauten")
+        backend_form = QFormLayout(backend_box)
+        self.display_backend_combo = QComboBox()
+        self.display_backend_combo.addItem("Automatisch (empfohlen)", "auto")
+        self.display_backend_combo.addItem("TRCC Linux", "trcc_linux")
+        self.display_backend_combo.addItem("OHC nativ (noch nicht verfügbar)", "ohc_native")
+        self.display_backend_combo.model().item(2).setEnabled(False)
+        self.display_backend_combo.setCurrentIndex(max(0, self.display_backend_combo.findData(self.display_backend_choice)))
+        self.fan_backend_combo = QComboBox()
+        self.fan_backend_combo.addItem("Automatisch (empfohlen)", "auto")
+        self.fan_backend_combo.addItem("OHC Linux-hwmon", "ohc_hwmon")
+        self.fan_backend_combo.addItem("CoolerControl (noch nicht verfügbar)", "coolercontrol")
+        self.fan_backend_combo.model().item(2).setEnabled(False)
+        self.fan_backend_combo.setCurrentIndex(max(0, self.fan_backend_combo.findData(self.fan_backend_choice)))
+        self.hardware_backend_status = QLabel()
+        self.hardware_backend_status.setWordWrap(True)
+        self.hardware_backend_status.setObjectName("muted")
+        backend_note = QLabel(
+            "Eine nicht verfügbare Auswahl wird nie still ersetzt. Native Levita-Steuerung und "
+            "CoolerControl-Umschaltung bleiben bis zu einem validierten Adapter gesperrt."
+        )
+        backend_note.setWordWrap(True)
+        backend_note.setObjectName("muted")
+        self.display_backend_combo.currentIndexChanged.connect(self.apply_hardware_backend_selection)
+        self.fan_backend_combo.currentIndexChanged.connect(self.apply_hardware_backend_selection)
+        backend_form.addRow("Levita-Display", self.display_backend_combo)
+        backend_form.addRow("Mainboard-Lüfter", self.fan_backend_combo)
+        backend_form.addRow(self.hardware_backend_status)
+        backend_form.addRow(backend_note)
+        layout.addWidget(backend_box)
+        self.update_hardware_backend_status()
+
         temperature_box = QGroupBox("Temperatureinheit")
         temperature_form = QFormLayout(temperature_box)
         self.temperature_unit_combo = QComboBox()
@@ -11167,52 +11325,10 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.temperature_unit_combo.currentIndexChanged.connect(self.on_temperature_unit_changed)
         layout.addWidget(temperature_box)
 
-        display_box = QGroupBox("Anzeige und DPI")
-        display_form = QFormLayout(display_box)
-        self.display_info_label = QLabel("Monitor wird erkannt …")
-        self.display_info_label.setWordWrap(True)
-        self.display_auto_checkbox = QCheckBox("Automatisch an Monitor und Seitenverhältnis anpassen")
-        self.display_auto_checkbox.setChecked(self.display_auto)
-        self.ui_scale_spin = QSpinBox()
-        self.ui_scale_spin.setRange(75, 160)
-        self.ui_scale_spin.setValue(self.ui_scale_percent)
-        self.ui_scale_spin.setSuffix(" %")
-        self.display_layout_combo = QComboBox()
-        self.display_layout_combo.addItem("Automatisch", "auto")
-        self.display_layout_combo.addItem("Kompakt · 16:10", "16:10")
-        self.display_layout_combo.addItem("Standard · 16:9", "16:9")
-        self.display_layout_combo.addItem("Ultrawide · 21:9", "21:9")
-        self.display_layout_combo.addItem("Super-Ultrawide · 32:9", "32:9")
-        display_index = self.display_layout_combo.findData(self.display_layout)
-        self.display_layout_combo.setCurrentIndex(max(0, display_index))
-        self.window_screen_combo = QComboBox()
-        self.window_screen_combo.setAccessibleName("Startbildschirm des Programmfensters")
-        self.populate_window_screen_combo()
-        display_buttons = QWidget()
-        display_buttons_layout = QHBoxLayout(display_buttons)
-        display_buttons_layout.setContentsMargins(0, 0, 0, 0)
-        detect_display = QPushButton("Monitor neu erkennen")
-        detect_display.clicked.connect(self.refresh_screen_inventory)
-        apply_display = QPushButton("Anzeige anwenden")
-        apply_display.clicked.connect(self.apply_display_settings)
-        display_buttons_layout.addWidget(detect_display)
-        display_buttons_layout.addWidget(apply_display)
-        display_note = QLabel(
-            "Standardmäßig öffnet OHC auf dem von KDE/Qt gemeldeten Hauptbildschirm. Eine feste Auswahl wird "
-            "über den Bildschirmnamen gespeichert und fällt bei einem abgesteckten Monitor sicher auf den "
-            "Hauptbildschirm zurück. Unter Wayland besitzt KWin die endgültige Entscheidung über die Position. "
-            "Die App ändert weder die Linux-Bildschirmauflösung noch die KDE-Monitorkonfiguration."
-        )
-        display_note.setWordWrap(True)
-        display_note.setObjectName("muted")
-        display_form.addRow(self.display_info_label)
-        display_form.addRow(self.display_auto_checkbox)
-        display_form.addRow("Programmfenster starten auf", self.window_screen_combo)
-        display_form.addRow("App-Skalierung", self.ui_scale_spin)
-        display_form.addRow("Layoutvorgabe", self.display_layout_combo)
-        display_form.addRow(display_buttons)
-        display_form.addRow(display_note)
-        layout.addWidget(display_box)
+        build_display_settings(self, layout)
+        build_performance_settings(self, layout)
+        from modules.process_runtime.v1_1.health import build as build_runtime_health
+        build_runtime_health(self, layout)
 
         background_box = QGroupBox("Animierter Hintergrund")
         background_form = QFormLayout(background_box)
@@ -11251,6 +11367,13 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         )
         background_note.setWordWrap(True)
         background_note.setObjectName("muted")
+        self.background_theme_notice = QLabel(
+            "Studio-Design aktiv: Hintergrundanimationen sind in diesem Modus deaktiviert. "
+            "Die gespeicherte Hintergrundauswahl bleibt erhalten."
+        )
+        self.background_theme_notice.setWordWrap(True)
+        self.background_theme_notice.setObjectName("muted")
+        self.background_theme_notice.setVisible(False)
         background_form.addRow(self.background_enabled_checkbox)
         background_form.addRow("Thema", self.background_theme_combo)
         background_form.addRow("Bildrate", self.background_fps_combo)
@@ -11258,6 +11381,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         background_form.addRow(self.background_pause_checkbox)
         background_form.addRow(background_buttons)
         background_form.addRow(background_note)
+        background_form.addRow(self.background_theme_notice)
         layout.addWidget(background_box)
 
         app_box = QGroupBox("Programm")
@@ -11269,7 +11393,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.autostart_minimized_checkbox.toggled.connect(
             lambda enabled: self.settings.setValue("app/autostart_minimized", enabled)
         )
-        self.tray_checkbox = QCheckBox("Beim Schließen im Infobereich weiterlaufen")
+        self.tray_checkbox = QCheckBox("Beim Minimieren im Infobereich weiterlaufen")
         self.tray_checkbox.setChecked(True)
         self.refresh_interval = QSpinBox()
         self.refresh_interval.setRange(1, 30)
@@ -11305,6 +11429,9 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         rerun_setup = QPushButton("Einrichtungsassistent erneut starten")
         rerun_setup.clicked.connect(lambda: self.maybe_show_setup_wizard(force=True))
         form.addRow(rerun_setup)
+        restart_app = QPushButton("Open Hardware Control neu starten")
+        restart_app.clicked.connect(self.request_application_restart)
+        form.addRow(restart_app)
         layout.addWidget(app_box)
 
         experimental_box = QGroupBox("Experimentalhinweise und LCD-Sicherheit")
@@ -11394,10 +11521,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         outer.setContentsMargins(16, 14, 22, 22)
         outer.setSpacing(14)
         outer.addWidget(self.make_module_hero(
-            "☷", "Profile",
-            "Kühlung, LCD, RGB, Design, Hintergrund und Anzeige gemeinsam sichern, duplizieren, importieren und wiederherstellen.",
-            "Profile",
-        ))
+            "☷", "Profile", "Kühlung, GPU, LCD, RGB, Design und Anzeige gemeinsam sichern.", "Profile"))
 
         startup_box = QGroupBox("Profil beim Start")
         startup_form = QFormLayout(startup_box)
@@ -11415,7 +11539,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.profile_name_input = QLineEdit()
         self.profile_name_input.setPlaceholderText("z. B. Gaming, Leise Nacht oder Sommer")
         self.profile_category_combo = QComboBox()
-        for category in ("Gesamt", "Kühlung", "LCD", "RGB", "Design"):
+        for category in ("Gesamt", "Kühlung", "GPU", "LCD", "RGB", "Design", "Benutzerdefiniert"):
             self.profile_category_combo.addItem(category, category)
         self.profile_description_input = QLineEdit()
         self.profile_description_input.setPlaceholderText("Kurze Beschreibung")
@@ -11431,6 +11555,17 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         form.addRow("Name", self.profile_name_input)
         form.addRow("Kategorie", self.profile_category_combo)
         form.addRow("Beschreibung", self.profile_description_input)
+        profile_sections = QWidget()
+        profile_sections_layout = QHBoxLayout(profile_sections)
+        profile_sections_layout.setContentsMargins(0, 0, 0, 0)
+        self.profile_section_checks: dict[str, QCheckBox] = {}
+        for key, title in (("cooling", "Kühlung"), ("gpu", "GPU"), ("lcd", "LCD"), ("rgb", "RGB"), ("design", "Design & Anzeige")):
+            checkbox = QCheckBox(title); checkbox.setChecked(True)
+            checkbox.toggled.connect(self.on_profile_sections_changed)
+            self.profile_section_checks[key] = checkbox; profile_sections_layout.addWidget(checkbox)
+        profile_sections_layout.addStretch()
+        self.profile_category_combo.currentIndexChanged.connect(self.apply_profile_category_to_sections)
+        form.addRow("Gespeicherte Bereiche", profile_sections)
         form.addRow(profile_editor_buttons)
         outer.addWidget(editor)
 
@@ -11440,9 +11575,29 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.profiles_table.horizontalHeader().setStretchLastSection(True)
         self.profiles_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.profiles_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        header = self.profiles_table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
         self.profiles_table.itemSelectionChanged.connect(self.on_profile_selection_changed)
         self.profiles_table.doubleClicked.connect(lambda _index: self.apply_selected_profile())
         outer.addWidget(self.profiles_table, 1)
+
+        contents_box = QGroupBox("Gespeicherter Profilinhalt")
+        contents_layout = QVBoxLayout(contents_box)
+        self.profile_contents_summary = QLabel("Profil auswählen, um alle gespeicherten Bereiche und Werte zu sehen.")
+        self.profile_contents_summary.setWordWrap(True)
+        self.profile_contents_summary.setObjectName("infoText")
+        contents_layout.addWidget(self.profile_contents_summary)
+        self.profile_contents_tree = QTreeWidget()
+        self.profile_contents_tree.setHeaderLabels(["Bereich / Einstellung", "Gespeicherter Wert"])
+        self.profile_contents_tree.setRootIsDecorated(True)
+        self.profile_contents_tree.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self.profile_contents_tree.header().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        self.profile_contents_tree.setMinimumHeight(190)
+        contents_layout.addWidget(self.profile_contents_tree)
+        outer.addWidget(contents_box)
 
         buttons = QHBoxLayout()
         apply_profile = QPushButton("Profil anwenden")
@@ -11461,6 +11616,9 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             buttons.addWidget(button)
         buttons.addStretch()
         outer.addLayout(buttons)
+
+        from modules.profile_bundle.v1_0.controller import build_bundle_controls
+        build_bundle_controls(self, outer)
 
         self.profile_status_label = QLabel("Noch kein Profil ausgewählt.")
         self.profile_status_label.setWordWrap(True)
@@ -11483,33 +11641,13 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
 
     @staticmethod
     def runtime_component_versions() -> list[tuple[str, str]]:
-        liquidctl_version = "nicht erkannt"
-        openrgb_version = "nicht installiert"
+        liquidctl_version = "installiert · Version nicht gelesen" if shutil.which(LIQUIDCTL) else "nicht installiert"
         try:
-            completed = subprocess.run(
-                [LIQUIDCTL, "--version"],
-                capture_output=True,
-                text=True,
-                timeout=3,
-                check=False,
-            )
-            liquidctl_version = (completed.stdout or completed.stderr).strip() or "unbekannt"
-        except (OSError, subprocess.SubprocessError):
+            liquidctl_version = metadata.version("liquidctl")
+        except metadata.PackageNotFoundError:
             pass
         openrgb_executable = shutil.which("openrgb") or shutil.which("OpenRGB")
-        if openrgb_executable:
-            try:
-                completed = subprocess.run(
-                    [openrgb_executable, "--version"],
-                    capture_output=True,
-                    text=True,
-                    timeout=4,
-                    check=False,
-                    env=openrgb_subprocess_environment(),
-                )
-                openrgb_version = (completed.stdout or completed.stderr).strip().splitlines()[0]
-            except (OSError, subprocess.SubprocessError, IndexError):
-                openrgb_version = "installiert · Version nicht gelesen"
+        openrgb_version = "installiert · Version nicht gelesen" if openrgb_executable else "nicht installiert"
         distro = "Linux"
         try:
             values = {}
@@ -11656,6 +11794,10 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             versions_layout.addWidget(value, row, 1)
         versions_layout.setColumnStretch(1, 1)
         layout.addWidget(versions_box)
+        updates_box = QGroupBox("Backend-Aktualisierungen")
+        updates_layout = QGridLayout(updates_box)
+        self.populate_backend_update_box(updates_layout)
+        layout.addWidget(updates_box)
         cpu_sources = QGroupBox("AMD-AM5-Temperaturprofile")
         cpu_sources_layout = QVBoxLayout(cpu_sources)
         self.cpu_sources_text = QLabel(self.cpu_profile_temperature_explanation())
@@ -11741,34 +11883,21 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             "Hardwarebefehle, Fehler, Benutzeraktionen und Laufzeitereignisse mit aktivem Privacy-Redactor nachvollziehen.",
             "Lokal",
         ))
-        note = QLabel(
-            "Private Pfade und Kennungen werden beim Anzeigen, Kopieren und Speichern bereinigt. "
-            "Die aktuelle und die vorherige Sitzung liegen unter ~/.local/state/open-hardware-control/."
-        )
+        note = QLabel("Die Ansicht hält immer die letzten 60 Minuten vor. Private Pfade und Kennungen werden "
+                      "bereinigt; aktuelle/vorherige Sitzung und das dauerhafte errors.log liegen unter ~/.local/state/open-hardware-control/.")
         note.setWordWrap(True)
         note.setObjectName("muted")
         layout.addWidget(note)
-        self.log_view = QPlainTextEdit()
-        self.log_view.setReadOnly(True)
-        self.log_view.setMaximumBlockCount(2000)
-        self.hardware_log_view = QPlainTextEdit()
-        self.hardware_log_view.setReadOnly(True)
-        self.hardware_log_view.setMaximumBlockCount(1000)
-        self.hardware_log_view.setPlaceholderText(
-            "Keine auffälligen Hardwarewerte erkannt. Hier erscheinen nur Fehler, "
-            "unplausible Werte und deren Ursache – keine sekündlichen Messreihen."
-        )
-        self.log_category_tabs = QTabWidget()
-        self.log_category_tabs.addTab(self.log_view, "Allgemein")
-        self.log_category_tabs.addTab(self.hardware_log_view, "Hardware · Auffälligkeiten")
-        self.log_category_tabs.currentChanged.connect(self._trim_log_to_character_limit)
-        self.log_char_limit = 10000
-        self.log_counter_label = QLabel("Log: 0 / 10.000 Zeichen")
+        self.log_category_tabs = build_log_category_tabs(self)
+        self.log_counter_label = QLabel(self.tr_static(
+            "Letzte 60 Minuten: {lines} Zeilen · {characters} Zeichen"
+        ).format(lines=0, characters=0))
         self.log_counter_label.setObjectName("muted")
         buttons = QHBoxLayout()
         clear = QPushButton("Log leeren")
         clear.clicked.connect(self.clear_application_log)
         copy = QPushButton("Alles kopieren")
+        copy.setToolTip("Kopiert den gerade sichtbaren Reiter: Gesamt, RGB · Lüfter oder Hardware · Auffälligkeiten.")
         copy.clicked.connect(self.copy_application_log)
         save = QPushButton("Log speichern")
         save.clicked.connect(self.save_application_log)
@@ -11779,6 +11908,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         buttons.addWidget(self.log_counter_label)
         layout.addLayout(buttons)
         layout.addWidget(self.log_category_tabs)
+        self._start_log_retention_timer()
         return page
 
     @staticmethod
@@ -11827,6 +11957,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.settings.setValue("design/theme", self.theme_mode)
         self.settings.setValue("design/accent", self.accent_hex)
         self.settings.setValue("display/ui_scale", self.ui_scale_percent)
+        self.settings.setValue("window/normal_size_percent", self.windowed_size_percent)
         self.settings.setValue("display/auto", self.display_auto)
         self.settings.setValue("display/layout", self.display_layout)
         self.settings.setValue("display/temperature_unit", self.temperature_unit)
@@ -11840,434 +11971,6 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.apply_theme()
         if hasattr(self, "log_view"):
             self.log_message(f"DESIGN: Modus={self.theme_mode} · Akzent={self.accent_hex}")
-
-    def apply_theme(self) -> None:
-        app = QApplication.instance()
-        if app is None:
-            return
-        accent = QColor(self.accent_hex)
-        if not accent.isValid():
-            accent = QColor("#00aaff")
-            self.accent_hex = accent.name()
-
-        if self.theme_mode == "light":
-            palette = QPalette()
-            colors = {
-                QPalette.ColorRole.Window: "#f4f6f8",
-                QPalette.ColorRole.WindowText: "#18202a",
-                QPalette.ColorRole.Base: "#ffffff",
-                QPalette.ColorRole.AlternateBase: "#eef2f6",
-                QPalette.ColorRole.ToolTipBase: "#ffffff",
-                QPalette.ColorRole.ToolTipText: "#18202a",
-                QPalette.ColorRole.Text: "#18202a",
-                QPalette.ColorRole.Button: "#ffffff",
-                QPalette.ColorRole.ButtonText: "#18202a",
-                QPalette.ColorRole.BrightText: "#ffffff",
-                QPalette.ColorRole.Mid: "#667085",
-                QPalette.ColorRole.Midlight: "#d0d5dd",
-                QPalette.ColorRole.Dark: "#344054",
-                QPalette.ColorRole.PlaceholderText: "#98a2b3",
-            }
-            for role, value in colors.items():
-                palette.setColor(role, QColor(value))
-        elif self.theme_mode == "dark":
-            palette = QPalette()
-            colors = {
-                QPalette.ColorRole.Window: "#11161d",
-                QPalette.ColorRole.WindowText: "#eef2f7",
-                QPalette.ColorRole.Base: "#191f29",
-                QPalette.ColorRole.AlternateBase: "#202834",
-                QPalette.ColorRole.ToolTipBase: "#202834",
-                QPalette.ColorRole.ToolTipText: "#eef2f7",
-                QPalette.ColorRole.Text: "#eef2f7",
-                QPalette.ColorRole.Button: "#202834",
-                QPalette.ColorRole.ButtonText: "#eef2f7",
-                QPalette.ColorRole.BrightText: "#ffffff",
-                QPalette.ColorRole.Mid: "#98a2b3",
-                QPalette.ColorRole.Midlight: "#344054",
-                QPalette.ColorRole.Dark: "#090d12",
-                QPalette.ColorRole.PlaceholderText: "#667085",
-            }
-            for role, value in colors.items():
-                palette.setColor(role, QColor(value))
-        else:
-            palette = QPalette(self.system_palette)
-
-        palette.setColor(QPalette.ColorRole.Highlight, accent)
-        palette.setColor(QPalette.ColorRole.Link, accent)
-        highlighted_text = QColor("#111111") if accent.lightness() > 155 else QColor("#ffffff")
-        palette.setColor(QPalette.ColorRole.HighlightedText, highlighted_text)
-        app.setPalette(palette)
-
-        scale = self.ui_scale_percent / 100.0
-        app_font = QFont(self.base_font)
-        base_point = self.base_font.pointSizeF() if self.base_font.pointSizeF() > 0 else 10.0
-        app_font.setPointSizeF(max(8.0, base_point * scale))
-        app.setFont(app_font)
-        hover = accent.lighter(118) if self.theme_mode == "dark" else accent.darker(108)
-        pressed = accent.darker(125)
-        is_dark_palette = palette.color(QPalette.ColorRole.Window).lightness() < 150
-        surface_rgba = "rgba(25, 31, 41, 232)" if is_dark_palette else "rgba(255, 255, 255, 242)"
-        panel_rgba = (
-            "rgba(12, 30, 47, 226)"
-            if is_dark_palette
-            else f"rgba({accent.red()}, {accent.green()}, {accent.blue()}, 18)"
-        )
-        panel_border_rgba = (
-            f"rgba({accent.red()}, {accent.green()}, {accent.blue()}, 92)"
-            if is_dark_palette
-            else f"rgba({accent.red()}, {accent.green()}, {accent.blue()}, 70)"
-        )
-        input_rgba = "rgba(8, 23, 38, 238)" if is_dark_palette else "rgba(255, 255, 255, 246)"
-        neutral_button_rgba = (
-            "rgba(24, 45, 64, 238)"
-            if is_dark_palette
-            else f"rgba({accent.red()}, {accent.green()}, {accent.blue()}, 24)"
-        )
-        table_header_rgba = (
-            "rgba(20, 48, 72, 245)"
-            if is_dark_palette
-            else f"rgba({accent.red()}, {accent.green()}, {accent.blue()}, 32)"
-        )
-        # Light mode gets a stronger frosted sheet so text/controls stay readable
-        # over bright animations; dark/system keep a slightly more transparent veil.
-        content_rgba = "rgba(17, 22, 29, 166)" if is_dark_palette else "rgba(244, 246, 248, 242)"
-        if is_dark_palette:
-            rail_bg = "rgba(7, 19, 31, 248)"
-            rail_border = "rgba(83, 112, 139, 90)"
-            brand_logo_bg = "rgba(2, 8, 15, 205)"
-            brand_logo_border = "rgba(52, 151, 255, 105)"
-            brand_color = "#f2f7fb"
-            sidebar_status_bg = "rgba(15, 31, 47, 220)"
-            sidebar_status_border = "rgba(83, 112, 139, 110)"
-            sidebar_status_color = "#a8b6c5"
-            nav_item_color = "#e8eef5"
-            nav_reset_color = "#d9e4ee"
-            nav_selected_color = accent.lighter(125).name()
-        else:
-            rail_bg = "rgba(255, 255, 255, 252)"
-            rail_border = f"rgba({accent.red()}, {accent.green()}, {accent.blue()}, 70)"
-            brand_logo_bg = "rgba(244, 246, 248, 255)"
-            brand_logo_border = f"rgba({accent.red()}, {accent.green()}, {accent.blue()}, 80)"
-            brand_color = "#18202a"
-            sidebar_status_bg = "rgba(238, 242, 246, 255)"
-            sidebar_status_border = f"rgba({accent.red()}, {accent.green()}, {accent.blue()}, 55)"
-            sidebar_status_color = "#344054"
-            nav_item_color = "#18202a"
-            nav_reset_color = "#344054"
-            nav_selected_color = "#18202a"
-        base_px = max(10, round(12 * scale))
-        title_px = max(19, round(23 * scale))
-        card_px = max(18, round(22 * scale))
-        self.setStyleSheet(
-            f"""
-            QWidget {{ font-size: {base_px}px; color: palette(window-text); }}
-            QMainWindow {{ background: palette(window); }}
-            QWidget#backgroundRoot {{ background: transparent; }}
-            QWidget#contentRoot {{ background: {content_rgba}; }}
-            QScrollArea, QScrollArea > QWidget > QWidget {{ background: transparent; border: none; }}
-            QScrollBar:vertical {{
-                width: 8px; margin: 2px 1px; border: none; background: transparent;
-            }}
-            QScrollBar::handle:vertical {{
-                min-height: 28px; border-radius: 3px;
-                background: rgba({accent.red()}, {accent.green()}, {accent.blue()}, 145);
-            }}
-            QScrollBar::handle:vertical:hover {{ background: {accent.name()}; }}
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; border: none; }}
-            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{ background: transparent; }}
-            QScrollBar:horizontal {{
-                height: 8px; margin: 1px 2px; border: none; background: transparent;
-            }}
-            QScrollBar::handle:horizontal {{
-                min-width: 28px; border-radius: 3px;
-                background: rgba({accent.red()}, {accent.green()}, {accent.blue()}, 145);
-            }}
-            QScrollBar::handle:horizontal:hover {{ background: {accent.name()}; }}
-            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{ width: 0; border: none; }}
-            QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {{ background: transparent; }}
-            QLabel#mainTitle {{ font-size: {title_px}px; font-weight: 750; }}
-            QLabel#subtitle, QLabel#muted, QLabel#cardHint {{ color: palette(mid); }}
-            QLabel#connectionPending {{ color: #d49b21; font-weight: 700; }}
-            QLabel#connectionOk {{ color: #2fbf71; font-weight: 700; }}
-            QLabel#connectionBad {{ color: #e05a5a; font-weight: 700; }}
-            QLabel#cardTitle {{ color: palette(mid); font-size: 13px; }}
-            QLabel#cardValue {{ font-size: {card_px}px; font-weight: 750; }}
-            QLabel#healthGood {{ color: #2fbf71; font-weight: 700; }}
-            QLabel#healthWarn {{ color: #d49b21; font-weight: 700; }}
-            QLabel#healthCritical {{ color: #e05a5a; font-weight: 800; }}
-            QLabel#healthNeutral {{ color: palette(mid); }}
-            QLabel#warningText {{ color: #d49b21; }}
-            QFrame#rgbDesignStatusPanel {{
-                background: rgba(11, 35, 54, 220);
-                border: 2px solid #43b8ff;
-                border-radius: 12px;
-            }}
-            QLabel#rgbDesignSelection {{ color: #eaf7ff; font-weight: 700; font-size: 14px; }}
-            QLabel#rgbDesignActive {{ color: #54dda1; font-weight: 600; }}
-            QLabel#infoText {{ color: palette(mid); }}
-            QLabel#designPreview {{
-                border: 2px solid {accent.name()};
-                border-radius: 8px;
-                background: palette(base);
-                color: {accent.name()};
-                font-weight: 700;
-                padding: 8px;
-            }}
-            QFrame#valueCard, QFrame#profileCard {{
-                border: 1px solid {panel_border_rgba};
-                border-radius: 10px;
-                background: {panel_rgba};
-            }}
-            QFrame#rgbDeviceTile {{
-                border: 2px solid {panel_border_rgba};
-                border-radius: 12px;
-                background: {panel_rgba};
-            }}
-            QFrame#rgbDeviceTile:hover {{ border-color: {accent.name()}; }}
-            QLabel#profileTitle {{ font-size: 17px; font-weight: 700; }}
-            QLabel#lcdPreview {{
-                background: #101010;
-                border: 3px solid {accent.name()};
-                border-radius: 150px;
-                color: #aaaaaa;
-            }}
-            CurveEditor#curveEditor {{
-                border: 1px solid {panel_border_rgba};
-                border-radius: 10px;
-                background: {input_rgba};
-            }}
-            QGroupBox {{
-                border: 1px solid {panel_border_rgba};
-                border-radius: 10px;
-                margin-top: 14px;
-                padding: 9px;
-                font-weight: 700;
-                background: {panel_rgba};
-            }}
-            QGroupBox::title {{ subcontrol-origin: margin; left: 12px; padding: 0 6px; }}
-            QPushButton {{
-                padding: 6px 10px;
-                border: 1px solid {panel_border_rgba};
-                border-radius: 7px;
-                background: {neutral_button_rgba};
-            }}
-            QPushButton:hover {{ border-color: {hover.name()}; color: {accent.name()}; }}
-            QPushButton:pressed {{ border-color: {pressed.name()}; background: palette(midlight); }}
-            QPushButton:checked {{
-                border: 2px solid #2fbf71;
-                background: rgba(47, 191, 113, 52);
-                color: #54dda1;
-                font-weight: 750;
-            }}
-            QPushButton#dangerButton {{
-                border: 2px solid #e05a5a;
-                background: #9f2636;
-                color: #ffffff;
-                font-weight: 850;
-            }}
-            QPushButton#dangerButton:hover {{ border-color: #ff9aa8; background: #b52d40; color: #ffffff; }}
-            QPushButton#coolingModeButton[coolingState="active"] {{
-                border: 2px solid #2fbf71;
-                background: #238b55;
-                color: #ffffff;
-                font-weight: 750;
-            }}
-            QPushButton#coolingModeButton[coolingState="active"]:hover {{
-                border-color: #59d992;
-                background: #238b55;
-                color: #ffffff;
-            }}
-            QPushButton#coolingModeButton[coolingState="active"]:pressed {{
-                border-color: #8aefb7;
-                background: #1b6f44;
-                color: #ffffff;
-            }}
-            QPushButton#coolingQuickProfileButton[profileState="active"] {{
-                border: 2px solid {accent.lighter(125).name()};
-                background: {accent.name()};
-                color: #ffffff;
-                font-weight: 800;
-            }}
-            QPushButton#coolingQuickProfileButton[profileState="active"]:hover {{
-                border-color: {accent.lighter(140).name()};
-                background: {hover.name()};
-                color: #ffffff;
-            }}
-            QPushButton#coolingQuickProfileButton[profileState="active"]:pressed {{
-                border-color: {accent.lighter(150).name()};
-                background: {pressed.name()};
-                color: #ffffff;
-            }}
-            QPushButton:focus, QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QTableWidget:focus {{
-                border: 2px solid {accent.name()};
-            }}
-            QTabWidget::pane {{ border: 1px solid {panel_border_rgba}; border-radius: 8px; background: {panel_rgba}; }}
-            QScrollArea#settingsScrollArea {{ border: none; background: transparent; }}
-            QScrollArea#settingsScrollArea > QWidget > QWidget {{ background: transparent; }}
-            QWidget#settingsContent {{ background: transparent; }}
-            QTabBar::tab {{ padding: 9px 16px; border-bottom: 2px solid transparent; }}
-            QTabBar::tab:selected {{ font-weight: 700; color: {accent.name()}; border-bottom-color: {accent.name()}; }}
-            QTreeWidget#hardwareNavigation {{
-                border: 1px solid {panel_border_rgba};
-                border-radius: 10px;
-                background: {panel_rgba};
-                padding: 7px;
-            }}
-            QTableWidget, QPlainTextEdit, QTextEdit, QTextBrowser, QListWidget {{
-                border: 1px solid {panel_border_rgba};
-                border-radius: 7px;
-                background: {input_rgba};
-                alternate-background-color: {panel_rgba};
-                selection-background-color: {accent.name()};
-                selection-color: #ffffff;
-            }}
-            QHeaderView::section {{
-                border: none;
-                border-right: 1px solid {panel_border_rgba};
-                border-bottom: 1px solid {panel_border_rgba};
-                padding: 7px;
-                background: {table_header_rgba};
-                font-weight: 700;
-            }}
-            QLineEdit, QComboBox, QSpinBox {{
-                padding: 6px;
-                border: 1px solid {panel_border_rgba};
-                border-radius: 6px;
-                background: {input_rgba};
-            }}
-            QFrame#navigationRail {{
-                background: {rail_bg};
-                border: 1px solid {rail_border};
-                border-radius: 12px;
-            }}
-            QLabel#brandLogo {{
-                background: {brand_logo_bg}; border: 1px solid {brand_logo_border};
-                border-radius: 12px; padding: 4px;
-            }}
-            QLabel#brandLabel {{ font-size: 17px; font-weight: 750; padding: 3px 8px 8px 8px; color: {brand_color}; }}
-            QLabel#sidebarServiceStatus {{
-                color: {sidebar_status_color}; border: 1px solid {sidebar_status_border};
-                border-radius: 9px; padding: 9px; background: {sidebar_status_bg};
-            }}
-            QLabel#pageTitle {{ font-size: {title_px}px; font-weight: 800; color: palette(window-text); }}
-            QLabel#sectionTitle, QLabel#fanCardTitle, QLabel#coolingCardTitle, QLabel#dialogTitle {{ font-size: 16px; font-weight: 780; }}
-            QLabel#accentText {{ color: {accent.name()}; font-weight: 700; }}
-            QLabel#metricStatusDot {{ color: #63d76a; font-weight: 900; }}
-            QLabel#metricStatusBad {{ color: #e05a5a; font-weight: 900; }}
-            QLabel#dashboardStatusTitle {{ color: #63d76a; font-size: 16px; font-weight: 800; }}
-            QLabel#dashboardStatusNeutralTitle {{ color: #d2dbe5; font-size: 16px; font-weight: 780; }}
-            QLabel#dashboardStatusIcon {{
-                color: white; background: #4aaa4f; border-radius: 18px; font-size: 20px; font-weight: 900;
-            }}
-            QLabel#dashboardStatusNeutral {{
-                color: #c8d2dc; background: #44515f; border-radius: 18px; font-size: 18px; font-weight: 800;
-            }}
-            QLabel#dashboardMeta {{ color: #c4cfda; min-width: 110px; }}
-            QFrame#dashboardStatusBanner, QFrame#dashboardSection, QFrame#coolingSummaryCard,
-            QFrame#fanChannelCard, QFrame#fanChannelCardSelected, QFrame#fanInlineDetail,
-            QFrame#moduleHeroCard, QFrame#curveOverlayCard {{
-                background: {panel_rgba};
-                border: 1px solid {panel_border_rgba};
-                border-radius: 11px;
-            }}
-            QFrame#moduleHeroCard {{
-                border-left: 3px solid {accent.name()};
-                background: rgba(11, 28, 45, 218);
-            }}
-            QFrame#curveOverlayCard {{
-                border: 2px solid rgba({accent.red()}, {accent.green()}, {accent.blue()}, 155);
-                background: rgba(8, 23, 38, 244);
-            }}
-            QLabel#moduleHeroIcon {{
-                background: rgba({accent.red()}, {accent.green()}, {accent.blue()}, 45);
-                border: 1px solid rgba({accent.red()}, {accent.green()}, {accent.blue()}, 115);
-                border-radius: 10px; color: {accent.lighter(128).name()}; font-size: 21px; font-weight: 800;
-            }}
-            QLabel#moduleHeroBadge {{
-                color: {accent.lighter(125).name()}; border: 1px solid rgba({accent.red()}, {accent.green()}, {accent.blue()}, 110);
-                border-radius: 8px; padding: 5px 8px; background: rgba({accent.red()}, {accent.green()}, {accent.blue()}, 24);
-                font-weight: 700;
-            }}
-            QFrame#fanChannelCardSelected {{ border: 1px solid {accent.name()}; }}
-            QFrame#fanInlineDetail {{ background: rgba(8, 22, 36, 205); }}
-            QFrame#hardwareListRow {{
-                background: rgba(16, 35, 53, 190); border: 1px solid rgba(83, 112, 139, 75); border-radius: 8px;
-            }}
-            QLabel#fanCardIcon {{
-                background: rgba(28, 91, 151, 160); border: 1px solid rgba(74, 155, 239, 170);
-                border-radius: 8px; color: #d9efff; font-size: 18px;
-            }}
-            QLabel#coolingMetrics {{ color: #c6d0db; padding: 4px 0; }}
-            QFrame#coolingDashboard {{ background: transparent; border: none; }}
-            QGroupBox#ownershipBanner {{
-                border: 1px solid #b87b17; background: rgba(75, 49, 12, 150); border-radius: 9px;
-            }}
-            QPushButton#primaryAction, QPushButton#primaryDashboardAction, QPushButton#profilePrimary {{
-                background: {accent.name()}; color: white; border: 1px solid {accent.lighter(118).name()}; font-weight: 750;
-            }}
-            QPushButton#primaryAction:hover, QPushButton#primaryDashboardAction:hover, QPushButton#profilePrimary:hover {{
-                background: {hover.name()}; color: white;
-            }}
-            QPushButton#dashboardAction {{ text-align: left; min-height: 48px; }}
-            QPushButton#headerActionButton {{ min-height: 34px; }}
-            QPushButton#headerMoreButton {{ font-size: 20px; padding: 4px; }}
-            QFrame#valueCard {{ min-width: 135px; }}
-            QTreeWidget#hardwareNavigation {{ border: none; background: transparent; padding: 2px; color: {nav_item_color}; }}
-            QTreeWidget#hardwareNavigation::item {{
-                min-height: 38px; padding: 4px 9px; border-radius: 7px; color: {nav_item_color};
-            }}
-            QTreeWidget#hardwareNavigation::item:hover {{
-                background: rgba({accent.red()}, {accent.green()}, {accent.blue()}, 28); color: {nav_item_color};
-            }}
-            QTreeWidget#hardwareNavigation::item:selected {{
-                background: rgba({accent.red()}, {accent.green()}, {accent.blue()}, 55); color: {nav_selected_color};
-                border: 1px solid rgba({accent.red()}, {accent.green()}, {accent.blue()}, 100); font-weight: 750;
-            }}
-            QTreeWidget#hardwareNavigation::indicator {{
-                width: 30px; height: 16px; border-radius: 8px;
-                border: 1px solid rgba(120, 140, 160, 150); background: rgba(70, 82, 94, 190);
-            }}
-            QTreeWidget#hardwareNavigation::indicator:checked {{
-                border-color: {accent.name()}; background: {accent.name()};
-            }}
-            QPushButton#navigationCustomizeButton, QPushButton#helpNavigationButton {{
-                text-align: left; font-weight: 700; color: {nav_item_color};
-            }}
-            QPushButton#navigationResetButton {{ text-align: left; color: {nav_reset_color}; }}
-            QSlider::groove:horizontal {{ height: 6px; border-radius: 3px; background: palette(midlight); }}
-            QSlider::sub-page:horizontal {{ background: {accent.name()}; border-radius: 3px; }}
-            QSlider::handle:horizontal {{
-                width: 17px; margin: -6px 0; border-radius: 8px;
-                background: {accent.name()}; border: 2px solid palette(base);
-            }}
-            """
-        )
-        if hasattr(self, "navigation"):
-            nav_palette = QPalette(palette)
-            nav_palette.setColor(QPalette.ColorRole.Text, QColor(nav_item_color))
-            nav_palette.setColor(QPalette.ColorRole.WindowText, QColor(nav_item_color))
-            nav_palette.setColor(QPalette.ColorRole.HighlightedText, QColor(nav_selected_color))
-            self.navigation.setPalette(nav_palette)
-        if hasattr(self, "pump_curve_table"):
-            self.pump_curve_table[2].set_accent_color(accent)
-        if hasattr(self, "fan_curve_table"):
-            self.fan_curve_table[2].set_accent_color(accent)
-        if hasattr(self, "design_preview"):
-            self.design_preview.setText(
-                f"{self.theme_mode_combo.currentText()} · Akzent {self.accent_hex} · Skalierung {self.ui_scale_percent} %"
-            )
-        if hasattr(self, "background_widget"):
-            self.background_widget.configure(
-                enabled=self.background_enabled,
-                theme=self.background_theme,
-                fps=self.background_fps,
-                intensity=self.background_intensity,
-                pause_inactive=self.background_pause_inactive,
-            )
-            self.ensure_background_layer_order()
-        if hasattr(self, "dashboard_cards_layout"):
-            self.adapt_dashboard_layout()
 
     def ensure_background_layer_order(self) -> None:
         """Keep the decorative background behind every interactive widget."""
@@ -12338,10 +12041,10 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
     @staticmethod
     def builtin_profiles() -> list[dict[str, object]]:
         return [
-            {"id": "builtin-quiet", "name": "Leise", "category": "Kühlung", "description": "Pumpe 45 %, Lüfter 35 %", "builtin": True,
-             "payload": {"cooling": {"pump_mode": "fixed", "fan_mode": "fixed", "pump": 45, "fan": 35}}},
-            {"id": "builtin-balanced", "name": "Ausgeglichen", "category": "Kühlung", "description": "Pumpe 55 %, Lüfter 50 %", "builtin": True,
-             "payload": {"cooling": {"pump_mode": "fixed", "fan_mode": "fixed", "pump": 55, "fan": 50}}},
+            {"id": "builtin-quiet", "name": "Leise", "category": "Kühlung", "description": "Pumpe 55 %, Lüfter 35 %", "builtin": True,
+             "payload": {"cooling": {"pump_mode": "fixed", "fan_mode": "fixed", "pump": 55, "fan": 35}}},
+            {"id": "builtin-balanced", "name": "Ausgeglichen", "category": "Kühlung", "description": "Pumpe 70 %, Lüfter 50 %", "builtin": True,
+             "payload": {"cooling": {"pump_mode": "fixed", "fan_mode": "fixed", "pump": 70, "fan": 50}}},
             {"id": "builtin-performance", "name": "Leistung", "category": "Kühlung", "description": "Pumpe, Radiator und aktive Gehäuselüfter 100 %", "builtin": True,
              "payload": {"cooling": {"pump_mode": "fixed", "fan_mode": "fixed", "pump": 100, "fan": 100}}},
             {"id": "builtin-safe", "name": "Sicher", "category": "Kühlung", "description": "Pumpe und Lüfter 65 %", "builtin": True,
@@ -12373,9 +12076,121 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
     def all_profiles(self) -> list[dict[str, object]]:
         return self.builtin_profiles() + self.user_profiles
 
+    @staticmethod
+    def profile_payload_sections(payload: object) -> set[str]:
+        if not isinstance(payload, dict):
+            return set()
+        sections = {key for key in ("cooling", "gpu", "rgb", "design") if isinstance(payload.get(key), dict)}
+        if isinstance(payload.get("lcd"), dict) or isinstance(payload.get("levita_display"), dict): sections.add("lcd")
+        return sections
+
+    @staticmethod
+    def profile_category_for_sections(sections: set[str]) -> str:
+        if sections == {"cooling", "gpu", "lcd", "rgb", "design"}: return "Gesamt"
+        single = {"cooling": "Kühlung", "gpu": "GPU", "lcd": "LCD", "rgb": "RGB", "design": "Design"}
+        return single.get(next(iter(sections)), "Benutzerdefiniert") if len(sections) == 1 else "Benutzerdefiniert"
+
+    def selected_profile_editor_sections(self) -> set[str]:
+        return {
+            key for key, checkbox in getattr(self, "profile_section_checks", {}).items() if checkbox.isChecked()}
+
+    def apply_profile_category_to_sections(self, _index: int = -1) -> None:
+        if getattr(self, "_syncing_profile_sections", False):
+            return
+        category = str(self.profile_category_combo.currentData() or "Gesamt")
+        wanted = {
+            "Gesamt": {"cooling", "gpu", "lcd", "rgb", "design"},
+            "Kühlung": {"cooling"}, "GPU": {"gpu"}, "LCD": {"lcd"},
+            "RGB": {"rgb"}, "Design": {"design"},
+        }.get(category)
+        if wanted is None:
+            return
+        self._syncing_profile_sections = True
+        try:
+            for key, checkbox in self.profile_section_checks.items():
+                checkbox.setChecked(key in wanted)
+        finally:
+            self._syncing_profile_sections = False
+
+    def on_profile_sections_changed(self, _checked: bool = False) -> None:
+        if getattr(self, "_syncing_profile_sections", False):
+            return
+        category = self.profile_category_for_sections(self.selected_profile_editor_sections())
+        self._syncing_profile_sections = True
+        try:
+            self.profile_category_combo.setCurrentIndex(max(0, self.profile_category_combo.findData(category)))
+        finally:
+            self._syncing_profile_sections = False
+
+    def capture_profile_payload_from_editor(self) -> dict[str, object]:
+        sections = self.selected_profile_editor_sections()
+        complete = self.capture_profile_payload("Gesamt")
+        allowed = set(sections)
+        if "lcd" in sections:
+            allowed.add("levita_display")
+        return {key: value for key, value in complete.items() if key in allowed}
+
+    def profile_value_text(self, value: object) -> str:
+        if isinstance(value, bool):
+            return self.tr_static("Ja" if value else "Nein")
+        if value is None or value == "":
+            return "—"
+        if isinstance(value, list):
+            if len(value) <= 6 and all(not isinstance(item, (dict, list)) for item in value):
+                return ", ".join(str(item) for item in value) or "—"
+            return f"{len(value)} {self.tr_static('Einträge')}"
+        if isinstance(value, dict):
+            return f"{len(value)} {self.tr_static('Einstellungen')}"
+        return str(value)
+
+    def add_profile_payload_tree(self, parent: QTreeWidgetItem, value: object, depth: int = 0) -> None:
+        if not isinstance(value, dict) or depth >= 3:
+            return
+        for key, child_value in sorted(value.items(), key=lambda item: str(item[0]).casefold()):
+            item = QTreeWidgetItem([str(key).replace("_", " "), self.profile_value_text(child_value)])
+            parent.addChild(item)
+            if isinstance(child_value, dict):
+                self.add_profile_payload_tree(item, child_value, depth + 1)
+
+    def refresh_profile_contents(self, profile: dict[str, object] | None) -> None:
+        if not hasattr(self, "profile_contents_tree"):
+            return
+        self.profile_contents_tree.clear()
+        if profile is None:
+            self.profile_contents_summary.setText("Profil auswählen, um alle gespeicherten Bereiche und Werte zu sehen.")
+            return
+        payload = profile.get("payload")
+        sections = self.profile_payload_sections(payload)
+        section_names = {"cooling": "Kühlung", "gpu": "GPU", "lcd": "LCD", "rgb": "RGB", "design": "Design & Anzeige"}
+        visible_sections = ", ".join(
+            self.tr_static(section_names[key])
+            for key in ("cooling", "gpu", "lcd", "rgb", "design")
+            if key in sections
+        ) or self.tr_static("keine gültigen Bereiche")
+        self.profile_contents_summary.setText(
+            f"{self.tr_static('Enthalten')}: {visible_sections}. "
+            f"{self.tr_static('Die Kontrollkästchen oben bestimmen, welche aktuellen Bereiche das Profil beim nächsten Aktualisieren speichert.')}"
+        )
+        if not isinstance(payload, dict):
+            return
+        roots = (("cooling", "Kühlung"), ("gpu", "GPU"), ("lcd", "LCD"), ("levita_display", "Levita-Display"), ("rgb", "RGB"), ("design", "Design & Anzeige"))
+        for key, title in roots:
+            value = payload.get(key)
+            if not isinstance(value, dict):
+                continue
+            root = QTreeWidgetItem([
+                self.tr_static(title),
+                f"{len(value)} {self.tr_static('Einstellungen')}",
+            ])
+            self.profile_contents_tree.addTopLevelItem(root)
+            self.add_profile_payload_tree(root, value)
+            root.setExpanded(True)
+
     def refresh_profiles_table(self) -> None:
         if not hasattr(self, "profiles_table"):
             return
+        current_item = self.profiles_table.item(self.profiles_table.currentRow(), 0) if self.profiles_table.currentRow() >= 0 else None
+        selected_before = str(current_item.data(Qt.ItemDataRole.UserRole) or "") if current_item is not None else ""
         profiles = self.all_profiles()
         self.profiles_table.setRowCount(len(profiles))
         for row, profile in enumerate(profiles):
@@ -12391,7 +12206,6 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                     item.setData(Qt.ItemDataRole.UserRole, str(profile.get("id", "")))
                 item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                 self.profiles_table.setItem(row, column, item)
-        self.profiles_table.resizeColumnsToContents()
         if hasattr(self, "profile_startup_combo"):
             saved_startup = str(self.settings.value("profiles/startup", "none"))
             self.profile_startup_combo.blockSignals(True)
@@ -12403,10 +12217,11 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             startup_index = self.profile_startup_combo.findData(saved_startup)
             self.profile_startup_combo.setCurrentIndex(max(0, startup_index))
             self.profile_startup_combo.blockSignals(False)
-        if self.current_profile_id:
+        target_profile_id = selected_before or self.current_profile_id
+        if target_profile_id:
             for row in range(self.profiles_table.rowCount()):
                 item = self.profiles_table.item(row, 0)
-                if item and item.data(Qt.ItemDataRole.UserRole) == self.current_profile_id:
+                if item and item.data(Qt.ItemDataRole.UserRole) == target_profile_id:
                     self.profiles_table.selectRow(row)
                     break
 
@@ -12421,10 +12236,15 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
     def profile_startup_changed(self) -> None:
         if hasattr(self, "profile_startup_combo"):
             self.settings.setValue("profiles/startup", self.profile_startup_combo.currentData() or "none")
+        self.sync_rgb_engine_toggle_controls()
 
     def apply_startup_profile(self) -> None:
         startup = str(self.settings.value("profiles/startup", "none"))
-        if startup == "none" or self.pending_setup_profile:
+        if startup == "none" or (self.pending_setup_profile and pending_setup_blocks_profile_start(
+            self.pending_setup_profile, ubuntu_runtime=is_ubuntu_runtime(),
+            thermalright_present=thermalright_display_present(),
+            nzxt_ready=self.devices_ready, cooling_kind=self.cooling_hardware_kind,
+        )):
             return
         profile_id = self.current_profile_id if startup == "last" else startup
         if profile_id:
@@ -12432,14 +12252,21 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
 
     def startup_profile_has_lcd_payload(self) -> bool:
         startup = str(self.settings.value("profiles/startup", "none"))
-        if startup == "none" or self.pending_setup_profile:
+        if startup == "none" or (self.pending_setup_profile and pending_setup_blocks_profile_start(
+            self.pending_setup_profile, ubuntu_runtime=is_ubuntu_runtime(),
+            thermalright_present=thermalright_display_present(),
+            nzxt_ready=self.devices_ready, cooling_kind=self.cooling_hardware_kind,
+        )):
             return False
         profile_id = self.current_profile_id if startup == "last" else startup
         profile = next((item for item in self.all_profiles() if str(item.get("id")) == profile_id), None)
         if not isinstance(profile, dict):
             return False
         payload = profile.get("payload")
-        return isinstance(payload, dict) and isinstance(payload.get("lcd"), dict)
+        return isinstance(payload, dict) and (
+            isinstance(payload.get("lcd"), dict)
+            or isinstance(payload.get("levita_display"), dict)
+        )
 
     def selected_profile(self) -> dict[str, object] | None:
         if not hasattr(self, "profiles_table"):
@@ -12455,13 +12282,24 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         profile = self.selected_profile()
         if profile is None:
             self.profile_status_label.setText("Noch kein Profil ausgewählt.")
+            self.refresh_profile_contents(None)
             return
         self.profile_name_input.setText(str(profile.get("name", "")))
         self.profile_description_input.setText(str(profile.get("description", "")))
         category_index = self.profile_category_combo.findData(str(profile.get("category", "Gesamt")))
         self.profile_category_combo.setCurrentIndex(max(0, category_index))
+        sections = self.profile_payload_sections(profile.get("payload"))
+        self._syncing_profile_sections = True
+        try:
+            for key, checkbox in self.profile_section_checks.items():
+                checkbox.setChecked(key in sections)
+            category = self.profile_category_for_sections(sections)
+            self.profile_category_combo.setCurrentIndex(max(0, self.profile_category_combo.findData(category)))
+        finally:
+            self._syncing_profile_sections = False
         profile_type = "Standardprofil" if profile.get("builtin") else "eigenes Profil"
         self.profile_status_label.setText(f"Ausgewählt: {profile.get('name')} · {profile_type}")
+        self.refresh_profile_contents(profile)
 
     def current_lcd_profile_mode(self) -> str:
         """Return the LCD mode that a newly saved profile must restore."""
@@ -12544,6 +12382,9 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 "cpu_profile": self.cpu_profile_combo.currentData() or "",
                 "curve_source": "cpu",
             }
+        if category in {"Gesamt", "GPU"} and hasattr(self, "gpu_control_page"):
+            gpu_profile = self.gpu_control_page.profile_payload_for_main_profile()
+            if gpu_profile is not None: result["gpu"] = gpu_profile
         if category in {"Gesamt", "LCD"}:
             result["lcd"] = {
                 "file": str(self.selected_lcd_file or ""),
@@ -12580,7 +12421,13 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 "layer_y": self.lcd_layer_y.value(),
                 "layer_show_clock": self.lcd_layer_clock_checkbox.isChecked(),
             }
+            thermalright_studio = getattr(self, "thermalright_display_studio", None)
+            if thermalright_studio is not None:
+                levita_payload = thermalright_studio.profile_startup_payload()
+                if levita_payload is not None:
+                    result["levita_display"] = levita_payload
         if category in {"Gesamt", "RGB"}:
+            from modules.rgb_studio.v1_15.gpu_motion import load as load_gpu_motion
             selected_openrgb = self.selected_openrgb_device()
             studio_config = self.current_rgb_studio_config()
             result["rgb"] = {
@@ -12600,12 +12447,15 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 "studio_autostart_enabled": self.rgb_profile_autostart_checkbox.isChecked(),
                 "studio_auto_reclaim_enabled": self.rgb_auto_reclaim_checkbox.isChecked(),
                 "studio_selected_devices": sorted(self.rgb_selected_devices),
+                "studio_individual_selection": self.rgb_individual_selection,
                 "studio_groups": [
                     {"id": group.group_id, "name": group.name} for group in self.rgb_groups
                 ],
                 "studio_group_assignments": dict(self.rgb_group_assignments),
                 "studio_device_aliases": dict(self.rgb_device_aliases),
                 "studio_zone_configurations": self.rgb_zone_configurations,
+                "studio_gpu_routes": dict(self.rgb_gpu_routes),
+                "studio_gpu_motion": load_gpu_motion(self),
                 "studio_layout_slots": [
                     {
                         "position": slot.position,
@@ -12618,7 +12468,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                         "x": slot.x,
                         "y": slot.y,
                         "airflow": slot.airflow,
-                        "size_mm": slot.size_mm,
+                        "size_mm": slot.size_mm, "scale": slot.scale,
+                        "visual_kind": slot.visual_kind, "gpu_visual": slot.gpu_visual,
                     }
                     for slot in self.rgb_layout_slots
                 ],
@@ -12638,6 +12489,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 "background_pause_inactive": self.background_pause_inactive,
                 "display_auto": self.display_auto,
                 "ui_scale": self.ui_scale_percent,
+                "windowed_size_percent": self.windowed_size_percent,
                 "display_layout": self.display_layout,
                 "temperature_unit": self.temperature_unit,
                 "window_width": self.width(),
@@ -12651,7 +12503,11 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         if not name:
             self.show_error("Bitte einen Profilnamen eingeben.")
             return
-        category = str(self.profile_category_combo.currentData() or "Gesamt")
+        sections = self.selected_profile_editor_sections()
+        if not sections:
+            self.show_error("Bitte mindestens einen Profilbereich auswählen.")
+            return
+        category = self.profile_category_for_sections(sections)
         profile_id = f"user-{int(time.time() * 1000)}"
         self.user_profiles.append({
             "id": profile_id,
@@ -12659,7 +12515,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             "category": category,
             "description": self.profile_description_input.text().strip(),
             "builtin": False,
-            "payload": self.capture_profile_payload(category),
+            "payload": self.capture_profile_payload_from_editor(),
         })
         self.current_profile_id = profile_id
         self.save_profiles()
@@ -12674,10 +12530,14 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         if profile.get("builtin"):
             self.show_error("Standardprofile können nicht überschrieben werden. Bitte duplizieren.")
             return
+        sections = self.selected_profile_editor_sections()
+        if not sections:
+            self.show_error("Bitte mindestens einen Profilbereich auswählen.")
+            return
         profile["name"] = self.profile_name_input.text().strip() or str(profile.get("name"))
-        profile["category"] = str(self.profile_category_combo.currentData() or "Gesamt")
+        profile["category"] = self.profile_category_for_sections(sections)
         profile["description"] = self.profile_description_input.text().strip()
-        profile["payload"] = self.capture_profile_payload(str(profile["category"]))
+        profile["payload"] = self.capture_profile_payload_from_editor()
         self.save_profiles()
         self.refresh_profiles_table()
         self.footer_status.setText(f"Profil „{profile['name']}“ aktualisiert")
@@ -12722,58 +12582,12 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.refresh_profiles_table()
 
     def export_selected_profile(self) -> None:
-        profile = self.selected_profile()
-        if profile is None:
-            self.show_error("Bitte ein Profil auswählen.")
-            return
-        default_name = re.sub(r"[^A-Za-z0-9._-]+", "_", str(profile.get("name", "profil"))).strip("_") or "profil"
-        filename, _ = QFileDialog.getSaveFileName(self, "Profil exportieren", str(Path.home() / f"{default_name}.kraken-profile.json"), "Kraken-Profile (*.json)")
-        if not filename:
-            return
-        export_data = {"schema": PROFILE_SCHEMA_VERSION, "profile": profile}
-        Path(filename).write_text(json.dumps(export_data, ensure_ascii=False, indent=2), encoding="utf-8")
-        self.footer_status.setText("Profil exportiert")
+        from modules.profile_bundle.v1_0.legacy_profiles import export_selected_profile
+        export_selected_profile(self)
 
     def import_profiles(self) -> None:
-        filename, _ = QFileDialog.getOpenFileName(self, "Profil importieren", str(Path.home()), "Kraken-Profile (*.json)")
-        if not filename:
-            return
-        try:
-            data = json.loads(Path(filename).read_text(encoding="utf-8"))
-            candidates = []
-            if isinstance(data, dict) and isinstance(data.get("profile"), dict):
-                candidates = [data["profile"]]
-            elif isinstance(data, dict) and isinstance(data.get("profiles"), list):
-                candidates = data["profiles"]
-            filename_stem = Path(filename).name
-            for suffix in (".kraken-profile.json", ".ohc-profile.json", ".json"):
-                if filename_stem.casefold().endswith(suffix):
-                    filename_stem = filename_stem[:-len(suffix)]
-                    break
-            filename_stem = filename_stem.strip() or "Importiertes Profil"
-            existing_names = {str(item.get("name", "")).casefold() for item in self.user_profiles}
-            for source_index, source in enumerate(candidates):
-                imported = json.loads(json.dumps(source))
-                imported["id"] = f"user-{int(time.time() * 1000)}-{len(self.user_profiles)}"
-                imported["builtin"] = False
-                base_name = filename_stem if len(candidates) == 1 else str(imported.get("name", f"{filename_stem} {source_index + 1}"))
-                candidate = base_name[:120]
-                counter = 2
-                while candidate.casefold() in existing_names:
-                    tail = f" ({counter})"
-                    candidate = base_name[: max(1, 120 - len(tail))] + tail
-                    counter += 1
-                imported["sourceProfileName"] = str(imported.get("name", ""))
-                imported["name"] = candidate
-                existing_names.add(candidate.casefold())
-                self.user_profiles.append(imported)
-            if not candidates:
-                raise ValueError("Keine Profile gefunden")
-            self.save_profiles()
-            self.refresh_profiles_table()
-            self.footer_status.setText(f"{len(candidates)} Profil(e) importiert")
-        except (OSError, ValueError, json.JSONDecodeError) as exc:
-            self.show_error(f"Profil konnte nicht importiert werden:\n{exc}")
+        from modules.profile_bundle.v1_0.legacy_profiles import import_profiles
+        import_profiles(self)
 
     def apply_selected_profile(self) -> None:
         profile = self.selected_profile()
@@ -12788,6 +12602,9 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.apply_profile_payload(payload, str(profile.get("name", "Profil")))
 
     def apply_profile_payload(self, payload: dict[str, object], name: str, *, startup: bool = False) -> None:
+        gpu = payload.get("gpu")
+        if isinstance(gpu, dict) and hasattr(self, "gpu_control_page"): self.gpu_control_page.restore_main_profile_payload(gpu, startup=startup)
+
         design = payload.get("design")
         if isinstance(design, dict):
             self.theme_mode = str(design.get("theme", self.theme_mode))
@@ -12799,24 +12616,27 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.background_pause_inactive = bool(design.get("background_pause_inactive", self.background_pause_inactive))
             self.display_auto = bool(design.get("display_auto", self.display_auto))
             self.ui_scale_percent = int(design.get("ui_scale", self.ui_scale_percent))
+            self.windowed_size_percent = normalize_windowed_size_percent(
+                design.get("windowed_size_percent", self.windowed_size_percent)
+            )
             self.display_layout = str(design.get("display_layout", self.display_layout))
             requested_unit = normalize_temperature_unit(design.get("temperature_unit", self.temperature_unit))
             target_width = max(920, int(design.get("window_width", self.width())))
             target_height = max(680, int(design.get("window_height", self.height())))
-            # A full profile also contains the former window state.  During a
-            # desktop autostart this must never make the deliberately hidden
-            # tray window visible or maximized again.
-            if not (startup and self.should_start_minimized_from_autostart()):
+            # A startup profile must not compete with the global window target.
+            # Manually applied profiles retain their explicit window payload.
+            if not startup:
                 if bool(design.get("window_maximized", False)):
                     self.showMaximized()
                 else:
                     self.showNormal()
                     self.resize(target_width, target_height)
+                    self.remember_windowed_geometry()
                 self.position_window_on_preferred_screen(f"Profil „{name}“")
             else:
                 self.log_message(
-                    "AUTOSTART: gespeicherter Fensterzustand des Startprofils übersprungen · "
-                    "Hauptfenster bleibt im Tray."
+                    "PROFILSTART: gespeicherter Fensterzustand übersprungen · "
+                    "globale Bildschirm- und Startmodus-Einstellungen bleiben zuständig."
                 )
             self.sync_design_controls()
             self.apply_theme()
@@ -12826,6 +12646,11 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
 
         rgb = payload.get("rgb")
         if isinstance(rgb, dict):
+            self.restore_gpu_profile_hardware(rgb, startup)
+            from modules.rgb_studio.v1_15.gpu_motion import normalize as normalize_gpu_motion, save as save_gpu_motion
+            motion = rgb.get("studio_gpu_motion")
+            if isinstance(motion, dict) and normalize_gpu_motion(motion) == motion:
+                save_gpu_motion(self, motion)
             if "studio_groups" in rgb:
                 self.rgb_groups = normalize_rgb_groups(rgb.get("studio_groups"))
                 self.rgb_groups_initialized = True
@@ -12835,17 +12660,15 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 )
             if "studio_device_aliases" in rgb:
                 self.rgb_device_aliases = normalize_device_aliases(rgb.get("studio_device_aliases"))
-            if "studio_zone_configurations" in rgb:
-                self.rgb_zone_configurations = normalize_zone_configurations(
-                    rgb.get("studio_zone_configurations")
-                )
             if "studio_layout_slots" in rgb:
                 self.rgb_layout_slots = normalize_layout_slots(rgb.get("studio_layout_slots"), self.rgb_groups)
             selected_devices = rgb.get("studio_selected_devices")
+            if isinstance(rgb.get("studio_individual_selection"), bool): set_individual(self, rgb["studio_individual_selection"])
             if isinstance(selected_devices, list):
                 self.rgb_selected_devices = {
                     str(device_id)[:96] for device_id in selected_devices[:512] if str(device_id)
                 }
+            self.select_gpu_route_sources()
             group_effects = rgb.get("studio_group_effects")
             if isinstance(group_effects, dict):
                 restored_effects: dict[str, RGBEffectConfig] = {}
@@ -12902,7 +12725,14 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             finally:
                 self._loading_rgb_design = False
             self.on_rgb_studio_effect_changed(mark_custom=False)
-            autostart_requested = bool(rgb.get("studio_autostart_enabled", False))
+            autostart_requested = bool(rgb.get(
+                "studio_autostart_enabled",
+                self.settings.value(
+                    "rgb_studio/profile_autostart_default",
+                    self.rgb_control_consent_confirmed,
+                    type=bool,
+                ),
+            ))
             self.rgb_profile_autostart_checkbox.blockSignals(True)
             self.rgb_profile_autostart_checkbox.setChecked(autostart_requested)
             self.rgb_profile_autostart_checkbox.blockSignals(False)
@@ -12926,6 +12756,11 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 )
             if startup and autostart_requested:
                 QTimer.singleShot(900, lambda profile_name=name: self.start_rgb_profile_automatically(profile_name))
+
+        levita_display = payload.get("levita_display")
+        thermalright_studio = getattr(self, "thermalright_display_studio", None)
+        if isinstance(levita_display, dict) and thermalright_studio is not None:
+            thermalright_studio.restore_profile_startup_payload(levita_display, startup=startup)
 
         lcd = payload.get("lcd")
         if isinstance(lcd, dict):
@@ -13026,12 +12861,10 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.save_settings()
         self.profile_status_label.setText(f"Aktiv: {name}")
         self.footer_status.setText(f"Profil „{name}“ angewendet")
-        if startup:
-            QTimer.singleShot(0, self.apply_initial_window_state)
 
     def load_profile_cooling_controls(self, cooling: dict[str, object]) -> None:
-        self.pump_slider.setValue(int(cooling.get("pump", self.pump_slider.value())))
-        self.fan_slider.setValue(int(cooling.get("fan", self.fan_slider.value())))
+        self.pump_slider.setValue(self.safe_cooling_duty("pump", int(cooling.get("pump", self.pump_slider.value()))))
+        self.fan_slider.setValue(self.safe_cooling_duty("fan", int(cooling.get("fan", self.fan_slider.value()))))
         pump_curve = self.normalize_profile_cpu_curve(
             cooling.get("pump_curve", self.pump_curve_table[2].points()),
             list(DEFAULT_PUMP_CURVE),
@@ -13040,6 +12873,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             cooling.get("fan_curve", self.fan_curve_table[2].points()),
             list(DEFAULT_FAN_CURVE),
         )
+        pump_curve = [(temp, self.safe_cooling_duty("pump", duty)) for temp, duty in pump_curve]
+        fan_curve = [(temp, self.safe_cooling_duty("fan", duty)) for temp, duty in fan_curve]
         self.pump_curve_table[2].set_points(pump_curve)
         self.update_curve_table(self.pump_curve_table[1], pump_curve)
         self.fan_curve_table[2].set_points(fan_curve)
@@ -13054,6 +12889,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         cpu_index = self.cpu_profile_combo.findData(cpu_model)
         if cpu_index >= 0:
             self.cpu_profile_combo.setCurrentIndex(cpu_index)
+        self.mark_cpu_curve_user_override()
         self.cpu_curve_force_update = True
 
     def transmit_profile_cooling(self, cooling: dict[str, object], name: str) -> None:
@@ -13086,17 +12922,17 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                     if curve_controlled:
                         editor = self.pump_curve_table[2] if channel == "pump" else self.fan_curve_table[2]
                         duty = self.quantize_curve_duty(self.interpolate_curve(editor.points(), float(cpu_temp)))
-                        duty = max(20 if channel == "pump" else 0, duty)
+                        duty = self.safe_cooling_duty(channel, duty)
                         mode_label = "CPU-Temperaturkurve"
                         detail = f"{duty} % · CPU {self.format_temperature(float(cpu_temp))} · Software-Regelung"
                     else:
-                        duty = int(cooling.get(channel, 55))
+                        duty = self.safe_cooling_duty(channel, int(cooling.get(channel, 55)))
                         mode_label = "Feste Drehzahl"
                         detail = f"{duty} %"
                     self.write_thermalright_cooling(channel, duty)
                     applied.append((channel, duty, mode_label, detail, curve_controlled))
             except MainboardFanWriteError as exc:
-                self.show_error(f"Levita-Profil „{name}“ konnte nicht vollständig angewendet werden: {exc}")
+                self.report_profile_apply_error(name, str(exc), component="Levita-Kühlung")
                 return
             for channel, duty, mode_label, detail, curve_controlled in applied:
                 self.set_cooling_mode(channel, mode_label, detail)
@@ -13114,12 +12950,12 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             if self.cooling_mode_kind(mode) == "curve":
                 editor = self.pump_curve_table[2] if channel == "pump" else self.fan_curve_table[2]
                 duty = self.quantize_curve_duty(self.interpolate_curve(editor.points(), float(cpu_temp)))
-                duty = max(20 if channel == "pump" else 0, duty)
+                duty = self.safe_cooling_duty(channel, duty)
                 args = Backend.kraken_direct_args() + ["set", channel, "speed", str(duty)]
                 detail = f"{duty} % · CPU {self.format_temperature(float(cpu_temp))} · Software-Regelung"
                 commands.append((channel, args, "CPU-Temperaturkurve", detail, duty, True))
             else:
-                duty = int(cooling.get(channel, 55))
+                duty = self.safe_cooling_duty(channel, int(cooling.get(channel, 55)))
                 args = Backend.kraken_direct_args() + ["set", channel, "speed", str(duty)]
                 commands.append((channel, args, "Feste Drehzahl", f"{duty} %", duty, False))
         self.kraken_write_busy = True
@@ -13181,14 +13017,21 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             return
         preference = normalize_screen_preference(self.window_screen_preference)
         screens = list(QApplication.screens())
+        primary = QApplication.primaryScreen()
         self.window_screen_combo.blockSignals(True)
         self.window_screen_combo.clear()
-        self.window_screen_combo.addItem("Hauptbildschirm (Standard)", PRIMARY_SCREEN_PREFERENCE)
+        primary_label = self.tr_static("Hauptbildschirm (Standard)")
+        if primary is not None:
+            primary_index = screens.index(primary) if primary in screens else 0
+            primary_parts = screen_option_label(primary, primary_index).split(" · ", 1)
+            if len(primary_parts) == 2:
+                primary_label = f"{primary_label} · {primary_parts[1]}"
+        self.window_screen_combo.addItem(primary_label, PRIMARY_SCREEN_PREFERENCE)
         for index, screen in enumerate(screens):
             screen_preference = preference_for_screen(screen)
-            if screen_preference == PRIMARY_SCREEN_PREFERENCE:
-                continue
-            self.window_screen_combo.addItem(screen_option_label(screen, index), screen_preference)
+            label = screen_option_label(screen, index)
+            label += f" · {self.tr_static('Hauptbildschirm')}" if screen is primary else ""
+            self.window_screen_combo.addItem(label, screen_preference)
         selected_index = self.window_screen_combo.findData(preference)
         if selected_index < 0 and preference != PRIMARY_SCREEN_PREFERENCE:
             missing_name = preference.partition(":")[2]
@@ -13201,6 +13044,117 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.populate_window_screen_combo()
         self.refresh_display_info()
 
+    @staticmethod
+    def _window_rect_from_qrect(rect: QRect) -> WindowRect:
+        return WindowRect(rect.x(), rect.y(), rect.width(), rect.height())
+
+    @staticmethod
+    def _qrect_from_window_rect(rect: WindowRect) -> QRect:
+        return QRect(rect.x, rect.y, rect.width, rect.height)
+
+    def _preferred_available_window_rect(self) -> tuple[object | None, WindowRect | None, bool]:
+        screen, matched = self.preferred_window_screen()
+        if screen is None:
+            return None, None, matched
+        return screen, self._window_rect_from_qrect(screen.availableGeometry()), matched
+
+    def _adapt_window_minimum_to_available(self, available: WindowRect) -> None:
+        """Allow the shell to remain recoverable on small logical HiDPI work areas."""
+        base = self.window_base_minimum_size
+        self.setMinimumSize(
+            min(base.width(), max(320, available.width - 24)),
+            min(base.height(), max(240, available.height - 24)),
+        )
+
+    def _store_windowed_rect(self, rect: WindowRect) -> None:
+        self._last_windowed_rect = rect
+        self.settings.setValue("window/normal_geometry", encode_window_rect(rect))
+
+    def remember_windowed_geometry(self) -> bool:
+        """Remember only a genuine floating geometry, never compositor maximized bounds."""
+        if self.isMaximized() or self.isFullScreen() or self.isMinimized():
+            return False
+        _screen, available, _matched = self._preferred_available_window_rect()
+        if available is None:
+            return False
+        current = self._window_rect_from_qrect(self.geometry())
+        fitted = safe_window_rect(
+            current,
+            available,
+            self.windowed_size_percent,
+            minimum_width=self.minimumWidth(),
+            minimum_height=self.minimumHeight(),
+        )
+        self._store_windowed_rect(fitted)
+        return True
+
+    def restore_safe_windowed_geometry(self, reason: str = "Fenster wiederhergestellt") -> bool:
+        """Restore a bounded normal rect after KWin leaves maximized mode."""
+        if self.isMaximized() or self.isFullScreen():
+            return False
+        screen, available, matched = self._preferred_available_window_rect()
+        if screen is None or available is None:
+            return False
+        self._adapt_window_minimum_to_available(available)
+        candidate = self._last_windowed_rect
+        if candidate is None:
+            normal = self.normalGeometry()
+            candidate = self._window_rect_from_qrect(normal) if normal.isValid() else None
+        target = safe_window_rect(
+            candidate,
+            available,
+            self.windowed_size_percent,
+            minimum_width=self.minimumWidth(),
+            minimum_height=self.minimumHeight(),
+        )
+        self.setGeometry(self._qrect_from_window_rect(target))
+        handle = self.windowHandle()
+        if handle is not None:
+            handle.setScreen(screen)
+            handle.setPosition(target.x, target.y)
+        self._store_windowed_rect(target)
+        self._window_restore_pending = False
+        fallback = " · Hauptbildschirm-Fallback" if not matched else ""
+        self.log_message(
+            f"FENSTERPOSITION: {reason} · normal={target.width}×{target.height} "
+            f"bei {target.x},{target.y} · Ziel={screen.name()}{fallback}"
+        )
+        return True
+
+    def apply_windowed_size_preference(self, reason: str) -> bool:
+        """Prepare the chosen floating size without disturbing maximized state."""
+        _screen, available, _matched = self._preferred_available_window_rect()
+        if available is None:
+            return False
+        self._adapt_window_minimum_to_available(available)
+        target = preferred_window_rect(
+            available,
+            self.windowed_size_percent,
+            minimum_width=self.minimumWidth(),
+            minimum_height=self.minimumHeight(),
+        )
+        self._store_windowed_rect(target)
+        if not self.isMaximized() and not self.isFullScreen():
+            return self.restore_safe_windowed_geometry(reason)
+        self.log_message(
+            f"FENSTERPOSITION: {reason} · {target.width}×{target.height} für nächstes Wiederherstellen vorgemerkt"
+        )
+        return True
+
+    def recover_window_to_preferred_screen(self) -> None:
+        """Keyboard-accessible escape hatch when custom title-bar buttons are off-screen."""
+        if self.isMaximized() or self.isFullScreen() or self.isMinimized():
+            self.showNormal()
+        _screen, available, _matched = self._preferred_available_window_rect()
+        if available is not None:
+            self._store_windowed_rect(preferred_window_rect(
+                available,
+                self.windowed_size_percent,
+                minimum_width=self.minimumWidth(),
+                minimum_height=self.minimumHeight(),
+            ))
+        QTimer.singleShot(0, lambda: self.restore_safe_windowed_geometry("Sichere Tastatur-Wiederherstellung"))
+
     def position_window_on_preferred_screen(self, reason: str) -> bool:
         """Set the top-level screen and keep restored geometry on that output."""
         screen, matched = self.preferred_window_screen()
@@ -13208,32 +13162,41 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.log_message(f"FENSTERPOSITION: {reason} · kein Monitor verfügbar")
             return False
 
-        # Do not call this while the tray-autostart surface is suppressed.  A
-        # native surface is created only immediately before a deliberate show.
+        was_visible = self.isVisible()
+        was_maximized = self.isMaximized()
+        if was_maximized:
+            self._window_screen_repositioning = True
+            if was_visible:
+                self.hide()
+            self.setWindowState(self.windowState() & ~Qt.WindowState.WindowMaximized)
+
         self.winId()
         handle = self.windowHandle()
         if handle is not None:
             handle.setScreen(screen)
 
         available = screen.availableGeometry()
-        if not self.isMaximized() and not self.isFullScreen():
-            target_width = min(max(self.minimumWidth(), self.width()), available.width())
-            target_height = min(max(self.minimumHeight(), self.height()), available.height())
-            if target_width != self.width() or target_height != self.height():
-                self.resize(target_width, target_height)
-            current_frame = self.frameGeometry()
-            if not available.contains(current_frame.center()):
-                x = available.x() + max(0, (available.width() - self.width()) // 2)
-                y = available.y() + max(0, (available.height() - self.height()) // 2)
-                self.move(x, y)
-                if handle is not None:
-                    handle.setPosition(x, y)
+        if not self.isFullScreen():
+            available_rect = self._window_rect_from_qrect(available)
+            self._adapt_window_minimum_to_available(available_rect)
+            current = self._last_windowed_rect or self._window_rect_from_qrect(self.geometry())
+            target = safe_window_rect(current, available_rect, self.windowed_size_percent,
+                                      minimum_width=self.minimumWidth(),
+                                      minimum_height=self.minimumHeight())
+            self.setGeometry(self._qrect_from_window_rect(target))
+            self._store_windowed_rect(target)
+            if handle is not None:
+                handle.setPosition(target.x, target.y)
+
+        if was_maximized:
+            self.setWindowState(self.windowState() | Qt.WindowState.WindowMaximized)
+            self._window_screen_repositioning = False
+            if was_visible:
+                self.show()
 
         fallback = " · feste Auswahl fehlt, Hauptbildschirm verwendet" if not matched else ""
-        self.log_message(
-            f"FENSTERPOSITION: {reason} · Ziel={screen.name()} · "
-            f"{available.width()}×{available.height()}{fallback}"
-        )
+        self.log_message(f"FENSTERPOSITION: {reason} · Ziel={screen.name()} · "
+                         f"{available.width()}×{available.height()}{fallback}")
         return matched
 
     def refresh_display_info(self) -> None:
@@ -13255,8 +13218,21 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.window_screen_combo.currentData() or PRIMARY_SCREEN_PREFERENCE
         )
         self.settings.setValue("window/screen_preference", self.window_screen_preference)
+        self.window_start_mode = normalize_window_start_mode(
+            self.window_start_mode_combo.currentData() or WINDOW_START_LAST
+        )
+        self.settings.setValue("window/start_mode", self.window_start_mode)
+        experimental_60 = self.levita_experimental_60_checkbox.isChecked()
+        self.settings.setValue("thermalright/experimental_60_fps", experimental_60)
+        studio = getattr(self, "thermalright_display_studio", None)
+        if studio is not None:
+            studio.configure_experimental_60(experimental_60)
         self.display_auto = self.display_auto_checkbox.isChecked()
         self.ui_scale_percent = self.ui_scale_spin.value()
+        self.windowed_size_percent = normalize_windowed_size_percent(
+            self.windowed_size_spin.value()
+        )
+        self.settings.setValue("window/normal_size_percent", self.windowed_size_percent)
         self.display_layout = str(self.display_layout_combo.currentData() or "auto")
         if self.display_auto:
             screen, _matched = self.preferred_window_screen()
@@ -13264,7 +13240,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 ratio = screen.geometry().width() / max(1, screen.geometry().height())
                 self.display_layout = self.classify_aspect_ratio(ratio)
         self.apply_theme()
-        self.position_window_on_preferred_screen("Anzeigeeinstellungen angewendet")
+        self.apply_windowed_size_preference("Anzeigeeinstellungen angewendet")
         self.refresh_display_info()
         self.save_settings()
         self.footer_status.setText("Anzeigeeinstellungen angewendet")
@@ -13278,6 +13254,39 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.ensure_background_layer_order()
         if self.display_auto:
             self.adapt_dashboard_layout()
+
+    def changeEvent(self, event) -> None:  # noqa: ANN001, N802
+        super().changeEvent(event)
+        if event.type() == QEvent.Type.WindowStateChange and hasattr(self, "window_chrome"):
+            self.window_chrome.sync_state()
+            self.sync_active_page_performance(self.tabs.currentIndex())
+            old_state = event.oldState()
+            entered_minimized = (
+                not bool(old_state & Qt.WindowState.WindowMinimized)
+                and self.isMinimized()
+            )
+            if (
+                entered_minimized
+                and hasattr(self, "tray_checkbox")
+                and self.tray_checkbox.isChecked()
+                and not self.explicit_quit_requested
+                and not self.session_shutdown_requested
+            ):
+                QTimer.singleShot(0, self.minimize_to_tray)
+            if not getattr(self, "_window_screen_repositioning", False) and not self.isMinimized():
+                self.window_last_maximized = self.isMaximized() or self.isFullScreen()
+                self.settings.setValue("window/last_maximized", self.window_last_maximized)
+            left_maximized = bool(old_state & Qt.WindowState.WindowMaximized) and not self.isMaximized()
+            if (
+                left_maximized
+                and not getattr(self, "_window_screen_repositioning", False)
+                and not self._window_restore_pending
+            ):
+                self._window_restore_pending = True
+                QTimer.singleShot(
+                    0,
+                    lambda: self.restore_safe_windowed_geometry("KWin: Fenstermodus wiederhergestellt"),
+                )
 
     def _restorable_background_theme(self) -> str:
         """Return a real animation theme that can be restored after disabling."""
@@ -13308,7 +13317,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.background_intensity = self.background_intensity_slider.value()
         self.background_pause_inactive = self.background_pause_checkbox.isChecked()
         self.background_widget.configure(
-            enabled=self.background_enabled,
+            enabled=self.background_enabled and not getattr(self, "_animated_background_theme_blocked", False),
             theme=self.background_theme,
             fps=self.background_fps,
             intensity=self.background_intensity,
@@ -13338,7 +13347,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.background_intensity = self.background_intensity_slider.value()
         self.background_pause_inactive = self.background_pause_checkbox.isChecked()
         self.background_widget.configure(
-            enabled=self.background_enabled,
+            enabled=self.background_enabled and not getattr(self, "_animated_background_theme_blocked", False),
             theme=self.background_theme,
             fps=self.background_fps,
             intensity=self.background_intensity,
@@ -13370,6 +13379,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.theme_mode_combo.setCurrentIndex(max(0, index))
             self.accent_hex_input.setText(self.accent_hex)
             self.ui_scale_spin.setValue(self.ui_scale_percent)
+            self.windowed_size_spin.setValue(self.windowed_size_percent)
             self.display_auto_checkbox.setChecked(self.display_auto)
             index = self.display_layout_combo.findData(self.display_layout)
             self.display_layout_combo.setCurrentIndex(max(0, index))
@@ -13404,6 +13414,15 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.ui_scale_percent = int(values["scale"])
         self.display_layout = str(values["layout"])
         self.pending_setup_profile = str(values["cooling"])
+        previous_features = self.enabled_features
+        self.enabled_features = set(normalize_selection(values.get("features")))
+        for key in previous_features - self.enabled_features:
+            self.release_feature_writers(key)
+        self.settings.setValue("features/enabled", json.dumps(sorted(self.enabled_features), ensure_ascii=False))
+        self.update_navigation_visibility()
+        refresh_feature_settings(self)
+        if self.feature_enabled("automation"):
+            self.design_automation_controller.start()
         self.settings.setValue("setup/completed", True)
         self.settings.setValue("setup/deferred", False)
         self.settings.setValue("setup/pending_profile", self.pending_setup_profile)
@@ -13416,6 +13435,32 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.apply_pending_setup_profile()
         if bool(values.get("show_help", False)):
             QTimer.singleShot(0, lambda: self.open_help_center("getting_started"))
+        if values.get("install_lact") or values.get("install_openrgb") or values.get("install_trcc"):
+            install_lact = bool(values.get("install_lact"))
+            install_openrgb = bool(values.get("install_openrgb"))
+            install_trcc = bool(values.get("install_trcc"))
+            QTimer.singleShot(
+                0,
+                lambda: self.offer_setup_backends(install_lact, install_openrgb, install_trcc),
+            )
+
+    def offer_setup_backends(
+        self, install_lact: bool, install_openrgb: bool, install_trcc: bool = False,
+    ) -> None:
+        after_lact = (
+            (lambda: self.install_optional_backend(
+                "trcc", after=(self.install_openrgb_dependencies if install_openrgb else None),
+            ))
+            if install_trcc else (self.install_openrgb_dependencies if install_openrgb else None)
+        )
+        if install_lact:
+            self.install_optional_backend("lact", after=after_lact)
+        elif install_trcc:
+            self.install_optional_backend(
+                "trcc", after=(self.install_openrgb_dependencies if install_openrgb else None),
+            )
+        elif install_openrgb:
+            self.install_openrgb_dependencies()
 
     def apply_pending_setup_profile(self) -> None:
         profile = self.pending_setup_profile or str(self.settings.value("setup/pending_profile", ""))
@@ -13448,14 +13493,14 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.tray.setContextMenu(menu)
         show_action = QAction("Öffnen", self)
         show_action.triggered.connect(self.show_from_tray)
-        liquid_action = QAction("Flüssigkeitstemperatur anzeigen", self)
+        liquid_action = QAction("Originalanzeige des Kühlers wiederherstellen", self)
         liquid_action.triggered.connect(self.show_liquid_screen)
-        quit_action = QAction("Beenden", self)
-        quit_action.triggered.connect(self.quit_app)
+        self.tray_quit_action = QAction("Beenden", self)
+        self.tray_quit_action.triggered.connect(self.quit_app)
         menu.addAction(show_action)
         menu.addAction(liquid_action)
         menu.addSeparator()
-        menu.addAction(quit_action)
+        menu.addAction(self.tray_quit_action)
         self.tray.activated.connect(
             lambda reason: self.show_from_tray()
             if reason == QSystemTrayIcon.ActivationReason.Trigger
@@ -13481,10 +13526,36 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 f"LAYOUT: Hauptfenster für 2.9.2 auf {target_width}×{target_height} angepasst; Einstellungen sind scrollbar."
             )
         self.ui_scale_percent = max(75, min(160, int(self.settings.value("display/ui_scale", self.ui_scale_percent))))
+        self.windowed_size_percent = normalize_windowed_size_percent(
+            self.settings.value("window/normal_size_percent", self.windowed_size_percent)
+        )
+        self._last_windowed_rect = decode_window_rect(
+            self.settings.value("window/normal_geometry", "")
+        )
+        if not self.settings.value("migration/v342960_safe_windowed_geometry", False, type=bool):
+            _screen, available, _matched = self._preferred_available_window_rect()
+            if available is not None:
+                normal = self.normalGeometry()
+                candidate = self._window_rect_from_qrect(normal) if normal.isValid() else None
+                target = safe_window_rect(
+                    self._last_windowed_rect or candidate,
+                    available,
+                    self.windowed_size_percent,
+                    minimum_width=self.minimumWidth(),
+                    minimum_height=self.minimumHeight(),
+                )
+                self._store_windowed_rect(target)
+            self.settings.setValue("migration/v342960_safe_windowed_geometry", True)
         self.display_auto = self.settings.value("display/auto", self.display_auto, type=bool)
         self.display_layout = str(self.settings.value("display/layout", self.display_layout))
         self.window_screen_preference = normalize_screen_preference(
             self.settings.value("window/screen_preference", self.window_screen_preference)
+        )
+        self.window_start_mode = normalize_window_start_mode(
+            self.settings.value("window/start_mode", self.window_start_mode)
+        )
+        self.window_last_maximized = self.settings.value(
+            "window/last_maximized", self.window_last_maximized, type=bool
         )
         self.background_enabled = self.settings.value("background/enabled", self.background_enabled, type=bool)
         self.background_theme = str(self.settings.value("background/theme", self.background_theme))
@@ -13498,8 +13569,11 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.background_pause_inactive = self.settings.value("background/pause_inactive", self.background_pause_inactive, type=bool)
         if hasattr(self, "ui_scale_spin"):
             self.ui_scale_spin.setValue(self.ui_scale_percent)
+            self.windowed_size_spin.setValue(self.windowed_size_percent)
             self.display_auto_checkbox.setChecked(self.display_auto)
             self.populate_window_screen_combo()
+            start_index = self.window_start_mode_combo.findData(self.window_start_mode)
+            self.window_start_mode_combo.setCurrentIndex(max(0, start_index))
             index = self.display_layout_combo.findData(self.display_layout)
             self.display_layout_combo.setCurrentIndex(max(0, index))
             self.background_enabled_checkbox.blockSignals(True)
@@ -13607,23 +13681,41 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.restore_cooling_quick_profile_state()
         self.auto_max_checkbox.setChecked(self.settings.value("safety/auto_max", True, type=bool))
         saved_cpu = str(self.settings.value("cpu/profile", ""))
-        cpu_index = self.cpu_profile_combo.findData(saved_cpu)
-        if cpu_index >= 0:
-            self.cpu_profile_combo.setCurrentIndex(cpu_index)
-            self.selected_cpu_profile = CPU_PROFILE_BY_MODEL.get(saved_cpu)
-        else:
-            self.detect_and_select_cpu(silent=True)
-        self.update_cpu_profile_preview()
-        if curves_migrated and self.selected_cpu_profile is not None:
-            pump_points = list(self.selected_cpu_profile.pump_curve)
-            fan_points = list(self.selected_cpu_profile.fan_curve)
-            self.pump_curve_table[2].set_points(pump_points)
-            self.update_curve_table(self.pump_curve_table[1], pump_points)
-            self.fan_curve_table[2].set_points(fan_points)
-            self.update_curve_table(self.fan_curve_table[1], fan_points)
-            self.log_message(
-                f"KURVEN-MIGRATION 3.0.5: CPU-Profil {self.selected_cpu_profile.model} auf beide Kurven übernommen."
-            )
+        self._loading_cpu_curve_defaults = True
+        try:
+            saved_profile = CPU_PROFILE_BY_MODEL.get(saved_cpu)
+            if saved_profile is not None:
+                self.cpu_curve_origin = infer_cpu_curve_origin(
+                    self.settings.value("cpu/curve_origin", ""),
+                    pump_points,
+                    fan_points,
+                    saved_profile.pump_curve,
+                    saved_profile.fan_curve,
+                )
+            else:
+                self.cpu_curve_origin = str(self.settings.value("cpu/curve_origin", "") or "")
+                if self.cpu_curve_auto_detect_enabled and not self.cpu_curve_origin:
+                    self.cpu_curve_origin = CPU_CURVE_AUTO_ORIGIN
+            if curves_migrated:
+                self.cpu_curve_origin = CPU_CURVE_AUTO_ORIGIN
+            if should_load_detected_defaults(
+                self.cpu_curve_auto_detect_enabled, self.cpu_curve_origin
+            ) or not saved_profile:
+                self.detect_and_select_cpu(silent=True)
+            else:
+                cpu_index = self.cpu_profile_combo.findData(saved_cpu)
+                if cpu_index >= 0:
+                    self.cpu_profile_combo.setCurrentIndex(cpu_index)
+                    self.selected_cpu_profile = saved_profile
+            self.update_cpu_profile_preview()
+            self.settings.setValue("cpu/curve_origin", self.cpu_curve_origin)
+        finally:
+            self._loading_cpu_curve_defaults = False
+        if should_load_detected_defaults(
+            self.cpu_curve_auto_detect_enabled, self.cpu_curve_origin
+        ):
+            self.load_detected_cpu_curve_defaults()
+        self.refresh_cpu_curve_auto_status()
         self.lcd_interval.setValue(int(self.settings.value("lcd/interval", DEFAULT_LCD_INTERVAL)))
         security_migrated = self.settings.value("security/migrated_231", False, type=bool)
         previous_keepalive = self.settings.value("lcd/keepalive", False, type=bool)
@@ -13738,7 +13830,14 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.settings.setValue("security/migrated_231", True)
             if previous_keepalive or previous_clock or previous_hardware_lcd:
                 self.log_message("Sicherheitsupdate 2.3.1: Wiederholte LCD-Uploads wurden vorsorglich deaktiviert.")
-        self.tray_checkbox.setChecked(self.settings.value("app/tray", True, type=bool))
+        if not self.settings.contains("app/minimize_to_tray"):
+            self.settings.setValue(
+                "app/minimize_to_tray",
+                self.settings.value("app/tray", True, type=bool),
+            )
+        self.tray_checkbox.setChecked(
+            self.settings.value("app/minimize_to_tray", True, type=bool)
+        )
         self.refresh_interval.setValue(int(self.settings.value("app/refresh", 3)))
         self.autostart_checkbox.blockSignals(True)
         autostart_path = self.autostart_file()
@@ -13761,6 +13860,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 and (
                     "--autostart" not in autostart_text
                     or "open-hardware-control-icon.png" not in autostart_text
+                    or "StartupNotify=false" not in autostart_text
+                    or "X-KDE-StartupNotify=false" not in autostart_text
                 )
             ):
                 self.set_autostart(True)
@@ -13776,8 +13877,13 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.load_lcd_file(Path(last_file), quiet=True)
 
     def save_settings(self) -> None:
+        if not self.isMinimized() and not getattr(self, "_window_screen_repositioning", False):
+            self.window_last_maximized = self.isMaximized() or self.isFullScreen()
+        self.remember_windowed_geometry()
         self.settings.setValue("window/geometry", self.saveGeometry())
         self.settings.setValue("window/screen_preference", self.window_screen_preference)
+        self.settings.setValue("window/start_mode", self.window_start_mode)
+        self.settings.setValue("window/last_maximized", self.window_last_maximized)
         self.settings.setValue("cooling/pump", self.pump_slider.value())
         self.settings.setValue("cooling/fan", self.fan_slider.value())
         self.settings.setValue("cooling/pump_curve", self.serialize_curve(self.pump_curve_table[2].points()))
@@ -13785,6 +13891,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.settings.setValue("design/theme", self.theme_mode)
         self.settings.setValue("design/accent", self.accent_hex)
         self.settings.setValue("display/ui_scale", self.ui_scale_percent)
+        self.settings.setValue("window/normal_size_percent", self.windowed_size_percent)
         self.settings.setValue("display/auto", self.display_auto)
         self.settings.setValue("display/layout", self.display_layout)
         self.settings.setValue("display/temperature_unit", self.temperature_unit)
@@ -13827,12 +13934,15 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.settings.setValue(f"cooling/{channel}_mode_detail", detail)
         self.settings.setValue("safety/auto_max", self.auto_max_checkbox.isChecked())
         self.settings.setValue("cpu/profile", self.cpu_profile_combo.currentData() or "")
+        self.settings.setValue("cpu/auto_detect_curves", self.cpu_curve_auto_detect_enabled)
+        self.settings.setValue("cpu/curve_origin", self.cpu_curve_origin)
         self.settings.setValue("cooling/curve_source", "cpu")
         self.settings.setValue(
             "mainboard_fans/profiles",
             json.dumps(self.mainboard_fan_profiles, ensure_ascii=False, sort_keys=True),
         )
-        self.settings.setValue("mainboard_fans/master_enabled", bool(self.mainboard_control_active))
+        from modules.cooling_state.v1_0.controller import requested
+        self.settings.setValue("mainboard_fans/master_enabled", requested(self))
         self.settings.setValue("lcd/interval", self.lcd_interval.value())
         self.settings.setValue("lcd/keepalive", self.keep_lcd_checkbox.isChecked())
         self.settings.setValue("lcd/restore", self.restore_lcd_checkbox.isChecked())
@@ -13871,134 +13981,197 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.settings.setValue("gif/interpolate", self.gif_interpolate_checkbox.isChecked())
         self.settings.setValue("gif/show_advanced", self.gif_advanced_checkbox.isChecked())
         self.settings.setValue("app/tray", self.tray_checkbox.isChecked())
+        self.settings.setValue("app/minimize_to_tray", self.tray_checkbox.isChecked())
         self.settings.setValue("app/autostart_minimized", self.autostart_minimized_checkbox.isChecked())
         self.settings.setValue("app/refresh", self.refresh_interval.value())
         self.settings.setValue("ui/language", self.ui_language)
+        self.settings.setValue("hardware_backends/display", self.display_backend_choice)
+        self.settings.setValue("hardware_backends/fans", self.fan_backend_choice)
+        if hasattr(self, "temperature_history_range_combo"):
+            self.settings.setValue(
+                "temperature_history/range_seconds",
+                int(self.temperature_history_range_combo.currentData() or 0),
+            )
+            for key, checkbox in self.temperature_history_checks.items():
+                self.settings.setValue(f"temperature_history/show_{key}", checkbox.isChecked())
+
+    def minimize_to_tray(self, force_tray: bool = False) -> None:
+        """Keep running in the tray; window close always requests this path."""
+
+        self.save_settings()
+        tray_reachable = QSystemTrayIcon.isSystemTrayAvailable() and self.tray.isVisible()
+        if (force_tray or self.tray_checkbox.isChecked()) and tray_reachable:
+            self.hide()
+            self.sync_active_page_performance(self.tabs.currentIndex())
+            if hasattr(self, "ui_performance"):
+                self.ui_performance.schedule_memory_reclaim()
+            self.log_message("INFOBEREICH: Fenster über X ausgeblendet" if force_tray
+                             else "INFOBEREICH: Fenster auf ausdrückliches Minimieren ausgeblendet")
+            return
+        self.showMinimized()
+        if force_tray:
+            self.log_message("INFOBEREICH: Tray nicht verfügbar · Fenster in Taskleiste minimiert")
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        self.save_settings()
-        if self.tray_checkbox.isChecked() and QSystemTrayIcon.isSystemTrayAvailable():
-            event.ignore()
-            self.hide()
-            self.tray.showMessage(DISPLAY_NAME, "Die Steuerung läuft im Infobereich weiter.")
-        else:
-            self.perform_orderly_hardware_exit("Fenster/Programmende")
-            self.mark_clean_shutdown()
-            self.backend.shutdown()
-            event.accept()
+        from modules.application_shutdown.v1_1.journal import record
+        tray_reachable = QSystemTrayIcon.isSystemTrayAvailable() and self.tray.isVisible()
+        record(
+            "window-close",
+            close_to_tray=tray_reachable,
+            minimize_to_tray=self.tray_checkbox.isChecked(),
+            explicit=False,
+        )
+        record("window-close-choice", decision="automatic-tray" if tray_reachable else "minimized")
+        event.ignore()
+        self.minimize_to_tray(force_tray=True)
 
     def show_from_tray(self) -> None:
-        self.release_autostart_window_surface()
-        self.position_window_on_preferred_screen("Öffnen aus dem Infobereich")
-        self.show()
-        self.raise_()
-        self.activateWindow()
+        activate_window_from_tray(self)
+        self.sync_active_page_performance(self.tabs.currentIndex())
         if self.settings.value("setup/deferred", False, type=bool) or not self.settings.value("setup/completed", False, type=bool):
             self.settings.setValue("setup/deferred", False)
             self.settings.sync()
             QTimer.singleShot(150, self.maybe_show_setup_wizard)
 
     def perform_orderly_hardware_exit(self, reason: str) -> None:
-        """Put hardware into autonomous/safe states before slow process cleanup.
-
-        Shutdown ordering matters: the LCD liquid-temperature restore is done
-        before waiting for OpenRGB workers, so a desktop logout cannot kill OHC
-        while the CAM-raw animation still owns the display.
-        """
-        if self.exit_hardware_cleanup_done:
+        """Preserve restore ordering, but isolate failures and quiesce retries."""
+        if self.exit_hardware_cleanup_done or getattr(self, "exit_cleanup_in_progress", False):
             return
-        self.exit_hardware_cleanup_done = True
+        from modules.application_shutdown.v1_1.journal import begin
+        begin(reason)
+        from modules.cooling_state.v1_0.controller import requested
+        self.mainboard_startup_pending = requested(self)
+        self.exit_cleanup_in_progress = True
+        self.exit_cleanup_success = False
+        run = ShutdownSequence(self.log_message)
+        run.run("timers", lambda: stop_owned_timers(self))
+        if hasattr(self, "design_automation_controller"):
+            run.run("design-automation", self.design_automation_controller.shutdown)
+        if hasattr(self, "process_runtime"):
+            run.run("sensor-runtime", self.process_runtime.shutdown)
         thermalright_studio = getattr(self, "thermalright_display_studio", None)
+        display_effects_page = getattr(self, "display_effects_page", None)
+        if display_effects_page is not None:
+            run.run("display-effects", display_effects_page.shutdown)
         if thermalright_studio is not None:
-            thermalright_studio.shutdown()
-        request = self.usb_coordinator.request(
+            run.run("levita", thermalright_studio.shutdown)
+            if hasattr(thermalright_studio, "verify_shutdown_result"):
+                run.run("levita-result", thermalright_studio.verify_shutdown_result)
+        if hasattr(self, "gpu_control_page"):
+            run.run("gpu-preview", self.gpu_control_page.shutdown)
+        if hasattr(self, "programs_page"):
+            run.run("program-inventory", self.programs_page.stop)
+        run.run("startup-probes", self.shutdown_responsive_startup)
+        request = run.value("usb-request", lambda: self.usb_coordinator.request(
             "Shutdown",
             "LCD-Sicherheitszustand Flüssigkeitstemperatur",
             priority=RequestPriority.CRITICAL,
             replace_key="shutdown",
             detail=reason,
-        )
-        self.shutdown_lcd_request_id = request.request_id
-        self.usb_coordinator.begin(request.request_id, "Shutdown-Sicherheitsroutine")
-        self.log_message(f"SYSTEMENDE: {reason} · LCD-Rückstellung hat höchste Priorität.")
-        for timer_name in (
-            "status_timer", "cpu_curve_timer", "mainboard_fan_timer", "mainboard_calibration_timer", "mainboard_calibration_sample_timer",
-            "lcd_keepalive_timer", "clock_timer", "clock_keepalive_timer", "hardware_lcd_timer", "imported_lcd_timer",
-        ):
-            timer = getattr(self, timer_name, None)
-            if timer is not None:
-                try:
-                    timer.stop()
-                except RuntimeError:
-                    pass
+        ))
+        if request is not None:
+            self.shutdown_lcd_request_id = request.request_id
+            run.run("usb-begin", lambda: self.usb_coordinator.begin(request.request_id, "Shutdown-Sicherheitsroutine"))
+        run.run("exit-log", lambda: self.log_message(f"SYSTEMENDE: {reason} · LCD-Rückstellung hat höchste Priorität."))
         if self.mainboard_calibration_channel_id and self.mainboard_calibration_snapshot is not None:
             channel = self.mainboard_channels.get(self.mainboard_calibration_channel_id)
             if channel is not None:
-                try:
-                    restore_mainboard_snapshot(channel, self.mainboard_calibration_snapshot)
-                    self.log_message("MAINBOARD-FAN: laufender Kalibrierungstest beim Programmende wiederhergestellt")
-                except MainboardFanWriteError as exc:
-                    self.log_message(f"MAINBOARD-FAN: Kalibrierungs-Wiederherstellung beim Programmende fehlgeschlagen · {exc}")
+                if run.run("fan-calibration", lambda: restore_mainboard_snapshot(channel, self.mainboard_calibration_snapshot)):
+                    run.run("calibration-log", lambda: self.log_message("MAINBOARD-FAN: laufender Kalibrierungstest beim Programmende wiederhergestellt"))
             self.mainboard_calibration_channel_id = ""
             self.mainboard_calibration_snapshot = None
         if self.mainboard_control_active:
-            self.restore_all_mainboard_fans_to_firmware(quiet=True)
+            run.run("fan-firmware", lambda: self.restore_all_mainboard_fans_to_firmware(quiet=True))
             self.mainboard_control_active = False
-            self.log_message("MAINBOARD-FAN: Programmende · aktivierte Kanäle an Firmware/BIOS zurückgegeben")
-        self.restore_thermalright_cooling_on_quit()
-        stop_mainboard_fan_helper_session()
-        self.shutdown_gif_stream_sync()
-        self.restore_original_lcd_sync_on_quit()
-        self.usb_coordinator.complete(request.request_id, "Flüssigkeitstemperatur-Fallback gesendet")
+        run.run("levita-cooling", self.restore_thermalright_cooling_on_quit)
+        if hasattr(self, "case_inspector"):
+            run.run("case-inspector", self.case_inspector.shutdown)
+        if hasattr(self, "ui_performance"):
+            run.run("ui-performance", self.ui_performance.shutdown)
+        run.run("fan-helper", lambda: stop_mainboard_fan_helper_session())
+        if getattr(self, "coolercontrol_stopped_by_ohc", False):
+            run.run("coolercontrol-return", self.restore_coolercontrol_on_quit)
+        run.run("kraken-stream", lambda: self.shutdown_gif_stream_sync())
+        run.run("kraken-lcd", lambda: self.restore_original_lcd_sync_on_quit())
+        if request is not None:
+            run.run("usb-complete", lambda: self.usb_coordinator.complete(
+                request.request_id, "Flüssigkeitstemperatur-Fallback gesendet" if run.success else "shutdown-best-effort"))
         self.shutdown_lcd_request_id = 0
-        self.restore_safe_hardware_fallback_sync_on_quit()
-        self.stop_openrgb_effect()
-        self.rgb_session_lock.release()
-        self.stop_managed_rgb_engine(wait=True)
+        run.run("kraken-safety", self.restore_safe_hardware_fallback_sync_on_quit)
+        run.run("rgb-effect", self.stop_openrgb_effect)
+        run.run("rgb-lock", self.rgb_session_lock.release)
+        run.run("rgb-engine", lambda: self.stop_managed_rgb_engine(wait=True))
+        from modules.application_shutdown.v1_1.qt_processes import stop_remaining
+        run.run("remaining-processes", lambda: stop_remaining(self))
+        from modules.application_shutdown.v1_1.journal import record
+        record("cleanup-result", success=run.success, failed_phases=list(run.failures))
+        if run.success:
+            run.run("lcd-marker", self.mark_clean_shutdown)
+        self.exit_cleanup_success = run.success
+        self.exit_hardware_cleanup_done = True
+        self.exit_cleanup_in_progress = False
 
-    def quit_app(self) -> None:
-        self.save_settings()
-        self.mark_clean_shutdown()
-        self.perform_orderly_hardware_exit("manuelles Programmende")
-        self.backend.shutdown()
-        QApplication.quit()
+    def request_application_restart(self, _checked: bool = False) -> None:
+        """Quit orderly, then relaunch after the single-instance lock is free."""
+
+        answer = QMessageBox.question(
+            self,
+            self.tr_static("Open Hardware Control neu starten"),
+            self.tr_static(
+                "Open Hardware Control wird kontrolliert beendet und danach automatisch wieder geöffnet. Fortfahren?"
+            ),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.Yes,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        from modules.application_shutdown.v1_1.restart import relaunch_command, schedule_relaunch
+        command = relaunch_command()
+        if not schedule_relaunch(command):
+            self.show_error(self.tr_static("Der sichere Programmneustart konnte nicht vorbereitet werden."))
+            return
+        self.log_message("SYSTEMENDE: sicherer Programmneustart vorgemerkt · neue Instanz wartet auf alte PID")
+        self.quit_app(reason="Programmneustart")
+
+    def quit_app(self, _checked: bool = False, *, reason: str = "manuelles Programmende") -> None:
+        if getattr(self, "explicit_quit_in_progress", False): return
+        from modules.application_shutdown.v1_1.journal import begin, record
+        begin(reason)
+        self.explicit_quit_in_progress = True
+        self.explicit_quit_requested = True
+        from modules.cooling_state.v1_0.controller import requested
+        self.mainboard_startup_pending = requested(self)
+        exit_run = ShutdownSequence(self.log_message)
+        if hasattr(self, "tray_quit_action"):
+            exit_run.run("tray-action", lambda: self.tray_quit_action.setEnabled(False))
+        exit_run.run("tray-hide", lambda: self.tray.hide())
+        exit_run.run("settings", self.save_settings)
+        exit_run.run("hardware", lambda: self.perform_orderly_hardware_exit(reason))
+        exit_run.run("backend", self.backend.shutdown)
+        record("qt-exit-requested")
+        QApplication.exit(0)
 
     def request_session_shutdown(self) -> None:
         """Handle logout/shutdown with LCD restore before non-critical cleanup."""
         if self.session_shutdown_requested:
             return
+        from modules.application_shutdown.v1_1.journal import begin
+        begin("session shutdown")
         self.session_shutdown_requested = True
         self.log_message("SYSTEMENDE: Sitzung/Shutdown erkannt · kritische LCD-Rückstellung startet sofort.")
-        self.save_settings()
-        self.mark_clean_shutdown()
-        self.perform_orderly_hardware_exit("System-Shutdown/Logout")
-        self.backend.shutdown()
+        exit_run = ShutdownSequence(self.log_message)
+        exit_run.run("settings", self.save_settings)
+        exit_run.run("hardware", lambda: self.perform_orderly_hardware_exit("System-Shutdown/Logout"))
+        exit_run.run("backend", self.backend.shutdown)
         QApplication.quit()
 
     # ---------- dependency/device ----------
     @staticmethod
     def missing_dependency_packages() -> list[str]:
-        script = helper_script_path(Path(__file__), "install-dependencies.sh")
-        if script.is_file():
-            try:
-                result = subprocess.run(
-                    [str(script), "--check"],
-                    text=True,
-                    capture_output=True,
-                    timeout=30,
-                    check=False,
-                )
-            except (OSError, subprocess.SubprocessError):
-                result = None
-            if result is not None and result.returncode == 0:
-                return []
-            if result is not None and result.returncode == 10:
-                return [line.strip() for line in result.stdout.splitlines() if line.strip()]
-
-        # Conservative fallback for an incomplete developer checkout. Release
-        # packages always include the distribution-aware shell helper above.
+        # Inspect the actual runtime capabilities in-process. The distribution
+        # helper remains available only for the explicit asynchronous install.
         missing: list[str] = []
-        if shutil.which("liquidctl") is None:
+        if not IS_WINDOWS and shutil.which("liquidctl") is None:
             missing.append("liquidctl")
         try:
             import PySide6  # noqa: F401
@@ -14017,12 +14190,16 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         if not hasattr(self, "dependency_status"):
             return missing
         if missing:
-            self.dependency_status.setText(
-                "⚠ Fehlende Pakete: " + ", ".join(missing) +
+            suffix = (
+                ". Windows-Paket neu installieren; OHC bleibt bis dahin in den betroffenen Bereichen lesend."
+                if IS_WINDOWS else
                 ". Die Installation wird für DNF, APT, Pacman und Zypper unterstützt."
             )
+            self.dependency_status.setText("⚠ Fehlende Pakete: " + ", ".join(missing) + suffix)
         else:
             self.dependency_status.setText(
+                "✅ Windows-Laufzeit und Medienmodule sind vollständig gebündelt."
+                if IS_WINDOWS else
                 "✅ Alle benötigten Pakete sind installiert: liquidctl, PySide6, Qt SVG und Pillow."
             )
         return missing
@@ -14031,6 +14208,10 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         missing = self.refresh_dependency_status()
         if not missing:
             return []
+        if IS_WINDOWS:
+            # Bundled Windows media modules are not Linux system packages.
+            self.log_message("WINDOWS-ABHÄNGIGKEITEN: optional unvollständig · " + ", ".join(missing))
+            return missing
         box = QMessageBox(self)
         box.setIcon(QMessageBox.Icon.Warning)
         box.setWindowTitle("Fehlende Abhängigkeiten")
@@ -14096,6 +14277,16 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.backend.run_async([str(script), "--install"], callback=done, timeout=900)
 
     def initialize_devices(self) -> None:
+        if IS_WINDOWS:
+            self.refresh_button.setEnabled(True)
+            self.devices_ready = False
+            self.nzxt_rgb_ready = False
+            self.connection_label.setText("● Windows-Vorschau · Anbieter werden geprüft")
+            self.connection_label.setObjectName("connectionPending")
+            self.footer_status.setText("Windows: Hardwarezugriffe bleiben bis zur Anbieterwahl konfliktgeschützt")
+            self.update_navigation_visibility()
+            self.populate_openrgb_devices()
+            return
         if self.kraken_command_blocked_by_gif("Geräteinitialisierung"):
             return
         self.refresh_button.setEnabled(False)
@@ -14404,13 +14595,101 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             pass
         return ""
 
-    @staticmethod
-    def read_amd_cpu_temperature() -> tuple[float | None, str]:
+    def read_amd_cpu_temperature(self=None) -> tuple[float | None, str]:
+        if hasattr(self, "process_runtime"):
+            return self.process_runtime.temperature("cpu")
         return read_amd_cpu_temperature()
 
-    @staticmethod
-    def read_amd_gpu_temperature(drm_root: Path = Path("/sys/class/drm")) -> tuple[float | None, str]:
+    def read_amd_gpu_temperature(self=None, drm_root: Path = Path("/sys/class/drm")) -> tuple[float | None, str]:
+        if isinstance(self, Path): drm_root = self
+        if hasattr(self, "process_runtime") and drm_root == Path("/sys/class/drm"):
+            return self.process_runtime.temperature("gpu")
         return read_amd_gpu_temperature(drm_root)
+
+    def mark_cpu_curve_user_override(self) -> None:
+        if getattr(self, "_loading_cpu_curve_defaults", False):
+            return
+        self.cpu_curve_origin = CPU_CURVE_USER_ORIGIN
+        self.settings.setValue("cpu/curve_origin", self.cpu_curve_origin)
+        self.refresh_cpu_curve_auto_status()
+
+    def on_cpu_profile_selection_changed(self, _index: int = -1) -> None:
+        self.update_cpu_profile_preview()
+        if getattr(self, "_loading_cpu_curve_defaults", False):
+            return
+        self.settings.setValue("cpu/profile", self.cpu_profile_combo.currentData() or "")
+        self.mark_cpu_curve_user_override()
+
+    def set_cpu_curve_auto_detection(self, enabled: bool) -> None:
+        self.cpu_curve_auto_detect_enabled = bool(enabled)
+        self.settings.setValue("cpu/auto_detect_curves", self.cpu_curve_auto_detect_enabled)
+        if enabled and not str(self.cpu_curve_origin).strip():
+            self.cpu_curve_origin = CPU_CURVE_AUTO_ORIGIN
+            self.settings.setValue("cpu/curve_origin", self.cpu_curve_origin)
+        self.refresh_cpu_curve_auto_status()
+
+    def refresh_cpu_curve_auto_status(self) -> None:
+        label = getattr(self, "cpu_curve_auto_status", None)
+        if label is None:
+            return
+        if not self.cpu_curve_auto_detect_enabled:
+            text = "CPU-Automatik ist ausgeschaltet. Die gespeicherte Auswahl und Kurve bleiben unverändert."
+        elif self.cpu_curve_origin == CPU_CURVE_USER_ORIGIN:
+            text = "Eigene Auswahl oder Kurve erkannt · Benutzereinstellung hat Vorrang vor der CPU-Automatik."
+        elif self.selected_cpu_profile is not None:
+            label.setText(self.tr_static(
+                "Automatisch erkannt: {model} · passende Standardkurven sind geladen."
+            ).format(model=self.selected_cpu_profile.model))
+            return
+        else:
+            text = "CPU-Automatik aktiv · für die erkannte CPU ist noch kein geprüftes Standardprofil vorhanden."
+        label.setText(self.tr_static(text))
+
+    def load_detected_cpu_curve_defaults(self, *, force: bool = False) -> bool:
+        if not self.cpu_curve_auto_detect_enabled and not force:
+            self.refresh_cpu_curve_auto_status()
+            return False
+        self._loading_cpu_curve_defaults = True
+        try:
+            self.detect_and_select_cpu(silent=True)
+            profile = self.selected_cpu_profile
+            if profile is None:
+                return False
+            if not force and not should_load_detected_defaults(
+                self.cpu_curve_auto_detect_enabled, self.cpu_curve_origin
+            ):
+                return False
+            pump_points = list(profile.pump_curve)
+            fan_points = list(profile.fan_curve)
+            self.pump_curve_table[2].set_points(pump_points)
+            self.update_curve_table(self.pump_curve_table[1], pump_points)
+            self.fan_curve_table[2].set_points(fan_points)
+            self.update_curve_table(self.fan_curve_table[1], fan_points)
+            self.cpu_curve_origin = CPU_CURVE_AUTO_ORIGIN
+            self.settings.setValue("cpu/profile", profile.model)
+            self.settings.setValue("cpu/curve_origin", self.cpu_curve_origin)
+            self.settings.setValue("cpu/auto_detect_curves", True)
+            self.settings.setValue("cooling/pump_curve", self.serialize_curve(pump_points))
+            self.settings.setValue("cooling/fan_curve", self.serialize_curve(fan_points))
+            self.settings.setValue("cooling/curve_source", "cpu")
+            self.log_message(
+                f"CPU-AUTOMATIK: {profile.model} erkannt · passende Standardkurven geladen · keine Hardwareaktivierung"
+            )
+            return True
+        finally:
+            self._loading_cpu_curve_defaults = False
+            self.refresh_cpu_curve_auto_status()
+
+    def restore_detected_cpu_curve_defaults(self) -> None:
+        self.cpu_curve_auto_detect_enabled = True
+        self.cpu_curve_origin = CPU_CURVE_AUTO_ORIGIN
+        blocked = self.cpu_curve_auto_checkbox.blockSignals(True)
+        self.cpu_curve_auto_checkbox.setChecked(True)
+        self.cpu_curve_auto_checkbox.blockSignals(blocked)
+        if self.load_detected_cpu_curve_defaults(force=True):
+            self.footer_status.setText(self.tr_static("Erkannte CPU-Standardkurven wurden geladen"))
+        else:
+            self.show_error(self.tr_static("Für die erkannte CPU ist kein geprüftes Standardprofil vorhanden."))
 
     def detect_and_select_cpu(self, _checked: bool = False, silent: bool = False) -> None:
         model = self.read_cpu_model()
@@ -14454,6 +14733,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         if profile is None:
             self.show_error("Bitte zuerst einen AMD-AM5-Prozessor auswählen.")
             return
+        self.mark_cpu_curve_user_override()
         pump_points = list(profile.pump_curve)
         fan_points = list(profile.fan_curve)
         self.pump_curve_table[2].set_points(pump_points)
@@ -14564,6 +14844,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 self.fan_slider.setValue(int(round(fan_duty)))
             self.apply_dashboard_card_visibility(save=False)
             self.refresh_cooling_dashboard_summary()
+            self.record_temperature_history()
             self.footer_status.setText(self.tr_static("Status aktuell"))
 
         self.backend.run_async(
@@ -14728,8 +15009,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             target = self.interpolate_curve(editor.points(), self.cpu_curve_filtered_temp)
             if cpu_temp >= editor.points()[-1][0]:
                 target = 100
-            minimum = 20 if channel == "pump" else 0
-            targets[channel] = max(minimum, self.quantize_curve_duty(target))
+            targets[channel] = self.safe_cooling_duty(channel, self.quantize_curve_duty(target))
 
         now = time.monotonic()
         elapsed = now - self.cpu_curve_last_write
@@ -14765,7 +15045,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
     ) -> None:
         """Write one or both calculated duties in a single coordinated window."""
         ordered_targets = {
-            channel: int(targets[channel])
+            channel: self.safe_cooling_duty(channel, targets[channel])
             for channel in ("pump", "fan")
             if channel in targets
         }
@@ -15044,7 +15324,17 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         if not hasattr(self, "cooling_mode_buttons"):
             return
         for channel, buttons in self.cooling_mode_buttons.items():
-            active = self.cooling_mode_kind(self.cooling_modes.get(channel, ("", ""))[0])
+            mode, detail = self.cooling_modes.get(channel, ("", ""))
+            active = self.cooling_mode_kind(mode)
+            profile_fixed = "profil" in f"{mode} {detail}".casefold()
+            manual_button = buttons.get("manual")
+            if manual_button is not None:
+                if active == "manual" and profile_fixed:
+                    manual_button.setText(self.tr_static("Profil-Festwert aktiv"))
+                elif active == "manual":
+                    manual_button.setText(self.tr_static("Eigener Festwert aktiv"))
+                else:
+                    manual_button.setText(self.tr_static("Eigenen Festwert anwenden"))
             for kind, button in buttons.items():
                 state = "active" if kind == active else "inactive"
                 if button.property("coolingState") == state:
@@ -15067,15 +15357,37 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         active_name = str(name).strip()
         if hasattr(self, "cooling_cpu_active_profile"):
             if active_name:
-                label = active_name
+                label = f"{self.tr_static('Profil-Festwert')} · {self.tr_static(active_name)}"
             else:
                 modes = getattr(self, "cooling_modes", {})
                 unknown = all(
                     str(modes.get(channel, ("", ""))[0]).strip().casefold() in {"", "unbekannt"}
                     for channel in ("pump", "fan")
                 )
-                label = "Noch nicht gesetzt" if unknown else "Individuell"
+                curve_active = any(
+                    self.cooling_mode_kind(modes.get(channel, ("", ""))[0]) == "curve"
+                    for channel in ("pump", "fan")
+                )
+                label = (
+                    self.tr_static("Noch nicht gesetzt") if unknown
+                    else self.tr_static("CPU-Kurve") if curve_active
+                    else self.tr_static("Eigener Festwert")
+                )
             self.cooling_cpu_active_profile.setText(label)
+        if hasattr(self, "cooling_profile_behavior_label"):
+            if active_name:
+                pump = self.pump_slider.value()
+                fan = self.fan_slider.value()
+                self.cooling_profile_behavior_label.setText(
+                    f"{self.tr_static('Pumpe')} {pump} % · {self.tr_static('Radiatorlüfter')} {fan} % · "
+                    f"{self.tr_static('feste Profilwerte; Gehäuselüfter nutzen die gleichnamige Kurvenvorlage.')}"
+                )
+            else:
+                self.cooling_profile_behavior_label.setText(
+                    self.tr_static(
+                        "Schnellprofile setzen Pumpe und Radiator auf feste Profilwerte; Gehäuselüfter erhalten die gleichnamige Kurvenvorlage."
+                    )
+                )
         for title, button in buttons.items():
             state = "active" if title == active_name else "inactive"
             if button.property("profileState") == state:
@@ -15174,8 +15486,9 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             lambda: self.set_fixed_speed(channel, duty),
         ):
             return
+        duty = self.safe_cooling_duty(channel, duty)
         if self.is_thermalright_cooling():
-            minimum = 20 if channel == "pump" else 0
+            minimum = self.cooling_minimum_duty(channel)
             if not minimum <= duty <= 100:
                 self.show_error(f"Ungültiger Wert für {channel}: {duty} %")
                 return
@@ -15198,7 +15511,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         if access is False:
             self.show_permission_error("/dev/hidraw für USB 1e71:300e ist nicht les- und schreibbar.")
             return
-        minimum = 20 if channel == "pump" else 0
+        minimum = self.cooling_minimum_duty(channel)
         if not minimum <= duty <= 100:
             self.show_error(f"Ungültiger Wert für {channel}: {duty} %")
             return
@@ -15238,16 +15551,18 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             return
         if getattr(self, "is_thermalright_cooling", lambda: False)():
             pump, fan = thermalright_profile_duties(name)
+            pump = self.safe_cooling_duty("pump", pump)
+            fan = self.safe_cooling_duty("fan", fan)
             self.pump_slider.setValue(pump)
             self.fan_slider.setValue(fan)
             try:
                 self.write_thermalright_cooling("pump", pump)
                 self.write_thermalright_cooling("fan", fan)
             except MainboardFanWriteError as exc:
-                self.show_error(f"Profil {name} konnte nicht vollständig angewendet werden: {exc}")
+                self.report_profile_apply_error(name, str(exc), component="Levita-Kühlung")
                 return
-            self.set_cooling_mode("pump", "Feste Drehzahl", f"{pump} % · Profil {name}")
-            self.set_cooling_mode("fan", "Feste Drehzahl", f"{fan} % · Profil {name}")
+            self.set_cooling_mode("pump", "Profil-Festwert", f"{pump} % · Profil {name}")
+            self.set_cooling_mode("fan", "Profil-Festwert", f"{fan} % · Profil {name}")
             KrakenControl.apply_matching_case_fan_profile(self, name)
             self.update_cooling_quick_profile_state(name)
             self.cpu_curve_last_duties = {"pump": None, "fan": None}
@@ -15256,6 +15571,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 self.tray.showMessage(APP_NAME, f"Levita-Profil „{name}“ wurde angewendet.")
             self.refresh_thermalright_cooling_status()
             return
+        pump = self.safe_cooling_duty("pump", pump)
+        fan = self.safe_cooling_duty("fan", fan)
         if self.has_kraken_write_access() is False:
             self.show_permission_error("/dev/hidraw für USB 1e71:300e ist nicht les- und schreibbar.")
             return
@@ -15272,8 +15589,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 self.show_error(result.combined or f"Profil {name}: Lüfter fehlgeschlagen")
                 return
             self.footer_status.setText(f"Profil „{name}“ aktiv")
-            self.set_cooling_mode("pump", "Feste Drehzahl", f"{pump} % · Profil {name}")
-            self.set_cooling_mode("fan", "Feste Drehzahl", f"{fan} % · Profil {name}")
+            self.set_cooling_mode("pump", "Profil-Festwert", f"{pump} % · Profil {name}")
+            self.set_cooling_mode("fan", "Profil-Festwert", f"{fan} % · Profil {name}")
             KrakenControl.apply_matching_case_fan_profile(self, name)
             self.update_cooling_quick_profile_state(name)
             self.cpu_curve_last_duties = {"pump": None, "fan": None}
@@ -15321,7 +15638,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             for row in range(table.rowCount()):
                 temp = self.temperature_c_from_display(int(table.item(row, 0).text()))
                 duty = int(table.item(row, 1).text())
-                if temp < 20 or temp > 100 or duty < (20 if channel == "pump" else 0) or duty > 100:
+                if temp < 20 or temp > 100 or duty < self.cooling_minimum_duty(channel) or duty > 100:
                     raise ValueError
                 points.append((temp, duty))
         except (AttributeError, ValueError):
@@ -15341,6 +15658,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 f"Eine sichere CPU-Kurve muss spätestens bei {self.format_temperature(safe_limit, 0)} einen Endpunkt mit 100 % besitzen."
             )
             return
+        self.mark_cpu_curve_user_override()
         low_limit = LOW_PUMP_WARNING if channel == "pump" else LOW_FAN_WARNING
         low_points = [(temp, duty) for temp, duty in points if duty < low_limit]
         if low_points:
@@ -15363,7 +15681,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             )
             return
         target = self.quantize_curve_duty(self.interpolate_curve(points, float(cpu_temp)))
-        target = max(20 if channel == "pump" else 0, target)
+        target = self.safe_cooling_duty(channel, target)
         self.settings.setValue("cooling/curve_source", "cpu")
         self.cpu_curve_filtered_temp = float(cpu_temp)
         self.apply_cpu_curve_targets(
@@ -15381,15 +15699,102 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.openrgb_server_label.setText("Engine: Neustart direkt nach dem laufenden Komplett-Reset vorgemerkt")
             self.log_message("RGB-ENGINE: Neuerkennung während Reset vorgemerkt · Neustart folgt nach Gerätefreigabe")
             return
-        self.rgb_engine_disabled_by_reset = False
-        self.openrgb_engine_crash_quarantined = False
-        self.rgb_engine_restart_pending = False
-        self.refresh_rgb_studio()
+        from modules.rgb_studio.v1_15.engine_recovery import manual_engine_recovery
+        manual_engine_recovery(self)
+
+    def openrgb_profile_library_path(self) -> Path:
+        return self.app_config_dir / "rgb-profiles"
+
+    def refresh_imported_openrgb_profiles(self) -> None:
+        if not hasattr(self, "openrgb_imported_profile_combo"):
+            return
+        previous = str(self.openrgb_imported_profile_combo.currentData() or "")
+        profiles = list_openrgb_profiles(self.openrgb_profile_library_path())
+        self.openrgb_imported_profile_combo.clear()
+        for profile in profiles:
+            suffix = "OpenRGB 1.0 JSON" if profile.supports_device_filter else "OpenRGB .orp"
+            self.openrgb_imported_profile_combo.addItem(
+                f"{profile.title} · {suffix}", str(profile.path)
+            )
+        if not profiles:
+            self.openrgb_imported_profile_combo.addItem("Noch kein Profil importiert", "")
+        index = self.openrgb_imported_profile_combo.findData(previous)
+        self.openrgb_imported_profile_combo.setCurrentIndex(max(0, index))
+        self.openrgb_profile_apply_button.setEnabled(bool(profiles))
+        self.openrgb_profile_import_status.setText(
+            f"{len(profiles)} importierte(s) OpenRGB-Profil(e) · Originaldateien bleiben unverändert."
+            if profiles else "Noch kein OpenRGB-Profil importiert."
+        )
+
+    def import_openrgb_profile_file(self) -> None:
+        source, _selected_filter = QFileDialog.getOpenFileName(
+            self,
+            self.tr_static("OpenRGB-Profil importieren"),
+            str(Path.home()),
+            self.tr_static("OpenRGB-Profile (*.orp *.json)"),
+        )
+        if not source:
+            return
+        try:
+            profile = import_openrgb_profile(Path(source), self.openrgb_profile_library_path())
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            self.show_error(f"Das OpenRGB-Profil konnte nicht importiert werden: {exc}")
+            return
+        self.refresh_imported_openrgb_profiles()
+        index = self.openrgb_imported_profile_combo.findData(str(profile.path))
+        if index >= 0:
+            self.openrgb_imported_profile_combo.setCurrentIndex(index)
+        scope = (
+            f"{len(profile.device_names)} Controller auslesbar"
+            if profile.supports_device_filter else
+            "binäres Profil · vollständiger gespeicherter Geräteumfang"
+        )
+        self.openrgb_profile_import_status.setText(f"„{profile.title}“ importiert · {scope}.")
+        self.log_message(f"RGB-PROFILIMPORT: {profile.title} · {profile.format}")
+
+    def apply_imported_openrgb_profile(self) -> None:
+        raw_path = str(self.openrgb_imported_profile_combo.currentData() or "")
+        if not raw_path:
+            return
+        if not self.openrgb_write_enabled:
+            self.show_error("Bitte zuerst oben die RGB-Steuerung für diese Sitzung aktivieren.")
+            return
+        selected = {device.index for device in self.selected_openrgb_devices()}
+        available = {
+            device.index for device in self.openrgb_devices
+            if not self.openrgb_device_conflict(device)
+        }
+        if available and selected != available:
+            self.show_error(
+                "Ein binäres OpenRGB-.orp-Profil kann nicht sicher nach Geräten gefiltert werden. Wähle für diesen "
+                "Import alle verfügbaren OpenRGB-Geräte aus. Für normale OHC-Designs bleiben einzelne Geräte- und "
+                "Lüftergruppen weiterhin frei an- und abwählbar."
+            )
+            return
+        try:
+            command = self.openrgb_client.profile_command(Path(raw_path))
+        except (OSError, ValueError, OpenRGBError) as exc:
+            self.show_error(str(exc))
+            return
+        answer = QMessageBox.question(
+            self,
+            "OpenRGB-Profil vollständig laden",
+            "Das importierte Profil darf seinen vollständigen gespeicherten OpenRGB-Geräteumfang setzen. "
+            "Laufende OHC-Animationen werden vorher angehalten. Fortfahren?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        self.stop_openrgb_effect("OHC-Animation angehalten · importiertes OpenRGB-Profil wird geladen")
+        self.openrgb_profile_import_status.setText("OpenRGB-Profil wird über die lokale OHC-Engine geladen …")
+        self.run_openrgb_write(command, "Importiertes OpenRGB-Profil geladen")
 
     def set_rgb_auto_reclaim_enabled(self, enabled: bool) -> None:
         self.rgb_auto_reclaim_enabled = bool(enabled)
         self.settings.setValue("rgb_studio/auto_reclaim", self.rgb_auto_reclaim_enabled)
         self.settings.sync()
+        self.sync_rgb_engine_toggle_controls()
         if not self.rgb_auto_reclaim_enabled:
             self.rgb_reclaim_waiting = False
             self.rgb_reclaim_retry_count = 0
@@ -15404,6 +15809,29 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             "RGB-ÜBERNAHME: automatische Wiederübernahme aktiviert · "
             "separates OpenRGB wird nur beobachtet und niemals beendet"
         )
+
+    def set_rgb_profile_autostart_enabled(self, enabled: bool) -> None:
+        self.settings.setValue("rgb_studio/profile_autostart_default", bool(enabled))
+        self.settings.sync()
+        self.sync_rgb_engine_toggle_controls()
+
+    def enable_rgb_automation_after_consent(self) -> None:
+        """Remember intent, not hardware ownership, after the explicit consent."""
+
+        first_confirmation = not self.rgb_control_consent_confirmed
+        self.rgb_control_consent_confirmed = True
+        self.settings.setValue("rgb_studio/control_consent_confirmed", True)
+        if first_confirmation:
+            self.rgb_profile_autostart_checkbox.setChecked(True)
+            self.rgb_auto_reclaim_checkbox.setChecked(True)
+            self.settings.setValue("rgb_studio/profile_autostart_default", True)
+            self.settings.setValue("rgb_studio/auto_reclaim", True)
+            self.rgb_auto_reclaim_enabled = True
+            self.log_message(
+                "RGB-STUDIO: erste Übernahme bestätigt · Startprofil-Automatik und Wiederaufnahme aktiviert"
+            )
+        self.settings.sync()
+        self.sync_rgb_engine_toggle_controls()
 
     def monitor_rgb_ownership(self) -> None:
         conflicts = self.conflicting_openrgb_process_ids()
@@ -15465,6 +15893,11 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
     def reinitialize_rgb_control(self, _checked: bool = False, *, automatic: bool = False) -> None:
         """Rebuild OHC's local write path without terminating another RGB program."""
 
+        if automatic and self.openrgb_engine_crash_quarantined:
+            self.rgb_reclaim_waiting = False
+            self.rgb_reinitialize_pending = False
+            self.log_message("RGB-ENGINE: auto-reclaim blocked · crash-quarantine · manual recovery required")
+            return
         if not automatic:
             self.openrgb_engine_crash_quarantined = False
 
@@ -15790,6 +16223,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.refresh_rgb_studio(background=True)
 
     def refresh_rgb_studio(self, *, background: bool = False) -> None:
+        if getattr(self, "rgb_header_preview_depth", 0):
+            return
         if self.hardware_io_disabled:
             return
         if self.openrgb_status_busy:
@@ -15862,7 +16297,13 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.openrgb_status_busy = False
             refresh_workspace = not background
             if result.ok:
-                prepared = prepare_openrgb_devices(parse_device_listing(result.stdout))
+                try:
+                    devices = parse_device_listing(result.stdout, require_details=True)
+                except OpenRGBError as exc:
+                    self.openrgb_device_count_label.setText(f"Geräte: {exc}")
+                    self.log_message("RGB-AUTOERKENNUNG: incomplete-inventory=discarded · saved-identities=preserved")
+                    return
+                prepared = prepare_openrgb_devices(devices)
                 candidate_devices = list(prepared.devices)
                 candidate_stable_ids = {
                     device.index: stable_id
@@ -16043,6 +16484,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.backend.run_async(command, callback=done, timeout=30, log_output=False)
 
     def save_rgb_workspace(self) -> None:
+        self.settings.setValue("rgb_studio/gpu_routes", json.dumps(self.rgb_gpu_routes, sort_keys=True))
         groups = [{"id": group.group_id, "name": group.name} for group in self.rgb_groups]
         self.settings.setValue("rgb_studio/groups", json.dumps(groups, ensure_ascii=False))
         self.settings.setValue(
@@ -16076,7 +16518,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                         "x": slot.x,
                         "y": slot.y,
                         "airflow": slot.airflow,
-                        "size_mm": slot.size_mm,
+                        "size_mm": slot.size_mm, "scale": slot.scale,
+                        "visual_kind": slot.visual_kind, "gpu_visual": slot.gpu_visual,
                     }
                     for slot in self.rgb_layout_slots
                 ],
@@ -16092,7 +16535,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         return self.rgb_device_aliases.get(stable_id, device.name)
 
     def rename_rgb_device(self, device_id: str) -> None:
-        logical = next((item for item in self.rgb_logical_devices() if str(item["id"]) == device_id), None)
+        logical = next((item for item in self.rgb_ui_devices() if str(item["id"]) == device_id), None)
         if logical is None:
             return
         current = self.rgb_device_aliases.get(device_id, str(logical["title"]))
@@ -16113,14 +16556,19 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.rebuild_rgb_workspace()
 
     def refresh_rgb_layout_editor(self) -> None:
+        refresh_case_views(self)
         if hasattr(self, "rgb_layout_diagram"):
+            self.rgb_layout_diagram.set_case_template(case_template(self.rgb_case_template_id))
+            self.rgb_layout_diagram.set_cooling_visual(
+                str(self.settings.value("rgb_studio/cooling_visual", "auto") or "auto")
+            )
             self.rgb_layout_diagram.set_slots(self.rgb_layout_slots)
             self.rgb_layout_diagram.set_selected_slot(self.rgb_layout_selected_slot_id)
         if hasattr(self, "cooling_layout_diagram"):
-            self.cooling_layout_diagram.set_slots(self.rgb_layout_slots)
+            self.cooling_layout_diagram.set_slots(cooling_slots(self))
             self.cooling_layout_diagram.set_channel_assignments(self.mainboard_layout_assignments)
         if hasattr(self, "assistant_layout_diagram"):
-            self.assistant_layout_diagram.set_slots(self.rgb_layout_slots)
+            self.assistant_layout_diagram.set_slots(cooling_slots(self))
             self.assistant_layout_diagram.set_channel_assignments(self.mainboard_layout_assignments)
 
     def rgb_layout_device_position_label(self, device_id: str) -> str:
@@ -16135,6 +16583,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
 
     def focus_rgb_layout_slot(self, slot_id: str) -> None:
         self.rgb_layout_selected_slot_id = str(slot_id)
+        refresh_case_views(self)
         slot = next(
             (item for item in self.rgb_layout_slots if (item.slot_id or item.position) == slot_id),
             None,
@@ -16147,102 +16596,21 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 + (f" · {channel_order}" if channel_order else "")
             )
 
-    def edit_rgb_layout_slot_dialog(self, slot: RGBLayoutSlot | None = None) -> RGBLayoutSlot | None:
-        if not self.rgb_groups:
-            self.show_error("Bitte zuerst mindestens eine RGB-Gruppe anlegen.")
-            return None
-        dialog = QDialog(self)
-        dialog.setWindowTitle("Lüfter-/Komponentenblock bearbeiten" if slot else "Lüfterblock hinzufügen")
-        form = QFormLayout(dialog)
-        name_input = QLineEdit(slot.name if slot else "Neuer Lüfterblock")
-        position_combo = QComboBox()
-        for title, value in (
-            ("Oben", "top"), ("Front", "front"), ("Rückwand/Seite", "side"),
-            ("Netzteilabdeckung/Boden", "bottom"), ("Heck", "rear"),
-            ("Grafikkarte", "gpu"), ("Grafikkartenhalterung", "gpu-support"),
-            ("Arbeitsspeicher", "ram"), ("Pumpenkopf", "pump"),
-        ):
-            position_combo.addItem(title, value)
-        position_combo.setCurrentIndex(max(0, position_combo.findData(slot.position if slot else "side")))
-        count_input = QSpinBox()
-        count_input.setRange(1, 12)
-        count_input.setValue(max(1, slot.count if slot else 1))
-        size_input = QComboBox()
-        for size in (120, 140):
-            size_input.addItem(f"{size} mm", size)
-        size_input.setCurrentIndex(max(0, size_input.findData(slot.size_mm if slot and slot.size_mm else 120)))
-        airflow_combo = QComboBox()
-        airflow_combo.addItem("Ansaugung / Intake", "intake")
-        airflow_combo.addItem("Abluft / Exhaust", "exhaust")
-        airflow_combo.addItem("Komponente ohne Luftstrom", "component")
-        airflow_combo.setCurrentIndex(max(0, airflow_combo.findData(slot.airflow if slot else "intake")))
-        group_combo = QComboBox()
-        for group in self.rgb_groups:
-            group_combo.addItem(group.name, group.group_id)
-        preferred_group = slot.group_id if slot else str(self.rgb_group_picker.currentData() or "")
-        group_combo.setCurrentIndex(max(0, group_combo.findData(preferred_group)))
-        connection_input = QLineEdit(slot.connection if slot else "")
-        connection_input.setPlaceholderText("z. B. RGB-Hub B7 · PWM SYS-FAN6")
-        form.addRow("Name", name_input)
-        form.addRow("Position", position_combo)
-        form.addRow("Anzahl", count_input)
-        form.addRow("Größe", size_input)
-        form.addRow("Luftstrom", airflow_combo)
-        form.addRow("RGB-Gruppe", group_combo)
-        form.addRow("Anschluss / Notiz", connection_input)
-        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        buttons.accepted.connect(dialog.accept)
-        buttons.rejected.connect(dialog.reject)
-        form.addRow(buttons)
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return None
-        name = sanitize_group_name(name_input.text())
-        connection = " ".join(connection_input.text().split())[:96]
-        if slot is None:
-            slot_id = f"custom-{int(time.time() * 1000)}"
-            x, y = 0.5, 0.5
-            device_ids: tuple[str, ...] = ()
-        else:
-            slot_id = slot.slot_id or slot.position
-            x, y = slot.x, slot.y
-            device_ids = slot.device_ids
-        return RGBLayoutSlot(
-            str(position_combo.currentData()), name, count_input.value(),
-            str(group_combo.currentData()), connection, device_ids, slot_id,
-            x, y, str(airflow_combo.currentData()), int(size_input.currentData()),
-        )
+    def edit_rgb_layout_slot_dialog(self, slot: RGBLayoutSlot | None = None) -> None:
+        from modules.pc_case_profiles.v1_5.component_editor import open_component
+        open_component(self, slot)
 
     def add_rgb_layout_slot(self) -> None:
-        slot = self.edit_rgb_layout_slot_dialog()
-        if slot is None:
-            return
-        arranged_candidate = auto_arrange_layout_slots([*self.rgb_layout_slots, slot])[-1]
-        self.rgb_layout_slots.append(arranged_candidate)
-        self.rgb_layout_selected_slot_id = arranged_candidate.slot_id
-        self.save_rgb_workspace()
-        self.refresh_rgb_layout_editor()
-        self.rgb_layout_status_label.setText(f"Hinzugefügt und gespeichert: {arranged_candidate.name}")
+        self.edit_rgb_layout_slot_dialog()
 
     def edit_selected_rgb_layout_slot(self) -> None:
-        existing = next(
-            (
-                item for item in self.rgb_layout_slots
-                if (item.slot_id or item.position) == self.rgb_layout_selected_slot_id
-            ),
-            None,
-        )
+        existing = next((slot for slot in self.rgb_layout_slots
+                         if (slot.slot_id or slot.position) == self.rgb_layout_selected_slot_id), None)
         if existing is None:
-            self.show_error("Bitte zuerst einen Block in der PC-Ansicht anklicken.")
+            self.show_error(self.tr_static("Bitte zuerst einen Block in der PC-Ansicht anklicken."))
             return
-        updated = self.edit_rgb_layout_slot_dialog(existing)
-        if updated is None:
-            return
-        self.rgb_layout_slots = [updated if item is existing else item for item in self.rgb_layout_slots]
-        for device_id in updated.device_ids:
-            self.rgb_group_assignments[device_id] = updated.group_id
-        self.save_rgb_workspace()
-        self.refresh_rgb_layout_editor()
-        self.rgb_layout_status_label.setText(f"Bearbeitet und gespeichert: {updated.name}")
+        self.edit_rgb_layout_slot_dialog(existing)
+
 
     def remove_selected_rgb_layout_slot(self) -> None:
         existing = next(
@@ -16271,10 +16639,92 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.rgb_layout_status_label.setText(f"Entfernt: {existing.name} · RGB-Gruppe blieb erhalten")
 
     def auto_arrange_rgb_layout(self) -> None:
-        self.rgb_layout_slots = auto_arrange_layout_slots(self.rgb_layout_slots)
+        self.rgb_layout_slots = arrange_case_slots(self.rgb_layout_slots, self.rgb_case_template_id)
         self.save_rgb_workspace()
         self.refresh_rgb_layout_editor()
         self.rgb_layout_status_label.setText("Alle Blöcke wurden übersichtlich angeordnet und gespeichert")
+
+    def reverse_selected_rgb_layout_slot(self) -> None:
+        existing = next(
+            (
+                item for item in self.rgb_layout_slots
+                if (item.slot_id or item.position) == self.rgb_layout_selected_slot_id
+            ),
+            None,
+        )
+        if existing is None:
+            self.show_error("Bitte zuerst einen Lüfterblock in der PC-Ansicht anklicken.")
+            return
+        if existing.airflow not in {"intake", "exhaust"}:
+            self.show_error("Der ausgewählte Komponentenblock besitzt keinen umkehrbaren Luftstrom.")
+            return
+        airflow = "exhaust" if existing.airflow == "intake" else "intake"
+        updated = self.copy_rgb_layout_slot(existing, airflow=airflow)
+        self.rgb_layout_slots = [updated if item is existing else item for item in self.rgb_layout_slots]
+        self.save_rgb_workspace()
+        self.refresh_rgb_layout_editor()
+        label = "Abluft / Exhaust" if airflow == "exhaust" else "Ansaugung / Intake"
+        self.rgb_layout_status_label.setText(f"{existing.name}: Luftstrom auf {label} umgekehrt")
+
+    def split_selected_rgb_layout_slot(self) -> None:
+        existing = next(
+            (
+                item for item in self.rgb_layout_slots
+                if (item.slot_id or item.position) == self.rgb_layout_selected_slot_id
+            ),
+            None,
+        )
+        if existing is None:
+            self.show_error("Bitte zuerst einen Lüfterblock in der PC-Ansicht anklicken.")
+            return
+        if existing.position not in {"top", "front", "side", "bottom", "rear"} or existing.count <= 1:
+            self.show_error("Nur ein Lüfterblock mit mindestens zwei Lüftern kann geteilt werden.")
+            return
+        horizontal = existing.position in {"top", "bottom"}
+        spread = 0.062
+        center_offset = (existing.count - 1) / 2
+        separated: list[RGBLayoutSlot] = []
+        for index in range(existing.count):
+            offset = (index - center_offset) * spread
+            assigned = (
+                (existing.device_ids[index],)
+                if len(existing.device_ids) == existing.count
+                else existing.device_ids if index == 0 else ()
+            )
+            separated.append(self.copy_rgb_layout_slot(
+                existing,
+                name=f"{existing.name} · {index + 1}",
+                count=1,
+                x=max(0.04, min(0.96, existing.x + (offset if horizontal else 0.0))),
+                y=max(0.04, min(0.96, existing.y + (0.0 if horizontal else offset))),
+                device_ids=assigned,
+            ))
+            separated[-1] = RGBLayoutSlot(
+                separated[-1].position,
+                separated[-1].name,
+                separated[-1].count,
+                separated[-1].group_id,
+                separated[-1].connection,
+                separated[-1].device_ids,
+                f"{existing.slot_id or existing.position}-fan-{index + 1}",
+                separated[-1].x,
+                separated[-1].y,
+                separated[-1].airflow,
+                separated[-1].size_mm,
+                separated[-1].scale,
+                separated[-1].visual_kind,
+                separated[-1].gpu_visual,
+            )
+        replacement: list[RGBLayoutSlot] = []
+        for item in self.rgb_layout_slots:
+            replacement.extend(separated if item is existing else (item,))
+        self.rgb_layout_slots = replacement
+        self.rgb_layout_selected_slot_id = separated[0].slot_id
+        self.save_rgb_workspace()
+        self.refresh_rgb_layout_editor()
+        self.rgb_layout_status_label.setText(
+            f"{existing.name}: {existing.count} Einzellüfter angelegt · jeder Lüfter ist jetzt separat verschiebbar"
+        )
 
     @staticmethod
     def copy_rgb_layout_slot(
@@ -16303,6 +16753,9 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             y if y is not None else slot.y,
             airflow if airflow is not None else slot.airflow,
             size_mm if size_mm is not None else slot.size_mm,
+            slot.scale,
+            slot.visual_kind,
+            slot.gpu_visual,
         )
 
     def move_rgb_layout_slot(self, slot_id: str, x: float, y: float, position: str) -> None:
@@ -16373,6 +16826,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         slot = next((item for item in self.rgb_layout_slots if (item.slot_id or item.position) == slot_id), None)
         if slot is None:
             return
+        set_individual(self, True)
         writable = {str(item["id"]) for item in self.rgb_logical_devices() if bool(item.get("writable", False))}
         self.rgb_selected_devices = {device_id for device_id in slot.device_ids if device_id in writable}
         self.save_rgb_workspace()
@@ -16391,7 +16845,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             "PC- und Gruppenprofil laden",
             f"Frelidon Thermaltake-Ansicht mit 360-mm-Aufbau, {aio_name} oben, 2 Frontlüftern, "
             "3 Reverse-Lüftern an der Rückwand/Seite, 3 Reverse-Lüftern unten und einem Heck-Abluftlüfter laden? "
-            "Die Jungle-Leopard-GPU-Halterung wird als Airgoo Channel B6 mit 24 LEDs eingerichtet. "
+            "Die Jungle-Leopard-GPU-Halterung wird als Airgoo Channel B6 mit 12 LEDs eingerichtet. "
             "Eigene Gruppen- und Positionszuordnungen werden ersetzt; es wird noch keine Hardwarefarbe geschrieben.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.Yes,
@@ -16407,6 +16861,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
 
         self.settings.setValue("rgb_studio/layout_profile", "flori")
         self.settings.setValue("rgb_studio/layout_profile_version", THERMALTAKE_LAYOUT_VERSION)
+        self.rgb_case_template_id = DEFAULT_CASE_ID
+        self.settings.setValue("rgb_studio/case_template", DEFAULT_CASE_ID)
         self.settings.setValue("rgb_studio/flori_select_pending", not bool(self.openrgb_devices))
         self.map_flori_rgb_devices(select_all=True)
         self.rgb_groups_initialized = True
@@ -16417,7 +16873,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.log_message(
             f"RGB-STUDIO: Thermaltake-360-mm-Profil geladen · {aio_name} · "
             "3× Radiator, 2× Front, 3× Seite Reverse, 3× Boden Reverse, 1× Heck, "
-            "Jungle-Leopard-GPU-Halterung 24 LEDs · noch keine Hardwarefarbe geschrieben"
+            "Jungle-Leopard-GPU-Halterung 12 LEDs · noch keine Hardwarefarbe geschrieben"
         )
 
     def map_flori_rgb_devices(self, *, select_all: bool = False) -> None:
@@ -16425,6 +16881,9 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
 
         if str(self.settings.value("rgb_studio/layout_profile", "")) != "flori":
             return
+        self.migrate_flori_gpu_header()
+        from modules.rgb_studio.v1_15.personal_wiring import migrate_personal_wiring
+        migrate_personal_wiring(self)
         logical = self.rgb_logical_devices()
         if self.settings.value("rgb_studio/flori_select_pending", False, type=bool) and self.openrgb_devices:
             select_all = True
@@ -16460,38 +16919,10 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         if support_device is not None:
             device_id = str(support_device["id"])
             self.rgb_group_assignments.setdefault(device_id, "gpu-halterung")
-            self.rgb_device_aliases.setdefault(device_id, "Jungle Leopard GPU-Halterung · 24 LEDs")
+            self.rgb_device_aliases.setdefault(device_id, "Jungle Leopard GPU-Halterung · 12 LEDs")
 
-        # The GPU support is not a separate OpenRGB controller on this build;
-        # it is Channel B6 of the Airgoo hub.  Keep that component zone at its
-        # real 24 LEDs so a legacy 30-LED value cannot stretch frames and
-        # interfere with later controller writes (including ENE DRAM).
-        zone_profile_changed = False
-        for device in self.openrgb_devices:
-            identity = f"{device.name} {device.description}".casefold()
-            if "airgoo" not in identity:
-                continue
-            component_defaults = flori_component_zone_defaults(device.zones)
-            if not component_defaults:
-                continue
-            stable_id = self.openrgb_stable_ids.get(device.index, f"openrgb:index-{device.index}")
-            configuration = self.rgb_zone_configurations.get(stable_id, {})
-            # Never create a partial hub configuration here: missing entries
-            # intentionally fall back to OpenRGB's complete reported shape.
-            # Only migrate an already saved legacy B6 value; a fresh setup
-            # receives the same default in the full zone dialog below.
-            if migrate_flori_component_zones(device.zones, configuration):
-                zone_profile_changed = True
-                self.log_message(
-                    "RGB-STUDIO: Airgoo Channel B6 fest der Jungle-Leopard-GPU-Halterung zugeordnet · 1× 24 LEDs"
-                )
-        if zone_profile_changed:
-            self.settings.setValue(
-                "rgb_studio/zone_configurations",
-                json.dumps(self.rgb_zone_configurations, ensure_ascii=False, sort_keys=True),
-            )
-            self.settings.sync()
-
+        # Physical corrections run once above. Later manual counts win;
+        # inventory refresh must never continually force B6 back to a default.
         # Bind the diagram to all devices assigned by the preset without
         # destroying the user's physical left-to-right channel order.
         mapped_slots: list[RGBLayoutSlot] = []
@@ -16569,6 +17000,89 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             })
         return result
 
+    @staticmethod
+    def is_rgb_ram_device(device: OpenRGBDevice) -> bool:
+        """Recognize directly addressable RGB memory independent of module count."""
+
+        identity = " ".join(
+            (device.name, device.description, device.version, device.device_type)
+        ).casefold()
+        return bool(
+            device.supports_direct
+            and any(token in identity for token in ("dram", "dimm", "rgb memory", "arbeitsspeicher"))
+        )
+
+    @staticmethod
+    def rgb_ui_member_ids(item: dict[str, object]) -> tuple[str, ...]:
+        members = item.get("member_ids")
+        if isinstance(members, tuple) and members:
+            return tuple(str(value) for value in members)
+        if isinstance(members, list) and members:
+            return tuple(str(value) for value in members)
+        device_id = str(item.get("id", ""))
+        return (device_id,) if device_id else ()
+
+    def rgb_ui_devices(self) -> list[dict[str, object]]:
+        """Collapse every detected RGB DIMM into one presentation-only RAM bank.
+
+        Physical stable IDs remain the persistence and transport authority, so
+        a two- or four-module bank still receives one frame per DIMM.
+        """
+
+        logical = self.rgb_logical_devices()
+        ram_items = [
+            item for item in logical
+            if item.get("backend") == "openrgb"
+            and isinstance(item.get("device"), OpenRGBDevice)
+            and self.is_rgb_ram_device(item["device"])
+        ]
+        if not ram_items:
+            return logical
+        member_ids = tuple(str(item["id"]) for item in ram_items)
+        devices = tuple(item["device"] for item in ram_items)
+        counts = [self.openrgb_device_write_shape(device)[0] for device in devices]
+        count_text = (
+            f"{counts[0]} LEDs je Riegel"
+            if counts and len(set(counts)) == 1
+            else "LED-Anzahl je Riegel einstellbar"
+        )
+        bank_id = "openrgb-bank:ram"
+        bank = {
+            "id": bank_id,
+            "title": self.rgb_device_aliases.get(
+                bank_id, f"Arbeitsspeicher · {len(devices)} Riegel"
+            ),
+            "subtitle": (
+                f"{len(devices)} RGB-Riegel · {count_text} · gemeinsame Steuerung · OpenRGB Direct"
+            ),
+            "writable": all(bool(item.get("writable", False)) for item in ram_items),
+            "backend": "openrgb-bank",
+            "devices": devices,
+            "member_ids": member_ids,
+        }
+        first = min(logical.index(item) for item in ram_items)
+        remaining = [item for item in logical if item not in ram_items]
+        remaining.insert(first, bank)
+        return remaining
+
+    def rgb_ui_item_selected(self, item: dict[str, object]) -> bool:
+        members = self.rgb_ui_member_ids(item)
+        return bool(members) and all(member in self.rgb_selected_devices for member in members)
+
+    def rgb_ui_group_id(self, item: dict[str, object]) -> str:
+        groups = {
+            self.rgb_group_assignments.get(member, "ungrouped")
+            for member in self.rgb_ui_member_ids(item)
+        }
+        return groups.pop() if len(groups) == 1 else "ungrouped"
+
+    def rgb_expand_ui_device_id(self, device_id: str) -> tuple[str, ...]:
+        item = next(
+            (entry for entry in self.rgb_ui_devices() if str(entry.get("id", "")) == device_id),
+            None,
+        )
+        return self.rgb_ui_member_ids(item) if item is not None else (device_id,)
+
     def auto_group_for_rgb_device(self, item: dict[str, object]) -> str:
         identity = f"{item.get('title', '')} {item.get('subtitle', '')}".casefold()
         available = {group.group_id for group in self.rgb_groups}
@@ -16594,13 +17108,13 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             if widget is not None:
                 widget.deleteLater()
         self.rgb_device_tiles = {}
-        devices = self.rgb_logical_devices()
+        devices = self.rgb_ui_devices()
+        refresh_selection(self)
         for item in devices:
-            device_id = str(item["id"])
-            if device_id not in self.rgb_group_assignments:
-                automatic = self.auto_group_for_rgb_device(item)
-                if automatic:
-                    self.rgb_group_assignments[device_id] = automatic
+            automatic = self.auto_group_for_rgb_device(item)
+            for member in self.rgb_ui_member_ids(item):
+                if member not in self.rgb_group_assignments and automatic:
+                    self.rgb_group_assignments[member] = automatic
 
         self.rgb_group_picker.blockSignals(True)
         previous_group = self.rgb_group_picker.currentData()
@@ -16618,7 +17132,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             box.group_selection_requested.connect(self.select_rgb_group)
             members = [
                 item for item in devices
-                if (self.rgb_group_assignments.get(str(item["id"]), "ungrouped") == group.group_id)
+                if self.rgb_ui_group_id(item) == group.group_id
             ]
             for index, item in enumerate(members):
                 device_id = str(item["id"])
@@ -16626,7 +17140,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                     device_id,
                     str(item["title"]),
                     str(item["subtitle"]),
-                    device_id in self.rgb_selected_devices,
+                    self.rgb_ui_item_selected(item),
                     bool(item["writable"]),
                 )
                 tile.selection_changed.connect(self.set_rgb_device_selected)
@@ -16653,7 +17167,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         current_id = str(self.rgb_test_device_combo.currentData() or self.rgb_test_active_device)
         self.rgb_test_device_combo.blockSignals(True)
         self.rgb_test_device_combo.clear()
-        for item in self.rgb_logical_devices():
+        for item in self.rgb_ui_devices():
             backend = "NZXT" if item.get("backend") == "nzxt" else "OpenRGB"
             locked = " · gesperrt" if not bool(item.get("writable", False)) else ""
             position = self.rgb_layout_device_position_label(str(item["id"]))
@@ -16680,8 +17194,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         if device_id:
             self.rename_rgb_device(device_id)
 
-    def build_rgb_device_test_commands(self, target_id: str = "") -> tuple[list[list[str]], list[str]]:
-        logical = self.rgb_logical_devices()
+    def build_rgb_device_test_commands(self, target_id: str = "", *, exclude_ids=(), only_selected=False) -> tuple[list[list[str]], list[str]]:
+        logical = self.rgb_ui_devices()
         by_id = {str(item["id"]): item for item in logical}
         target = by_id.get(target_id) if target_id else None
         if target_id and target is None:
@@ -16690,7 +17204,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             raise ValueError(
                 "Dieses Gerät ist durch ein anderes Hardwaremodul gesperrt und kann nicht exklusiv getestet werden."
             )
-        openrgb_items = [item for item in logical if item.get("backend") == "openrgb"]
+        openrgb_items = [item for item in logical if str(item.get("backend", "")).startswith("openrgb")]
         if openrgb_items and self.openrgb_external_server_detected:
             raise ValueError(
                 "Der Einzeltest ist gesperrt, solange eine fremd gestartete OpenRGB-Instanz aktiv ist. "
@@ -16700,49 +17214,57 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             raise ValueError("Die von OHC verwaltete OpenRGB-Engine ist nicht erreichbar.")
 
         blocked = [str(item["title"]) for item in logical if not bool(item.get("writable", False))]
-        writable = [item for item in logical if bool(item.get("writable", False))]
+        writable = [item for item in logical if bool(item.get("writable", False)) and (
+            not only_selected or self.rgb_ui_item_selected(item))]
         # Everything else is switched off first; the target is intentionally
         # written last so the intermediate state never has two test devices on.
-        ordered = [item for item in writable if str(item["id"]) != target_id]
+        excluded = set(exclude_ids)
+        ordered = [item for item in writable if str(item["id"]) != target_id and str(item["id"]) not in excluded]
         if target is not None:
             ordered.append(target)
         commands: list[list[str]] = []
         for item in ordered:
             is_target = str(item["id"]) == target_id
-            if item.get("backend") == "openrgb":
-                device = item.get("device")
-                if not isinstance(device, OpenRGBDevice):
-                    continue
-                color = self.rgb_test_color if is_target else "000000"
-                if device.supports_direct:
-                    stable_id = str(item["id"])
-                    shape_reader = getattr(self, "openrgb_device_write_shape", None)
-                    led_count, zone_sizes = (
-                        shape_reader(device) if callable(shape_reader) else (device.led_count, None)
+            if str(item.get("backend", "")).startswith("openrgb"):
+                raw_devices = item.get("devices")
+                devices = raw_devices if isinstance(raw_devices, tuple) else (item.get("device"),)
+                for device in devices:
+                    if not isinstance(device, OpenRGBDevice):
+                        continue
+                    stable_id = self.openrgb_stable_ids.get(
+                        device.index, f"openrgb:index-{device.index}"
                     )
-                    commands.append(
-                        self.openrgb_client.sdk_color_command(
-                            device.index,
-                            [color],
-                            led_count,
-                            direct=is_target or stable_id not in getattr(self, "openrgb_sdk_ready_devices", set()),
-                            zone_sizes=zone_sizes,
+                    if stable_id in excluded:
+                        continue
+                    color = self.rgb_test_color if is_target else "000000"
+                    if device.supports_direct:
+                        shape_reader = getattr(self, "openrgb_device_write_shape", None)
+                        led_count, zone_sizes = (
+                            shape_reader(device) if callable(shape_reader) else (device.led_count, None)
                         )
-                    )
-                else:
-                    available = {
-                        mode.casefold(): mode for mode in device.modes if mode.casefold() != "direct"
-                    }
-                    mode = next(
-                        (available[name] for name in ("off", "static", "fixed") if name in available),
-                        "",
-                    )
-                    if mode:
                         commands.append(
-                            self.openrgb_client.native_mode_command(
-                                device.index, mode, [color], 100 if is_target else 0
+                            self.openrgb_client.sdk_color_command(
+                                device.index,
+                                [color],
+                                led_count,
+                                direct=is_target or stable_id not in getattr(self, "openrgb_sdk_ready_devices", set()),
+                                zone_sizes=zone_sizes,
                             )
                         )
+                    else:
+                        available = {
+                            mode.casefold(): mode for mode in device.modes if mode.casefold() != "direct"
+                        }
+                        mode = next(
+                            (available[name] for name in ("off", "static", "fixed") if name in available),
+                            "",
+                        )
+                        if mode:
+                            commands.append(
+                                self.openrgb_client.native_mode_command(
+                                    device.index, mode, [color], 100 if is_target else 0
+                                )
+                            )
             elif item.get("backend") == "nzxt":
                 channel = str(item["id"]).partition(":")[2]
                 commands.extend(
@@ -16768,14 +17290,14 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.show_error("Es wurde kein steuerbares RGB-Gerät für den Test erkannt.")
             return
         self.stop_openrgb_effect("Geräte-Testmodus gestartet · laufende OHC-Animationen beendet")
-        logical = {str(item["id"]): str(item["title"]) for item in self.rgb_logical_devices()}
+        logical = {str(item["id"]): str(item["title"]) for item in self.rgb_ui_devices()}
         target_name = logical.get(target_id, "")
         description = (
             f"Einzeltest {target_name} · alle anderen OHC-Geräte aus"
             if target_id else "Geräte-Testmodus beendet · alle OHC-Geräte aus"
         )
         target_item = next(
-            (item for item in self.rgb_logical_devices() if str(item["id"]) == target_id),
+            (item for item in self.rgb_ui_devices() if str(item["id"]) == target_id),
             None,
         )
         target_device = target_item.get("device") if target_item is not None else None
@@ -16812,7 +17334,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
 
     def test_next_rgb_device(self) -> None:
         writable_ids = [
-            str(item["id"]) for item in self.rgb_logical_devices() if bool(item.get("writable", False))
+            str(item["id"]) for item in self.rgb_ui_devices() if bool(item.get("writable", False))
         ]
         if not writable_ids:
             self.show_error("Es wurde kein exklusiv steuerbares RGB-Gerät erkannt.")
@@ -16830,31 +17352,30 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.run_rgb_device_test("")
 
     def set_rgb_device_selected(self, device_id: str, selected: bool) -> None:
+        if not choose_device(self, device_id, selected): return
         if selected:
-            self.rgb_selected_devices.add(device_id)
+            selected_ids = set(self.rgb_expand_ui_device_id(device_id))
             device = next(
-                (item for item in self.openrgb_devices if self.openrgb_stable_ids.get(item.index) == device_id),
+                (item for item in self.openrgb_devices if self.openrgb_stable_ids.get(item.index) in selected_ids),
                 None,
             )
             if device is not None:
                 index = self.openrgb_device_combo.findData(device.index)
                 self.openrgb_device_combo.setCurrentIndex(max(0, index))
-        else:
-            self.rgb_selected_devices.discard(device_id)
         self.save_rgb_workspace()
-        self.update_rgb_selection_summary()
+        self.rebuild_rgb_workspace()
         self.update_openrgb_control_state()
         self.on_openrgb_device_changed()
 
     def select_all_rgb_devices(self, selected: bool) -> None:
-        writable = {
-            str(item["id"]) for item in self.rgb_logical_devices() if bool(item.get("writable", False))
-        }
+        set_individual(self, not selected)
+        writable = writable_ids(self)
         self.rgb_selected_devices = writable if selected else set()
         self.save_rgb_workspace()
         self.rebuild_rgb_workspace()
 
     def select_rgb_group(self, group_id: str) -> None:
+        set_individual(self, True)
         device_map = {str(item["id"]): bool(item.get("writable", False)) for item in self.rgb_logical_devices()}
         self.rgb_selected_devices = {
             device_id
@@ -16876,9 +17397,10 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
     def update_rgb_selection_summary(self) -> None:
         if not hasattr(self, "rgb_selection_summary"):
             return
-        logical = self.rgb_logical_devices()
-        selected = [item for item in logical if str(item["id"]) in self.rgb_selected_devices]
+        logical = self.rgb_ui_devices()
+        selected = [item for item in logical if self.rgb_ui_item_selected(item)]
         if hasattr(self, "rgb_selection_list"):
+            self.rgb_selection_list.blockSignals(True)
             self.rgb_selection_list.clear()
         if not selected:
             self.rgb_selection_summary.setText("Noch kein Gerät ausgewählt")
@@ -16890,12 +17412,14 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         if not hasattr(self, "rgb_selection_list"):
             return
         grouped_rows: dict[str, list[QTreeWidgetItem]] = {}
-        for item in selected:
+        for item in logical:
             device_id = str(item["id"])
             backend = str(item.get("backend", ""))
             device = item.get("device")
             if backend == "nzxt":
                 path = "NZXT-Modul · liquidctl"
+            elif backend == "openrgb-bank":
+                path = "OHC Direct · gemeinsame RAM-Bank"
             elif isinstance(device, OpenRGBDevice) and device.supports_direct:
                 path = "OHC Direct · lokaler SDK"
             else:
@@ -16903,8 +17427,13 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             if not bool(item.get("writable", False)):
                 status = str(item.get("subtitle", "")).partition("gesperrt: ")[2] or "nicht schreibbereit"
             else:
-                status = self.rgb_device_last_results.get(device_id, "bereit")
+                member_states = [
+                    self.rgb_device_last_results.get(member, "bereit")
+                    for member in self.rgb_ui_member_ids(item)
+                ]
+                status = member_states[0] if len(set(member_states)) == 1 else "teilweise bereit"
             row = QTreeWidgetItem([str(item["title"]), path, status])
+            configure_selection_row(self, row, item)
             row.setToolTip(0, str(item.get("subtitle", "")))
             vendor = self.rgb_vendor_bucket(str(item["title"]), backend)
             grouped_rows.setdefault(vendor, []).append(row)
@@ -16916,6 +17445,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             for row in rows:
                 parent.addChild(row)
             self.rgb_selection_list.addTopLevelItem(parent)
+        self.rgb_selection_list.blockSignals(False)
 
     @staticmethod
     def rgb_vendor_bucket(device_name: str, backend: str = "") -> str:
@@ -17012,16 +17542,17 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             QTimer.singleShot(delay, restore)
 
     def move_rgb_device_to_group(self, device_id: str, group_id: str) -> None:
-        valid_devices = {str(item["id"]) for item in self.rgb_logical_devices()}
+        valid_devices = {str(item["id"]) for item in self.rgb_ui_devices()}
         valid_groups = {group.group_id for group in self.rgb_groups}
         if device_id not in valid_devices:
             return
-        if group_id == "ungrouped":
-            self.rgb_group_assignments.pop(device_id, None)
-        elif group_id in valid_groups:
-            self.rgb_group_assignments[device_id] = group_id
-        else:
+        if group_id != "ungrouped" and group_id not in valid_groups:
             return
+        for member in self.rgb_expand_ui_device_id(device_id):
+            if group_id == "ungrouped":
+                self.rgb_group_assignments.pop(member, None)
+            else:
+                self.rgb_group_assignments[member] = group_id
         self.save_rgb_workspace()
         self.rebuild_rgb_workspace()
 
@@ -17225,6 +17756,172 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
 
         self.backend.run_async(command, callback=inspected, timeout=8, log_output=False)
 
+    def configure_openrgb_ram_bank(
+        self, target_devices: list[OpenRGBDevice] | tuple[OpenRGBDevice, ...] | None = None,
+    ) -> None:
+        """Inspect and edit all RGB DIMMs through one shared bank dialog."""
+
+        if not self.openrgb_server_reachable or self.openrgb_external_server_detected:
+            self.show_error(
+                "Die von OHC verwaltete OpenRGB-Engine muss erreichbar sein. Bitte ein separates OpenRGB-Fenster "
+                "schließen und danach die Geräte neu erkennen."
+            )
+            return
+        devices = list(target_devices or [
+            device for device in self.openrgb_devices
+            if self.is_rgb_ram_device(device) and not self.openrgb_device_conflict(device)
+        ])
+        devices = [
+            device for device in devices
+            if self.is_rgb_ram_device(device) and not self.openrgb_device_conflict(device)
+        ]
+        if not devices:
+            self.show_error("Es wurde kein schreibbereiter RGB-Arbeitsspeicher erkannt.")
+            return
+        inspections: list[tuple[OpenRGBDevice, dict[str, object]]] = []
+        pending = list(devices)
+        self.footer_status.setText(
+            f"RGB-Studio: gemeinsame RAM-Bank mit {len(devices)} Riegel(n) wird gelesen …"
+        )
+
+        def inspect_next() -> None:
+            if not pending:
+                self.show_openrgb_ram_bank_dialog(inspections)
+                return
+            device = pending.pop(0)
+            try:
+                command = self.openrgb_client.sdk_inspect_command(device.index)
+            except (OpenRGBError, ValueError) as exc:
+                self.show_error(str(exc))
+                return
+
+            def inspected(result: CommandResult, current: OpenRGBDevice = device) -> None:
+                if not result.ok:
+                    self.show_error(
+                        f"Die RAM-Zone von {self.rgb_device_display_name(current)} konnte nicht gelesen werden:\n"
+                        + (result.combined or f"Exit-Code {result.returncode}")[:800]
+                    )
+                    return
+                try:
+                    payload = json.loads(result.stdout.strip())
+                except (TypeError, ValueError, json.JSONDecodeError):
+                    self.show_error("Der OpenRGB-Zonenbericht des Arbeitsspeichers war nicht gültig.")
+                    return
+                if not isinstance(payload, dict) or not isinstance(payload.get("zones"), list):
+                    self.show_error("OpenRGB hat keine auswertbare RAM-Zonenliste geliefert.")
+                    return
+                inspections.append((current, payload))
+                inspect_next()
+
+            self.backend.run_async(command, callback=inspected, timeout=8, log_output=False)
+
+        inspect_next()
+
+    def show_openrgb_ram_bank_dialog(
+        self, inspections: list[tuple[OpenRGBDevice, dict[str, object]]],
+    ) -> None:
+        rows: list[tuple[OpenRGBDevice, str, int, int, int]] = []
+        for device, inspection in inspections:
+            zones = [zone for zone in inspection.get("zones", []) if isinstance(zone, dict)]
+            if not zones:
+                self.show_error(f"{self.rgb_device_display_name(device)} meldet keine RAM-LED-Zone.")
+                return
+            zone = zones[0]
+            name = str(zone.get("name", device.zones[0] if device.zones else "Unknown"))
+            current = max(1, int(zone.get("current", device.led_count or 1)))
+            minimum = max(1, int(zone.get("minimum", current)))
+            maximum = max(minimum, min(512, int(zone.get("maximum", current))))
+            rows.append((device, name, current, minimum, maximum))
+        lower = max(row[3] for row in rows)
+        upper = min(row[4] for row in rows)
+        if lower > upper:
+            self.show_error("Die erkannten RAM-Riegel haben keinen gemeinsamen erlaubten LED-Bereich.")
+            return
+        stored_counts = []
+        for device, zone, current, _minimum, _maximum in rows:
+            stable_id = self.openrgb_stable_ids.get(device.index, f"openrgb:index-{device.index}")
+            saved = self.rgb_zone_configurations.get(stable_id, {}).get(zone, {})
+            stored_counts.append(int(saved.get("leds_per_unit", current) or current))
+        initial = stored_counts[0] if len(set(stored_counts)) == 1 else rows[0][2]
+        initial = max(lower, min(upper, initial))
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle(f"Arbeitsspeicher gemeinsam einrichten · {len(rows)} Riegel")
+        dialog.setMinimumWidth(620)
+        layout = QVBoxLayout(dialog)
+        note = QLabel(
+            "Alle erkannten RGB-Riegel werden als eine RAM-Bank gesteuert. Die Einstellung gilt gemeinsam, "
+            "wird intern aber für jeden Riegel separat gespeichert und übertragen. Später erkannte weitere "
+            "Riegel erscheinen automatisch in derselben Bank."
+        )
+        note.setWordWrap(True)
+        layout.addWidget(note)
+        form = QFormLayout()
+        led_spin = QSpinBox()
+        led_spin.setRange(lower, upper)
+        led_spin.setValue(initial)
+        led_spin.setSuffix(" LEDs je Riegel")
+        form.addRow("LED-Anzahl", led_spin)
+        form.addRow("Erkannte Riegel", QLabel(str(len(rows))))
+        form.addRow("OpenRGB erlaubt gemeinsam", QLabel(f"{lower}–{upper} LEDs je Riegel"))
+        layout.addLayout(form)
+        details = QLabel("\n".join(
+            f"• {self.rgb_device_display_name(device)} · OpenRGB #{device.index} · {current} LEDs gemeldet"
+            for device, _zone, current, _minimum, _maximum in rows
+        ))
+        details.setObjectName("muted")
+        layout.addWidget(details)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        buttons.button(QDialogButtonBox.StandardButton.Ok).setText(
+            "Speichern und gemeinsam anwenden" if self.openrgb_write_enabled else "Gemeinsam speichern"
+        )
+        buttons.rejected.connect(dialog.reject)
+        layout.addWidget(buttons)
+
+        def save_bank() -> None:
+            count = led_spin.value()
+            member_ids: set[str] = set()
+            for device, zone, _current, minimum, maximum in rows:
+                if not minimum <= count <= maximum:
+                    self.show_error(
+                        f"{self.rgb_device_display_name(device)} erlaubt {minimum}–{maximum} LEDs."
+                    )
+                    return
+                stable_id = self.openrgb_stable_ids.get(device.index, f"openrgb:index-{device.index}")
+                configuration = dict(self.rgb_zone_configurations.get(stable_id, {}))
+                configuration[zone] = {"units": 1, "leds_per_unit": count}
+                self.rgb_zone_configurations[stable_id] = configuration
+                self.rgb_group_assignments[stable_id] = "arbeitsspeicher"
+                self.openrgb_sdk_ready_devices.discard(stable_id)
+                member_ids.add(stable_id)
+            self.rgb_selected_devices.update(member_ids)
+            self.save_rgb_workspace()
+            dialog.accept()
+            self.rebuild_rgb_workspace()
+            self.log_message(
+                f"RGB-RAM-BANK: {len(rows)} Riegel gemeinsam gespeichert · je {count} LEDs · "
+                "ein Menü, getrennte Geräteframes"
+            )
+            if not self.openrgb_write_enabled:
+                self.openrgb_effect_status.setText(
+                    f"RAM-Bank gespeichert · {len(rows)} Riegel mit je {count} LEDs"
+                )
+                return
+
+            def apply_after_ene_reclaim() -> None:
+                self.request_rgb_direct_apply(80)
+
+            if any(self.is_ene_dram_device(device) for device, *_rest in rows):
+                for device, *_rest in rows:
+                    stable_id = self.openrgb_stable_ids.get(device.index, "")
+                    self.ene_dram_cli_prime_done.discard(stable_id)
+                self.prime_ene_dram_cold_start(apply_after_ene_reclaim, force_all=True)
+            else:
+                apply_after_ene_reclaim()
+
+        buttons.accepted.connect(save_bank)
+        dialog.exec()
+
     def show_openrgb_zone_configuration_dialog(
         self,
         device: OpenRGBDevice,
@@ -17240,6 +17937,9 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         dialog = QDialog(self)
         dialog.setWindowTitle(f"LED-Zonen · {self.rgb_device_display_name(device)}")
         dialog.resize(980, min(760, 260 + 48 * len(zones)))
+        from modules.rgb_studio.v1_15.header_preview import HeaderPreview
+        preview = HeaderPreview(self)
+        dialog.finished.connect(lambda _result: preview.close())
         layout = QVBoxLayout(dialog)
         note = QLabel(
             "OpenRGB erkennt bei ARGB-Hubs und Mainboard-Anschlüssen häufig nur den Kanal, nicht die dahinter "
@@ -17253,7 +17953,9 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         model_row = QHBoxLayout()
         fan_model_combo = QComboBox()
         fan_model_combo.addItem("Manuell · LED-Anzahl selbst angeben", "")
-        for model in RGB_FAN_MODELS:
+        from modules.rgb_studio.v1_15.fan_library import zone_models
+        fan_models = zone_models(self)
+        for model in fan_models:
             fan_model_combo.addItem(
                 f"{model.title} · {model.leds_per_fan} LEDs je Lüfter",
                 model.model_id,
@@ -17261,7 +17963,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         preferred_model = str(
             self.settings.value(
                 "rgb_studio/fan_model",
-                "tzmrit-interstellar-v2-normal"
+                "frelidon-interstellar-v2-8"
                 if str(self.settings.value("rgb_studio/layout_profile", "")) == "flori"
                 else "",
             )
@@ -17290,7 +17992,9 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             suggested_units = self.suggested_units_for_openrgb_zone(name)
             suggested_fan_units = self.suggested_fan_units_for_openrgb_zone(name)
             suggested_component_units = max(0, suggested_units - suggested_fan_units)
-            component_default = flori_component_zone_defaults((name,)).get(name, {})
+            component_default = (flori_component_zone_defaults((name,)).get(name, {})
+                                 if str(self.settings.value("rgb_studio/layout_profile", "")) == "flori"
+                                 and "airgoo" in device.name.casefold() else {})
             units = max(0, min(64, int(values.get("units", 0))))
             leds_per_unit = max(0, min(512, int(values.get("leds_per_unit", 0))))
             if not values and component_default:
@@ -17329,10 +18033,10 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             table.setCellWidget(row, 5, total_label)
             table.setItem(row, 6, QTableWidgetItem(" · ".join(hint_parts) or "—"))
             zone_test_button = QPushButton("Nur diese Zone")
-            zone_test_button.setToolTip(
-                "Schaltet innerhalb dieses Controllers nur diese Zone in der Testfarbe ein; alle anderen Zonen werden schwarz."
-            )
-            table.setCellWidget(row, 7, zone_test_button)
+            zone_test_button.setToolTip(self.tr_static(
+                "Sichttest: Nur die gewählte LED oder Zone leuchtet weiß; andere OHC-LEDs werden schwarz. Beim Schließen kehrt das Design zurück."
+            ))
+            table.setCellWidget(row, 7, build_zone_test_controls(self, device, name, zone_test_button, unit_spin, led_spin))
 
             def update_total(
                 _value: int = 0,
@@ -17353,6 +18057,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 _checked: bool = False,
                 target_row: int = row,
             ) -> None:
+                if preview.pending or getattr(self, "rgb_manual_write_active", False):
+                    return
                 if not self.openrgb_write_enabled:
                     self.show_error("Bitte zuerst die RGB-Hardwaresteuerung für diese Programmsitzung aktivieren.")
                     return
@@ -17365,8 +18071,10 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                     return
                 colors: list[str] = []
                 for index, size in enumerate(sizes):
-                    colors.extend([self.rgb_test_color if index == target_row else "000000"] * size)
+                    colors.extend(["ffffff" if index == target_row else "000000"] * size)
                 try:
+                    from modules.rgb_studio.v1_15.led_test_isolation import commands as isolated_test_commands
+                    blackout = isolated_test_commands(self, device, str(editors[target_row][0].get("name", "")))
                     command = self.openrgb_client.sdk_color_command(
                         device.index,
                         colors,
@@ -17378,17 +18086,21 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                     self.show_error(str(exc))
                     return
                 zone_name = str(editors[target_row][0].get("name", f"Zone {target_row + 1}"))
+                self.stop_openrgb_effect(self.tr_static("Eine LED testen"))
+                preview.start()
                 self.run_rgb_command_sequence(
-                    [command],
+                    [*blackout, command],
                     f"Sichttest {self.rgb_device_display_name(device)} · nur {zone_name}",
+                    finished=preview.complete,
                 )
 
             zone_test_button.clicked.connect(test_zone)
         table.resizeColumnsToContents()
+        table.verticalHeader().setDefaultSectionSize(44)
         layout.addWidget(table)
 
         def apply_selected_fan_model() -> None:
-            model = rgb_fan_model(fan_model_combo.currentData())
+            model = next((m for m in fan_models if m.model_id == fan_model_combo.currentData()), None)
             if model is None:
                 self.show_error("Bitte zuerst ein bekanntes Lüftermodell auswählen.")
                 return
@@ -17432,6 +18144,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         layout.addWidget(buttons)
 
         def apply_configuration() -> None:
+            if preview.pending or getattr(self, "rgb_manual_write_active", False):
+                return
             configuration: dict[str, dict[str, int]] = {}
             sizes: list[int] = []
             plausibility_warnings: list[str] = []
@@ -17495,12 +18209,17 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 if answer != QMessageBox.StandardButton.Yes:
                     return
             self.rgb_zone_configurations[stable_id] = configuration
+            save_controller_diagnostics(self, device, zones, "save-controller", configuration)
             self.openrgb_quarantined_devices.pop(stable_id, None)
             self.openrgb_effect_failures_by_device.pop(stable_id, None)
             self.openrgb_sdk_ready_devices.discard(stable_id)
             self.save_rgb_workspace()
             dialog.accept()
             self.rebuild_rgb_workspace()
+            if preview.touched:
+                # A pixel/zone preview already supplied the optical test. The
+                # preview's guarded restore now applies the saved zone sizes.
+                return
             if not self.openrgb_write_enabled:
                 self.openrgb_effect_status.setText(
                     "Zonengrößen gespeichert · RGB-Hardwaresteuerung aktivieren, um sie an OpenRGB zu übertragen"
@@ -17534,16 +18253,19 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
     def selected_rgb_blocked_names(self) -> list[str]:
         return [
             str(item["title"])
-            for item in self.rgb_logical_devices()
-            if str(item["id"]) in self.rgb_selected_devices and not bool(item.get("writable", False))
+            for item in self.rgb_ui_devices()
+            if self.rgb_ui_item_selected(item) and not bool(item.get("writable", False))
         ]
 
-    def openrgb_device_conflict(self, device: OpenRGBDevice) -> str:
+    def openrgb_wiring_conflict(self, device: OpenRGBDevice) -> str:
+        return self.openrgb_device_conflict(device, require_reachable=False)
+
+    def openrgb_device_conflict(self, device: OpenRGBDevice, *, require_reachable: bool = True) -> str:
         stable_id = self.openrgb_stable_ids.get(device.index, f"openrgb:index-{device.index}")
         quarantined = self.openrgb_quarantined_devices.get(stable_id, "")
         if quarantined:
             return quarantined
-        if not self.openrgb_server_reachable:
+        if require_reachable and not self.openrgb_server_reachable:
             return "OpenRGB-Engine nicht erreichbar"
         identity = f"{device.name} {device.description} {device.device_type}".casefold()
         if self.nzxt_rgb_ready and "nzxt" in identity:
@@ -17715,6 +18437,21 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 "Automatische Wiederübernahme · EIN"
                 if self.rgb_auto_reclaim_checkbox.isChecked()
                 else "Automatische Wiederübernahme · AUS"
+            )
+        if hasattr(self, "rgb_startup_automation_summary"):
+            profile = startup_profile_caption(
+                self.settings.value("profiles/startup", "none"), self.all_profiles(), self.tr_static
+            )
+            self.rgb_startup_automation_summary.setText(
+                startup_status_summary(
+                    profile,
+                    control_enabled=self.openrgb_write_enabled,
+                    control_pending=self.openrgb_write_enable_pending,
+                    autostart_enabled=self.rgb_profile_autostart_checkbox.isChecked(),
+                    reclaim_enabled=self.rgb_auto_reclaim_checkbox.isChecked(),
+                    consent_confirmed=self.rgb_control_consent_confirmed,
+                    translator=self.tr_static,
+                )
             )
 
     def start_rgb_profile_automatically(self, profile_name: str) -> None:
@@ -17952,6 +18689,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             "ENE-DRAM-Kaltstart-Reclaim",
             finished=prime_finished,
             require_session=True,
+            stream_exclusions=tuple(key for _device, key in targets)
+            if getattr(self, "ene_dram_post_start_preserve_stream", False) else (),
         )
 
     def finish_rgb_profile_autostart(self) -> None:
@@ -18021,6 +18760,15 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
 
     def set_openrgb_write_enabled(self, enabled: bool) -> None:
         if enabled:
+            if not self.feature_enabled("rgb") or not ohc_may_write(
+                "rgb", self.control_authority.get("rgb", "auto")
+            ):
+                self.openrgb_write_checkbox.blockSignals(True)
+                self.openrgb_write_checkbox.setChecked(False)
+                self.openrgb_write_checkbox.blockSignals(False)
+                self.openrgb_write_enabled = False
+                self.footer_status.setText(self.tr_static("RGB-Zuständigkeit liegt nicht bei OHC"))
+                return
             if not self.rgb_logical_devices() and not self.openrgb_client.installed:
                 self.openrgb_write_checkbox.blockSignals(True)
                 self.openrgb_write_checkbox.setChecked(False)
@@ -18083,6 +18831,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 self.rgb_session_lock.release()
                 self.update_openrgb_control_state()
                 return
+            self.enable_rgb_automation_after_consent()
             if self.openrgb_client.installed and not self.openrgb_server_reachable:
                 self.openrgb_write_enabled = False
                 self.openrgb_write_enable_pending = True
@@ -18288,17 +19037,39 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         return "fastest"
 
     def update_rgb_studio_preview(self) -> None:
-        if not hasattr(self, "rgb_studio_preview"):
+        if not hasattr(self, "rgb_design_gallery"):
             return
-        device = self.selected_openrgb_device()
-        led_count = min(256, self.openrgb_device_write_shape(device)[0]) if device is not None else 24
+        if not hasattr(self, "tabs") or not active_page_visible(self, self.tabs, getattr(self, "rgb_page_scroll", None)):
+            return
         if not hasattr(self, "rgb_preview_started"):
             self.rgb_preview_started = time.monotonic()
         elapsed = time.monotonic() - self.rgb_preview_started
-        self.rgb_studio_preview.set_effect(self.current_rgb_studio_config(), led_count, elapsed)
-        if hasattr(self, "rgb_design_gallery"):
-            self.rgb_design_gallery.set_static_color(self.rgb_studio_primary)
-            self.rgb_design_gallery.set_elapsed(elapsed)
+        self.rgb_design_gallery.set_static_color(self.rgb_studio_primary)
+        self.rgb_design_gallery.set_elapsed(elapsed)
+
+    def sync_active_page_performance(self, _index: int = -1) -> None:
+        timer = getattr(self, "rgb_preview_timer", None)
+        tabs = getattr(self, "tabs", None)
+        if timer is None or tabs is None:
+            return
+        window_active = self.isVisible() and not self.isMinimized()
+        sync_visible_page_timer(self, timer, tabs, getattr(self, "rgb_page_scroll", None), self.update_rgb_studio_preview)
+        self.background_widget.set_window_active(window_active)
+        self.display_effects_page.set_window_active(window_active)
+        lcd_active = active_page_visible(self, tabs, getattr(self, "lcd_scroll_page", None))
+        for movie in (getattr(self, "lcd_preview_movie", None), getattr(self, "hardware_animation_movie", None)):
+            if movie is not None:
+                state = movie.state()
+                if lcd_active and state == QMovie.MovieState.NotRunning:
+                    movie.start()
+                elif lcd_active and state == QMovie.MovieState.Paused:
+                    movie.setPaused(False)
+                elif not lcd_active and state == QMovie.MovieState.Running:
+                    movie.setPaused(True)
+        if not lcd_active:
+            for button in getattr(self, "builtin_lcd_theme_buttons", {}).values():
+                if isinstance(button, AnimatedGifTileButton):
+                    button.stop_preview()
 
     def current_rgb_design_snapshot(self) -> tuple[int, str, RGBEffectConfig]:
         data = self.rgb_studio_design_combo.currentData()
@@ -18409,6 +19180,38 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             button.setChecked(title == category)
             button.blockSignals(False)
         self.rgb_design_gallery.set_category(category)
+        if hasattr(self, "tabs") and self.tabs.currentIndex() == 2:
+            self.sync_navigation_to_page(2)
+
+    def select_rgb_design_view(self, view_mode: str) -> None:
+        if not hasattr(self, "rgb_design_gallery"):
+            return
+        view_mode = view_mode if view_mode in {"suggestions", "favorites", "all"} else "suggestions"
+        for mode, button in self.rgb_design_view_buttons.items():
+            button.blockSignals(True)
+            button.setChecked(mode == view_mode)
+            button.blockSignals(False)
+        self.rgb_design_category_host.setVisible(view_mode == "all")
+        self.rgb_design_gallery.set_view_mode(view_mode)
+        if hasattr(self, "tabs") and self.tabs.currentIndex() == 2:
+            self.sync_navigation_to_page(2)
+
+    def toggle_rgb_design_favorite(self, design_index: int, favorite: bool) -> None:
+        if favorite:
+            self.rgb_favorite_design_indices.add(int(design_index))
+        else:
+            self.rgb_favorite_design_indices.discard(int(design_index))
+        self.settings.setValue(
+            "rgb_studio/favorite_design_indices",
+            json.dumps(sorted(self.rgb_favorite_design_indices)),
+        )
+        self.settings.sync()
+        if hasattr(self, "rgb_design_gallery"):
+            self.rgb_design_gallery.set_favorite_indices(self.rgb_favorite_design_indices)
+        if hasattr(self, "rgb_design_view_buttons"):
+            self.rgb_design_view_buttons["favorites"].setText(
+                self.tr_static("Favoriten · 0").replace("0", str(len(self.rgb_favorite_design_indices)))
+            )
 
     def activate_rgb_design_tile(self, design_index: int) -> None:
         combo_index = self.rgb_studio_design_combo.findData(int(design_index))
@@ -18482,6 +19285,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.rgb_direct_apply_timer.start()
 
     def apply_pending_rgb_design(self) -> None:
+        if getattr(self, "rgb_header_preview_depth", 0):
+            return
         if not self.rgb_direct_apply_pending or getattr(self, "_loading_rgb_design", False):
             return
         if self.rgb_manual_write_active:
@@ -18711,6 +19516,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         finished: Callable[[bool], None] | None = None,
         require_session: bool = True,
         preserved_scroll_position: tuple[int, int, int] | None = None,
+        stream_exclusions: tuple[str, ...] = (),
     ) -> None:
         if require_session and not self.openrgb_write_enabled:
             self.show_error("Bitte zuerst die RGB-Hardwaresteuerung für diese Programmsitzung aktivieren.")
@@ -18746,16 +19552,29 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             any(Path(argument).name == "openrgb_sdk.py" for argument in command[:3])
             for command in commands
         )
-        if uses_sdk_helper and self.openrgb_worker_frame_inflight:
+        from modules.rgb_studio.v1_15.stream_reclaim import begin, release
+        lease = getattr(self, "rgb_reclaim_stream_exclusions", None) if stream_exclusions else None
+        if stream_exclusions:
+            if not self.openrgb_effect_active or getattr(self, "explicit_quit_requested", False):
+                if finished is not None: finished(False)
+                return
+            if not lease: lease = begin(self, stream_exclusions)
+        drain_pending = (stream_exclusions and self.openrgb_worker_frame_inflight
+                         and self.openrgb_worker_frame_sequence == self.rgb_reclaim_drain_sequence)
+        if (uses_sdk_helper and self.openrgb_worker_frame_inflight) or drain_pending:
             QTimer.singleShot(30, lambda: self.run_rgb_command_sequence(
                 commands, description, finished=finished, require_session=require_session,
                 preserved_scroll_position=preserved_scroll_position,
+                stream_exclusions=stream_exclusions,
             ))
             return
         scroll_position = preserved_scroll_position or self.capture_rgb_scroll_position()
         resume_stream = bool(self.openrgb_effect_assignments)
         self.rgb_manual_write_active = True
-        self.openrgb_effect_timer.stop()
+        if not lease:
+            self.openrgb_effect_timer.stop()
+        else:
+            self.log_message("RGB-ENE-WAKE: RAM isoliert · übrige SDK-Zonen und Effektphase laufen weiter")
         self.update_openrgb_control_state()
         self.footer_status.setText(f"RGB-Studio: {description} …")
         pending = list(commands)
@@ -18766,6 +19585,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
 
         def finish_sequence(ok: bool) -> None:
             self.rgb_manual_write_active = False
+            if lease is not None:
+                QTimer.singleShot(320, lambda: release(self, lease))
             if resume_stream and self.openrgb_effect_assignments:
                 self.openrgb_effect_timer.start()
             self.update_openrgb_control_state()
@@ -19010,10 +19831,20 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         return (
             config.effect_id, config.primary, config.secondary, config.brightness,
             config.speed, config.direction, selected, nzxt,
+            json.dumps(self.rgb_gpu_routes, sort_keys=True),
+            json.dumps(self.rgb_zone_configurations, sort_keys=True),
+            str(self.settings.value("rgb_studio/led_paths_v1", "{}")),
+            str(self.settings.value("rgb_studio/case_effect_direction_v1", "local")),
+            str(self.settings.value("rgb_studio/gpu_support_sync_v1", True)),
         )
 
     def start_openrgb_effect(self) -> None:
         """Coalesce rapid UI/profile requests before touching RGB hardware."""
+        if not self.feature_enabled("rgb") or not ohc_may_write(
+            "rgb", self.control_authority.get("rgb", "auto")
+        ):
+            self.footer_status.setText(self.tr_static("RGB-Zuständigkeit liegt nicht bei OHC"))
+            return
         signature = self._rgb_effect_request_signature()
         now = time.monotonic()
         if signature == self.rgb_last_effect_request_signature and now - self.rgb_last_effect_request_at < 1.2:
@@ -19036,6 +19867,27 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         if not request_id or not self.rgb_request_coordinator.is_current(request_id):
             return
         self.rgb_request_coordinator.begin(request_id, "RGB-Engine")
+        sleeping_ene = []
+        for device in self.selected_openrgb_devices():
+            if not self.is_ene_dram_device(device):
+                continue
+            stable_id = self.openrgb_stable_ids.get(
+                device.index, f"openrgb:index-{device.index}"
+            )
+            if stable_id not in self.ene_dram_cli_prime_done:
+                sleeping_ene.append(device)
+        if sleeping_ene:
+            self.log_message(
+                f"RGB-ENE-WAKE: manueller Designstart wartet auf Kaltstart-Reclaim · "
+                f"{len(sleeping_ene)} RAM-Riegel"
+            )
+
+            def start_after_reclaim() -> None:
+                if self.rgb_request_coordinator.is_current(request_id):
+                    self._start_openrgb_effect_now(request_id)
+
+            self.prime_ene_dram_cold_start(start_after_reclaim)
+            return
         self._start_openrgb_effect_now(request_id)
 
     def _start_openrgb_effect_now(self, request_id: int = 0) -> None:
@@ -19090,16 +19942,10 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 )
                 native_result_entries.append((f"NZXT · {channel}", nzxt_effect.title))
             for device in native_devices:
-                # The explicit GPU/hardware-mode selector is independent from
-                # OHC effects. Sapphire's reported External Control route is
-                # the intended bridge for synchronized external lighting and
-                # is preferred automatically when available. Otherwise an
-                # alphabetically selected Off/Dark entry could switch it off.
-                external_control = next(
-                    (item for item in device.modes if item.casefold() == "external control"),
-                    "",
+                mode = gpu_mode_for_effect(
+                    device, config.effect_id, self.openrgb_stable_ids,
+                    self.rgb_gpu_routes, direct_devices,
                 )
-                mode = external_control or best_native_mode_for_effect(device, config.effect_id)
                 if mode:
                     native_fallback_commands.append(
                         self.openrgb_client.native_mode_command(
@@ -19122,18 +19968,23 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         for device in direct_devices:
             stable_id = self.openrgb_stable_ids.get(device.index)
             if stable_id:
+                log_effect_plan(self, device, config)
                 self.openrgb_effect_assignments[stable_id] = config
         self.openrgb_effect_active = bool(self.openrgb_effect_assignments or nzxt_channels)
         # Every accepted editor/profile transfer starts from a defined phase.
         # Changing the speed therefore cannot reuse an old elapsed time and
         # jump to an apparently unrelated point in the animation.
         self.openrgb_effect_started = time.monotonic()
+        self.rgb_visual_elapsed = self.rgb_gpu_visual_elapsed = 0.0
+        self.rgb_last_wall_elapsed = self.rgb_gpu_last_wall_elapsed = None
         self.openrgb_effect_failures_by_device.clear()
         self.openrgb_effect_custom_initialized.clear()
         self.openrgb_worker_coalesced_frames = 0
         self.openrgb_worker_restart_failures = 0
         for stable_id in self.openrgb_effect_assignments:
             self.openrgb_worker_metrics.pop(stable_id, None)
+        if hasattr(self, "sdk_supervisor"):
+            self.sdk_supervisor.reset()
         if self.openrgb_effect_assignments:
             self.openrgb_effect_timer.start()
             self.send_openrgb_effect_frame()
@@ -19201,9 +20052,11 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             if self.openrgb_stable_ids.get(device.index)
         }
         stale: list[str] = []
-        elapsed = now - self.openrgb_effect_started
+        wall_elapsed = now - self.openrgb_effect_started
         assignments: list[tuple[str, RGBEffectConfig, OpenRGBDevice]] = []
         for stable_id, config in sorted(self.openrgb_effect_assignments.items()):
+            if stable_id in getattr(self, "rgb_reclaim_stream_exclusions", ()):
+                continue
             device = device_by_id.get(stable_id)
             if device is None or self.openrgb_device_conflict(device) or not device.supports_direct:
                 stale.append(stable_id)
@@ -19212,6 +20065,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         for stable_id in stale:
             self.openrgb_effect_assignments.pop(stable_id, None)
         if not assignments:
+            if getattr(self, "rgb_reclaim_stream_exclusions", ()):
+                return
             self.openrgb_effect_timer.stop()
             if not self.selected_nzxt_rgb_channels():
                 self.stop_openrgb_effect("Animation angehalten · keine steuerbaren Geräte mehr vorhanden")
@@ -19230,15 +20085,18 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             self.update_openrgb_performance_status()
             return
 
+        elapsed = self.update_rgb_gpu_visual_elapsed(wall_elapsed)
+        self.rgb_last_sent_elapsed = elapsed
         devices: list[dict[str, object]] = []
         try:
             for stable_id, config, device in assignments:
                 led_count, zone_sizes = self.openrgb_device_write_shape(device)
+                render_payload = self.rgb_worker_render_payload(stable_id, device, config, led_count, zone_sizes, elapsed) if hasattr(self, "rgb_worker_render_payload") else {"colors": list(self.render_gpu_controller_frame(stable_id, device, config, led_count, zone_sizes, elapsed))}
                 devices.append({
                     "key": stable_id,
                     "device": device.index,
                     "led_count": led_count,
-                    "colors": list(render_hex_frame(config, led_count, elapsed)),
+                    **render_payload,
                     "zone_sizes": list(zone_sizes) if zone_sizes is not None else None,
                     "prepare": stable_id not in self.openrgb_sdk_ready_devices,
                 })
@@ -19270,6 +20128,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.openrgb_worker_frame_started = now
 
     def start_openrgb_worker(self) -> None:
+        if hasattr(self, "sdk_supervisor") and not self.sdk_supervisor.allowed():
+            return
         if self.openrgb_effect_process.state() != QProcess.ProcessState.NotRunning:
             return
         command = [
@@ -19281,6 +20141,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             "--port",
             str(self.openrgb_client.port),
         ]
+        command += self.openrgb_client.sdk_protocol_arguments
         environment = QProcessEnvironment.systemEnvironment()
         environment.insert("PYTHONUNBUFFERED", "1")
         self.openrgb_effect_process.setProcessEnvironment(environment)
@@ -19289,6 +20150,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.openrgb_worker_ready = False
         self.openrgb_worker_stdout_buffer = ""
         self.openrgb_worker_stderr_buffer = ""
+        if hasattr(self, "sdk_supervisor"):
+            self.sdk_supervisor.launching()
         self.openrgb_effect_process.start()
 
     def on_openrgb_worker_started(self) -> None:
@@ -19305,6 +20168,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 message = json.loads(line)
             except (TypeError, ValueError, json.JSONDecodeError):
                 self.log_message("RGB-STUDIO: SDK-Worker lieferte eine ungültige lokale Antwort")
+                if hasattr(self, 'sdk_supervisor'):
+                    self.sdk_supervisor.fail('protocol-json: invalid local SDK reply')
                 continue
             if isinstance(message, dict):
                 self.handle_openrgb_worker_message(message)
@@ -19314,6 +20179,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.openrgb_worker_stderr_buffer = (self.openrgb_worker_stderr_buffer + chunk)[-4000:]
 
     def handle_openrgb_worker_message(self, message: dict[str, object]) -> None:
+        if getattr(self, "openrgb_worker_draining_exit", False):
+            return
         message_type = str(message.get("type", ""))
         if message_type == "ready":
             self.openrgb_worker_ready = True
@@ -19337,6 +20204,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 self.log_message(f"RGB-STUDIO: SDK-Worker-Frame abgelehnt · {detail[:220]}")
             return
         if message_type != "frame":
+            return
+        if hasattr(self, 'sdk_supervisor') and not self.sdk_supervisor.accept_frame(message):
             return
         self.openrgb_worker_frame_inflight = False
         try:
@@ -19362,11 +20231,22 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
             )
             if bool(raw_result.get("ok")):
                 frame_had_success = True
+                write_path = str(raw_result.get("write_path", ""))[:24]
+                if write_path in {"device", "device+zones", "zones"} and metrics.get("write_path") != write_path:
+                    metrics["write_path"] = write_path
+                    role = self.rgb_packet_role(stable_id)
+                    label = {
+                        "gpu": "Grafikkarte",
+                        "support": "Grafikkartenhalterung",
+                        "ram": "Arbeitsspeicher",
+                    }.get(role, "anderes Gerät")
+                    self.log_message(f"RGB-STUDIO: SDK-Schreibweg · Komponente={label} · Gerät={stable_id} · Modus={write_path} · Antwort=Socket, keine optische Bestätigung")
                 success_times = metrics.setdefault("success_times", [])
                 if isinstance(success_times, list):
                     success_times.append(completed_at)
                     success_times[:] = [stamp for stamp in success_times[-200:] if completed_at - stamp <= 5.0]
                 metrics["last_success"] = completed_at
+                metrics["last_frame_id"] = completed_frame_id
                 metrics["last_duration_ms"] = max(0.0, float(raw_result.get("duration_ms", duration_ms)))
                 metrics["errors"] = 0
                 self.openrgb_effect_failures_by_device[stable_id] = 0
@@ -19382,6 +20262,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         if completed_snapshot is not None and frame_had_success and not frame_had_failure:
             self.acknowledge_rgb_design_part("direct", completed_snapshot)
         self.openrgb_worker_restart_failures = 0
+        if frame_had_success and hasattr(self, "sdk_supervisor"):
+            self.sdk_supervisor.progress()
         self.update_openrgb_performance_status(duration_ms)
         if self.openrgb_effect_active and self.openrgb_worker_frame_pending and not self.rgb_manual_write_active:
             QTimer.singleShot(0, self.send_openrgb_effect_frame)
@@ -19489,23 +20371,20 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         )
 
     def on_openrgb_worker_finished(self, exit_code: int, _status) -> None:
-        self.read_openrgb_worker_stdout()
-        self.read_openrgb_worker_stderr()
+        self.openrgb_worker_draining_exit = True
+        try:
+            self.read_openrgb_worker_stdout()
+            self.read_openrgb_worker_stderr()
+        finally:
+            self.openrgb_worker_draining_exit = False
         self.openrgb_worker_ready = False
         self.openrgb_worker_frame_inflight = False
         self.openrgb_worker_frame_snapshots.clear()
         if self.rgb_manual_write_active or not self.openrgb_effect_active:
             return
         self.openrgb_sdk_ready_devices.difference_update(self.openrgb_effect_assignments)
-        self.openrgb_worker_restart_failures += 1
-        detail = self.openrgb_worker_stderr_buffer.strip() or f"Exit-Code {exit_code}"
-        if self.openrgb_worker_restart_failures >= 3:
-            self.stop_openrgb_effect(f"Animation angehalten · SDK-Worker dreimal beendet: {detail[:160]}")
-            return
-        self.openrgb_worker_frame_pending = True
-        self.log_message(
-            f"RGB-STUDIO: SDK-Worker unerwartet beendet · sicherer Neuaufbau {self.openrgb_worker_restart_failures}/3"
-        )
+        if hasattr(self, "sdk_supervisor"):
+            self.sdk_supervisor.finished(exit_code, _status)
 
     def stop_selected_rgb_animations(self) -> None:
         # Button-state and group-layout updates can change the scroll area's
@@ -19537,9 +20416,13 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         )
 
     def stop_openrgb_effect(self, status: str = "Animation angehalten · der letzte Hardwarezustand bleibt erhalten") -> None:
+        self.rgb_reclaim_stream_exclusions = frozenset()
+        self.ene_dram_post_start_preserve_stream = False
         self.cancel_ene_dram_post_start_retries()
         was_active = self.openrgb_effect_active
         self.openrgb_effect_active = False
+        if hasattr(self, "sdk_supervisor"):
+            self.sdk_supervisor.stop()
         self.openrgb_effect_assignments.clear()
         self.openrgb_effect_failures_by_device.clear()
         self.openrgb_effect_custom_initialized.clear()
@@ -19612,6 +20495,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                 pass
 
         self.rgb_selected_devices.clear()
+        set_individual(self, True)
         self.openrgb_effect_assignments.clear()
         self.rgb_group_effect_configs.clear()
         self.rgb_engine_disabled_by_reset = True
@@ -19722,6 +20606,16 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
 
         self.backend.run_async([str(script), "--install-openrgb"], callback=done, timeout=900)
 
+    def install_optional_backend(self, backend_name: str, after=None) -> None:
+        if backend_name == "openrgb":
+            self.install_openrgb_dependencies()
+        elif backend_name == "lact":
+            from modules.gpu_control.v1_0.installer import install_lact
+            install_lact(self, after)
+        elif backend_name == "trcc":
+            from modules.trcc_backend.v1_0.installer import install_trcc
+            install_trcc(self, after)
+
     # ---------- NZXT RGB ----------
     def update_rgb_controls(self) -> None:
         mode_key = str(self.rgb_mode.currentData() or "Aus")
@@ -19759,6 +20653,11 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.apply_openrgb_static()
 
     def apply_rgb(self) -> None:
+        if not self.feature_enabled("rgb") or not ohc_may_write(
+            "rgb", self.control_authority.get("rgb", "auto")
+        ):
+            self.footer_status.setText(self.tr_static("RGB-Zuständigkeit liegt nicht bei OHC"))
+            return
         if not self.rgb_session_lock.acquire():
             self.show_error(
                 "Eine andere Open-Hardware-Control-Instanz besitzt bereits die RGB-Steuerung."
@@ -19926,6 +20825,52 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         if filename:
             self.load_lcd_file(Path(filename))
 
+    def refresh_kraken_lcd_library(self) -> None:
+        if not hasattr(self, "kraken_lcd_library_combo"):
+            return
+        previous = str(self.kraken_lcd_library_combo.currentData() or "")
+        self.kraken_lcd_library_combo.clear()
+        compatible = 0
+        for path in library_media_items(self.kraken_lcd_library_state):
+            if not path.is_file() or path.suffix.casefold() not in {
+                ".png", ".jpg", ".jpeg", ".bmp", ".webp", ".gif",
+            }:
+                continue
+            label = friendly_media_name(path, self.kraken_lcd_library_state.aliases.get(str(path), ""))
+            self.kraken_lcd_library_combo.addItem(label, str(path))
+            compatible += 1
+        if not compatible:
+            self.kraken_lcd_library_combo.addItem("Noch keine Kraken-kompatible Datei importiert", "")
+        index = self.kraken_lcd_library_combo.findData(previous)
+        self.kraken_lcd_library_combo.setCurrentIndex(max(0, index))
+        self.kraken_lcd_library_load_button.setEnabled(bool(compatible))
+
+    def open_kraken_lcd_library_manager(self) -> None:
+        dialog = DesignLibraryDialog(self.kraken_lcd_library_state, self.tr_static, self)
+        if not dialog.exec():
+            return
+        self.kraken_lcd_library_state = dialog.state()
+        self.settings.setValue(
+            "lcd/design_library_v1", save_library_state(self.kraken_lcd_library_state)
+        )
+        self.settings.sync()
+        self.refresh_kraken_lcd_library()
+        self.log_message("LCD-MANAGER: eigene Ordner und Einzeldateien aktualisiert")
+
+    def load_selected_kraken_lcd_library_item(self) -> None:
+        raw_path = str(self.kraken_lcd_library_combo.currentData() or "")
+        if not raw_path:
+            return
+        path = Path(raw_path)
+        if not path.is_file():
+            self.show_error("Die ausgewählte LCD-Datei ist nicht mehr vorhanden.")
+            self.refresh_kraken_lcd_library()
+            return
+        self.load_lcd_file(path)
+        mode = "animated" if path.suffix.casefold() == ".gif" else "static"
+        index = self.lcd_content_mode_combo.findData(mode)
+        self.lcd_content_mode_combo.setCurrentIndex(max(0, index))
+
     def load_lcd_file(self, path: Path, quiet: bool = False) -> None:
         if not path.exists():
             if not quiet:
@@ -20079,6 +21024,11 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         )
 
     def show_liquid_screen(self) -> None:
+        if self.is_thermalright_cooling():
+            studio = getattr(self, "thermalright_display_studio", None)
+            if studio is not None:
+                studio.restore_firmware_display()
+            return
         if self.is_gif_stream_running():
             self.stop_gif_stream(lambda: self.show_liquid_screen())
             return
@@ -20281,7 +21231,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         movie.setCacheMode(QMovie.CacheMode.CacheNone)
         movie.frameChanged.connect(lambda _frame: self._set_lcd_preview_pixmap(movie.currentPixmap()))
         self.lcd_preview_movie = movie
-        movie.start()
+        if active_page_visible(self, self.tabs, self.lcd_scroll_page):
+            movie.start()
 
     def update_lcd_sticky_preview_visibility(self) -> None:
         sticky = getattr(self, "lcd_sticky_preview", None)
@@ -20649,7 +21600,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.hardware_animation_movie = movie
         self.preview.clear()
         self.preview.setMovie(movie)
-        movie.start()
+        if active_page_visible(self, self.tabs, self.lcd_scroll_page):
+            movie.start()
         self.file_name_label.setText(
             f"{self.tr_static('Animierte Hardwaredaten')} · {self.hardware_animation_design_combo.currentText()}"
         )
@@ -20799,7 +21751,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.hardware_animation_movie = movie
         self.preview.clear()
         self.preview.setMovie(movie)
-        movie.start()
+        if active_page_visible(self, self.tabs, self.lcd_scroll_page):
+            movie.start()
         background_name = self.selected_lcd_file.name if self.selected_lcd_file else "—"
         self.file_name_label.setText(
             f"LCD-Ebenen · {background_name} + {self.lcd_layer_design_combo.currentText()}"
@@ -21293,7 +22246,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.gif_loop_warning_label.hide()
         self.gif_loop_warning_label.clear()
         self.footer_status.setText("GIF-Animation wird vorbereitet …")
-        self.gif_process.setProgram(sys.executable)
+        self.gif_process.setProgram(resolve_liquidctl_python(sys.executable))
         self.gif_process.setArguments(args)
         self.gif_process.setWorkingDirectory(str(helper.parent))
         self.gif_process.start()
@@ -22062,19 +23015,7 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         self.autostart_window_surface_suppressed = False
 
     def apply_initial_window_state(self) -> None:
-        if not self.should_start_minimized_from_autostart():
-            self.release_autostart_window_surface()
-            self.position_window_on_preferred_screen("Programmstart")
-            self.show()
-            return
-        if QSystemTrayIcon.isSystemTrayAvailable():
-            self.hide()
-            self.log_message("AUTOSTART: Hauptfenster bleibt minimiert/im Tray · Einstellungen werden im Hintergrund angewendet.")
-        else:
-            self.release_autostart_window_surface()
-            self.position_window_on_preferred_screen("minimierter Programmstart ohne Infobereich")
-            self.showMinimized()
-            self.log_message("AUTOSTART: Kein Tray verfügbar · Hauptfenster minimiert gestartet.")
+        apply_initial_window_presentation(self, QSystemTrayIcon.isSystemTrayAvailable())
 
     # ---------- app settings ----------
     def update_status_interval(self) -> None:
@@ -22104,6 +23045,8 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
                     f"Exec={exec_line}\n"
                     f"Icon={icon_line}\n"
                     "Terminal=false\n"
+                    "StartupNotify=false\n"
+                    "X-KDE-StartupNotify=false\n"
                     "X-GNOME-Autostart-enabled=true\n",
                     encoding="utf-8",
                 )
@@ -22227,10 +23170,18 @@ class KrakenControl(RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLa
         QMessageBox.critical(self, APP_NAME, message)
 
 
+    def report_profile_apply_error(self, name: str, detail: str, *, component: str = "Profil") -> None:
+        """Keep background/profile restoration errors inside OHC, never modal."""
+        message = self.tr_static(
+            "{component} aus Profil „{name}“ konnte nicht vollständig angewendet werden: {detail}"
+        ).format(component=self.tr_static(component), name=name, detail=detail)
+        self.log_message("PROFIL-FEHLER: " + message)
+        self.footer_status.setText(message)
+
+
 def install_session_signal_handlers(window: KrakenControl) -> None:
     """Forward common Unix session-stop signals into Qt's event loop."""
     def request_shutdown(_signum, _frame) -> None:  # noqa: ANN001
-        window.mark_clean_shutdown()
         QTimer.singleShot(0, window.request_session_shutdown)
 
     for signal_name in ("SIGTERM", "SIGINT", "SIGHUP", "SIGQUIT"):
@@ -22242,22 +23193,33 @@ def install_session_signal_handlers(window: KrakenControl) -> None:
 def run_application(argv: list[str] | None = None) -> int:
     """Start exactly one hardware-owning OHC process."""
     arguments = list(sys.argv if argv is None else argv)
-    instance_lock = ApplicationInstanceLock(application_state_directory() / "application-instance.lock")
+    suppress_autostart_startup_feedback(arguments)
+    state_directory = application_state_directory()
+    activation_endpoint = state_directory / "application-activate.sock"
+    instance_lock = ApplicationInstanceLock(state_directory / "application-instance.lock")
     if not instance_lock.acquire():
-        app = QApplication(arguments)
-        app.setApplicationName(APP_NAME)
-        app.setOrganizationName(ORG_NAME)
-        diagnostics = install_window_process_diagnostics(app)
         if instance_lock.last_error == "busy":
             owner = f" (Prozess {instance_lock.owner_pid})" if instance_lock.owner_pid else ""
-            append_startup_event(f"ZWEITSTART BLOCKIERT: laufende Instanz{owner}")
+            if request_existing_instance(activation_endpoint):
+                append_startup_event(f"ZWEITSTART: laufende Instanz{owner} wurde geöffnet")
+                return 0
+            app = QApplication(arguments)
+            app.setApplicationName(APP_NAME)
+            app.setOrganizationName(ORG_NAME)
+            diagnostics = install_window_process_diagnostics(app)
+            append_startup_event(f"ZWEITSTART: laufende Instanz{owner} konnte nicht aktiviert werden")
             QMessageBox.information(
                 None,
                 DISPLAY_NAME,
                 "Open Hardware Control läuft bereits"
-                f"{owner}.\n\nDer zweite Start wurde vor jedem Hardwarezugriff beendet.",
+                f"{owner}.\n\nDas vorhandene Fenster konnte nicht automatisch geöffnet werden. "
+                "Der zweite Start wurde vor jedem Hardwarezugriff beendet.",
             )
             return 0
+        app = QApplication(arguments)
+        app.setApplicationName(APP_NAME)
+        app.setOrganizationName(ORG_NAME)
+        diagnostics = install_window_process_diagnostics(app)
         append_startup_event(f"START BLOCKIERT: Einzelinstanz-Sperre fehlgeschlagen · {instance_lock.last_error}")
         QMessageBox.critical(
             None,
@@ -22270,6 +23232,21 @@ def run_application(argv: list[str] | None = None) -> int:
 
     try:
         install_application_exception_logging()
+        from modules.application_shutdown.v1_1.diagnostics import latest_shutdown_report
+        from modules.application_shutdown.v1_1.journal import observe_lifetime
+        from modules.crash_recovery.v1_0 import recover_crash_context
+        previous_shutdown = latest_shutdown_report()
+        unexpected_previous_exit = previous_shutdown.status in {
+            "unexpected-exit", "cleanup-failed", "ended-without-qt-confirmation",
+            "stuck", "incomplete",
+        }
+        crash_state_root = application_state_directory()
+        recovered_crash_context = recover_crash_context(
+            crash_state_root / "crash-context-current.jsonl",
+            crash_state_root / "last-crash-context.log",
+            unexpected_exit=unexpected_previous_exit,
+        )
+        observe_lifetime()
         app = QApplication(arguments)
         app.setApplicationName(APP_NAME)
         app.setOrganizationName(ORG_NAME)
@@ -22277,7 +23254,26 @@ def run_application(argv: list[str] | None = None) -> int:
         app.setWindowIcon(application_icon(Path(__file__).resolve().parent))
         app.setQuitOnLastWindowClosed(True)
         diagnostics = install_window_process_diagnostics(app)
+        activation_server = ApplicationActivationServer(activation_endpoint, app)
+        activation_available = activation_server.start()
         window = KrakenControl()
+        if unexpected_previous_exit:
+            detail = previous_shutdown.reason or "unbekannte Ursache"
+            phase = previous_shutdown.phase or "—"
+            window.log_message(window.tr_static(
+                "VORHERIGES BEENDEN UNVOLLSTÄNDIG: Status={status} · Phase={phase} · Ursache={reason}. Details: shutdown.jsonl"
+            ).format(status=previous_shutdown.status, phase=phase, reason=detail))
+            window.restore_previous_crash_context(
+                recovered_crash_context,
+                crash_state_root / "last-crash-context.log",
+            )
+        if activation_available:
+            activation_server.activation_requested.connect(window.show_from_tray)
+            app.aboutToQuit.connect(activation_server.stop)
+        else:
+            append_startup_event(
+                "EINZELINSTANZ: Fensteraktivierungskanal nicht verfügbar · Dateisperre bleibt aktiv"
+            )
         diagnostics.set_ui_sink(window.log_message)
         # Session managers do not all terminate GUI applications with the same
         # Unix signal.  aboutToQuit is the final Qt-side fallback; the orderly
@@ -22287,7 +23283,10 @@ def run_application(argv: list[str] | None = None) -> int:
         app.aboutToQuit.connect(window.backend.shutdown)
         install_session_signal_handlers(window)
         window.apply_initial_window_state()
+        from modules.application_shutdown.v1_1.journal import record
+        app.aboutToQuit.connect(lambda: record("qt-about-to-quit"))
         exit_code = app.exec()
+        record("qt-loop-returned", exit_code=int(exit_code))
         append_startup_event(f"ENDE: normaler Programmabschluss · Exit-Code {exit_code}")
         return int(exit_code)
     finally:
@@ -22295,4 +23294,5 @@ def run_application(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(run_application())
+    helper_exit = run_frozen_helper(sys.argv)
+    sys.exit(run_application() if helper_exit is None else helper_exit)

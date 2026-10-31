@@ -1,46 +1,82 @@
 # Roadmap
 
-Open Hardware Control is developed incrementally. Features are tested before they are treated as stable.
+Open Hardware Control is developed incrementally. Features are tested before they
+are treated as stable. This file contains only active work; completed planning
+records remain in release notes, the changelog and `NEXT_VERSION_NOTES.md`.
 
-## Next internal versions
+## Current work — 3.4.29 INTERN
 
-### 3.4.27 INTERN — consistent application design
+### Closure audit for 3.4.29.151–3.4.29.157
 
-- Completed: apply the current dashboard design language consistently to RGB Studio, LCD, Profiles, Log, Corsair/OpenLinkHub, Settings, About and Help.
-- Completed: introduce shared blue-tinted module headers, status panels, section cards, editors and tables instead of maintaining a separate visual structure on every page.
-- Preserve the existing page behavior, navigation anchors and hardware ownership boundaries during the visual migration.
-- Clarify CoolerControl ownership messages: distinguish the closed graphical client from the active `coolercontrold` background service and explain whether the service is running or starts automatically.
-- Let the user explicitly stop CoolerControl for the current session or permanently disable and later re-enable its system-service autostart through a confirmed Polkit action.
-- Completed ahead of the cooling pass: mark Kraken quick profiles only after both pump and fan writes succeed and clear stale selection after individual control.
+| Version | Repository implementation | Remaining evidence |
+|---|---|---|
+| `.151` | Mainboard driver/MOK workflow, separated Ubuntu update/install path and bounded fan grant are present with regressions. | No repository implementation item remains. |
+| `.152` | CPU defaults, complete PC PWM topology, profile persistence and module visibility are present with regressions. | No repository implementation item remains. |
+| `.153` | Deleted-Qt-object guards, Snapshot Manager shutdown handling and module cards are present with regressions. | No repository implementation item remains. |
+| `.154` | Detailed OpenRGB inventory, external GPU routing, narrow RAM metadata helper and package payload checks are present with regressions. | Optical output was not inferred from protocol success. |
+| `.155` | Startup-policy separation, occupied-display ownership handling and safe package-directory modes are present with separate Ubuntu/Fedora fixtures. | Repeat on real Fedora hardware. |
+| `.156` | Editable LED drafts, spatial direction fixes and animated fan-ring previews are present with regressions. | Confirm brightness, direction and LED order optically. |
+| `.157` | Programs inventory/profiles, guarded GitHub download, exact downloaded-AppImage selection and bounded own-daemon Levita recovery are present with regressions. | Release-gate/package evidence is recorded separately; Fedora and optical checks remain owner/hardware work. |
 
-### 3.4.28 INTERN — cooling interaction
+An item is not reopened merely because an older release note says a package or
+installation was pending at that historical point; later status evidence records
+the completed builds and Ubuntu installation. Real-hardware/optical evidence stays
+open until it is actually observed.
 
-- Completed: show all chassis-fan cards collapsed by default.
-- Completed: give every card a clear `Kurve & Details bearbeiten` action and expand only the selected card.
-- Completed: keep the embedded curve editor associated with that selected fan and allow the currently open card to be collapsed again.
-- Add regression tests for successful/failed Kraken profile writes, initial collapsed state and single-card expansion.
+### Actionable in the repository
 
-### 3.4.29 INTERN — UI finish and reliability
+- Measure first: keep UI-event latency, worker duration, cache I/O and display
+  frame gaps separate. Add a regression or reproducible measurement before
+  changing a hot path and record the result afterwards.
+- Keep the Qt main thread free of discovery, decoding, filesystem scans, network
+  access and package-manager calls. Work must be bounded, cancellable and must
+  not outlive its page or application owner.
+- Continue splitting large pages into versioned feature modules with pure,
+  directly testable policy/render helpers. Preserve the public Python interfaces
+  and Fedora/Ubuntu behavior while moving one responsibility at a time.
+- Finish keyboard navigation, focus-state, scaling and profile-migration checks
+  for the migrated pages; move new visible text into all four language catalogs.
+- Keep the **Programs** module bounded after its installed-application inventory,
+  saved profiles, guarded GitHub release/source download, confirmed Flatpak/
+  Snap/AppImage actions, persisted source association and exact downloaded-
+  AppImage selection. System packages remain disabled without a confirmed
+  distribution source.
 
-- Complete keyboard navigation, focus-state and scaling checks for the migrated pages.
-- Review translations and move further user-visible strings toward dedicated translation resources.
-- Add visual/static regression coverage for the shared page components and cooling states.
-- Broaden real-hardware testing without claiming untested devices as compatible.
-- Improve profile validation and migration handling.
+### Requires owner or real-hardware confirmation
+
+- Confirm case RGB brightness, direction and physical LED order optically.
+- Repeat the current hardware and ownership checks on real Fedora hardware;
+  Ubuntu results and Fedora fixtures are not a substitute.
+- Broaden GPU, fan, display and RGB compatibility only from diagnostic reports
+  or tested hardware. Do not advertise inferred compatibility.
 
 ## Packaging
 
-After the first source release has proven stable:
+Fedora/Nobara RPM and Debian/Ubuntu DEB remain separate, equally supported
+paths. Further candidates are:
 
-- Fedora/Nobara RPM packaging;
-- Debian/Ubuntu DEB packaging;
 - Arch/AUR PKGBUILD;
-- evaluate Flatpak hardware-access constraints before a Flathub submission.
+- Flatpak only after its hardware-access and privilege constraints are proven;
+- AppImage only with an explicit hardware-helper and update model.
+
+## Performance and implementation language
+
+The application remains Python/PySide6. A complete Rust rewrite would discard
+mature UI, hardware, packaging and regression behavior without proving a user
+benefit. Rust is an optional implementation detail for an isolated, pure CPU
+hotspot only when a profile demonstrates that Python is the bottleneck. Such a
+component needs the existing Python API, a safe Python fallback, identical test
+fixtures and separate package support. Hardware writes, privilege boundaries and
+Qt ownership are not moved merely for language uniformity.
 
 ## Longer term
 
 - More Kraken models based on diagnostic reports and real hardware testing.
-- Optional CPU performance controls only as a separately reviewed future module: begin read-only, use documented AMD/Linux interfaces, retain firmware thermal limits and never mix clock/voltage writes into the fan helper. PBO, power limits, frequency caps and undervolting need separate capability detection, rollback, suspend/resume and crash-safety tests before any write path.
-- Optional shared launcher/control-center concept for separate Frelidon hardware tools.
+- Optional CPU performance controls as a separately reviewed future module:
+  begin read-only, use documented AMD/Linux interfaces, retain firmware thermal
+  limits and never mix clock/voltage writes into the fan helper. PBO, power
+  limits, frequency caps and undervolting need separate capability detection,
+  rollback, suspend/resume and crash-safety tests before any write path.
+- Optional shared launcher/control-center concept for separate Frelidon tools.
 
 This roadmap is not a promise of dates or compatibility.

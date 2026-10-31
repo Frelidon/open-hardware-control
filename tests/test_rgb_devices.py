@@ -97,15 +97,19 @@ class RGBDeviceInventoryTests(unittest.TestCase):
         self.assertIsNone(configured_zone_sizes(("Unknown",), clean["openrgb:hub"]))
 
     def test_interstellar_v2_profiles_use_24_leds_for_normal_and_reverse(self):
-        self.assertEqual(len(RGB_FAN_MODELS), 2)
-        self.assertEqual({model.leds_per_fan for model in RGB_FAN_MODELS}, {24})
+        self.assertEqual(len(RGB_FAN_MODELS), 4)
+        legacy = [model for model in RGB_FAN_MODELS if model.model_id.startswith("tzmrit-")]
+        self.assertEqual(len(legacy), 2)
+        self.assertEqual({model.leds_per_fan for model in legacy}, {24})
+        self.assertEqual(rgb_fan_model("frelidon-interstellar-v2-8").leds_per_fan, 8)
+        self.assertIn("B0CN39T7QN", rgb_fan_model("frelidon-interstellar-v2-8").title)
         self.assertEqual(rgb_fan_model("tzmrit-interstellar-v2-normal").airflow, "normal")
         self.assertEqual(rgb_fan_model("tzmrit-interstellar-v2-reverse").airflow, "reverse")
         self.assertIn("ungewöhnlich hoch", fan_zone_plausibility_warning(3, 90))
         self.assertEqual(fan_zone_plausibility_warning(3, 24), "")
         self.assertEqual(
             flori_component_zone_defaults(("Channel A1", "Channel B6", "Channel B7")),
-            {"Channel B6": {"units": 1, "leds_per_unit": 24}},
+            {"Channel B6": {"units": 1, "leds_per_unit": 12}},
         )
         empty: dict[str, dict[str, int]] = {}
         self.assertFalse(migrate_flori_component_zones(("Channel B6",), empty))
@@ -116,7 +120,7 @@ class RGBDeviceInventoryTests(unittest.TestCase):
         }
         self.assertTrue(migrate_flori_component_zones(("Channel A1", "Channel B6"), configured))
         self.assertEqual(configured["Channel A1"], {"units": 2, "leds_per_unit": 24})
-        self.assertEqual(configured["Channel B6"], {"units": 1, "leds_per_unit": 24})
+        self.assertEqual(configured["Channel B6"], {"units": 1, "leds_per_unit": 12})
 
     def test_session_lock_blocks_second_writer(self):
         with tempfile.TemporaryDirectory() as temp_name:
@@ -155,7 +159,7 @@ class RGBDeviceInventoryTests(unittest.TestCase):
         radiator = next(slot for slot in slots if slot.slot_id == "radiator-top")
         self.assertEqual(radiator.device_ids, ("nzxt:led2", "nzxt:led3", "nzxt:led1"))
         support = next(slot for slot in slots if slot.slot_id == "gpu-support")
-        self.assertIn("24 LEDs", support.name)
+        self.assertIn("12 LEDs", support.name)
         self.assertIn("B6", support.connection)
         _thermalright_groups, thermalright_slots = flori_rgb_layout_profile("thermalright")
         thermalright_radiator = next(slot for slot in thermalright_slots if slot.slot_id == "radiator-top")
@@ -184,6 +188,9 @@ class RGBDeviceInventoryTests(unittest.TestCase):
                 "y": slot.y,
                 "airflow": slot.airflow,
                 "size_mm": slot.size_mm,
+                "scale": slot.scale,
+                "visual_kind": slot.visual_kind,
+                "gpu_visual": slot.gpu_visual,
             }
             for slot in slots
         ], groups)

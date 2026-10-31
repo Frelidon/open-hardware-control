@@ -7,6 +7,7 @@ import sys
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QProcess, QProcessEnvironment, Qt
+from PySide6.QtGui import QWindow
 from PySide6.QtWidgets import QApplication, QComboBox, QDialog, QFrame, QLabel, QPushButton, QVBoxLayout
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -16,8 +17,22 @@ from window_diagnostics import (  # noqa: E402
     WindowProcessDiagnostics,
     is_expected_qt_auxiliary_widget,
     process_start_summary,
+    native_window_summary,
     widget_window_summary,
 )
+
+
+def test_native_window_summary_never_creates_blank_log_lines() -> None:
+    app = QApplication.instance() or QApplication(["window-diagnostics-test"])
+    window = QWindow()
+    window.setTitle("Native Testfläche")
+    window.resize(320, 180)
+    summary = native_window_summary(window, "SurfaceCreated")
+    assert summary.startswith("NATIVES FENSTER SurfaceCreated")
+    assert "Native Testfläche" in summary
+    assert "320x180" in summary
+    window.deleteLater()
+    app.processEvents()
 
 
 def test_process_summary_identifies_helper_without_recording_secret_values() -> None:
@@ -160,6 +175,25 @@ def test_routine_tooltips_and_combo_popups_are_not_logged() -> None:
     app.processEvents()
 
 
+def test_startup_snapshot_summarizes_hidden_combo_surfaces() -> None:
+    app = QApplication.instance() or QApplication(["window-diagnostics-test"])
+    persistent: list[str] = []
+    diagnostics = WindowProcessDiagnostics(app, persistent_sink=persistent.append)
+    combo = QComboBox()
+    popup = QFrame(combo, Qt.WindowType.Popup)
+
+    diagnostics.snapshot_top_level_windows("TEST")
+
+    assert not any("FENSTER TEST" in line and "Eltern=QComboBox" in line for line in persistent)
+    assert any("FENSTERSNAPSHOT TEST" in line and "Qt-Hilfsfenster übersprungen=" in line for line in persistent)
+
+    app.removeEventFilter(diagnostics)
+    popup.deleteLater()
+    combo.deleteLater()
+    diagnostics.deleteLater()
+    app.processEvents()
+
+
 def test_global_filter_records_qprocess_program_and_headless_platform() -> None:
     app = QApplication.instance() or QApplication(["window-diagnostics-test"])
     persistent: list[str] = []
@@ -181,6 +215,26 @@ def test_global_filter_records_qprocess_program_and_headless_platform() -> None:
     )
     app.removeEventFilter(diagnostics)
     process.deleteLater()
+    diagnostics.deleteLater()
+    app.processEvents()
+
+
+def test_repeated_identical_process_starts_are_batched_without_losing_the_first(monkeypatch) -> None:
+    app = QApplication.instance() or QApplication(["window-diagnostics-test"])
+    persistent: list[str] = []
+    diagnostics = WindowProcessDiagnostics(app, persistent_sink=persistent.append)
+    clock = iter((10.0, 20.0, 311.0))
+    monkeypatch.setattr("window_diagnostics.time.monotonic", lambda: next(clock))
+
+    diagnostics._record_process("PROZESS START · Programm=helper")
+    diagnostics._record_process("PROZESS START · Programm=helper")
+    diagnostics._record_process("PROZESS START · Programm=helper")
+
+    lines = [line for line in persistent if "Programm=helper" in line]
+    assert len(lines) == 2
+    assert "Wiederholung" not in lines[0]
+    assert "zuvor 1 schnelle Wiederholung(en) zusammengefasst" in lines[1]
+    app.removeEventFilter(diagnostics)
     diagnostics.deleteLater()
     app.processEvents()
 

@@ -27,7 +27,7 @@ def _fake_release(project: Path, version: str) -> Path:
     )
     for name in names:
         (dist / name).write_bytes(f"artifact {version} {name}".encode())
-    notes = project / "docs" / f"RELEASE_NOTES_v{version}.md"
+    notes = project / "docs" / "releases" / f"RELEASE_NOTES_v{version}.md"
     notes.parent.mkdir(parents=True, exist_ok=True)
     notes.write_text(f"# {version}\n", encoding="utf-8")
     return dist

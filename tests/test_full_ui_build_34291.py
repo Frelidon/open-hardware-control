@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import os
+import atexit
 import json
 from pathlib import Path
 import sys
@@ -22,11 +23,21 @@ os.environ["OHC_WALLPAPER_STEAM_LIBRARY"] = str(temporary_root / "Steam")
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from PySide6.QtCore import QSettings, QSize, Qt  # noqa: E402
-from PySide6.QtGui import QColor, QImage, QPalette, QPixmap  # noqa: E402
-from PySide6.QtWidgets import QApplication, QLabel, QGraphicsView, QSizePolicy  # noqa: E402
+from PySide6.QtCore import QCoreApplication, QEvent, QProcess, QSettings, QSize, Qt, QTimer  # noqa: E402
+from PySide6.QtGui import QAction, QColor, QImage, QPalette, QPixmap  # noqa: E402
+from PySide6.QtWidgets import (  # noqa: E402
+    QAbstractButton, QApplication, QComboBox, QGraphicsView, QGroupBox,
+    QLabel, QLineEdit, QMenu, QSizePolicy, QTableWidget,
+)
 import kraken_control as application  # noqa: E402
-from modules.wallpaper_engine.v1_2.library import WallpaperEntry  # noqa: E402
+from cooling_ownership import CoolingOwnerStatus  # noqa: E402
+from modules.localization.v1_0 import de, en, es, fr  # noqa: E402
+from modules.localization.v1_0.policy import (  # noqa: E402
+    interactive_text_needs_translation, translated_control_text,
+)
+from modules.wallpaper_engine.v1_3.library import WallpaperEntry  # noqa: E402
+from modules.application_shutdown.v1_1.qt_processes import stop_remaining  # noqa: E402
+from shiboken6 import isValid  # noqa: E402
 
 # A synthetic missing dependency prevents initialize_devices() and all deferred
 # hardware discovery. The test covers the complete synchronous UI construction
@@ -34,6 +45,42 @@ from modules.wallpaper_engine.v1_2.library import WallpaperEntry  # noqa: E402
 application.KrakenControl.check_dependencies = lambda self: ["ui-build-no-hardware"]
 
 qt_app = QApplication.instance() or QApplication([])
+
+
+def dispose_window(host: application.KrakenControl) -> None:
+    """Reap this test window before the shared Qt application runs other tests."""
+    host.settings.setValue("setup/completed", True)
+    host.settings.setValue("dependencies/desktop_design_offer_330", True)
+    studio = host.thermalright_display_studio
+    # The test has exercised startup intent but must not let its delayed retry
+    # outlive the window.  Quiesce UI-only owners without firmware restoration.
+    studio.shutdown_started = True
+    studio.startup_apply_active = False
+    studio.thumbnail_shutting_down = True
+    studio.media_preview.shutdown()
+    studio.lcd_runtime.shutdown()
+    studio.game_activity.shutdown()
+    studio.gallery_preparation.shutdown()
+    # Resolve queued startup callbacks while their widgets are still alive.
+    qt_app.processEvents()
+    for timer in host.findChildren(QTimer):
+        timer.stop()
+    host.snapshot_manager_page.stop_processes()
+    host.process_runtime.shutdown()
+    host.ui_performance.shutdown()
+    host.backend.shutdown()
+    stop_remaining(host)
+    assert all(
+        process.state() == QProcess.ProcessState.NotRunning
+        for process in host.findChildren(QProcess)
+    )
+    host.deleteLater()
+    # processEvents() alone does not guarantee that Qt handles DeferredDelete
+    # without a running outer event loop.  Otherwise periodic probe timers
+    # survive this module and can start helpers during unrelated pytest tests.
+    QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    assert not isValid(host)
+
 
 # Reproduce startup with a persisted TRCC media directory and editable data
 # blocks, before log_view exists.
@@ -88,27 +135,221 @@ settings.setValue("thermalright/brightness", 0)
 settings.sync()
 
 window = application.KrakenControl()
+atexit.register(lambda: dispose_window(window) if isValid(window) else None)
+from modules.profile_bundle.v1_0.controller import snapshot as bundle_snapshot
+from modules.profile_bundle.v1_0.archive import json_bytes as bundle_json_bytes
+complete_snapshot = bundle_snapshot(window)
+assert bundle_json_bytes(complete_snapshot)
+assert complete_snapshot["settings"] and complete_snapshot["profiles"]
+assert "rgb_studio/layout_slots" in complete_snapshot["settings"]
 labels = [label.text() for label in window.findChildren(QLabel)]
 
-assert window.tabs.count() == 12
+# Every interactive caption built by the real UI must be present atomically in
+# English, Spanish and French. Technical identifiers and proper product/design
+# names are deliberately excluded by the narrow production policy.
+interactive_sources: set[str] = set()
+interactive_types = (QAbstractButton, QComboBox, QGroupBox, QLineEdit, QMenu, QTableWidget, QAction)
+for obj, source_record in window._i18n_widget_sources.items():
+    if not isinstance(obj, interactive_types) and obj is not window.tabs:
+        continue
+    for field in ("text", "title", "placeholder"):
+        raw = source_record.get(field)
+        if isinstance(raw, str) and interactive_text_needs_translation(raw):
+            interactive_sources.add(raw.strip())
+    for field in ("items", "tabs", "headers"):
+        if field == "items" and not source_record.get("translate_items"):
+            continue
+        interactive_sources.update(
+            str(raw).strip() for raw in source_record.get(field, ())
+            if interactive_text_needs_translation(str(raw))
+        )
+for language in ("en", "es", "fr"):
+    missing = sorted(interactive_sources - application.UI_TRANSLATIONS[language].keys())
+    assert not missing, f"{language} misses interactive UI translations: {missing}"
+navigation_sources = {raw for _item, raw in window._navigation_item_sources}
+for caption in ("Übersicht", "Kühlung", "Einstellungen", "Über"):
+    assert any(raw.endswith(caption) for raw in navigation_sources)
+language_modules = (de, en, es, fr)
+assert tuple(module.LANGUAGE_CODE for module in language_modules) == ("de", "en", "es", "fr")
+assert all(set(module.UI_MESSAGES) == set(de.UI_MESSAGES) for module in language_modules)
+assert len(set(de.UI_MESSAGES.values())) == len(de.UI_MESSAGES)
+assert all(application.UI_TRANSLATIONS["de"][source] == source for source in de.UI_MESSAGES.values())
+assert translated_control_text("personal.png\nBild", application.UI_TRANSLATIONS["en"]) == "personal.png\nImage"
+assert translated_control_text("Alle Hintergründe · 27", application.UI_TRANSLATIONS["fr"]) == "Tous les arrière-plans · 27"
+
+# Prove that live switching applies the catalog, not merely that keys exist.
+balanced_button = next(
+    obj for obj, source in window._i18n_widget_sources.items()
+    if isinstance(obj, QAbstractButton) and source.get("text") == "Ausbalanciert"
+)
+language_combo = next(
+    obj for obj, source in window._i18n_widget_sources.items()
+    if isinstance(obj, QComboBox) and "Deutsch" in source.get("items", ())
+)
+german_index = list(window._i18n_widget_sources[language_combo]["items"]).index("Deutsch")
+for language, profile_text, german_text in (
+    ("en", "Balanced", "German"),
+    ("es", "Equilibrado", "Alemán"),
+    ("fr", "Équilibré", "Allemand"),
+):
+    window.apply_ui_language(language, persist=False, log_change=False)
+    window.refresh_dynamic_translations()
+    assert balanced_button.text() == profile_text
+    for button, caption in zip(window.profile_bundle_controller.buttons,
+                               ("Komplettpaket exportieren", "Komplettpaket importieren"), strict=True):
+        assert button.text() == application.UI_TRANSLATIONS[language][caption]
+    assert window.openrgb_gpu_setup_button.text() == application.UI_TRANSLATIONS[language][
+        "Grafikkarte: Steuerweg und LEDs"
+    ]
+    assert language_combo.itemText(german_index) == german_text
+    assert language not in {"en", "es", "fr"} or "Übersicht" not in window.nav_overview.text(0)
+    assert language not in {"en", "es", "fr"} or "Kühlung" not in window.nav_nzxt.text(0)
+    window.tabs.setCurrentIndex(1)
+    assert window.page_title_label.text() == application.UI_TRANSLATIONS[language]["Kühlungszentrale"]
+
+included_label = next(
+    obj for obj, source in window._i18n_widget_sources.items()
+    if isinstance(obj, QLabel) and str(source.get("text", "")).startswith("<b>Enthalten:</b>")
+)
+window.apply_ui_language("en", persist=False, log_change=False)
+assert included_label.text().startswith("<b>Included:</b>")
+window._cooling_owner_probe_ready(CoolingOwnerStatus(False, False, False))
+assert window.cooling_ownership_label.text().startswith("✓ No competing CoolerControl")
+assert window.cooling_autostart_button.text() == "Enable CoolerControl permanently"
+window._cooling_owner_probe_ready(CoolingOwnerStatus(True, True, True))
+assert window.cooling_ownership_label.text().startswith("⚠ The CoolerControl background service")
+assert window.cooling_autostart_button.text() == "Permanently disable CoolerControl"
+
+# Fan cards are created only after hwmon discovery and must use the active
+# language even though they were absent from the startup translation snapshot.
+fan_root = temporary_root / "fan-card"
+fan_root.mkdir()
+pwm_path = fan_root / "pwm3"
+pwm_path.write_text("128\n", encoding="ascii")
+rpm_path = fan_root / "fan3_input"
+rpm_path.write_text("912\n", encoding="ascii")
+label_path = fan_root / "fan3_label"
+label_path.write_text("System Fan 3\n", encoding="ascii")
+channel = application.MainboardFanChannel(
+    index=3,
+    hwmon_path=fan_root,
+    name="nct6687",
+    pwm_path=pwm_path,
+    enable_path=None,
+    rpm_path=rpm_path,
+    label_path=label_path,
+    writable=True,
+    pwm_value=128,
+    rpm=912,
+)
+window.mainboard_channels = {channel.stable_id: channel}
+profile = window.mainboard_default_profile(channel)
+profile.update({"calibrated": True, "enabled": False, "preset": "balanced"})
+window.mainboard_fan_profiles[channel.stable_id] = profile
+window.apply_ui_language("en", persist=False, log_change=False)
+window.refresh_dynamic_translations()
+fan_buttons = {button.text() for button in window.mainboard_fan_cards.findChildren(QAbstractButton)}
+fan_labels = {label.text() for label in window.mainboard_fan_cards.findChildren(QLabel)}
+assert {"Test", "Test 0% / 10 s", "Edit curve & details", "Assign", "Enable automatic control", "Quiet", "Balanced", "Performance"} <= fan_buttons
+assert "Curve profile:" in fan_labels
+assert any(text.startswith("Profile: Balanced") for text in fan_labels)
+assert "System Fan 3" in fan_labels
+assert "SYS_FAN3" in fan_labels
+assert not any("PWM 3" in text for text in fan_labels)
+assert any("nct6687:pwm3" in label.toolTip() for label in window.mainboard_fan_cards.findChildren(QLabel))
+assert not any("System Fan 3 · pwm3" in text for text in fan_labels)
+assert "1 system-fan channels  ·  1 assigned  ·  0 profile active" == window.cooling_case_summary_label.text()
+window.toggle_mainboard_channel_enabled_from_card(channel.stable_id)
+fan_buttons = {button.text() for button in window.mainboard_fan_cards.findChildren(QAbstractButton)}
+assert "Disable automatic control" in fan_buttons
+assert window.mainboard_fan_profiles[channel.stable_id]["enabled"] is True
+window.toggle_mainboard_channel_enabled_from_card(channel.stable_id)
+assert window.mainboard_fan_profiles[channel.stable_id]["enabled"] is False
+window.mainboard_channels = {}
+window.mainboard_fan_profiles.pop(channel.stable_id, None)
+window.apply_ui_language("de", persist=False, log_change=False)
+assert balanced_button.text() == "Ausbalanciert"
+assert tuple(application.UI_TRANSLATIONS[language]["0 % / 10 s testen"] for language in ("en", "es", "fr")) == (
+    "Test 0% / 10 s", "Probar 0 % / 10 s", "Tester 0 % / 10 s",
+)
+
+assert window.tabs.count() == 19
+assert window.tabs.tabText(window.design_automation_page_index) == "Automationszentrale"
+assert window.navigation_items["automations"].data(0, Qt.ItemDataRole.UserRole) == window.design_automation_page_index
+assert window.tabs.tabText(window.programs_page_index) == "Programme"
+assert window.navigation_items["programs"].data(0, Qt.ItemDataRole.UserRole) == window.programs_page_index
+assert window.tabs.tabText(13) == "Gehäuse"
+assert window.tabs.tabText(window.gpu_control_page_index) == "Grafikkarte"
+assert window.navigation_items["case"].data(0, Qt.ItemDataRole.UserRole) == 13
+assert window.tabs.tabText(14) == "Hardware-Checker"
+assert window.navigation_items["hardware_checker"].data(0, Qt.ItemDataRole.UserRole) == 14
+assert window.tabs.tabText(window.snapshot_manager_page_index) == "Snapshot-Manager"
+assert window.navigation_items["snapshot_manager"].data(0, Qt.ItemDataRole.UserRole) == window.snapshot_manager_page_index
 assert window.tabs.tabText(9) == "Wallpaper Engine"
 assert window.navigation_items["wallpaper_engine"].data(0, Qt.ItemDataRole.UserRole) == 9
+assert window.tabs.tabText(11) == "Display-Effekte"
+assert window.navigation_items["display_effects"].data(0, Qt.ItemDataRole.UserRole) == 11
+assert window.help_page_index == 12
 navigation_root = window.navigation.invisibleRootItem()
 assert [window.navigation_item_key(navigation_root.child(index)) for index in range(navigation_root.childCount())] == [
-    "overview", *application.NAVIGATION_DEFAULT_ORDER
+    "overview", *(key for key in application.NAVIGATION_DEFAULT_ORDER if key != "display_effects")
 ]
+assert window.nav_display_effects.parent() is window.nav_lcd
+assert window.nav_lcd_studio.parent() is window.nav_lcd
+assert len(window.lcd_section_tabs.bars) == 2
+assert all(bar.count() == 2 for bar in window.lcd_section_tabs.bars)
+window.lcd_section_tabs.bars[0].setCurrentIndex(1)
+assert window.tabs.currentIndex() == 11
+assert all(bar.currentIndex() == 1 for bar in window.lcd_section_tabs.bars)
+window.lcd_section_tabs.bars[1].setCurrentIndex(0)
+assert window.tabs.currentIndex() == 3
+assert all(bar.currentIndex() == 0 for bar in window.lcd_section_tabs.bars)
+assert window.nav_cooling_controls.parent() is window.nav_nzxt
+assert window.nav_temperature_recording.parent() is window.nav_nzxt
+window.navigation.setCurrentItem(window.nav_temperature_recording)
+assert window.tabs.currentIndex() == 1
+assert window.cooling_subtabs.currentIndex() == 1
+assert window.nav_nzxt.isExpanded()
+window.navigation.setCurrentItem(window.nav_cooling_controls)
+assert window.cooling_subtabs.currentIndex() == 0
+window.tabs.setCurrentIndex(11)
+assert window.nav_lcd.isExpanded()
+window.tabs.setCurrentIndex(2)
+assert not window.nav_lcd.isExpanded()
 settings.setValue("navigation/order", json.dumps(application.NAVIGATION_LEGACY_DEFAULTS[-1]))
 assert window.load_navigation_order() == list(application.NAVIGATION_DEFAULT_ORDER)
 assert window.wallpaper_engine_page.sections.count() == 3
 assert window.window_screen_preference == application.PRIMARY_SCREEN_PREFERENCE
 assert window.window_screen_combo.currentData() == application.PRIMARY_SCREEN_PREFERENCE
 assert window.window_screen_combo.count() >= 1
+assert window.windowed_size_spin.value() == application.DEFAULT_WINDOWED_SIZE_PERCENT
+assert window.page_transitions_checkbox.isChecked()
+assert window.page_transition_style_combo.currentData() == "fade"
+assert window.ssd_cache_combo.currentData() == 2048
+assert window.ui_performance is not None
+assert window.window_chrome.close_button.size() == QSize(48, 42)
+assert window.cooling_auto_case_button.isCheckable()
+assert window.cooling_auto_case_button.isChecked() == window.mainboard_control_active
+assert window.rgb_devices_effects_panel.isHidden()
+button_texts = {button.text() for button in window.findChildren(QAbstractButton)}
+assert "Mein Retro 360 bei Amazon" not in button_texts
+assert "Luftstrom umkehren" in button_texts
+assert "Block in Einzellüfter teilen" in button_texts
+assert [window.rgb_case_cooling_combo.itemData(index) for index in range(3)] == ["auto", "aio", "air"]
 window.move(100000, 100000)
 assert window.position_window_on_preferred_screen("Offscreen-Regression")
 preferred_screen, preferred_matched = window.preferred_window_screen()
 assert preferred_screen is QApplication.primaryScreen()
 assert preferred_matched
 assert preferred_screen.availableGeometry().contains(window.frameGeometry().center())
+available = preferred_screen.availableGeometry()
+window._last_windowed_rect = application.WindowRect(
+    available.x(), available.y(), available.width(), available.height()
+)
+assert window.restore_safe_windowed_geometry("Maximierte-Normalgröße-Regression")
+assert window.width() < available.width()
+assert available.contains(window.geometry().topLeft())
+assert available.contains(window.geometry().bottomRight())
 window.apply_display_settings()
 assert settings.value("window/screen_preference") == application.PRIMARY_SCREEN_PREFERENCE
 window.wallpaper_engine_page.refresh_library()
@@ -135,9 +376,10 @@ for _refresh in range(2):
     wallpaper_page._thumb_queue.clear()
     wallpaper_page.workshop_entries = gallery_entries
     wallpaper_page._populate_gallery(wallpaper_page.workshop_list, gallery_entries, workshop=True)
-    while wallpaper_page._thumb_queue:
-        wallpaper_page._load_thumbnail_batch()
-    wallpaper_page._stabilize_gallery_layout()
+    hidden_queue_size = len(wallpaper_page._thumb_queue)
+    wallpaper_page._load_thumbnail_batch()
+    assert len(wallpaper_page._thumb_queue) == hidden_queue_size
+    assert not wallpaper_page.thumbnail_timer.isActive()
     assert wallpaper_page.workshop_list.count() == 8
     assert all(
         wallpaper_page.workshop_list.item(row).sizeHint() == QSize(224, 154)
@@ -145,9 +387,12 @@ for _refresh in range(2):
     )
 assert application._GIF_SAFETY_TEXT in labels
 assert application._ABOUT_SUMMARY_TEXT in labels
-assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.50 INTERN")
+assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.158 INTERN")
 assert window.temp_card.isHidden()
 assert not window.cpu_temp_card.isHidden()
+assert window.mainboard_sensor_source.findData("liquid") == -1
+assert window.mainboard_sensor_source.findData("max") >= 0
+assert window.mainboard_curve_overlay_source.findData("liquid") == -1
 window.devices_ready = True
 window.current_liquid_temp = 31.5
 window.apply_dashboard_card_visibility(save=False)
@@ -158,6 +403,20 @@ assert window.temp_card.isHidden()
 assert any(size.width() == 22 and size.height() == 22 for size in window.tray.icon().availableSizes())
 assert window.thermalright_display_studio.current_media_path() == (saved_designs / "saved-preview.png")
 studio = window.thermalright_display_studio
+custom_before = sum(item.kind == "text" for item in studio.overlay_specs)
+studio.add_custom_text_overlay()
+custom_item = next(item for item in studio.overlay_specs if item.kind == "text")
+assert sum(item.kind == "text" for item in studio.overlay_specs) == custom_before + 1
+custom_controls = studio.overlay_controls[custom_item.ident]
+custom_controls["label"].setText("Mein Rechner")
+custom_controls["label"].editingFinished.emit()
+custom_controls["font"].setCurrentIndex(min(1, custom_controls["font"].count() - 1))
+stored_custom = next(item for item in studio.overlay_specs if item.ident == custom_item.ident)
+assert stored_custom.text == "Mein Rechner"
+assert stored_custom.font == str(custom_controls["font"].currentData() or "")
+studio.remove_custom_text_overlay(custom_item.ident)
+assert sum(item.kind == "text" for item in studio.overlay_specs) == custom_before
+assert custom_item.ident not in studio.overlay_controls
 assert studio.custom_media_directory == saved_designs.resolve()
 assert studio.media_duplicate_count == 1
 assert sum(entry.path.name == "saved-preview.png" for entry in studio.media_entries) == 1
@@ -235,8 +494,10 @@ assert studio.split_mode.minimumWidth() >= 320
 assert studio.geometry_box.sizePolicy().verticalPolicy() == QSizePolicy.Policy.Minimum
 saved_overrides = json.loads(str(settings.value("thermalright/layer2_overrides_v1")))
 assert saved_overrides["schema"] == 1
-assert studio.canvas.maximumWidth() == 960
-assert studio.canvas.maximumHeight() == 432
+assert studio.canvas.minimumWidth() == 880
+assert studio.canvas.maximumWidth() == 880
+assert studio.canvas.minimumHeight() == 396
+assert studio.canvas.maximumHeight() == 396
 assert studio.canvas.heightForWidth(800) == 360
 studio.move_selected_theme_to_background_layer()
 assert studio.media_combo.findData(str(live_theme.resolve())) >= 0
@@ -247,6 +508,38 @@ studio._select_media_card(str((saved_designs / "saved-preview.png").resolve()))
 studio.remember_startup_design()
 assert settings.value("thermalright/autostart_enabled", False, type=bool)
 assert Path(str(settings.value("thermalright/start_media"))) == (saved_designs / "saved-preview.png")
+assert studio.stage_profile_startup_design()
+profile_payload = window.capture_profile_payload("LCD")
+assert profile_payload["levita_display"] == {
+    "media": str((saved_designs / "saved-preview.png").resolve()),
+    "hardware_design": "",
+    "enabled": True,
+    "layer2_motion": False,
+    "desktop_fps": 15,
+    "game_fps": 15,
+}
+settings.setValue("thermalright/start_media", str(saved_designs / "second-preview.png"))
+assert not studio.restore_profile_startup_payload(profile_payload["levita_display"], startup=True)
+assert Path(str(settings.value("thermalright/start_media"))) == saved_designs / "second-preview.png"
+assert studio.restore_profile_startup_payload(profile_payload["levita_display"])
+assert Path(str(settings.value("thermalright/start_media"))) == (saved_designs / "saved-preview.png")
+bundled_effect = next((ROOT / "src/assets/display-effects").glob("*.mp4")).resolve()
+assert not any(entry.path == bundled_effect for entry in studio.media_entries)
+assert studio.restore_profile_startup_payload({
+    "media": str(bundled_effect),
+    "hardware_design": "",
+    "enabled": True,
+})
+assert studio._restore_startup_selection()
+assert studio.current_media_path() == bundled_effect
+effects_page = window.display_effects_page
+pending_before_preview = settings.value("thermalright/profile_pending_media")
+effects_page.effect_combo.setCurrentIndex(effects_page.effect_combo.findData("library"))
+assert settings.value("thermalright/profile_pending_media") == pending_before_preview
+effects_page.remember_for_profile_start()
+assert Path(str(settings.value("thermalright/profile_pending_media"))) == effects_page.stock_library.current_video()
+assert Path(str(settings.value("thermalright/start_media"))) == effects_page.stock_library.current_video()
+assert settings.value("thermalright/autostart_enabled", False, type=bool)
 studio.startup_apply_requested = False
 studio.apply_startup_design_if_enabled()
 assert studio.startup_apply_requested
@@ -259,15 +552,59 @@ assert "rgba(255, 255, 255, 252)" in window.styleSheet()
 assert "QLabel#brandLabel" in window.styleSheet()
 assert "QScrollBar:vertical" in window.styleSheet()
 assert "width: 8px" in window.styleSheet()
-assert window.navigation.palette().color(QPalette.ColorRole.HighlightedText).name() == "#18202a"
-assert window.navigation.palette().color(QPalette.ColorRole.Text).name() == "#18202a"
+assert window.navigation.palette().color(QPalette.ColorRole.HighlightedText).name() == "#102a43"
+assert window.navigation.palette().color(QPalette.ColorRole.Text).name() == "#17212b"
 window.theme_mode = "dark"
 window.apply_theme()
 assert "rgba(7, 19, 31, 248)" in window.styleSheet()
 
-window.backend.shutdown()
-window.deleteLater()
-qt_app.processEvents()
+render_dir = os.environ.get("OHC_UI_RENDER_DIR")
+if render_dir:
+    settings.setValue("setup/completed", True)
+    settings.setValue("dependencies/desktop_design_offer_330", True)
+    from rgb_devices import flori_rgb_layout_profile
+    _, window.rgb_layout_slots = flori_rgb_layout_profile("thermalright")
+    window.refresh_rgb_layout_editor()
+    window.rgb_layout_diagram.set_cooling_visual("aio")
+    output = Path(render_dir)
+    output.mkdir(parents=True, exist_ok=True)
+    window.resize(1800, 1100)
+    window.tabs.setCurrentIndex(window.case_page_index)
+    window.show()
+    qt_app.processEvents()
+    assert window.grab().save(str(output / "case-page.png"))
+    window.tabs.setCurrentIndex(2)
+    window.set_rgb_devices_effects_expanded(True)
+    qt_app.processEvents()
+    window.rgb_page_scroll.verticalScrollBar().setValue(0)
+    qt_app.processEvents()
+    assert window.grab().save(str(output / "rgb-gallery.png"))
+    window.rgb_page_scroll.ensureWidgetVisible(window.openrgb_performance_label, 20, 20)
+    qt_app.processEvents()
+    assert window.grab().save(str(output / "rgb-transfer.png"))
+    window.tabs.setCurrentIndex(window.hardware_checker_page_index)
+    qt_app.processEvents()
+    assert window.grab().save(str(output / "hardware-checker-cards.png"))
+    window.tabs.setCurrentIndex(window.gpu_control_page_index)
+    window.gpu_control_page.sections.setCurrentIndex(0)
+    window.gpu_control_page.verticalScrollBar().setValue(0)
+    qt_app.processEvents()
+    assert window.grab().save(str(output / "gpu-cockpit.png"))
+    window.gpu_control_page.ensureWidgetVisible(window.gpu_control_page.fan_visual, 20, 20)
+    qt_app.processEvents()
+    assert window.grab().save(str(output / "gpu-fan-curve.png"))
+    window.tabs.setCurrentIndex(4)
+    modules_box = next(iter(window.navigation_module_checkboxes.values())).parentWidget().parentWidget()
+    assert isinstance(modules_box, QGroupBox)
+    window.settings_page_scroll.ensureWidgetVisible(modules_box, 24, 24)
+    qt_app.processEvents()
+    assert window.grab().save(str(output / "settings-modules.png"))
+    assert modules_box.grab().save(str(output / "settings-modules-panel.png"))
+    window.tabs.setCurrentIndex(5)
+    qt_app.processEvents()
+    assert window.profile_bundle_controller.buttons[0].isVisible()
+    assert window.grab().save(str(output / "profiles-complete-package.png"))
+dispose_window(window)
 
 # A KDE/Wayland tray autostart must suppress the native window surface before
 # the large UI constructor can expose an unpainted black frame.  Opening from
@@ -278,6 +615,7 @@ settings.setValue("setup/completed", True)
 settings.setValue("app/autostart_minimized", True)
 settings.sync()
 autostart_window = application.KrakenControl()
+atexit.register(lambda: dispose_window(autostart_window) if isValid(autostart_window) else None)
 assert autostart_window.testAttribute(application.Qt.WidgetAttribute.WA_DontShowOnScreen)
 assert autostart_window.autostart_window_surface_suppressed
 original_tray_available = application.QSystemTrayIcon.isSystemTrayAvailable
@@ -290,10 +628,8 @@ finally:
     application.QSystemTrayIcon.isSystemTrayAvailable = original_tray_available
 autostart_window.release_autostart_window_surface()
 assert not autostart_window.testAttribute(application.Qt.WidgetAttribute.WA_DontShowOnScreen)
-autostart_window.backend.shutdown()
-autostart_window.deleteLater()
+dispose_window(autostart_window)
 sys.argv[:] = original_argv
-qt_app.processEvents()
 temporary.cleanup()
 
 print("Full offscreen UI construction restored an editable TRCC directory without hardware I/O.")

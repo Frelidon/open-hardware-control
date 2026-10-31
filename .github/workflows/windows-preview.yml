@@ -1,0 +1,36 @@
+name: Windows preview
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "src/**"
+      - "tests/test_windows_platform_3429135.py"
+      - "packaging/windows/**"
+      - "scripts/build_windows.ps1"
+      - ".github/workflows/windows-preview.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows-preview:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Build and test Windows preview
+        shell: pwsh
+        run: ./scripts/build_windows.ps1
+      - name: Upload Windows preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenHardwareControl-Windows-preview
+          path: |
+            dist/windows/OpenHardwareControl-*-Windows-x64-preview.zip
+            dist/windows/OpenHardwareControl-*-Windows-x64-preview.zip.sha256
+          if-no-files-found: error

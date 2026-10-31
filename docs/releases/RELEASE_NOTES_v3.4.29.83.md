@@ -1,0 +1,10 @@
+# Open Hardware Control 3.4.29.83 INTERN
+
+- New central Case page after Overview: shared RGB components, declared LED counts and reported chassis-PWM assignments; optional separate cooling positions. Direct LED/PWM actions in block editors and the topology table. Assignment does not calibrate or activate regulation.
+- Single-header editor and indexed pixel test for every reported Direct ARGB zone, preserving other ports. Explicit manual counts survive design changes. The owner visually confirmed 30 LEDs on their personal Sapphire NITRO+ at MSI JARGB 1; no general GPU count is inferred.
+- All configured zones render independently. Bounded pixel-area sampling, soft spinner/comet heads and smooth colour/sparkle transitions reduce count-related stepping. The 25-Hz transport target and sole-writer queue remain unchanged; actual SDK throughput is separate and optical fluidity requires a real test. Intentional lightning flashes remain.
+- Detailed original code-native drawings for all 30 case templates, with PWM badges and bounded labels. Retro/North references were visually checked; remaining drawings are schematic rather than manufacturer-accurate CAD. No manufacturer photos are redistributed.
+- Full-width readable transfer panel and ARGB diagnostics for declared/server counts, limits, offsets, selected pixel and SDK completion; no per-frame log spam or physical readback claim.
+- PC Case Profiles 1.1; RGB Studio 1.5 with lazy Qt-free pure-effect imports. DE/EN/ES/FR remain complete at 1,387 shared messages.
+
+Validation: all 394 tests, full offscreen DE/EN/ES/FR UI, release/version/module-budget and security/privacy checks passed; real UI and all 30 case drawings rendered, including collision-free label coverage. Hardware-free validation cannot establish physical FPS. Local INTERN packaging is authorized with standing approval for automatic release-backup rotation: retain the two newest complete versions (.82/.83), removing .81 without further questions. No installation, tag or push.

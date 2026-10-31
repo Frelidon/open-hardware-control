@@ -17,6 +17,13 @@ REVIEW_LINES = 800
 REVIEW_CHARS = 40_000
 HARD_LINES = 1_200
 HARD_CHARS = 60_000
+LANGUAGE_DATA_CHARS = 78_000
+LANGUAGE_DATA_FILES = {
+    "src/modules/localization/v1_0/de.py",
+    "src/modules/localization/v1_0/en.py",
+    "src/modules/localization/v1_0/es.py",
+    "src/modules/localization/v1_0/fr.py",
+}
 
 
 def main() -> int:
@@ -59,7 +66,9 @@ def main() -> int:
             lines = len(text.splitlines())
             chars = len(text)
             label = source.relative_to(ROOT)
-            if lines > HARD_LINES or chars > HARD_CHARS:
+            label_text = label.as_posix()
+            hard_chars = LANGUAGE_DATA_CHARS if label_text in LANGUAGE_DATA_FILES else HARD_CHARS
+            if lines > HARD_LINES or chars > hard_chars:
                 errors.append(f"{label} exceeds hard budget: {lines} lines / {chars} chars")
             elif lines > REVIEW_LINES or chars > REVIEW_CHARS:
                 warnings.append(f"{label} reached split-review threshold: {lines} lines / {chars} chars")

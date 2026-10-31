@@ -1,4 +1,4 @@
-# Software und Links – Open Hardware Control 3.4.29.50
+# Software und Links – Open Hardware Control 3.4.29.82
 
 | Komponente | Zweck | Projekt | Lizenz |
 |---|---|---|---|

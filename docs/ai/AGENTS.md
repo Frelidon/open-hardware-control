@@ -34,6 +34,21 @@ If a request conflicts with these files or the current code, stop and explain th
 - Overview, Navigation customization and Help are permanent navigation safety anchors and must never be hideable or removable.
 - Hardware ownership boundaries must remain intact: NZXT, OpenLinkHub, OpenRGB and mainboard fan paths must not race each other for the same device.
 
+## Fedora and Ubuntu compatibility (mandatory owner decision 06.10.26)
+
+- Fedora and Ubuntu are equal supported targets. Inspect their paths separately; an Ubuntu fix must not silently replace or alter the established Fedora path, and vice versa. Keep necessary distribution-specific behavior behind explicit guards rather than inferring the distribution from whichever package-manager binary is available.
+- Installation and setup commands must match the detected distribution and its native package manager. Preserve existing features, designs/templates, user settings and hardware ownership on both paths; do not drop functionality to make one distribution work.
+- Every affected distribution-dependent change requires targeted Fedora and Ubuntu regressions, including the unchanged branch and correct executable/command selection. Use isolated fixtures or fake programs for administrator commands; a host installation or hardware write needs its own authorization.
+- Report test evidence separately for each distribution. If real Fedora or Ubuntu hardware is unavailable, explicitly mark its live test as pending. Passing Ubuntu tests or simulated Fedora fixtures must never be presented as a verified Fedora hardware run, or vice versa.
+
+## Localization is mandatory
+
+- German is the canonical source language; every new or changed user-visible UI text must update `de.py`, `en.py`, `es.py` and `fr.py` together under `src/modules/localization/v1_0/`.
+- Each language owns exactly one data file. Add a German source and its three translations under the same new stable message ID; a button, checkbox, group, tab, table header, placeholder or data-backed choice without all supported languages is incomplete.
+- Dynamic captions must assemble translated fragments through the localization API and be refreshed after a live language change. Never use translated display text as an internal identifier; combo boxes and actions use stable data IDs.
+- Only technical identifiers, measured hardware values and proper product/design names may remain unchanged. Do not add ordinary user-facing prose to the exemption policy.
+- The full offscreen UI localization coverage test is mandatory for every UI change and must not be weakened to accept missing translations.
+
 ## Hardware safety
 
 - Do not guess USB protocols, IDs, PWM mappings, LED counts, firmware commands or writable sysfs paths.
@@ -50,6 +65,7 @@ If a request conflicts with these files or the current code, stop and explain th
 - Before declaring a version/release ready, run `./scripts/check_release.sh`.
 - A successful version build must also complete the external rolling backup defined in `docs/project/RELEASE_BACKUP_POLICY.md`; verify both retained versions and their SHA256 files.
 - Update or add regression tests for behavior changes.
+- Include the separate Fedora/Ubuntu contracts above whenever distribution-specific behavior is affected.
 - Do not weaken tests to make broken behavior pass.
 - Update `docs/project/PROJECT_STATUS.md` after meaningful changes and `docs/project/DECISIONS.md` when a durable product/architecture decision changes.
 - Add a `docs/CHANGELOG.md` entry for user-visible changes and release notes for a versioned release.
@@ -69,7 +85,7 @@ The GitHub front page must stay short and tidy. This layout is permanent; do not
 | Location | What belongs there |
 |---|---|
 | repository root | **only** `README.md`, `LICENSE`, `CITATION.cff`, `AGENTS.md` (short pointer to this file) and dotfiles (`.gitignore`, `.gitattributes`, `.editorconfig`). Nothing else – no scripts, no `*.py`, no further Markdown, no version files. |
-| `src/` | all application code: every `*.py` (entry `kraken_control.py`), `assets/`, `modules/<name>/v<major>_<minor>/`, `test-gifs/`. Mirrors the flat installed application directory. |
+| `src/` | all application code: every `*.py` (entry `kraken_control.py`), `assets/`, `modules/<name>/v<major>_<minor>/`, `test-gifs/`. The localization module keeps one data file per supported language. Mirrors the flat installed application directory. |
 | `packaging/` | `install.sh`, `uninstall.sh`, `VERSION`, `BUILD_CHANNEL`, udev rule, Polkit policy, metainfo, desktop template, SVG icon, helper shell scripts. |
 | `docs/` | `INSTALL.md`, `CHANGELOG.md`, `README.en.md` |
 | `docs/project/` | architecture, decisions, status, roadmap, module registry/map, component/feature versions, project documentation, release/backup policies, publishing guide, authors, third-party notices |
@@ -111,6 +127,8 @@ A normal push of committed, tested work to a non-release development branch is e
 ## Destructive commands
 
 Do not run destructive commands (`rm -rf`, `git reset --hard`, `git clean -f`, force-push, branch/tag deletion, mass restore) without explicit user approval. Cursor hooks are configured to require confirmation for these commands.
+
+Standing owner approval (13.09.26): normal local release-backup rotation is authorized without asking again when an owner-requested build creates a complete new release set and retains the two newest complete versions in the fixed external `Open Hardware Control Backup` directory. Follow `docs/project/RELEASE_BACKUP_POLICY.md`, resolve exact recognized targets and verify retained checksums. This exception does not authorize deletion of unrelated files, other backups, settings, source trees or Git history; unsafe/incomplete targets must not be pruned.
 
 ## Secrets and privacy
 

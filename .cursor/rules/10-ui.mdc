@@ -1,6 +1,6 @@
 ---
 description: UI and navigation invariants for Open Hardware Control
-globs: src/kraken_control.py,src/ui_layout.py,src/desktop_*.py,src/assets/**
+globs: src/kraken_control.py,src/localization_catalog.py,src/modules/localization/**,src/ui_layout.py,src/desktop_*.py,src/assets/**
 alwaysApply: false
 ---
 
@@ -9,3 +9,4 @@ alwaysApply: false
 - Navigation reorder/visibility state must remain persistent and resettable to defaults.
 - Preserve keyboard/accessibility behavior and avoid modal flows when an embedded workflow already exists.
 - Keep UI code from inventing hardware capabilities; ask backend/capability layers instead.
+- Every new or changed visible UI string must ship in German, English, Spanish and French in the same change. Update the matching stable message ID in all four files under `src/modules/localization/v1_0/`, use translated fragments for dynamic text, retain separate stable data IDs and run the offscreen localization completeness test.

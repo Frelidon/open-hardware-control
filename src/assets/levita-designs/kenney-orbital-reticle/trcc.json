@@ -1,0 +1,79 @@
+{
+  "name": "Orbital Reticle",
+  "width": 1600,
+  "height": 720,
+  "overlay_enabled": true,
+  "elements": [
+    {
+      "id": "clock",
+      "type": "clock",
+      "x": 760,
+      "y": 105,
+      "source": "time",
+      "format": "{value}",
+      "color": "#ffffff",
+      "size": 58,
+      "bold": true
+    },
+    {
+      "id": "cpu",
+      "type": "metric",
+      "x": 390,
+      "y": 335,
+      "metric": "cpu:usage",
+      "format": "CPU  {value:.0f}%",
+      "color": "#7df4ff",
+      "size": 42,
+      "bold": true,
+      "show_unit": true
+    },
+    {
+      "id": "cpu-temp",
+      "type": "metric",
+      "x": 390,
+      "y": 420,
+      "metric": "cpu:temp",
+      "format": "{value:.0f}°C",
+      "color": "#ffffff",
+      "size": 30,
+      "bold": true,
+      "show_unit": true
+    },
+    {
+      "id": "gpu",
+      "type": "metric",
+      "x": 1110,
+      "y": 335,
+      "metric": "gpu:primary:usage",
+      "format": "GPU  {value:.0f}%",
+      "color": "#ff8dd7",
+      "size": 42,
+      "bold": true,
+      "show_unit": true
+    },
+    {
+      "id": "gpu-temp",
+      "type": "metric",
+      "x": 1110,
+      "y": 420,
+      "metric": "gpu:primary:temp",
+      "format": "{value:.0f}°C",
+      "color": "#ffffff",
+      "size": 30,
+      "bold": true,
+      "show_unit": true
+    },
+    {
+      "id": "power",
+      "type": "metric",
+      "x": 760,
+      "y": 605,
+      "metric": "cpu:power",
+      "format": "CPU POWER  {value:.0f} W",
+      "color": "#bba7ff",
+      "size": 28,
+      "bold": true,
+      "show_unit": true
+    }
+  ]
+}

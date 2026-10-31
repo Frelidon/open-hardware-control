@@ -18,19 +18,29 @@ DISTRO_ID="${ID:-unknown}"
 PACKAGE_FAMILY="unknown"
 PACKAGE_MANAGER=""
 
-if command -v dnf >/dev/null 2>&1; then
-    PACKAGE_FAMILY="dnf"
-    PACKAGE_MANAGER="$(command -v dnf)"
-elif command -v apt-get >/dev/null 2>&1; then
-    PACKAGE_FAMILY="apt"
-    PACKAGE_MANAGER="$(command -v apt-get)"
-elif command -v pacman >/dev/null 2>&1; then
-    PACKAGE_FAMILY="pacman"
-    PACKAGE_MANAGER="$(command -v pacman)"
-elif command -v zypper >/dev/null 2>&1; then
-    PACKAGE_FAMILY="zypper"
-    PACKAGE_MANAGER="$(command -v zypper)"
-fi
+select_package_family() {
+    local identifier
+    # The installed distribution owns package choice. A stray foreign package
+    # manager must never switch Ubuntu to DNF or Fedora to APT.
+    for identifier in "${ID:-}" ${ID_LIKE:-}; do
+        case "${identifier,,}" in
+            fedora|nobara|rhel|centos|rocky|almalinux) PACKAGE_FAMILY="dnf" ;;
+            debian|ubuntu|linuxmint|pop) PACKAGE_FAMILY="apt" ;;
+            arch|manjaro|endeavouros|cachyos) PACKAGE_FAMILY="pacman" ;;
+            opensuse|opensuse-leap|opensuse-tumbleweed|suse|sles) PACKAGE_FAMILY="zypper" ;;
+            *) continue ;;
+        esac
+        break
+    done
+    case "$PACKAGE_FAMILY" in
+        dnf) PACKAGE_MANAGER="$(command -v dnf || true)" ;;
+        apt) PACKAGE_MANAGER="$(command -v apt-get || true)" ;;
+        pacman) PACKAGE_MANAGER="$(command -v pacman || true)" ;;
+        zypper) PACKAGE_MANAGER="$(command -v zypper || true)" ;;
+    esac
+}
+
+select_package_family
 
 package_for() {
     local key="$1"
@@ -38,6 +48,7 @@ package_for() {
         dnf:liquidctl) echo "liquidctl" ;;
         dnf:pyside6) echo "python3-pyside6" ;;
         dnf:pyside6network) echo "python3-pyside6" ;;
+        dnf:pyside6multimedia) echo "python3-pyside6" ;;
         dnf:pyside6dbus) echo "python3-pyside6" ;;
         dnf:qtsvg) echo "qt6-qtsvg" ;;
         dnf:pillow) echo "python3-pillow" ;;
@@ -45,20 +56,26 @@ package_for() {
         dnf:qdbus6) echo "qt6-qttools" ;;
         dnf:openrgb) echo "openrgb" ;;
         dnf:openrgb_udev) echo "openrgb-udev-rules" ;;
+        dnf:vkmark) echo "vkmark" ;;
+        dnf:gamescope) echo "gamescope" ;;
         dnf:polkit) echo "polkit" ;;
         apt:liquidctl) echo "liquidctl" ;;
         apt:pyside6) echo "python3-pyside6.qtwidgets" ;;
         apt:pyside6network) echo "python3-pyside6.qtnetwork" ;;
+        apt:pyside6multimedia) echo "python3-pyside6.qtmultimedia" ;;
         apt:pyside6dbus) echo "python3-pyside6.qtdbus" ;;
         apt:qtsvg) echo "python3-pyside6.qtsvg" ;;
         apt:pillow) echo "python3-pil" ;;
         apt:kconfig6) echo "libkf6config-bin" ;;
         apt:qdbus6) echo "qdbus-qt6" ;;
-        apt:polkit) echo "policykit-1" ;;
+        apt:polkit) echo "polkitd pkexec" ;;
         apt:openrgb) echo "openrgb" ;;
+        apt:vkmark) echo "vkmark" ;;
+        apt:gamescope) echo "gamescope" ;;
         pacman:liquidctl) echo "liquidctl" ;;
         pacman:pyside6) echo "pyside6" ;;
         pacman:pyside6network) echo "pyside6" ;;
+        pacman:pyside6multimedia) echo "pyside6" ;;
         pacman:pyside6dbus) echo "pyside6" ;;
         pacman:qtsvg) echo "qt6-svg" ;;
         pacman:pillow) echo "python-pillow" ;;
@@ -66,9 +83,12 @@ package_for() {
         pacman:qdbus6) echo "qt6-tools" ;;
         pacman:polkit) echo "polkit" ;;
         pacman:openrgb) echo "openrgb" ;;
+        pacman:vkmark) echo "vkmark" ;;
+        pacman:gamescope) echo "gamescope" ;;
         zypper:liquidctl) echo "liquidctl" ;;
         zypper:pyside6) echo "python3-pyside6" ;;
         zypper:pyside6network) echo "python3-pyside6" ;;
+        zypper:pyside6multimedia) echo "python3-pyside6" ;;
         zypper:pyside6dbus) echo "python3-pyside6" ;;
         zypper:qtsvg) echo "libQt6Svg6" ;;
         zypper:pillow) echo "python3-Pillow" ;;
@@ -76,6 +96,7 @@ package_for() {
         zypper:qdbus6) echo "qt6-tools-qdbus" ;;
         zypper:polkit) echo "polkit" ;;
         zypper:openrgb) echo "openrgb" ;;
+        zypper:gamescope) echo "gamescope" ;;
         *) return 1 ;;
     esac
 }
@@ -84,10 +105,14 @@ add_missing() {
     local key="$1"
     local label="$2"
     local package
+    local -a packages=()
     package="$(package_for "$key" 2>/dev/null || true)"
     missing_keys+=("$key")
     missing_labels+=("$label")
-    [[ -n "$package" ]] && missing_packages+=("$package")
+    if [[ -n "$package" ]]; then
+        read -r -a packages <<< "$package"
+        missing_packages+=("${packages[@]}")
+    fi
 }
 
 qdbus6_available() {
@@ -100,13 +125,18 @@ qdbus6_available() {
 CHECK_GUI_ONLY=false
 CHECK_DESKTOP_ONLY=false
 CHECK_OPENRGB_ONLY=false
+CHECK_GPU_BENCHMARK_ONLY=false
 case "$MODE" in
     --check-gui-and-install) CHECK_GUI_ONLY=true ;;
     --check-desktop|--install-desktop|--check-desktop-and-install) CHECK_DESKTOP_ONLY=true ;;
     --check-openrgb|--install-openrgb|--check-openrgb-and-install) CHECK_OPENRGB_ONLY=true ;;
+    --check-gpu-benchmark|--install-gpu-benchmark|--check-gpu-benchmark-and-install) CHECK_GPU_BENCHMARK_ONLY=true ;;
 esac
 
-if [[ "$CHECK_OPENRGB_ONLY" == true ]]; then
+if [[ "$CHECK_GPU_BENCHMARK_ONLY" == true ]]; then
+    command -v vkmark >/dev/null 2>&1 || add_missing "vkmark" "vkmark Vulkan-Benchmark"
+    command -v gamescope >/dev/null 2>&1 || add_missing "gamescope" "Gamescope für skalierte 4K-/8K-Ausgabe"
+elif [[ "$CHECK_OPENRGB_ONLY" == true ]]; then
     command -v openrgb >/dev/null 2>&1 || command -v OpenRGB >/dev/null 2>&1 || add_missing "openrgb" "OpenRGB mit lokalem SDK-Server"
     if [[ "$PACKAGE_FAMILY" == "dnf" ]] && ! rpm -q openrgb-udev-rules >/dev/null 2>&1; then
         add_missing "openrgb_udev" "OpenRGB-udev-Regeln für Benutzerzugriff"
@@ -118,10 +148,12 @@ elif [[ "$CHECK_DESKTOP_ONLY" == true ]]; then
     python3 -c 'from PySide6.QtDBus import QDBusConnection' >/dev/null 2>&1 || add_missing "pyside6dbus" "PySide6 QtDBus für die Charms-Leiste"
 elif [[ "$CHECK_GUI_ONLY" == true ]]; then
     python3 -c 'import PySide6' >/dev/null 2>&1 || add_missing "pyside6" "PySide6 / Qt for Python"
+    python3 -c 'from PySide6.QtMultimedia import QMediaPlayer, QVideoSink' >/dev/null 2>&1 || add_missing "pyside6multimedia" "PySide6 QtMultimedia für animierte Effektvorschauen"
     python3 -c 'from PySide6.QtGui import QImageReader; assert any(bytes(x).lower() == b"svg" for x in QImageReader.supportedImageFormats())' >/dev/null 2>&1 || add_missing "qtsvg" "Qt-SVG-Unterstützung"
 else
     command -v liquidctl >/dev/null 2>&1 || add_missing "liquidctl" "liquidctl"
     python3 -c 'import PySide6' >/dev/null 2>&1 || add_missing "pyside6" "PySide6 / Qt for Python"
+    python3 -c 'from PySide6.QtMultimedia import QMediaPlayer, QVideoSink' >/dev/null 2>&1 || add_missing "pyside6multimedia" "PySide6 QtMultimedia für animierte Effektvorschauen"
     python3 -c 'from PySide6.QtGui import QImageReader; assert any(bytes(x).lower() == b"svg" for x in QImageReader.supportedImageFormats())' >/dev/null 2>&1 || add_missing "qtsvg" "Qt-SVG-Unterstützung"
     python3 -c 'from PIL import Image' >/dev/null 2>&1 || add_missing "pillow" "Pillow"
 fi
@@ -132,7 +164,8 @@ if (( ${#missing_keys[@]} == 0 )); then
 fi
 
 if [[ -z "$PKEXEC_BIN" ]] && ! command -v sudo >/dev/null 2>&1; then
-    missing_packages+=("$(package_for polkit 2>/dev/null || true)")
+    read -r -a polkit_packages <<< "$(package_for polkit 2>/dev/null || true)"
+    missing_packages+=("${polkit_packages[@]}")
 fi
 
 mapfile -t missing_packages < <(printf '%s\n' "${missing_packages[@]}" | sed '/^$/d' | awk '!seen[$0]++')
@@ -163,6 +196,7 @@ ask_confirmation() {
     [[ "$MODE" == "--check-gui-and-install" ]] && purpose="für die grafische Oberfläche"
     [[ "$CHECK_DESKTOP_ONLY" == true ]] && purpose="für die KDE-Plasma-Desktop-Designs"
     [[ "$CHECK_OPENRGB_ONLY" == true ]] && purpose="für das optionale RGB-Studio"
+    [[ "$CHECK_GPU_BENCHMARK_ONLY" == true ]] && purpose="für den optionalen GPU-Lasttest"
     local message="Open Hardware Control benötigt ${purpose} folgende Pakete:\n\n${label_list}\n\nDistribution: ${DISTRO_ID} (${PACKAGE_FAMILY})\nEs werden nur die bereits eingerichteten Paketquellen verwendet. Es werden keine fremden Paketquellen hinzugefügt.\n\nFortfahren?"
     if command -v kdialog >/dev/null 2>&1; then
         kdialog --title "Abhängigkeiten installieren" --yesno "$message"
@@ -182,7 +216,7 @@ ask_confirmation() {
     return 1
 }
 
-if [[ "$MODE" == "--check" || "$MODE" == "--check-desktop" || "$MODE" == "--check-openrgb" ]]; then
+if [[ "$MODE" == "--check" || "$MODE" == "--check-desktop" || "$MODE" == "--check-openrgb" || "$MODE" == "--check-gpu-benchmark" ]]; then
     printf '%s\n' "${missing_packages[@]}"
     exit 10
 fi
@@ -192,12 +226,12 @@ if [[ "$PACKAGE_FAMILY" == "unknown" || -z "$PACKAGE_MANAGER" || ${#missing_pack
     exit 2
 fi
 
-if [[ "$MODE" == "--check-and-install" || "$MODE" == "--check-gui-and-install" || "$MODE" == "--check-desktop-and-install" || "$MODE" == "--check-openrgb-and-install" ]]; then
+if [[ "$MODE" == "--check-and-install" || "$MODE" == "--check-gui-and-install" || "$MODE" == "--check-desktop-and-install" || "$MODE" == "--check-openrgb-and-install" || "$MODE" == "--check-gpu-benchmark-and-install" ]]; then
     if ! ask_confirmation; then
         echo "Installation abgebrochen."
         exit 20
     fi
-elif [[ "$MODE" != "--install" && "$MODE" != "--install-desktop" && "$MODE" != "--install-openrgb" ]]; then
+elif [[ "$MODE" != "--install" && "$MODE" != "--install-desktop" && "$MODE" != "--install-openrgb" && "$MODE" != "--install-gpu-benchmark" ]]; then
     echo "Unbekannter Modus: $MODE" >&2
     exit 64
 fi
@@ -222,7 +256,10 @@ else
 fi
 
 remaining=()
-if [[ "$CHECK_OPENRGB_ONLY" == true ]]; then
+if [[ "$CHECK_GPU_BENCHMARK_ONLY" == true ]]; then
+    command -v vkmark >/dev/null 2>&1 || remaining+=("vkmark")
+    command -v gamescope >/dev/null 2>&1 || remaining+=("gamescope")
+elif [[ "$CHECK_OPENRGB_ONLY" == true ]]; then
     command -v openrgb >/dev/null 2>&1 || command -v OpenRGB >/dev/null 2>&1 || remaining+=("OpenRGB")
     if [[ "$PACKAGE_FAMILY" == "dnf" ]] && ! rpm -q openrgb-udev-rules >/dev/null 2>&1; then
         remaining+=("openrgb-udev-rules")
@@ -234,10 +271,12 @@ elif [[ "$CHECK_DESKTOP_ONLY" == true ]]; then
     python3 -c 'from PySide6.QtDBus import QDBusConnection' >/dev/null 2>&1 || remaining+=("PySide6 QtDBus")
 elif [[ "$CHECK_GUI_ONLY" == true ]]; then
     python3 -c 'import PySide6' >/dev/null 2>&1 || remaining+=("PySide6")
+    python3 -c 'from PySide6.QtMultimedia import QMediaPlayer, QVideoSink' >/dev/null 2>&1 || remaining+=("PySide6 QtMultimedia")
     python3 -c 'from PySide6.QtGui import QImageReader; assert any(bytes(x).lower() == b"svg" for x in QImageReader.supportedImageFormats())' >/dev/null 2>&1 || remaining+=("Qt SVG")
 else
     command -v liquidctl >/dev/null 2>&1 || remaining+=("liquidctl")
     python3 -c 'import PySide6' >/dev/null 2>&1 || remaining+=("PySide6")
+    python3 -c 'from PySide6.QtMultimedia import QMediaPlayer, QVideoSink' >/dev/null 2>&1 || remaining+=("PySide6 QtMultimedia")
     python3 -c 'from PySide6.QtGui import QImageReader; assert any(bytes(x).lower() == b"svg" for x in QImageReader.supportedImageFormats())' >/dev/null 2>&1 || remaining+=("Qt SVG")
     python3 -c 'from PIL import Image' >/dev/null 2>&1 || remaining+=("Pillow")
 fi

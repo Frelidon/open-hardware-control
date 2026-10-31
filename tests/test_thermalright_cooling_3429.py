@@ -82,6 +82,10 @@ def test_application_requires_mapping_calibration_and_restores_firmware() -> Non
     assert "restore_thermalright_cooling_on_quit" in main
     assert "restore_mainboard_firmware_control(channel)" in main
     assert "Levita meldet keinen Kühlmittelsensor" not in main
+    assert "kein Kühlmittelsensor gemeldet" not in main
+    assert "def refresh_mainboard_sensor_source_choices" in main
+    assert 'if not active:\n                choices.append(("Kraken-Kühlmittel", "liquid"))' in main
+    assert 'minimum_panel.setObjectName("coolingSafetyNote")' in main
     assert 'if str(key) == "water_temperature"' in layout_policy
     assert "card.setVisible(selected_by_user and available)" in dashboard
     assert "update_dashboard_status_hints" in main

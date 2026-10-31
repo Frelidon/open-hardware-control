@@ -100,7 +100,7 @@ class FanChannel:
     def display_name(self) -> str:
         label = _read_text(self.label_path) if self.label_path else ""
         if label:
-            return f"{label} · pwm{self.index}"
+            return label
         return f"PWM {self.index} · {self.name}"
 
 
@@ -328,6 +328,30 @@ class CurveDecision:
     reason: str
 
 
+def should_log_curve_batch(
+    previous: dict[str, int],
+    current: dict[str, int],
+    *,
+    elapsed_seconds: float,
+    emergency: bool = False,
+    minimum_change: int = 5,
+    heartbeat_seconds: float = 60.0,
+) -> bool:
+    """Keep the log useful without hiding actual PWM writes.
+
+    Runtime status still updates after every successful write.  The shared log
+    records the first batch, a meaningful duty change, an emergency, or one
+    heartbeat per minute instead of six near-identical lines per controller.
+    """
+
+    if emergency or not previous or set(previous) != set(current):
+        return True
+    if elapsed_seconds >= max(1.0, float(heartbeat_seconds)):
+        return True
+    threshold = max(1, int(minimum_change))
+    return any(abs(int(current[key]) - int(previous[key])) >= threshold for key in current)
+
+
 def decide_curve_output(
     policy: CurvePolicy,
     state: CurveState,
@@ -388,20 +412,8 @@ class PrivilegedFanHelperSession:
     def stop(self) -> None:
         process = self.process
         self.process = None
-        if process is None:
-            return
-        try:
-            if process.stdin is not None:
-                process.stdin.close()
-        except OSError:
-            pass
-        if process.poll() is None:
-            process.terminate()
-            try:
-                process.wait(timeout=1.0)
-            except subprocess.TimeoutExpired:
-                process.kill()
-                process.wait(timeout=1.0)
+        from modules.application_shutdown.v1_1.process_cleanup import stop_pipe_bound_process
+        stop_pipe_bound_process(process)
 
     def _reply(self, timeout: float) -> dict[str, object]:
         process = self.process

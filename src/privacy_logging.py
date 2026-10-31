@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import faulthandler
 import os
 import platform
 import re
@@ -16,6 +17,11 @@ from pathlib import Path
 from PySide6.QtCore import qVersion
 
 from app_constants import APP_DISPLAY_VERSION
+
+
+ERROR_LOG_MAX_BYTES = 2 * 1024 * 1024
+ERROR_LOG_RETAIN_BYTES = 1024 * 1024
+_native_fault_stream = None
 
 
 def redact_private_text(text: str) -> str:
@@ -83,6 +89,30 @@ def append_startup_event(message: str) -> Path | None:
         return None
 
 
+def append_error_event(message: str) -> Path | None:
+    """Append one durable, bounded and privacy-filtered runtime failure."""
+    try:
+        directory = application_state_directory()
+        directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+        os.chmod(directory, 0o700)
+        path = directory / "errors.log"
+        if path.is_file() and path.stat().st_size > ERROR_LOG_MAX_BYTES:
+            tail = path.read_text(encoding="utf-8", errors="replace")[
+                -ERROR_LOG_RETAIN_BYTES:
+            ]
+            first_newline = tail.find("\n")
+            if first_newline >= 0:
+                tail = tail[first_newline + 1:]
+            path.write_text(tail, encoding="utf-8")
+        stamp = time.strftime("%Y-%m-%dT%H:%M:%S%z")
+        with path.open("a", encoding="utf-8") as handle:
+            handle.write(f"[{stamp}] {redact_private_text(message).rstrip()}\n")
+        os.chmod(path, 0o600)
+        return path
+    except OSError:
+        return None
+
+
 def write_application_crash_log(
     exception_type: type[BaseException],
     exception: BaseException,
@@ -104,9 +134,48 @@ def write_application_crash_log(
         )
         path.write_text(redact_private_text(payload), encoding="utf-8")
         os.chmod(path, 0o600)
-        append_startup_event(f"ABSTURZ: {exception_type.__name__}: {exception}")
+        event = f"ABSTURZ: {exception_type.__name__}: {exception}"
+        append_startup_event(event)
+        append_error_event(event)
         return path
     except OSError:
+        return None
+
+
+def _install_native_fault_logging() -> Path | None:
+    """Enable fatal-signal tracebacks in a private file kept across a crash."""
+    global _native_fault_stream
+    try:
+        directory = application_state_directory()
+        directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+        os.chmod(directory, 0o700)
+        current = directory / "native-crash-current.log"
+        previous = directory / "last-native-crash.log"
+        if current.exists() and not current.is_symlink():
+            descriptor = os.open(current, os.O_RDONLY | os.O_NOFOLLOW)
+            with os.fdopen(descriptor, "r", encoding="utf-8", errors="replace") as stream:
+                prior_payload = stream.read(2 * 1024 * 1024)
+            if prior_payload.strip() and not previous.is_symlink():
+                descriptor = os.open(
+                    previous,
+                    os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW,
+                    0o600,
+                )
+                with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+                    os.fchmod(stream.fileno(), 0o600)
+                    stream.write(redact_private_text(prior_payload))
+        if current.is_symlink():
+            return None
+        descriptor = os.open(
+            current,
+            os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW,
+            0o600,
+        )
+        _native_fault_stream = os.fdopen(descriptor, "w", encoding="utf-8")
+        os.fchmod(_native_fault_stream.fileno(), 0o600)
+        faulthandler.enable(file=_native_fault_stream, all_threads=True)
+        return current
+    except (OSError, RuntimeError, ValueError):
         return None
 
 
@@ -121,6 +190,7 @@ def install_application_exception_logging() -> None:
         original_hook(exception_type, exception, trace)
 
     sys.excepthook = log_uncaught
+    _install_native_fault_logging()
     append_startup_event(
         f"START: Version {APP_DISPLAY_VERSION} · Python {platform.python_version()} · Qt {qVersion()}"
     )

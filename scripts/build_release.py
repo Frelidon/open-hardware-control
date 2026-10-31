@@ -46,9 +46,14 @@ PACKAGING_FILES = {
     "71-nzxt-kraken-2023.rules",
     "collect-diagnostics.sh",
     "install-dependencies.sh",
+    "install-lact.sh",
+    "install-trcc.sh",
     "install-fan-helper.sh",
+    "install-snapshot-helper.sh",
     "install-udev-rule.sh",
     "io.github.Frelidon.OpenHardwareControl.fan.policy",
+    "io.github.Frelidon.OpenHardwareControl.dmi.policy",
+    "io.github.Frelidon.OpenHardwareControl.snapshot.policy",
     "io.github.Frelidon.OpenHardwareControl.metainfo.xml",
     "kraken-control.desktop.in",
     "kraken-control.svg",
@@ -74,6 +79,7 @@ RUNTIME_FILES = {
     "dashboard_layout.py",
     "command_backend.py",
     "ohc_fan_helper.py",
+    "ohc_trcc_dmi_helper.py",
     "kraken_control.py",
     "kraken_lcd_designs.py",
     "kraken_sensors.py",
@@ -294,13 +300,40 @@ def install_runtime_tree(package_root: Path) -> None:
     helper = libexec_dir / "open-hardware-control-fan-helper"
     shutil.copy2(ROOT / "src/ohc_fan_helper.py", helper)
     helper.chmod(0o755)
+    dmi_helper = libexec_dir / "open-hardware-control-dmi-memory-helper"
+    shutil.copy2(SRC_DIR / "ohc_trcc_dmi_helper.py", dmi_helper)
+    dmi_helper.chmod(0o755)
+    snapshot_helper = libexec_dir / "open-hardware-control-snapshot-helper"
+    shutil.copy2(SRC_DIR / "modules/snapshot_manager/v1_0/helper.py", snapshot_helper)
+    snapshot_helper.chmod(0o755)
+    snapshot_admin_helper = libexec_dir / "open-hardware-control-snapshot-admin-helper"
+    shutil.copy2(SRC_DIR / "modules/snapshot_manager/v1_0/helper.py", snapshot_admin_helper)
+    snapshot_admin_helper.chmod(0o755)
 
     polkit_dir = package_root / "usr/share/polkit-1/actions"
     polkit_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy2(
+        PACKAGING_DIR / "io.github.Frelidon.OpenHardwareControl.dmi.policy",
+        polkit_dir / "io.github.Frelidon.OpenHardwareControl.dmi.policy",
+    )
+    # copy2 preserves checkout permissions (for example a group-write umask).
+    # Both DEB and RPM consume this stage; its silent read-only authorization
+    # policy must always be root-installable as a non-writable 0644 file.
+    (polkit_dir / "io.github.Frelidon.OpenHardwareControl.dmi.policy").chmod(0o644)
+    shutil.copy2(
         PACKAGING_DIR / "io.github.Frelidon.OpenHardwareControl.fan.policy",
         polkit_dir / "io.github.Frelidon.OpenHardwareControl.fan.policy",
     )
+    shutil.copy2(
+        PACKAGING_DIR / "io.github.Frelidon.OpenHardwareControl.snapshot.policy",
+        polkit_dir / "io.github.Frelidon.OpenHardwareControl.snapshot.policy",
+    )
+    # Normalize only this isolated package stage, including copied directories.
+    # umask/copytree must not ship writable helper ancestors on fresh installs;
+    # checkout directories, stage parents and existing host paths stay untouched.
+    for directory in (package_root, *package_root.rglob("*")):
+        if not directory.is_symlink() and directory.is_dir():
+            directory.chmod(0o755)
 
 
 def build_deb(temp: Path) -> Path:
@@ -319,7 +352,7 @@ def build_deb(temp: Path) -> Path:
                 "Priority: optional",
                 "Architecture: all",
                 "Maintainer: Frelidon <noreply@github.com>",
-                "Depends: python3, liquidctl, python3-pil, python3-pyside6.qtwidgets, python3-pyside6.qtnetwork, python3-pyside6.qtdbus, python3-pyside6.qtsvg, policykit-1",
+                "Depends: python3, liquidctl, python3-pil, python3-pyside6.qtwidgets, python3-pyside6.qtmultimedia, python3-pyside6.qtnetwork, python3-pyside6.qtdbus, python3-pyside6.qtsvg, policykit-1 | polkitd, pkexec",
                 "Homepage: https://github.com/Frelidon/open-hardware-control",
                 "Description: NZXT Kraken, Thermalright Levita, OpenLinkHub and RGB for Linux",
                 " Open-source Linux GUI for NZXT Kraken and Thermalright Levita display/cooling",
@@ -430,7 +463,12 @@ cp -a usr %{{buildroot}}/
 /usr/share/metainfo/io.github.Frelidon.OpenHardwareControl.metainfo.xml
 /usr/lib/udev/rules.d/71-nzxt-kraken-2023.rules
 /usr/libexec/open-hardware-control-fan-helper
+/usr/libexec/open-hardware-control-dmi-memory-helper
+/usr/libexec/open-hardware-control-snapshot-helper
+/usr/libexec/open-hardware-control-snapshot-admin-helper
 /usr/share/polkit-1/actions/io.github.Frelidon.OpenHardwareControl.fan.policy
+/usr/share/polkit-1/actions/io.github.Frelidon.OpenHardwareControl.dmi.policy
+/usr/share/polkit-1/actions/io.github.Frelidon.OpenHardwareControl.snapshot.policy
 
 %changelog
 * Fri Aug 28 2026 Frelidon <noreply@github.com> - {VERSION}-{"0.intern2" if INTERNAL else "1"}

@@ -23,7 +23,7 @@ from dataclasses import dataclass, asdict
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
 
 
 DEFAULT_API_URL = "http://127.0.0.1:27003"
@@ -31,6 +31,23 @@ SERVICE_NAME = "OpenLinkHub.service"
 USER_ACTIONS = {"start", "stop", "restart", "enable", "disable"}
 MAX_API_RESPONSE_BYTES = 4 * 1024 * 1024
 CONTROL_ID_RE = re.compile(r"^[0-9a-f]{64}$")
+
+
+class _NoApiRedirect(HTTPRedirectHandler):
+    def redirect_request(self, request, response, code, message, headers, target):
+        # An HTTP redirect is not an API response, even if its destination is
+        # another local service. Never replay a device mutation or escape the
+        # validated fixed origin by following Location.
+        raise HTTPError(request.full_url, code, "OpenLinkHub API redirects are blocked", headers, response)
+
+
+_API_PROXY = ProxyHandler({})
+_API_OPENER = build_opener(_API_PROXY, _NoApiRedirect())
+
+
+def urlopen(request, *, timeout):
+    """Keep every API transaction direct and at its validated local origin."""
+    return _API_OPENER.open(request, timeout=timeout)
 
 # Actions are intentionally named independently from HTTP paths.  The caller
 # cannot select a URL or method and every payload is rebuilt after validation.
@@ -41,6 +58,7 @@ WRITE_ENDPOINTS = {
     "label": ("POST", "/api/label"),
     "brightness": ("POST", "/api/brightness/gradual"),
     "lcd-rotation": ("POST", "/api/lcd/rotation"),
+    "lcd-profile": ("POST", "/api/lcd/profile"),
     "mouse-dpi": ("POST", "/api/mouse/dpi"),
     "mouse-polling": ("POST", "/api/mouse/pollingRate"),
     "mouse-sleep": ("POST", "/api/mouse/sleep"),
@@ -118,10 +136,10 @@ def _service_state(*, user: bool) -> dict[str, Any]:
 
 
 def installed_version() -> str:
-    for package in ("OpenLinkHub", "openlinkhub"):
-        result = _run(["rpm", "-q", "--qf", "%{VERSION}-%{RELEASE}", package])
-        if result.returncode == 0 and result.stdout.strip():
-            return result.stdout.strip()
+    from modules.openlinkhub_update.v1_0.policy import update_plan
+    plan = update_plan()
+    if plan.method != "manual":
+        return plan.installed_version
     binary = "/opt/OpenLinkHub/OpenLinkHub"
     if os.path.isfile(binary) or shutil.which("OpenLinkHub"):
         return "installiert (Version unbekannt)"
@@ -146,7 +164,7 @@ def _api_request(
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
-            "User-Agent": "Open-Hardware-Control/3.4.17-INTERN",
+            "User-Agent": "Open-Hardware-Control",
         },
     )
     with urlopen(request, timeout=timeout) as response:  # noqa: S310 - loopback validated above
@@ -161,6 +179,16 @@ def _api_request(
         if isinstance(code, int) and code >= 400:
             message = result.get("message") or result.get("error") or f"API-Fehler {code}"
             raise RuntimeError(str(message))
+    # OpenLinkHub 0.9.2 also returns HTTP 200 for rejected writes. GET
+    # catalogues can legitimately contain status=0, so only writes require
+    # the explicit documented success acknowledgement.
+    if method != "GET" and (
+        not isinstance(result, dict)
+        or type(result.get("status")) is not int
+        or result["status"] != 1
+    ):
+        message = result.get("message") if isinstance(result, dict) else None
+        raise RuntimeError(str(message or "OpenLinkHub hat den Schreibauftrag nicht bestätigt"))
     return result
 
 
@@ -214,6 +242,11 @@ def validate_write_payload(action: str, payload: Any) -> dict[str, Any]:
             "channelId": _safe_int(payload, "channel_id", 0, 255),
             "profile": _safe_text(payload, "profile"),
         }
+    if action == "lcd-profile":
+        profile = _safe_text(payload, "profile", maximum=48)
+        if not re.fullmatch(r"[A-Za-z0-9_-]+(?:;[0-9]{1,3})?", profile):
+            raise ValueError("Ungültiges OpenLinkHub-LCD-Profil")
+        return {"_controlId": control_id, "profile": profile}
     if action == "speed-manual":
         return {
             "_controlId": control_id,

@@ -1,0 +1,53 @@
+"""Public interface for monitor-aware main-window placement 1.5."""
+
+from .confirmation import (
+    activate_window_from_tray,
+    apply_initial_window_presentation,
+    confirm_window_screen_after_mapping,
+    finish_initial_window_mapping,
+)
+from .placement import (
+    DEFAULT_WINDOWED_SIZE_PERCENT,
+    PRIMARY_SCREEN_PREFERENCE,
+    WINDOW_START_LAST,
+    WINDOW_START_MAXIMIZED,
+    WINDOW_START_WINDOWED,
+    WindowRect,
+    decode_window_rect,
+    encode_window_rect,
+    normalize_screen_preference,
+    normalize_window_start_mode,
+    normalize_windowed_size_percent,
+    preferred_window_rect,
+    preference_for_screen,
+    resembles_maximized_rect,
+    resolve_start_maximized,
+    safe_window_rect,
+    screen_option_label,
+    select_preferred_screen,
+)
+
+__all__ = [
+    "activate_window_from_tray",
+    "apply_initial_window_presentation",
+    "confirm_window_screen_after_mapping",
+    "finish_initial_window_mapping",
+    "DEFAULT_WINDOWED_SIZE_PERCENT",
+    "PRIMARY_SCREEN_PREFERENCE",
+    "WINDOW_START_LAST",
+    "WINDOW_START_MAXIMIZED",
+    "WINDOW_START_WINDOWED",
+    "WindowRect",
+    "decode_window_rect",
+    "encode_window_rect",
+    "normalize_screen_preference",
+    "normalize_window_start_mode",
+    "normalize_windowed_size_percent",
+    "preferred_window_rect",
+    "preference_for_screen",
+    "resembles_maximized_rect",
+    "resolve_start_maximized",
+    "safe_window_rect",
+    "screen_option_label",
+    "select_preferred_screen",
+]

@@ -3,10 +3,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 MAIN = (ROOT / "src/kraken_control.py").read_text(encoding="utf-8")
+OPENRGB = (ROOT / "src/openrgb_integration.py").read_text(encoding="utf-8")
 UI = (ROOT / "src/thermalright_display_ui.py").read_text(encoding="utf-8")
-LAYOUT_CANVAS = (ROOT / "src/modules" / "lcd_levita" / "v1_4" / "layout_canvas.py").read_text(encoding="utf-8")
-LAYOUT_MODEL = (ROOT / "src/modules" / "lcd_levita" / "v1_4" / "layout_model.py").read_text(encoding="utf-8")
-THEME_ADAPTER = (ROOT / "src/modules" / "lcd_levita" / "v1_4" / "theme_adapter.py").read_text(encoding="utf-8")
+LAYOUT_CANVAS = (ROOT / "src/modules" / "lcd_levita" / "v1_7" / "layout_canvas.py").read_text(encoding="utf-8")
+LAYOUT_MODEL = (ROOT / "src/modules" / "lcd_levita" / "v1_7" / "layout_model.py").read_text(encoding="utf-8")
+THEME_ADAPTER = (ROOT / "src/modules" / "lcd_levita" / "v1_7" / "theme_adapter.py").read_text(encoding="utf-8")
 BUILD = (ROOT / "scripts" / "build_release.py").read_text(encoding="utf-8")
 DESKTOP = (ROOT / "packaging/kraken-control.desktop.in").read_text(encoding="utf-8")
 
@@ -16,14 +17,26 @@ def test_thermalright_studio_is_a_full_width_lcd_tile() -> None:
     assert '("thermalright", self.thermalright_display_studio, 3)' in MAIN
 
 
-def test_test_mode_defaults_to_no_usb_writes() -> None:
-    assert 'self.settings.value("thermalright/test_mode", True, type=bool)' in UI
+def test_detected_levita_offers_verified_trcc_installer_and_all_local_catalogs() -> None:
+    assert 'QPushButton("TRCC Linux für Thermalright-LCD installieren")' in UI
+    assert "self.device_present and not self.cli.available" in UI
+    assert 'installer("trcc")' in UI
+    assert "default_trcc_media_directories()" in UI
+    assert '"TRCC-Katalog"' in UI
+    assert '"Eigene TRCC-Dateien"' in UI
+    assert 'Path(__file__).resolve().parent / "assets" / "levita-designs"' in UI
+    assert 'device_present=thermalright_display_present()' in MAIN
+
+
+def test_test_mode_defaults_to_hardware_only_for_present_device_and_backend() -> None:
+    assert "default_test_mode = not (self.device_present and self.cli.available)" in UI
+    assert 'self.settings.value("thermalright/test_mode", default_test_mode, type=bool)' in UI
     assert "if self.test_mode.isChecked():" in UI
     assert "nur Vorschau, keine USB-Schreibzugriffe" in UI
 
 
 def test_cutout_and_drag_editor_are_visible() -> None:
-    assert "from modules.lcd_levita.v1_4.layout_canvas import ThermalrightCanvas" in UI
+    assert "from modules.lcd_levita.v1_7.layout_canvas import ThermalrightCanvas" in UI
     assert "ItemIsMovable" in LAYOUT_CANVAS
     assert 'cutout_label = self._scene.addSimpleText(f"NOTCH · {cutout_width} px")' in LAYOUT_CANVAS
 
@@ -51,7 +64,7 @@ def test_real_notch_mask_and_background_movement_are_user_adjustable() -> None:
     assert "path.quadTo(0.0, height, -bottom, height)" in LAYOUT_CANVAS
     assert "outer_right_corner_wedges()" in LAYOUT_CANVAS
     assert "def fill_outside_levita_panel" in (
-        ROOT / "src/modules" / "lcd_levita" / "v1_4" / "panel_geometry.py"
+        ROOT / "src/modules" / "lcd_levita" / "v1_7" / "panel_geometry.py"
     ).read_text(encoding="utf-8")
     assert "READABLE_CONTROL_HEIGHT = 36" in UI
     assert "def _readable_value_widget" in UI
@@ -76,7 +89,9 @@ def test_media_library_uses_cards_and_animates_the_main_preview() -> None:
     assert '"-vf", "fps=4,scale=800:-2"' in UI
     assert '"-frames:v", "16"' in UI
     assert "def _fit_hover_preview_frames" in UI
-    assert "self.canvas.set_background(frame)" in UI
+    preview = (ROOT / 'src/modules/lcd_levita/v1_7/media_preview.py').read_text(encoding='utf-8')
+    assert 'self.studio.canvas.set_background' in preview
+    assert 'exposed(studio.canvas)' in preview
     assert "def _fit_transparent_layer_pixmap" in UI
     assert "canvas.fill(QColor(0, 0, 0, 0))" in UI
     assert "TRCC-Prozess ist abgestürzt (externer Backend-/libusb-Fehler)" in UI
@@ -119,15 +134,15 @@ def test_lcd_studio_has_separate_background_and_hardware_design_layers() -> None
 
 
 def test_levita_preview_is_centered_at_the_real_display_aspect_ratio() -> None:
-    assert "self.setMaximumSize(960, 432)" in LAYOUT_CANVAS
+    assert "self.setFixedSize(880, 396)" in LAYOUT_CANVAS
     assert "def heightForWidth" in LAYOUT_CANVAS
     assert "LEVITA_HEIGHT / LEVITA_WIDTH" in LAYOUT_CANVAS
     assert 'preview_stage.setObjectName("levitaPreviewStage")' in UI
     assert "self.preview_canvas_row.addWidget(self.canvas, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)" in UI
     assert "self.preview_canvas_row.insertWidget(1, self.geometry_scroll, 1)" in UI
     assert "galleries = QHBoxLayout()" in UI
-    assert "MEDIA_GALLERY_COLUMNS = (4, 8)" in UI
-    assert "HARDWARE_GALLERY_COLUMNS = (4, 8)" in UI
+    assert "MEDIA_GALLERY_COLUMNS = (1, 12)" in UI
+    assert "HARDWARE_GALLERY_COLUMNS = (1, 12)" in UI
     assert "DESIGN_CARD_WIDTH = 180" in UI
     assert "def gallery_column_count" in UI
     assert "def _relayout_design_galleries" in UI
@@ -157,7 +172,18 @@ def test_levita_has_real_independent_display_settings_and_usb_timeout_guard() ->
     assert "self._daemon_stream_started()" in UI
     assert "self.stream_process = track_qprocess(QProcess(self))" in UI
     assert "self.stream_process.started.connect(self._on_stream_started)" in UI
-    assert "args = self.cli.play_args(0.15)" in UI
+    assert "self.stream_restart_policy = StreamRestartPolicy()" in UI
+    assert "self.stream_restart_timer.timeout.connect(self._restart_stream_client)" in UI
+    assert "self.daemon_health_timer.timeout.connect(self._poll_trcc_daemon_health)" in UI
+    assert "self.cli.daemon_kill_args()" in UI
+    assert "find_trcc_daemon_memory()" in UI
+    assert "def force_recover_display" in UI
+    assert "signal_trcc_daemon(sample.pid, signal.SIGTERM)" in UI
+    assert "Display freigeben" in UI
+    assert "redact_private_text(text)" in UI
+    assert "args = self.cli.play_args(1.0 / max(1, self.active_lcd_fps))" in UI
+    assert "automatische Rückstufung" in UI
+    assert "Dekor-Animation" in UI
     assert "self._stop_stream_client()" in UI
     assert "self.command_step_timer.setInterval(350)" in UI
     assert "self.command_step_timer.start()" in UI
@@ -165,8 +191,9 @@ def test_levita_has_real_independent_display_settings_and_usb_timeout_guard() ->
     assert "LEVITA_APPLY_COOLDOWN_SECONDS = 10.0" in UI
     assert "Levita-Designwechsel vorgemerkt" in UI
     assert "Display bitte einmal vollständig stromlos machen" in UI
-    assert "self.cli.stop_video_now(timeout=1.5)" in UI
-    assert "aktives TRCC-Originaldesign wiederhergestellt" in UI
+    assert "self.firmware_guard.finish(restored=restored)" in UI
+    assert "Thermalright-Standardbild kehrt nach dem Firmware-Zeitlimit zurück" in UI
+    assert "restore_firmware_logo" in UI
     assert "commands = self.cli.reconnect_sequence()" in UI
     assert "Display wird sauber neu verbunden" in UI
 
@@ -186,6 +213,17 @@ def test_levita_start_design_is_explicit_and_retried_once() -> None:
     assert "def apply_startup_design_if_enabled" in UI
     assert "self.startup_retry_count >= 1" in UI
     assert "thermalright_studio.apply_startup_design_if_enabled" in MAIN
+
+
+def test_levita_start_design_can_be_staged_and_saved_with_profiles() -> None:
+    assert "def stage_profile_startup_design" in UI
+    assert "def stage_profile_effect_media" in UI
+    assert "def profile_startup_payload" in UI
+    assert "def restore_profile_startup_payload" in UI
+    assert "def _register_saved_effect_media" in UI
+    assert "validate_effect_handoff(resolved, root)" in UI
+    assert 'result["levita_display"] = levita_payload' in MAIN
+    assert "thermalright_studio.restore_profile_startup_payload(levita_display, startup=startup)" in MAIN
 
 
 def test_running_window_has_kde_desktop_identity_and_icon() -> None:
@@ -211,19 +249,33 @@ def test_project_owned_levita_media_are_packaged_from_an_explicit_allowlist() ->
         "ohc-ai-crystal-core.png",
         "ohc-ai-command-deck.png",
     }
-    expected_video = "ohc-ai-quantum-voyage-30s.mp4"
-    expected_top_level = expected_images | {expected_video, "README.md"}
-    assert {path.name for path in designs.iterdir() if path.is_file()} == expected_top_level
-    assert {path.name for path in designs.iterdir() if path.is_dir()} == {
-        "ohc-nebula-drift",
-        "ohc-orbital-command",
+    expected_videos = {
+        "ohc-ai-quantum-voyage-30s.mp4",
+        "ohc-3d-orbital-ring-10s.mp4",
+        "ohc-3d-neon-apex-10s.mp4",
+        "ohc-3d-quantum-core-10s.mp4",
     }
+    expected_top_level = expected_images | expected_videos | {"README.md"}
+    assert {path.name for path in designs.iterdir() if path.is_file()} == expected_top_level
+    expected_themes = {
+        "ohc-nebula-drift", "ohc-nebula-drift-minimal",
+        "ohc-nebula-drift-performance", "ohc-orbital-command", "kenney-space-console",
+        "kenney-orbital-reticle", "kenney-navigator-grid", "kenney-ambient-glow",
+        "kenney-clean-telemetry", "ohc-orbit", "ohc-aqua-pulse",
+        "ohc-horizon-glass", "ohc-split-core", "ohc-spectrum-ring",
+        "ohc-neon-double-arc", "ohc-prism-segments", "ohc-aurora-radar",
+    }
+    assert {path.name for path in designs.iterdir() if path.is_dir()} == expected_themes
     for filename in expected_images:
         with Image.open(designs / filename) as image:
             assert image.size == (1600, 720)
-    assert (designs / expected_video).stat().st_size > 1_000_000
-    for filename in expected_images | {expected_video}:
+    for filename in expected_videos:
+        assert (designs / filename).stat().st_size > 1_000_000
+    for filename in expected_images | expected_videos:
         assert filename in UI
+    for dirname in expected_themes:
+        assert dirname in UI
+    assert "render_levita_overlays.py" in (designs / "README.md").read_text(encoding="utf-8")
     assert '"ohc": "OHC-Designs"' in (ROOT / "src/thermalright_display.py").read_text(encoding="utf-8")
 
 
@@ -232,6 +284,10 @@ def test_overlay_spacing_presets_remain_individually_editable() -> None:
     assert "Untereinander" in UI
     assert 'self.apply_overlay_layout("two_rows")' in UI
     assert "Letzten Zustand wiederherstellen" in UI
+    assert "+ Eigenen Text hinzufügen" in UI
+    assert "QFontDatabase.families()" in UI
+    assert "def remove_custom_text_overlay" in UI
+    assert "stage_custom_overlay_theme(" in UI
 
 
 def test_runtime_package_contains_all_thermalright_modules() -> None:
@@ -294,14 +350,16 @@ def test_openrgb_crash_is_quarantined_and_ui_tests_disable_hardware_io() -> None
     assert 'os.environ.get("OHC_DISABLE_HARDWARE_IO") == "1"' in MAIN
     assert "self.openrgb_engine_crash_quarantined = True" in MAIN
     assert "automatischer Neustart gesperrt" in MAIN
-    assert "env=openrgb_subprocess_environment()" in MAIN
+    assert "env=openrgb_subprocess_environment()" in OPENRGB
+    runtime_versions = MAIN.split("def runtime_component_versions", 1)[1].split("def make_about_tab", 1)[0]
+    assert "subprocess.run" not in runtime_versions
 
 
 def test_gallery_column_count_fills_the_available_width() -> None:
     from thermalright_display_ui import gallery_column_count
 
-    assert gallery_column_count(400, minimum=4, maximum=8) == 4
-    assert gallery_column_count(1600, minimum=4, maximum=8) == 8
-    assert gallery_column_count(1400, minimum=4, maximum=8) >= 6
-    assert gallery_column_count(900, minimum=4, maximum=8) >= 4
-    assert gallery_column_count(900, minimum=4, maximum=8) <= 8
+    assert gallery_column_count(400, minimum=1, maximum=12) == 2
+    assert gallery_column_count(2200, minimum=1, maximum=12) >= 11
+    assert gallery_column_count(1400, minimum=1, maximum=12) >= 7
+    assert gallery_column_count(900, minimum=1, maximum=12) >= 4
+    assert gallery_column_count(900, minimum=1, maximum=12) <= 5

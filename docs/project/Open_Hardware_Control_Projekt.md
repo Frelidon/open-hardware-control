@@ -1,6 +1,6 @@
 # Open Hardware Control – zentrale Projektdokumentation
 
-Stand: **3.4.29.50 INTERN**, 07. September 2026
+Stand: **3.4.29.82 INTERN**, 13. September 2026
 
 ## Zielbild
 
@@ -8,9 +8,116 @@ Open Hardware Control by Frelidon ist die gemeinsame, modular erweiterbare Linux
 
 Open Radeon Control Center bleibt ein eigenständiges Projekt. Es wird weder technisch noch organisatorisch in Open Hardware Control verschmolzen.
 
+## Version 3.4.29.82 INTERN
+
+Die GPU-Designanwendung verwendet passende gemeldete Sapphire-Hardwareanimationen statt automatisch External Control. Das bestehende persönliche PC-Profil benötigt keine Änderung und seine übrigen LED-Anzahlen bleiben erhalten. GPU-Doppelklick und die neue Steuerweg-Schaltfläche öffnen dieselbe Einrichtung; bei bestätigter ARGB-Verkabelung wird der reale Direct-Controller zugeordnet und sein bestehender LED-Zonen-Editor geöffnet. Die Zuordnung ist profilfähig, fehlende Quellen fallen auf native Effekte zurück. Die interne logische GPU-LED wird nicht in erfundene adressierbare Segmente umgewandelt. Alle 367 Tests sowie Sicherheits-, Lokalisierungs- und Release-Prüfungen bestanden; die optische Wirkung bleibt am realen PC zu bestätigen. Kein öffentlicher Release.
+
+## Version 3.4.29.80 INTERN
+
+
+Version 3.4.29.80 ersetzt die gleichzeitige NCT6687-Einrichtung durch einen statusabhängigen Schritt-für-Schritt-Assistenten. Er erkennt eine bestätigende `mokutil`-Ausgabe auch dann korrekt, wenn nur der optionale Zugriff auf den Kernel-Keyring fehlschlägt, und aktiviert Schlüssel-, Import- und Ladeaktionen nur im passenden Zustand. Thermalright-Ansichten blenden die nicht vorhandene Kühlmittelquelle aus; der wichtige Sicherheitshinweis besitzt eine eigene lesbare Fläche. Mainboard-Kanäle verwenden eindeutige Namen, alle Gehäuselüfter-Zuordnungen lassen sich ohne Verlust der Kurven zurücksetzen und der Assistent springt nach Abschluss direkt zum nächsten Lüfter. In PC-Ansichten öffnet ein Doppelklick das zugeordnete RGB-Gerät; echte LED-Zonen werden nur bei gemeldetem OpenRGB-Direct-Modus angeboten. Das X verlässt sich unter KDE/Wayland nicht länger auf eine dort ungültige Tray-Geometrie, sondern blendet ein sichtbar registriertes Tray-Programm vollständig aus der Taskleiste aus. Es gibt kein öffentliches GitHub-Release.
+
+## Version 3.4.29.79 INTERN
+
+Version 3.4.29.79 ergänzt global abschaltbare leichte Seitenübergänge ohne Seitenaufnahme und einen auf 0 bis 4 GiB begrenzbaren gemeinsamen SSD-Cache für regenerierbare LCD-/Wallpaper-Kataloge und Vorschaubilder. Mehrsekündige ENE-Wiederherstellung wartet während aktiver Navigation. Der in vier Sprachen verfügbare Wallpaper-Assistent kann nach Bestätigung die freien KDE-/Qt-D-Bus-Hilfspakete aus vorhandenen Paketquellen installieren; der geprüfte CaptSilver-Plugin-Weg bleibt getrennt. Ein neuer NCT6687-Assistent führt getrennt durch Treiber, DKMS-Zertifikat, festen MOK-Import, physische UEFI-Bestätigung und Laden nach dem Neustart, ohne Passwortzugriff, automatischen Neustart oder Secure-Boot-Umgehung. Die automatische Gehäuselüfterregelung zeigt ausschließlich ihren echten aktiven Zustand vollflächig blau. Das neue Log belegt außerdem einen widersprüchlichen Fensterschluss: Eine kurz ungültige Tray-Geometrie schaltete Display und RGB ab, obwohl der Prozess bestehen blieb. Das X minimiert bei gewünschtem Tray-Betrieb nun sicher weiter, seine 48×42-Pixel-Fläche reicht bis in die obere rechte Ecke und wird dort nicht vom Größenänderungsrand abgefangen. Nur ein ausdrückliches Beenden führt die geordnete Hardware-Rückgabe aus.
+
+## Version 3.4.29.76 INTERN
+
+Version 3.4.29.76 behebt den im vollständigen Laufzeit- und Kernelprotokoll nachgewiesenen Levita-Langzeitstillstand. Der TRCC-Daemon war nach gut acht Stunden auf rund 15,5 GB RSS angewachsen und wurde vom OOM-Killer beendet; ein Ersatzdaemon hielt anschließend USB, während der Taktgeber seine alte IPC-Verbindung verloren hatte. OHC überwacht deshalb nur den exakt identifizierten eigenen Daemon rein lesend, startet ihn bei 1 GiB kontrolliert über IPC neu und überträgt das gewählte Design erneut. Derselbe begrenzte Weg greift bei verlorener IPC-Verbindung. Die sichtbare Protokollansicht hält als Ringpuffer die letzte Stunde vor, vollständige Sitzungsdateien bleiben erhalten und Fehler werden zusätzlich privat, bereinigt und größenbegrenzt gespeichert.
+
+## Version 3.4.29.75 INTERN
+
+Version 3.4.29.75 beendet das im neuen Log sichtbare Pendeln zwischen kleinem und großem Fenster: Der interne Normalzustand während der KWin-Platzierung ist geschützt, automatische Startprofile verändern die globalen Anzeigeeinstellungen nicht und lösen keine zweite Platzierung aus. LCD-Hintergründe, Datenoberflächen sowie die Ebene-1- und Sensorlayout-Karten unter Display-Effekte nutzen jetzt dynamisch die tatsächliche Breite. Ein nicht-destruktiver LCD-Manager verwaltet mehrere Ordner, einzelne Bilder/Videos, eigene Anzeigenamen und Ausblendungen; TRCC-IDs werden lesbar benannt, ohne Fremddateien zu verändern oder auszuliefern. Die Temperaturaufzeichnung zeigt lokales Datum und Uhrzeit, lässt Diagramm und Listen über Splitter skalieren und exportiert frei gewählte Zeiträume und Sensoren ausdrücklich als CSV oder JSON.
+
+## Version 3.4.29.74 INTERN
+
+Version 3.4.29.74 behebt das verbleibende Mehrmonitor-Startproblem unter KDE/Wayland. Der gelieferte Log belegt, dass OHC den 3440×1440-Hauptbildschirm `DP-1` korrekt ausgewählt und eine Position in dessen Arbeitsfläche berechnet hatte; KWin konnte das gleichzeitig maximiert gemappte Fenster danach trotzdem anhand des Discover-Startkontexts auf einen anderen Ausgang legen. OHC bildet das Fenster nun zuerst normal auf dem Zielmonitor ab, maximiert erst im folgenden Qt-Zyklus und prüft nach 350 ms den tatsächlich gemeldeten Bildschirm. Nur eine echte Abweichung wird korrigiert und mit Ziel, Ist-Bildschirm und Geometrie protokolliert. Das Öffnen aus dem Infobereich folgt derselben Reihenfolge.
+
+## Version 3.4.29.73 INTERN
+
+Version 3.4.29.73 ersetzt die bisherige pauschale Tray-Aktion durch eine modellabhängige Wiederherstellung: Bei der Thermalright Levita beendet OHC seinen Stream, trennt den einzigen TRCC-Besitzer und übergibt das Display an die eingebaute Firmware; bei NZXT Kraken bleibt die vorhandene Flüssigkeitstemperaturanzeige erhalten. Dieselbe Thermalright-Aktion ist oben auf der LCD-Seite und unter Display-Effekte erreichbar. Der Testmodus sendet nichts per USB, eine bereits getrennte Verbindung gilt als erfolgreich und gespeicherte Startprofile werden nicht verändert. Ein ausdrückliches Beenden über das Tray umgeht nur in diesem Fall das Minimieren ins Tray und funktioniert mit einem Klick. Die acht eigenen OHC-Lichtbänder werden aus 3200×1440-Frames hochwertig auf die nativen 1600×720 heruntergerechnet.
+
+## Version 3.4.29.72 INTERN
+
+Version 3.4.29.72 ordnet die Animationen von Spectrum Ring, Neon Double Arc, Prism Segments und Aurora Radar ausschließlich den editierbaren Ebene-2-Layouts zu. Jede Animation ist standardmäßig aktiv und direkt abschaltbar. Eine frei gewählte Ebene 1 wird lokal mit dem transparenten Glow-/Partikelmotiv in einen begrenzten 1600×720-Cache-Loop komponiert; Live-Daten und der einzige TRCC-/USB-Besitzer bleiben unverändert. Vorschau und physisches Display erhalten getrennte Bildraten. Das LCD bleibt standardmäßig bei 15 FPS; 60 FPS wird nur nach ausdrücklicher experimenteller Freigabe sichtbar und fällt bei unerwarteten Taktgeberfehlern begrenzt über 30/20 auf 15 zurück. Der automatische Spielmodus nutzt GameMode, Gamescope oder eine eigene Programmliste sowie einen manuellen Schalter, aber keine Lastheuristik und keine allgemeine Wayland-Fensterbeobachtung. Hauptfensterzustand und normale Geometrie werden getrennt wiederhergestellt, und der Randcursor wird auf allen Abbruchpfaden freigegeben.
+
+## Version 3.4.29.71 INTERN
+
+Version 3.4.29.71 ersetzt die Hauptdesign-Auswahlliste unter Display-Effekte durch grafische Ebene-1-Kacheln, während Kategorie, Farbvariante und alle Urheber-/Quellen-/Lizenzlinks erhalten bleiben. Der eigene nahtlose Spektrumring rotiert acht Farbsegmente und koppelt bei Auswahl die passende editierbare Live-Datenebene. OHC-Datenlayouts verwenden einheitliche DejaVu-Schriften und neue kompakte Glasrahmen für Uhren. In den Einstellungen sind der dynamische Hauptbildschirm und alle festen Monitoranschlüsse sichtbar; ein maximiertes Fenster wird zuerst normal auf dem gewünschten Ausgang platziert und danach wieder maximiert, damit KWin nicht den vorherigen Monitor übernimmt. Auswahl und Vorschau bleiben hardwarefrei, die Profilaktualisierung bleibt erforderlich und nur die bestehende TRCC-Warteschlange überträgt das Design.
+
+## Version 3.4.29.70 INTERN
+
+Version 3.4.29.70 ergänzt vier vollständig eigene bunte Datenlayouts: Spectrum Ring, Neon Double Arc, Prism Segments und Aurora Radar. Sie übernehmen weder Herstellerlogo noch Produktkontur oder Einzelbilder des Referenzvideos. Im Ebene-2-Editor lassen sich nun bis zu zwölf eigene Texte mit Inhalt, lokal installierter Qt-Schrift, Größe, Farbe, Sichtbarkeit und Position verwalten und einzeln entfernen. Die Vorschau bleibt fest auf 880×396 im exakten 1600:720-Verhältnis, sodass Werkzeugbereiche und Scrollbewegungen sie nicht mehr vergrößern oder verkleinern. Schrift und Text werden in ein privates validiertes natives Theme übernommen und ausschließlich über die bestehende einzelne TRCC-Warteschlange angewendet. Für eine der nächsten zwei bis drei Versionen ist ein nicht-destruktiver Design-Manager für mehrere Ordner und einzelne Medien verbindlich vorgemerkt.
+
+## Version 3.4.29.69 INTERN
+
+Version 3.4.29.69 ergänzt auf beiden LCD-Unterseiten eine browserähnliche Reiterleiste für „Display & Layout“ und „Display-Effekte“. Sie folgt der vorhandenen Seitenleiste in beide Richtungen und wird als wiederverwendbares Muster für künftige Bereiche mit Unterseiten geführt. Display-Effekte 1.7 liest das aktive gebündelte Levita-Medium über dessen exakt validierten Pfad und markiert die passende Effektart, Kategorie, das Hauptdesign und die Farbvariante. „OHC Light Ribbons“ setzt die beobachtete wandernde Lichtwellen-Idee als vollständig eigenen, reproduzierbaren 1600×720-Loop in acht Richtungen um; Referenzvideo, Kühlerform und Logo sind nicht enthalten. Die Synchronisierung blockiert Änderungssignale und löst weder Profilvormerkung noch Hardwarezugriff aus.
+
+## Version 3.4.29.68 INTERN
+
+Version 3.4.29.68 behebt die schwer auffindbare Temperaturaufzeichnung aus 3.4.29.67. „Kühlung“ klappt in der Hauptnavigation jetzt wie „LCD“ auf und zeigt die festen Unterpunkte „Steuerung & Profile“ und „Temperaturaufzeichnung“. Die Auswahl in der Seitenleiste und die interne Kühlungsansicht folgen einander in beide Richtungen; Navigationsanpassung und Zurücksetzen behalten beide Unterpunkte. Der gelieferte Log und die lokale Paketabfrage bestätigten 3.4.29.67 als ausgeführte Version, sodass kein Installations- oder Sensorfehler vorlag. Kühlkurven, Messwerte, Besitzergrenzen und Hardwarebefehle bleiben unverändert.
+
+## Version 3.4.29.67 INTERN
+
+Version 3.4.29.67 behält den kompakten Verlauf auf der Übersicht und ergänzt unter Kühlung eine eigene Temperaturaufzeichnung. Sie liest alle plausiblen vorhandenen Linux-hwmon-Quellen für CPU, GPU/Hotspot/VRAM, RAM, SSD/NVMe, Mainboard, VRM, PCH und weitere Sensoren ausschließlich lesend ein, bietet Auswahl, Maus-Hover und Zeitraumstatistiken und hält höchstens 24 Stunden beziehungsweise 28.800 Messpunkte flüchtig im RAM. Der Leser beansprucht keine GPU-/CPU-Steuerung und bleibt damit mit dem eigenständigen Open Radeon Control Center und anderen Überwachungsprogrammen vereinbar.
+
+Für die Levita gelten an Reglern, Profilen, Kurven und direkt vor jedem hwmon-Schreiben vorsichtige OHC-Untergrenzen von 50 % für die Pumpe und 25 % für die Radiatorlüfter. Thermalright veröffentlicht für das Modell nur 3000 rpm ±10 % beziehungsweise 2000 rpm ±10 % als Maximaldrehzahlen, aber kein Mindest-PWM-Signal; die Oberfläche weist deshalb ausdrücklich darauf hin, dass es sich um OHC-Sicherheitswerte handelt. Die Profilliste behält nach dem Aktualisieren ihre Breite und Auswahl, zeigt den gespeicherten Inhalt als Baum und erlaubt frei kombinierbare Bereiche. Es gibt kein öffentliches GitHub-Release.
+
+## Version 3.4.29.66 INTERN
+
+Version 3.4.29.66 unterscheidet auf der Kühlungsseite eindeutig zwischen Profil-Festwert, eigenem Festwert und CPU-Kurve. Bei den Schnellprofilen steuern feste Werte Pumpe und Radiator; vorhandene Gehäuselüfter erhalten weiterhin die gleichnamige Kurvenvorlage. Die Übersicht zeigt einen interaktiven, auswählbaren CPU-/GPU-/Kühlmittelverlauf für höchstens eine Stunde, ausschließlich im Arbeitsspeicher der Sitzung. Hardware-Unterbauten 1.0 speichert die Auswahl zwischen Automatik, TRCC Linux und OHC Linux-hwmon fail-closed; die geplanten nativen Levita- und CoolerControl-Adapter sind sichtbar, aber bis zu ihrer Validierung nicht auswählbar. Es gibt kein öffentliches GitHub-Release.
+
+## Version 3.4.29.65 INTERN
+
+Version 3.4.29.65 gleicht die Nebula-Werterahmen an die auf dem echten Levita fotografierte TRCC-Schriftausgabe an. TRCC zeichnet die Werte gegenüber der lokalen Noto-/DejaVu-Vorschau ungefähr 22 % breiter und 12 % höher. Die Rahmenberechnung berücksichtigt diese Reserve automatisch aus Text und Schriftgröße; dadurch werden die fertigen Rahmen abhängig vom Wert etwa 16–18 % breiter und 10–12 % höher. Alle drei Nebula-Varianten wurden neu erzeugt. Transparenz, Positionen, Daten, TRCC-Warteschlange, Display-Übertragung und Hardwarebefehle bleiben unverändert.
+
+## Version 3.4.29.64 INTERN
+
+Version 3.4.29.64 stellt Nebula Drift als echte teiltransparente Ebene über dem gewählten Video wieder her. Dunkle Leseflächen liegen nur noch unmittelbar hinter den Live-Werten. Drei fertige, weiterhin editierbare Varianten decken unterschiedliche Informationsdichten ab: Minimal zeigt Uhr, CPU- und GPU-Temperatur; System ergänzt RAM; Leistung zeigt Last, Temperatur und Takt von CPU und GPU sowie RAM. Die Galerie-Vorschau verwendet ein mitgeliefertes Landschaftsbild, damit das Zusammenspiel beider Ebenen vor dem Anwenden sichtbar ist. TRCC-Warteschlange, Display-Übertragung, Kühlkurven und Hardwarebefehle bleiben unverändert. Es gibt kein öffentliches GitHub-Release.
+
+## Version 3.4.29.63 INTERN
+
+Version 3.4.29.63 ersetzt die missverständlichen Zustandsbeschriftungen auf Gehäuselüfterkarten durch eindeutige Klickaktionen: Ein inaktiver bestätigter Kanal zeigt „Automatik einschalten“, ein aktiver Kanal „Automatik ausschalten“. Ein Offscreen-Test schaltet einen simulierten kalibrierten Kanal in beide Richtungen. Nebula Drift erhält vier dunkle, leicht transparente Karten hinter Uhr, CPU, GPU und RAM; Orbit, Aqua Pulse, Horizon Glass und Split Core unterscheiden sich durch Ring-, Wellen-, Glasleisten- und geteilte Winkelgeometrie. Kurvenwerte, Kalibrierungen, Zuordnungen, Besitzerprüfung, Watchdog, Firmware-Rückgabe und Hardwarebefehle bleiben unverändert. Es gibt kein öffentliches GitHub-Release.
+
+## Version 3.4.29.62 INTERN
+
+Version 3.4.29.62 ergänzt 15 lizenzierte, menschenfreie Weltall-, Landschafts- und Wasseranimationen in vier filterbaren Display-Effekt-Kategorien. Neun neue editierbare Datenlayouts bestehen aus fünf transparent dokumentierten Kenney-CC0-Ableitungen und vier originalen OHC-Entwürfen. Die abgelehnten Saturn-Technik-, 3D-Galaxieflug- und Grand-Canyon-Personenclips sind nicht enthalten. Die bestehende sichere Profilvormerkung und der einzige Levita-/TRCC-Schreibpfad bleiben unverändert. Es gibt kein öffentliches GitHub-Release.
+
+## Version 3.4.29.59 INTERN
+
+Version 3.4.29.59 setzt die freigegebene kompakte Oberfläche um: LCD enthält Display & Layout sowie Display-Effekte als automatisch einklappende Unterpunkte. Die eigene barrierearm benannte Titelleiste delegiert Verschieben und Größenänderung unter Wayland/X11 an Qt/KWin und behält den vorhandenen Tray-Schließpfad. RGB-Studio zeigt zunächst vier Vorschläge, ergänzt vier eigene OHC-Effekte, Favoriten und die gruppierte Gesamtbibliothek; Geräte-, Gruppen- und Detailbereiche starten eingeklappt. Das neue Modul PC-Gehäuseprofile 1.0 enthält 30 frei gezeichnete Schema-Startvorlagen, das Thermaltake Retro 360 TG als exakte Standardvorlage und lokale eigene PC-Profile. Herstellerbilder werden nicht eingebettet. Es gibt kein öffentliches GitHub-Release.
+
+## Version 3.4.29.57 INTERN
+
+Version 3.4.29.57 behebt den im neuen Log bestätigten Stillstand des Levita-Videos: Der daemonseitige `display play`-Taktgeber endete nach längerem Lauf unerwartet und wurde bislang nicht neu gestartet. OHC wiederholt jetzt ausschließlich diesen IPC-Taktgeber begrenzt nach 1, 2 und 4 Sekunden, erneuert das Budget nach einem stabilen Lauf und beendet schnelle Dauerfehler kontrolliert. Eine gekürzte, datenschutzgefilterte Backendausgabe bleibt für die Diagnose erhalten. USB-Neuverbindung, zehnsekündige Schutzpause und der einzelne TRCC-Hardwarebesitzer bleiben unverändert. Es gibt kein öffentliches GitHub-Release.
+
+## Version 3.4.29.56 INTERN
+
+Version 3.4.29.56 erweitert Display-Effekte 1.2 um fünf frei nutzbare, lokal bearbeitete Videodesigns mit je vier Farbvarianten. Hauptdesign und Farbvariante sind getrennt auswählbar; Urheber, Originalquelle und Lizenz stehen direkt im Programm als anklickbare Links und vollständig in den Drittanbieterhinweisen. Die mitgelieferten 1600×720-Dateien funktionieren offline und werden weiterhin nur über das bestehende Levita-Studio und dessen einzigen TRCC-Schreibpfad angewendet. Außerdem wurde anhand des gelieferten Logs die leere native Fensterdiagnose repariert; der darin protokollierte `QColorDialog` ist der erwartete Farbwähler. Es gibt kein öffentliches GitHub-Release.
+
+## Version 3.4.29.55 INTERN
+
+Version 3.4.29.55 lässt das Hauptfenster vor der Geräteinitialisierung und dem Aufbau der lokalen Levita-Karten reagieren. CoolerControl wird durch das neue Modul Responsive Startup 1.0 begrenzt und zusammengefasst außerhalb des GUI-Prozesses geprüft; ein unbekannter Zustand bleibt aus Sicherheitsgründen read-only. Display-Effekte zeigt die Sensorlayouts aus Ebene 2 nun als dieselben grafischen Vorschaukarten wie das LCD-Studio, ordnet die Effektart oben in den Einstellungen ein und verwendet einen schnelleren Export sowie den direkten Cachepfad. USB-Neuverbindung, zehnsekündige Levita-Schutzpause, Testmodus und der einzelne TRCC-Schreibpfad bleiben unverändert. Es gibt kein öffentliches GitHub-Release.
+
+## Version 3.4.29.54 INTERN
+
+Version 3.4.29.54 ergänzt neben LCD eine eigene Display-Effektseite. Ihr prozeduraler Rauch besitzt Farben, Schärfe, Dichte, Geschwindigkeit, Turbulenz, Leuchten und Richtung; die große Vorschau behält das aktuelle Ebene-2-Sensorlayout. Nur die vorhandene Levita-Orchestrierung schreibt über den TRCC-Daemon. OpenLinkHub samt gebündelter Web-UI kann nach ausdrücklicher Bestätigung über vorhandene RPM-/DEB-Quellen oder bei einer streng erkannten Benutzerinstallation über das offizielle, veröffentlichte SHA-256-Archiv aktualisiert werden; Backup und Rollback bleiben lokal. Außerdem sind die dynamischen Texte in DE/EN/ES/FR vollständig modularisiert, der Autostart bleibt ausschließlich im Tray und ein zweiter Start aktiviert das laufende Fenster. Die lokale OpenLinkHub-Installation wurde nicht automatisch verändert. Es gibt kein öffentliches GitHub-Release.
+
+## Version 3.4.29.53 INTERN
+
+Version 3.4.29.53 gibt die Levita beim echten Programmende, Tray-„Beenden“, Logout und behandeltem Shutdown vollständig aus dem TRCC-Daemon frei. Anders als das bisherige reine `stop-video` beendet der begrenzte `device disconnect` auch daemonseitige Live-Neurenderings; nach ungefähr zwei bis drei Sekunden ohne Frames kehrt das eingebaute Thermalright-Firmwarebild zurück. Ein kleiner prozessgetrennter Pipe-Wächter wird nur nach bestätigten echten Levita-Schreibzugriffen aktiv und wiederholt denselben festen Rückfall einmal, wenn der OHC-Elternprozess unerwartet verschwindet. Der Kraken-Pfad wurde geprüft und behält seine Reihenfolge aus Stream-Stopp, synchroner Flüssigkeitstemperatur-Rückstellung und persistentem Unsicherheitsmarker. Es gibt kein öffentliches GitHub-Release.
+
+## Version 3.4.29.52 INTERN
+
+Version 3.4.29.52 verschiebt den vollständigen Sprachbestand in `src/modules/localization/v1_0/`. Deutsch, Englisch, Spanisch und Französisch besitzen jeweils eine eigene Datei für UI, Einrichtungsassistent und Hilfe. Alle Sprachen verwenden dieselben stabilen Nachrichten-IDs; der Katalog prüft eindeutige deutsche Quellen sowie fehlende oder zusätzliche IDs. Der bisherige Root-Katalog bleibt nur als kompatible Schnittstelle. Es gibt kein öffentliches GitHub-Release.
+
+## Version 3.4.29.51 INTERN
+
+Version 3.4.29.51 repariert den Sprachwechsel für die vollständig aufgebaute Oberfläche. Alle übersetzungspflichtigen Bedienelemente werden in Deutsch, Englisch, Spanisch und Französisch abgedeckt; dynamische Galerieangaben behalten Dateinamen, Zahlen und Farbwerte bei. Eine verbindliche KI-Regel und ein Offscreen-Wächtertest verlangen bei jeder künftigen UI-Änderung die gleichzeitige Pflege aller vier Sprachen.
+
 ## Version 3.4.29.50 INTERN
 
-Version 3.4.29.50 ist eine interne Folgeversion: Die Übersicht „Status & Hinweise“ folgt bestätigten Levita-PWM-Tests (grüner Punkt und OK nach Pumpe/Radiator-Bestätigung, sonst Fehlerhaft) im gleichen Raster wie „Erkannte Hardware“. Das RGB-Studio klappt Geräte und Effekte sowie die native Hardwarekanal-Liste als große Bereiche in der Seite auf. Es gibt kein öffentliches GitHub-Release.
+Version 3.4.29.50 verbindet das obere Kühlprofil mit bestätigten Gehäuselüftern, setzt **Leistung** als echten 100-%-Override um und ergänzt den rückstellenden 0-%-/10-s-Stopptest. Fehlt `pwmN_mode`, weist OHC korrekt auf den im BIOS festgelegten elektrischen PWM/DC-Modus hin. Drei eigene 1600×720-3D-Loops ergänzen die Levita-Galerie.
 
 ## Version 3.4.29.48 STABLE
 

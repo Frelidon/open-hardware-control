@@ -1,0 +1,46 @@
+{
+  "name": "OHC Nebula Drift · Minimal",
+  "width": 1600,
+  "height": 720,
+  "overlay_enabled": true,
+  "elements": [
+    {
+      "id": "clock",
+      "type": "clock",
+      "x": 760,
+      "y": 178,
+      "source": "time",
+      "format": "{value}",
+      "color": "#ffffff",
+      "size": 92,
+      "bold": true,
+      "name": "DejaVu Sans"
+    },
+    {
+      "id": "cpu-temp",
+      "type": "metric",
+      "x": 410,
+      "y": 570,
+      "metric": "cpu:temp",
+      "format": "CPU  {value:.0f}°C",
+      "color": "#5ee7ff",
+      "size": 40,
+      "bold": true,
+      "name": "DejaVu Sans",
+      "show_unit": true
+    },
+    {
+      "id": "gpu-temp",
+      "type": "metric",
+      "x": 1110,
+      "y": 570,
+      "metric": "gpu:primary:temp",
+      "format": "GPU  {value:.0f}°C",
+      "color": "#b39aff",
+      "size": 40,
+      "bold": true,
+      "name": "DejaVu Sans",
+      "show_unit": true
+    }
+  ]
+}

@@ -7,6 +7,7 @@ Vor Änderungen vollständig `docs/ai/AGENTS.md`, `docs/project/MODULE_REGISTRY.
 - Dort müssen stets mindestens die zwei neuesten vollständigen Versionsordner einschließlich Laufzeit-ZIP, Entwicklerpaket, Quellarchiv, Git-Bundle, erzeugten DEB/RPM-Paketen, Release Notes und SHA256-Prüfsummen liegen.
 - Die konkrete Aufbewahrungs- und Prüfregel steht in `docs/project/RELEASE_BACKUP_POLICY.md`; sie gilt auch für GitHub Copilot und andere GitHub-Coding-Agenten.
 - Vor Abschluss `./scripts/check_release.sh` ausführen und `docs/project/MODULE_REGISTRY.md`, Projektstatus, Changelog und Release Notes passend aktualisieren.
+- Jede neue oder geänderte sichtbare UI-Beschriftung muss im selben Arbeitsschritt unter derselben stabilen Nachrichten-ID in `src/modules/localization/v1_0/de.py`, `en.py`, `es.py` und `fr.py` gepflegt werden. Dynamische Texte über die Lokalisierungs-API aktualisieren und niemals übersetzten Anzeigetext als interne Daten-ID verwenden; der Offscreen-Vollständigkeitstest darf nicht abgeschwächt werden.
 - Push, Tag, Pull Request oder Veröffentlichung nur nach der in `docs/ai/AGENTS.md` verlangten ausdrücklichen Freigabe.
 
 ## Feste Ablage (Wurzelverzeichnis bleibt leer)

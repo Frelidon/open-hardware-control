@@ -37,9 +37,22 @@ from mainboard_fan_control import (
     set_channel_control_mode,
     set_fan_control_watchdog,
     snapshot_channel,
+    should_log_curve_batch,
     update_curve_state,
     validate_curve,
 )
+
+
+def test_curve_log_batch_reports_only_meaningful_changes_or_heartbeat() -> None:
+    previous = {"nct6687:pwm3": 42, "nct6687:pwm4": 42}
+    assert not should_log_curve_batch(
+        previous, {"nct6687:pwm3": 44, "nct6687:pwm4": 44}, elapsed_seconds=12,
+    )
+    assert should_log_curve_batch(
+        previous, {"nct6687:pwm3": 47, "nct6687:pwm4": 47}, elapsed_seconds=12,
+    )
+    assert should_log_curve_batch(previous, previous, elapsed_seconds=60)
+    assert should_log_curve_batch(previous, previous, elapsed_seconds=1, emergency=True)
 
 
 def write(path: Path, value: str) -> None:

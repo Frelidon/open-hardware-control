@@ -18,23 +18,62 @@ def test_registry_is_mandatory_and_uses_date_without_time() -> None:
 
 
 def test_registry_points_to_only_current_versioned_levita_module() -> None:
-    assert "modules/lcd_levita/v1_4/" in REGISTRY
+    assert "modules/lcd_levita/v1_7/" in REGISTRY
     version_dirs = sorted(
         path.name for path in (ROOT / "src/modules" / "lcd_levita").iterdir()
         if path.is_dir() and path.name.startswith("v")
     )
-    assert version_dirs == ["v1_4"]
-    assert (ROOT / "src/modules" / "lcd_levita" / "v1_4" / "README.md").is_file()
+    assert version_dirs == ["v1_7"]
+    assert (ROOT / "src/modules" / "lcd_levita" / "v1_7" / "README.md").is_file()
 
 
 def test_registry_points_to_only_current_versioned_rgb_module() -> None:
-    assert "modules/rgb_studio/v1_1/" in REGISTRY
+    assert "modules/rgb_studio/v1_15/" in REGISTRY
     version_dirs = sorted(
         path.name for path in (ROOT / "src/modules" / "rgb_studio").iterdir()
         if path.is_dir() and path.name.startswith("v")
     )
-    assert version_dirs == ["v1_1"]
-    assert (ROOT / "src/modules" / "rgb_studio" / "v1_1" / "README.md").is_file()
+    assert version_dirs == ["v1_15"]
+    assert (ROOT / "src/modules" / "rgb_studio" / "v1_15" / "README.md").is_file()
+
+
+def test_registry_points_to_only_current_display_effects_module() -> None:
+    assert "modules/display_effects/v1_11/" in REGISTRY
+    version_dirs = sorted(
+        path.name for path in (ROOT / "src/modules" / "display_effects").iterdir()
+        if path.is_dir() and path.name.startswith("v")
+    )
+    assert version_dirs == ["v1_11"]
+    assert (ROOT / "src/modules" / "display_effects" / "v1_11" / "README.md").is_file()
+
+
+def test_registry_points_to_current_levita_performance_and_window_modules() -> None:
+    expected = {
+        "levita_daemon_health": "v1_1",
+        "levita_performance": "v1_1",
+        "window_chrome": "v1_2",
+        "window_placement": "v1_5",
+        "ui_performance": "v1_1",
+        "mainboard_driver_setup": "v1_1",
+        "wallpaper_engine": "v1_3",
+        "responsive_gallery": "v1_0",
+        "lcd_media_manager": "v1_0",
+        "temperature_history": "v1_2",
+        "pc_case_profiles": "v1_5",
+        "cooling_state": "v1_0",
+        "navigation_settings": "v1_0",
+        "programs": "v1_0",
+        "lcd_runtime": "v1_1",
+    }
+    for module, version in expected.items():
+        module_root = ROOT / "src/modules" / module
+        version_dirs = sorted(
+            path.name for path in module_root.iterdir()
+            if path.is_dir() and path.name.startswith("v")
+        )
+        assert version_dirs == [version]
+        assert f"modules/{module}/{version}/" in REGISTRY
+        assert (module_root / version / "README.md").is_file()
 
 
 def test_local_ai_size_budgets_are_explicit() -> None:

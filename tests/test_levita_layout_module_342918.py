@@ -10,24 +10,41 @@ sys.path.insert(0, str(ROOT / "src"))
 
 
 def test_bundled_ohc_layouts_keep_literal_units_visible_on_device() -> None:
-    for name in ("ohc-nebula-drift", "ohc-orbital-command"):
+    for name in (
+        "ohc-nebula-drift", "ohc-nebula-drift-minimal",
+        "ohc-nebula-drift-performance", "ohc-orbital-command", "kenney-space-console",
+        "kenney-orbital-reticle", "kenney-navigator-grid", "kenney-ambient-glow",
+        "kenney-clean-telemetry", "ohc-orbit", "ohc-aqua-pulse",
+        "ohc-horizon-glass", "ohc-split-core", "ohc-spectrum-ring",
+        "ohc-neon-double-arc", "ohc-prism-segments", "ohc-aurora-radar",
+    ):
         payload = json.loads((ROOT / "src/assets" / "levita-designs" / name / "trcc.json").read_text(encoding="utf-8"))
         metrics = [item for item in payload["elements"] if item.get("type") == "metric"]
         assert metrics
         assert all(item.get("show_unit") is True for item in metrics)
 
-from modules.lcd_levita.v1_4.layout_model import (
+from modules.lcd_levita.v1_7.layout_model import (
     EditableLayout,
     LayoutBlock,
     deserialize_layout_overrides,
     layout_from_config,
     serialize_layout_overrides,
 )
-from modules.lcd_levita.v1_4.runtime_policy import safe_split_mode
-from modules.lcd_levita.v1_4.theme_adapter import (
+from modules.lcd_levita.v1_7.runtime_policy import safe_split_mode
+from modules.lcd_levita.v1_7.stream_recovery import StreamRestartPolicy
+from modules.lcd_levita.v1_7.theme_adapter import (
     load_editable_layout,
     stage_editable_theme,
 )
+
+
+def test_stream_restart_policy_recovers_stable_runs_and_bounds_crash_loops() -> None:
+    policy = StreamRestartPolicy(max_attempts=3, base_delay_ms=1000, stable_seconds=30)
+    assert policy.next_delay_ms(1800) == 1000
+    assert policy.next_delay_ms(2) == 2000
+    assert policy.next_delay_ms(2) == 4000
+    assert policy.next_delay_ms(2) is None
+    assert policy.next_delay_ms(31) == 1000
 
 
 def sample_theme(tmp_path: Path) -> Path:
@@ -183,3 +200,31 @@ def test_split_mode_policy_defaults_corrupt_values_to_safe_off() -> None:
     assert safe_split_mode(-9) == 0
     assert safe_split_mode(9) == 3
     assert safe_split_mode("2") == 2
+
+
+def test_theme_cache_separates_selected_videos_and_source_animation_changes(tmp_path):
+    source = sample_theme(tmp_path)
+    layout, config = load_editable_layout(source)
+    cyber = tmp_path / "cyber.mp4"; cyber.write_bytes(b"cyber")
+    landscape = tmp_path / "landscape.mp4"; landscape.write_bytes(b"landscape")
+    cache = tmp_path / "cache"
+    first = stage_editable_theme(source, cache, layout, config, background_video=cyber)
+    second = stage_editable_theme(source, cache, layout, config, background_video=landscape)
+    assert first != second
+    assert (first / "Theme.mp4").resolve() == cyber
+    assert (second / "Theme.mp4").resolve() == landscape
+    (source / "Theme.mp4").write_bytes(b"first animation")
+    bundled = stage_editable_theme(source, cache, layout, config, include_source_video=True)
+    (source / "Theme.mp4").write_bytes(b"replacement animation")
+    replaced = stage_editable_theme(source, cache, layout, config, include_source_video=True)
+    assert bundled != replaced
+
+
+def test_theme_cache_identity_includes_effective_config(tmp_path):
+    source = sample_theme(tmp_path)
+    layout, config = load_editable_layout(source)
+    first = stage_editable_theme(source, tmp_path / "cache", layout, config)
+    changed = dict(config, mask_visible=False, custom_setting="new")
+    second = stage_editable_theme(source, tmp_path / "cache", layout, changed)
+    assert first != second
+    assert json.loads((second / "trcc.json").read_text())["custom_setting"] == "new"

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+  "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <vendor>Open Hardware Control</vendor>
+  <vendor_url>https://github.com/Frelidon/open-hardware-control</vendor_url>
+  <action id="io.github.Frelidon.OpenHardwareControl.memory-info">
+    <description>Read non-identifying RAM information</description>
+    <description xml:lang="de">RAM-Informationen ohne Gerätekennungen lesen</description>
+    <description xml:lang="es">Leer información de RAM sin identificadores de dispositivos</description>
+    <description xml:lang="fr">Lire les informations de RAM sans identifiants matériels</description>
+    <message>Reading RAM information requires an active desktop session</message>
+    <message xml:lang="de">Zum Lesen der RAM-Informationen ist eine aktive Desktopsitzung erforderlich</message>
+    <message xml:lang="es">Se necesita una sesión de escritorio activa para leer la información de RAM</message>
+    <message xml:lang="fr">Une session de bureau active est nécessaire pour lire les informations de RAM</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/libexec/open-hardware-control-dmi-memory-helper</annotate>
+  </action>
+</policyconfig>

@@ -1,12 +1,43 @@
-# Corsair-/OpenLinkHub-Integration in 3.4.16 INTERN
+# Corsair-/OpenLinkHub-Integration in 3.4.29.55 INTERN
 
 ## Unterstützter Umfang
 
 Open Hardware Control erkennt eine lokale OpenLinkHub-Installation, den aktiven Dienstkontext und die lokale API. Es liest `GET /api/devices/`, zeigt Geräte, Firmware, Kanäle, Temperatur, Drehzahl, Profil und RGB-Bezeichnung an und öffnet das Web-Dashboard unter `http://127.0.0.1:27003`.
 
-Die App kann einen bereits installierten Benutzerdienst starten, stoppen oder neu starten. Sie führt keine systemweiten Dienständerungen aus und installiert OpenLinkHub nicht selbst.
+Die App kann einen bereits installierten Benutzerdienst starten, stoppen oder neu starten. Systemweite Dienststrukturen werden nicht erfunden oder ersetzt.
 
-Nach ausdrücklicher Freigabe für die aktuelle Programmsitzung kann die App dokumentierte OpenLinkHub-Befehle für Kühlkanäle, RGB/LCD, Maus, Tastatur, Headset und Netzteil übertragen. Angezeigt werden nur erkannte Geräte und die von der API gemeldeten Kanäle beziehungsweise Profile. Der vollständige RGB-Editor und LCD-Mediendateien bleiben im Web-Dashboard.
+## Bestätigtes Update von OpenLinkHub und Web-UI
+
+OHC prüft ausschließlich den festen offiziellen GitHub-Endpunkt auf eine neuere OpenLinkHub-Version. Eine vorhandene RPM-/DEB-Installation wird nach ausdrücklicher Bestätigung über ihre bereits eingerichteten DNF-/APT-Quellen aktualisiert. Für eine Benutzerinstallation muss `~/.config/systemd/user/OpenLinkHub.service` eindeutig auf ein echtes Arbeitsverzeichnis und dessen `OpenLinkHub`-Programm innerhalb des Home-Verzeichnisses zeigen.
+
+Beim Benutzerpfad akzeptiert OHC nur das offizielle amd64-Release-Archiv mit der von GitHub veröffentlichten SHA-256 und der angegebenen Größe. Links, Gerätedateien, absolute Pfade, Traversierung und übergroße Archive werden abgewiesen. Nach dem Dienststopp wird die neue Version atomar eingesetzt; Konfiguration, Dashboard-/Displayeinstellungen sowie Datenbank/Profile bleiben erhalten. Die vorherige Installation bleibt als lokales Geschwister-Backup bestehen, und ein fehlgeschlagener Neustart löst ein Rollback aus. Die Web-UI gehört zum OpenLinkHub-Paket und wird gemeinsam aktualisiert; nachher kann lediglich ein Browser-Cache-Neuladen nötig sein.
+
+OHC führt kein aus dem Internet geladenes Installationsskript als Root aus und verändert beim User-Space-Update keine root-eigene udev-Regel. Benötigt eine spätere OpenLinkHub-Version neue Systemregeln, bleibt dafür die offizielle Installationsanleitung maßgeblich.
+
+Nach ausdrücklicher Freigabe für die aktuelle Programmsitzung kann die App dokumentierte OpenLinkHub-Befehle für Kühlkanäle, RGB/LCD, Maus, Tastatur, Headset und Netzteil übertragen. Angezeigt werden nur erkannte Geräte und die von der API gemeldeten Kanäle beziehungsweise Profile. Der vollständige RGB-Editor bleibt im Web-Dashboard.
+
+## iCUE NEXUS-Designmanager
+
+Bei einer eindeutig erkannten OpenLinkHub-Benutzerinstallation kann OHC ein
+Bild auf 640×48 Pixel vorbereiten und als zusätzliches Nexus-Profil eintragen.
+Ein optionales `.ohcnexus.json`-Manifest (Schema 1) darf bis zu zwölf
+Schaltflächen mit begrenzter Geometrie, nicht überlappenden Touch-Bereichen und
+bekannten OpenLinkHub-Aktionscodes 1–146 beschreiben. Pfadtraversierung,
+Symlinks, übergroße Dateien, unbekannte Farben und außerhalb liegende Elemente
+werden abgewiesen. Symbole aus beliebigen Pfaden werden absichtlich nicht
+übernommen.
+
+Vor jedem Import wird `database/nexus/nexus.json` zeitgestempelt gesichert;
+Bild und JSON werden atomar ersetzt. Anschließend wird ausschließlich der
+Benutzerdienst neu gestartet. Die Auswahl „Auf NEXUS anzeigen“ verwendet den
+dokumentierten lokalen Endpunkt `POST /api/lcd/profile`. Open Hardware Control
+besitzt keinen eigenen Corsair-USB-Treiber.
+
+OpenLinkHub rendert generische Profile als statischen Hintergrund mit
+Touchflächen; CPU-, GPU- und Zeitansichten sind in OpenLinkHub selbst fest
+implementiert. Weitere dynamische Sensorfunktionen erfordern deshalb eine
+Erweiterung von OpenLinkHub und lassen sich nicht allein durch das Kopieren
+eines Designs hinzufügen.
 
 ## Grafische Mausansicht in 3.0.9
 
@@ -40,6 +71,7 @@ Vor dem Start des Benutzerdiensts muss der systemweite Dienst beendet und deakti
 - Makroaufnahmen auf 64 Einzeltasten mit begrenzten Pausen beschränkt
 - Schreibfreigabe nur für die aktuelle Programmsitzung und Sperre bei Dienstkonflikt
 - fest begrenzte User-Service-Aktionen
+- Update erst nach ausdrücklicher Bestätigung; feste offizielle Herkunft, veröffentlichte SHA-256, sichere Archivgrenzen, Backup und Rollback
 
 ## Offizielle Quellen
 

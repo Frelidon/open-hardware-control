@@ -71,10 +71,11 @@ class OpenRGBIntegrationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_name:
             executable = Path(temp_name) / "openrgb"
             executable.touch()
-            client = OpenRGBClient(str(executable))
+            client = OpenRGBClient(str(executable), ubuntu_runtime=True)
             with patch.object(client, "server_reachable", return_value=True):
                 command = client.color_command(3, ["00aaff", "ffffff"], direct=True)
                 self.assertEqual(command[1:3], ["--client", "127.0.0.1:6742"])
+                self.assertEqual(command.count("--nodetect"), 1)
                 self.assertEqual(command[-2:], ["--color", "00aaff,ffffff"])
                 self.assertIn("direct", command)
                 native = client.native_mode_command(3, "Rainbow Wave", ["112233"], 72)
@@ -90,9 +91,20 @@ class OpenRGBIntegrationTests(unittest.TestCase):
                 self.assertEqual(sdk[sdk.index("--led-count") + 1], "24")
                 self.assertNotIn("--no-custom-mode", sdk)
                 self.assertEqual(sdk[sdk.index("--zone-sizes") + 1], "16,8")
+                self.assertEqual(sdk[sdk.index("--protocol-max") + 1], "6")
                 inspect = client.sdk_inspect_command(3)
                 self.assertIn("--inspect", inspect)
                 self.assertNotIn("--colors", inspect)
+                self.assertEqual(inspect[-2:], ["--protocol-max", "6"])
+
+            fedora_client = OpenRGBClient(str(executable), ubuntu_runtime=False)
+            with patch.object(fedora_client, "server_reachable", return_value=True):
+                self.assertNotIn("--protocol-max", fedora_client.sdk_color_command(3, ["00aaff"], 24))
+                self.assertNotIn("--protocol-max", fedora_client.sdk_inspect_command(3))
+                self.assertEqual(
+                    fedora_client.list_command(),
+                    [str(executable.resolve()), "--client", "127.0.0.1:6742", "--list-devices"],
+                )
 
     def test_managed_server_and_device_commands_are_serialized(self):
         with tempfile.TemporaryDirectory() as temp_name:

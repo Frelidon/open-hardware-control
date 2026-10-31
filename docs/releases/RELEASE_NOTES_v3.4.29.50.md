@@ -2,6 +2,13 @@
 
 Diese interne Kühlungsfassung macht das globale Leistungsprofil eindeutig, bringt den sicheren Stopptest direkt an jede Gehäuselüfterkarte und erklärt den Unterschied zwischen elektrischer PWM/DC-Auswahl und der über `pwmN` regelbaren Leistung.
 
+## Levita-Animationen
+
+- **Orbital Ring** zeigt ein rotierendes Raumtor mit Planet und kleinem Aufklärungsschiff.
+- **Neon Apex** präsentiert einen futuristischen Sportwagen auf einem cyan-/magentafarbenen Raster als vollständigen 360-Grad-Loop.
+- **Quantum Core** kombiniert einen pulsierenden Energiekern mit gegenläufigen Ringen und umlaufenden Steuerpods.
+- Alle drei Loops sind exakt 1600×720 Pixel groß, 10 Sekunden lang, nahtlos, stumm und als H.264/yuv420p für die bestehende Levita-Wiedergabe vorbereitet. Geometrie, Materialien und Bewegung sind projekt-eigen; es werden keine Hersteller-/Stockmedien mitgeliefert.
+
 ## Gehäuselüfter
 
 - Die obere Kühlprofilwahl und gespeicherte Kühlprofile werden mit den Gehäuselüfterprofilen synchronisiert. **Leistung** setzt Pumpe, Radiator und alle aktiven Gehäuselüfter auf konstante 100 % statt auf eine temperaturabhängige Kurve.
