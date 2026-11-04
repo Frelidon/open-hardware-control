@@ -1831,15 +1831,12 @@ class ThermalrightDisplayStudio(QGroupBox):
 
     def _reload_managed_library(self) -> None:
         standard = default_trcc_design_directory()
-        source = self.custom_media_directory or standard
-        if source is None and self.design_library_state.files:
+        include_custom = self.custom_media_enabled.isChecked()
+        source = self.custom_media_directory if include_custom else standard
+        if source is None and include_custom and self.design_library_state.files:
             source = self.design_library_state.files[0].parent
         if source is None:
-            self.media_entries = []
-            self._populate_media_categories()
-            self._populate_hardware_design_combo()
-            self._apply_media_filter()
-            return
+            source = Path(__file__).resolve().parent / "assets" / "levita-designs"
         self.load_media_directory(source, quiet=True, remember_custom=False, force_catalog=False)
 
     def show_remembered_media_directory(self) -> None:

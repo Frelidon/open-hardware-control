@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 import sys
 import tempfile
+from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 temporary = tempfile.TemporaryDirectory(prefix="ohc-full-ui-build-")
@@ -390,7 +391,7 @@ for _refresh in range(2):
     )
 assert application._GIF_SAFETY_TEXT in labels
 assert application._ABOUT_SUMMARY_TEXT in labels
-assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.160 STABLE")
+assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.161 STABLE")
 assert window.temp_card.isHidden()
 assert not window.cpu_temp_card.isHidden()
 assert window.mainboard_sensor_source.findData("liquid") == -1
@@ -442,8 +443,9 @@ assert studio.media_combo.findData(str(live_theme.resolve())) < 0
 studio.load_default_trcc_designs()
 assert Path(str(settings.value("thermalright/custom_media_directory"))) == saved_designs.resolve()
 assert any(entry.path == (saved_designs / "saved-preview.png") for entry in studio.media_entries)
-studio.custom_media_enabled.setChecked(False)
-assert not any(entry.path.is_relative_to(saved_designs) for entry in studio.media_entries)
+with patch("thermalright_display_ui.default_trcc_design_directory", return_value=None):
+    studio.custom_media_enabled.setChecked(False)
+    assert not any(entry.path.is_relative_to(saved_designs) for entry in studio.media_entries)
 assert saved_designs.is_dir()
 assert Path(str(settings.value("thermalright/custom_media_directory"))) == saved_designs.resolve()
 studio.custom_media_enabled.setChecked(True)

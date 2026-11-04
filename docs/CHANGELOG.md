@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 3.4.29.161 STABLE · 04.11.26
+
+- Keep remembered LCD media folders hidden when the host has no system-wide
+  TRCC standard catalog. The built-in OHC designs remain available and user
+  files stay untouched on disk.
+- Carry forward the `.160` deterministic hardware-free Levita UI fixture and
+  the complete `.159` feature maturity and OHC-only catalog work.
+
 ## 3.4.29.160 STABLE · 04.11.26
 
 - Make the full Levita UI release test deterministic on hardware-free CI by

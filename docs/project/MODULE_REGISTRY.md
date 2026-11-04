@@ -1,12 +1,13 @@
 # Open Hardware Control — verbindliches Modulregister
 
 **Stand:** 04.11.26
-**Anwendung:** 3.4.29.160 STABLE
+**Anwendung:** 3.4.29.161 STABLE
 
-Entwicklung 04.11.26: Anwendung 3.4.29.160 setzt im vollständigen Levita-
-UI-Test den isolierten Kühlertyp ausdrücklich, damit lokaler Rechner mit echter
-USB-Hardware und hardwarefreier GitHub-Runner denselben UI-Vertrag prüfen.
-Produktive Geräteerkennung, Einstellungen und Hardwarepfade bleiben unverändert.
+Entwicklung 04.11.26: Anwendung 3.4.29.161 setzt im vollständigen Levita-
+UI-Test den isolierten Kühlertyp ausdrücklich und hält eigene LCD-Medien auch
+ohne systemweiten TRCC-Katalog zuverlässig ausgeblendet. Eingebaute OHC-Designs
+bleiben sichtbar, Benutzerdateien unverändert. Produktive Geräteerkennung,
+Einstellungen und Hardwarepfade bleiben unverändert.
 
 Entwicklung 04.11.26: Feature Lifecycle 1.0 hält unabhängige semantische
 Feature-Versionen und die Reifegrade Alpha, Beta, Release Candidate und Stabil
@@ -818,6 +819,7 @@ dreizeilige persönliche Callouts.
 
 | Datum | Modul | Version | Änderung |
 |---|---|---:|---|
+| 04.11.26 | LCD-Medienverwaltung / Release-Test | 1.0 / Testfix · Anwendung 3.4.29.161 | Gemerkte eigene Medien bleiben beim Abwählen auch auf Rechnern ohne systemweiten TRCC-Standardkatalog ausgeblendet; der eingebaute OHC-Katalog bleibt verfügbar und Dateien werden nicht verändert. Hardwarefreier Levita-Test wählt weiterhin den isolierten Kühlertyp. |
 | 04.11.26 | Release-Test / Feature-Reifegrade / Funktionsmodule / Navigation / Lokalisierung | Testfix / 1.0 / 1.0 / 1.0 / 1.0 · Anwendung 3.4.29.160 | Vollständiger Levita-UI-Test wählt isolierten Kühlertyp unabhängig von Host-USB; produktive Erkennung unverändert. Zentrale unabhängige Feature-Versionen und Alpha/Beta/Release-Candidate/Stabil-Reifegrade in Funktionen-&-Bereiche- und Navigationskarten; reine Darstellung ohne Persistenz-/Besitz-/Hardwarewirkung. Vier Sprachquellen, OHC-eigener öffentlicher Designkatalog; Import-, Editor-, Vorschau-, Gehäuse-Lüfteranimations- und Übergabefunktionen erhalten. |
 | 31.10.26 | OpenRGB Studio / gemeinsame Infrastruktur / Levita-Orchestrierung | 1.15 / 1.0 legacy / Legacy · Anwendung 3.4.29.158 | Dokumentierte SDK-6-Profiländerungsmeldung 157 mit begrenztem nullterminiertem Payload als asynchrone Meldung verarbeitet, ohne ACK-10-Schreibbestätigung oder MSI-Mystic-Light-Frame zu verwerfen; unbekannte/malformed Pakete bleiben gesperrt. TRCC-GPU-Taktgrenzkorrektur erst nach drei aufeinanderfolgenden gültigen 5-s-Proben aufgehoben; fehlende/fehlerhafte Messung setzt Erholungsnachweis zurück. Keine Hardwarehoheit, LED-Zahl, Profil-, Berechtigungs- oder Schreibpfadänderung. |
 | 20.10.26 | Programme / Levita-Orchestrierung / Lokalisierung | 1.0 / Legacy 3.4.29.157 / 1.0 · Anwendung 3.4.29.157 | Letzten umsetzbaren Roadmap-Punkt geschlossen: nur ein tatsächlich heruntergeladenes, im inspizierten Releaseplan enthaltenes und größenpassendes AppImage kann direkt einem ausgewählten AppImage-Profil zugeordnet werden; spätere Pfad-/ELF-/AppImage-Prüfung bleibt getrennt. Belegten Levita-Eigenkonflikt anhand registrierter Sitzungs-PID, UID und exaktem Daemonkommando vom fremden USB-Besitzer getrennt; eigener Daemon erhält einmal den bestehenden begrenzten Neustart mit Designwiederherstellung, fremde/vorhandene/abweichende Prozesse bleiben unangetastet. Fünf neue Quellen in vier Sprachen und gezielte Regressionen ergänzt; reale Fedora- und optische RGB-Nachweise bleiben offen. |
