@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 3.4.29.162 STABLE · 04.11.26
+
+- Wait for the real offscreen LCD viewport geometry with a bounded condition
+  instead of assuming an 80 ms runner speed, and stop the Snapshot Manager
+  probe explicitly during that isolated preview regression's shutdown.
+- Carry forward the `.161` portable LCD catalog fix and all feature maturity,
+  OHC-only design and hardware-independent release coverage.
+
 ## 3.4.29.161 STABLE · 04.11.26
 
 - Keep remembered LCD media folders hidden when the host has no system-wide

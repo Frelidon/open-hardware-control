@@ -4,6 +4,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
@@ -66,6 +67,11 @@ def exercise():
         from PySide6.QtWidgets import QApplication, QScrollArea
         from modules.lcd_media_manager.v1_0.preview_visibility import exposed
         import kraken_control as application
+        def wait_until(predicate, timeout=2.0):
+            deadline = time.monotonic() + timeout
+            while not predicate() and time.monotonic() < deadline:
+                QTest.qWait(20)
+            return bool(predicate())
         application.KrakenControl.check_dependencies = lambda self: ['hardware-free-preview']
         app = QApplication([]); app.setQuitOnLastWindowClosed(False)
         window = application.KrakenControl()
@@ -80,9 +86,11 @@ def exercise():
         studio._select_effect_media(first, 'Quantum')
         window.tabs.setCurrentIndex(window.tabs.indexOf(window.lcd_scroll_page))
         window.lcd_scroll_page.ensureWidgetVisible(studio.canvas)
-        QTest.qWait(80); studio.media_preview.refresh()
-        assert exposed(studio.canvas)
-        assert studio.media_preview.video is not None and studio.media_preview.video._active
+        studio.media_preview.refresh()
+        assert wait_until(lambda: exposed(studio.canvas))
+        assert wait_until(
+            lambda: studio.media_preview.video is not None and studio.media_preview.video._active
+        )
         positions = []
         for _ in range(7):
             QTest.qWait(100)
@@ -155,6 +163,7 @@ def exercise():
                 output = Path(render); output.mkdir(parents=True, exist_ok=True)
                 window.grab().save(str(output / f'effects-live-{language}.png'))
         window.mainboard_channels = {}
+        window.snapshot_manager_page.stop_processes()
         window.perform_orderly_hardware_exit('preview regression')
         window.backend.shutdown(); window.close(); app.processEvents()
         print('selected video/viewport/confirmed fallback/four languages: passed', flush=True)

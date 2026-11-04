@@ -1,9 +1,9 @@
 # Open Hardware Control — verbindliches Modulregister
 
 **Stand:** 04.11.26
-**Anwendung:** 3.4.29.161 STABLE
+**Anwendung:** 3.4.29.162 STABLE
 
-Entwicklung 04.11.26: Anwendung 3.4.29.161 setzt im vollständigen Levita-
+Entwicklung 04.11.26: Anwendung 3.4.29.162 setzt im vollständigen Levita-
 UI-Test den isolierten Kühlertyp ausdrücklich und hält eigene LCD-Medien auch
 ohne systemweiten TRCC-Katalog zuverlässig ausgeblendet. Eingebaute OHC-Designs
 bleiben sichtbar, Benutzerdateien unverändert. Produktive Geräteerkennung,
@@ -819,6 +819,7 @@ dreizeilige persönliche Callouts.
 
 | Datum | Modul | Version | Änderung |
 |---|---|---:|---|
+| 04.11.26 | LCD-Vorschau / Snapshot-Prozesslaufzeit / Release-Test | Testfix / 1.0 / Testfix · Anwendung 3.4.29.162 | Isolierte Offscreen-Vorschau wartet begrenzt auf die reale Viewport-Geometrie statt eine feste Runner-Geschwindigkeit vorauszusetzen und beendet ihren Snapshot-Probe vor dem Testfenster. Produktive Vorschau-, Snapshot- und Hardwarepfade bleiben unverändert. |
 | 04.11.26 | LCD-Medienverwaltung / Release-Test | 1.0 / Testfix · Anwendung 3.4.29.161 | Gemerkte eigene Medien bleiben beim Abwählen auch auf Rechnern ohne systemweiten TRCC-Standardkatalog ausgeblendet; der eingebaute OHC-Katalog bleibt verfügbar und Dateien werden nicht verändert. Hardwarefreier Levita-Test wählt weiterhin den isolierten Kühlertyp. |
 | 04.11.26 | Release-Test / Feature-Reifegrade / Funktionsmodule / Navigation / Lokalisierung | Testfix / 1.0 / 1.0 / 1.0 / 1.0 · Anwendung 3.4.29.160 | Vollständiger Levita-UI-Test wählt isolierten Kühlertyp unabhängig von Host-USB; produktive Erkennung unverändert. Zentrale unabhängige Feature-Versionen und Alpha/Beta/Release-Candidate/Stabil-Reifegrade in Funktionen-&-Bereiche- und Navigationskarten; reine Darstellung ohne Persistenz-/Besitz-/Hardwarewirkung. Vier Sprachquellen, OHC-eigener öffentlicher Designkatalog; Import-, Editor-, Vorschau-, Gehäuse-Lüfteranimations- und Übergabefunktionen erhalten. |
 | 31.10.26 | OpenRGB Studio / gemeinsame Infrastruktur / Levita-Orchestrierung | 1.15 / 1.0 legacy / Legacy · Anwendung 3.4.29.158 | Dokumentierte SDK-6-Profiländerungsmeldung 157 mit begrenztem nullterminiertem Payload als asynchrone Meldung verarbeitet, ohne ACK-10-Schreibbestätigung oder MSI-Mystic-Light-Frame zu verwerfen; unbekannte/malformed Pakete bleiben gesperrt. TRCC-GPU-Taktgrenzkorrektur erst nach drei aufeinanderfolgenden gültigen 5-s-Proben aufgehoben; fehlende/fehlerhafte Messung setzt Erholungsnachweis zurück. Keine Hardwarehoheit, LED-Zahl, Profil-, Berechtigungs- oder Schreibpfadänderung. |
