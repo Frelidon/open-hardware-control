@@ -1,17 +1,17 @@
 # Open Hardware Control — Project Status
 
-**Current development version:** 3.4.29.162 STABLE
+**Current development version:** 3.4.29.163 STABLE
 
 **Status date:** 4 November 2026
 
 **Release channel:** STABLE — the project owner explicitly requested GitHub publication and local installation after the complete release gate.
 
-Version 3.4.29.162 carries the public OHC-only design catalog and Feature
+Version 3.4.29.163 carries the public OHC-only design catalog and Feature
 Lifecycle work from `.159`, the hardware-free Levita fixture from `.160` and
 the portable LCD catalog behavior from `.161`. Its isolated preview regression
-now waits for real offscreen viewport geometry within a bounded timeout and
-stops its Snapshot Manager probe explicitly during shutdown. Production
-preview, snapshot, application detection and hardware paths are unchanged.
+repeats the actual scroll-area visibility request while the bounded offscreen
+layout settles, and stops its Snapshot Manager probe explicitly during shutdown.
+Production preview, snapshot, application detection and hardware paths are unchanged.
 
 Version 3.4.29.159 prepared the public OHC-only design catalog and added the
 hardware-inert Feature Lifecycle 1.0 registry. Every main area now has an

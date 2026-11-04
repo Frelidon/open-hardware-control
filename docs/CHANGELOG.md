@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 3.4.29.163 STABLE · 04.11.26
+
+- Re-run the real scroll-area visibility request while the bounded offscreen
+  LCD layout settles. This covers runners whose final geometry is established
+  after the first `ensureWidgetVisible()` call.
+- Carry forward all `.162` release coverage and `.161` portable catalog work.
+
 ## 3.4.29.162 STABLE · 04.11.26
 
 - Wait for the real offscreen LCD viewport geometry with a bounded condition

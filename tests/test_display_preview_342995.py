@@ -85,9 +85,12 @@ def exercise():
         studio.hardware_design_combo.setCurrentIndex(0)
         studio._select_effect_media(first, 'Quantum')
         window.tabs.setCurrentIndex(window.tabs.indexOf(window.lcd_scroll_page))
-        window.lcd_scroll_page.ensureWidgetVisible(studio.canvas)
         studio.media_preview.refresh()
-        assert wait_until(lambda: exposed(studio.canvas))
+        def expose_studio_canvas():
+            window.lcd_scroll_page.ensureWidgetVisible(studio.canvas)
+            app.processEvents()
+            return exposed(studio.canvas)
+        assert wait_until(expose_studio_canvas, timeout=5.0)
         assert wait_until(
             lambda: studio.media_preview.video is not None and studio.media_preview.video._active
         )
