@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 3.4.29.160 STABLE · 04.11.26
+
+- Make the full Levita UI release test deterministic on hardware-free CI by
+  explicitly selecting its isolated Levita cooling fixture. The application
+  detection and every hardware path remain unchanged.
+- Carry forward the `.159` OHC-only public design catalog, independent feature
+  versions and Alpha/Beta/Release Candidate/Stable labels.
+
 ## 3.4.29.159 STABLE · 04.11.26
 
 - Add a hardware-inert feature lifecycle 1.0 catalog with an independent

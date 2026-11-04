@@ -132,6 +132,9 @@ assert theme_overlay.save(str(live_theme / "01.png"))
 settings = QSettings(application.ORG_NAME, application.APP_NAME)
 settings.setValue("thermalright/media_directory", str(saved_designs))
 settings.setValue("thermalright/brightness", 0)
+# The UI contract below is specifically the Levita cooling lane. Keep it
+# deterministic on hardware-free CI instead of inheriting the host's USB set.
+settings.setValue("cooling/hardware_kind", application.LEVITA_COOLER_KEY)
 settings.sync()
 
 window = application.KrakenControl()
@@ -387,7 +390,7 @@ for _refresh in range(2):
     )
 assert application._GIF_SAFETY_TEXT in labels
 assert application._ABOUT_SUMMARY_TEXT in labels
-assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.159 STABLE")
+assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.160 STABLE")
 assert window.temp_card.isHidden()
 assert not window.cpu_temp_card.isHidden()
 assert window.mainboard_sensor_source.findData("liquid") == -1

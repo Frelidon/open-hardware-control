@@ -1,12 +1,17 @@
 # Open Hardware Control — Project Status
 
-**Current development version:** 3.4.29.159 STABLE
+**Current development version:** 3.4.29.160 STABLE
 
 **Status date:** 4 November 2026
 
 **Release channel:** STABLE — the project owner explicitly requested GitHub publication and local installation after the complete release gate.
 
-Version 3.4.29.159 prepares the public OHC-only design catalog and adds the
+Version 3.4.29.160 carries the public OHC-only design catalog and Feature
+Lifecycle work from the `.159` candidate, and makes the full Levita UI release
+test deterministic on hardware-free CI by selecting its isolated cooling
+fixture explicitly. Application detection and hardware paths are unchanged.
+
+Version 3.4.29.159 prepared the public OHC-only design catalog and added the
 hardware-inert Feature Lifecycle 1.0 registry. Every main area now has an
 independent semantic version and Alpha, Beta, Release Candidate or Stable
 maturity label in feature cards and navigation settings.
