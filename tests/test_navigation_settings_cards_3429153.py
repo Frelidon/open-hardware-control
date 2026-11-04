@@ -12,7 +12,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from PySide6.QtWidgets import QApplication, QFrame, QWidget  # noqa: E402
+from PySide6.QtWidgets import QApplication, QFrame, QLabel, QWidget  # noqa: E402
 from modules.navigation_settings.v1_0.panel import (  # noqa: E402
     MODULE_ROWS,
     build_module_visibility_settings,
@@ -51,6 +51,9 @@ def test_module_visibility_cards_with_real_qt() -> None:
     assert len(cards) == len(MODULE_ROWS) == 17
     assert len(host.navigation_module_checkboxes) == 17
     assert len(host.navigation_module_status_dots) == 17
+    lifecycle_badges = panel.findChildren(QLabel, "featureLifecycleBadge")
+    assert len(lifecycle_badges) == 17
+    assert any(label.text() == "Release Candidate · v0.9.0-rc1" for label in lifecycle_badges)
     assert not host.navigation_module_checkboxes["about"].isChecked()
     assert host.navigation_module_status_dots["about"].objectName() == "moduleVisibilityDotOff"
 

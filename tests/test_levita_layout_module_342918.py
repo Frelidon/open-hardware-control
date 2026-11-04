@@ -12,9 +12,7 @@ sys.path.insert(0, str(ROOT / "src"))
 def test_bundled_ohc_layouts_keep_literal_units_visible_on_device() -> None:
     for name in (
         "ohc-nebula-drift", "ohc-nebula-drift-minimal",
-        "ohc-nebula-drift-performance", "ohc-orbital-command", "kenney-space-console",
-        "kenney-orbital-reticle", "kenney-navigator-grid", "kenney-ambient-glow",
-        "kenney-clean-telemetry", "ohc-orbit", "ohc-aqua-pulse",
+        "ohc-nebula-drift-performance", "ohc-orbital-command", "ohc-orbit", "ohc-aqua-pulse",
         "ohc-horizon-glass", "ohc-split-core", "ohc-spectrum-ring",
         "ohc-neon-double-arc", "ohc-prism-segments", "ohc-aurora-radar",
     ):

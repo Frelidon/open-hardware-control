@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.158 INTERN
+# Open Hardware Control by Frelidon 3.4.29.159 STABLE
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](../LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -51,20 +51,20 @@ Project repository: <https://github.com/Frelidon/open-hardware-control>
 
 ## Thermalright Levita Vision display
 
-**The 1600×720 display of the Thermalright Levita Vision 360 ARGB Black is supported.** The local display studio combines your own images and videos (layer 1) with a complete TRCC hardware design or freely movable OHC live values for CPU, GPU, RAM, clock and custom text (layer 2). Eleven original OHC backgrounds, seventeen editable data layouts, five original animations and 44 effect variants from 20 free sources plus two original OHC designs ship with the app. Thermalright/TRCC catalog media is neither copied nor downloaded.
+**The 1600×720 display of the Thermalright Levita Vision 360 ARGB Black is supported.** The local display studio combines your own images and videos (layer 1) with a complete TRCC hardware design or freely movable OHC live values for CPU, GPU, RAM, clock and custom text (layer 2). Eleven original OHC backgrounds, twelve original editable data layouts, four original layer-1 animations and five OHC effect families with twelve variants ship with the app. Manufacturer/TRCC catalogs, imported user files, stock clips and third-party design components are not bundled.
 
 The safe preview-only test mode is active by default; real USB transfer happens only through the separately installed GPL backend **TRCC Linux** (9.10.4 recommended). Levita pump and radiator fans run through separately confirmed motherboard PWM headers (`PUMP_FAN`, `CPU_FAN`) with a safe 70 %/10 s test; CoolerControl blocks concurrent writes.
 
-## New in 3.4.29.158 INTERN
+## New in 3.4.29.159 STABLE
 
-- OpenRGB SDK v6 profile callbacks are handled as documented asynchronous
-  notifications and no longer interrupt MSI Mystic Light frames.
-- The TRCC GPU-clock boundary guard waits for three valid five-second samples
-  before switching from the corrected 1 MHz value back to the live source.
-- Missing or malformed GPU-clock readings no longer count as proof that the
-  live source has recovered.
-- OpenRGB packet validation, unknown messages and inventory changes remain
-  strictly bounded and fail closed.
+- Public build with a fully cleaned design catalog: the repository and packages
+  contain only project-owned OHC designs.
+- Every main area now shows an independent feature version and its Alpha, Beta,
+  Release Candidate or Stable maturity level without changing feature behavior.
+- Manufacturer/TRCC catalogs, stock media, Kenney components and imported user
+  files are explicitly excluded from the release.
+- OpenRGB SDK v6 callbacks and the guarded TRCC GPU-clock recovery from `.158`
+  remain included.
 
 Older versions: [Version history](#version-history) · [CHANGELOG.md](CHANGELOG.md) · [docs/releases/](releases)
 
@@ -72,30 +72,30 @@ Older versions: [Version history](#version-history) · [CHANGELOG.md](CHANGELOG.
 
 ### Fedora and Nobara – RPM
 
-Download `open-hardware-control-3.4.29.158-0.intern2.noarch.rpm` to your Downloads folder and run:
+Download `open-hardware-control-3.4.29.159-1.noarch.rpm` to your Downloads folder and run:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.158-0.intern2.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.159-1.noarch.rpm
 ```
 
 ### Debian, Ubuntu and Linux Mint – DEB
 
-Download `open-hardware-control_3.4.29.158~intern2_all.deb` to your Downloads folder and run:
+Download `open-hardware-control_3.4.29.159_all.deb` to your Downloads folder and run:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.158~intern2_all.deb'
+sudo apt install './open-hardware-control_3.4.29.159_all.deb'
 ```
 
 ### Universal installer – ZIP
 
-For Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS and openSUSE. Download `open_hardware_control_v3_4_29_158_INTERN.zip` and run:
+For Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS and openSUSE. Download `open_hardware_control_v3_4_29_159.zip` and run:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_158_INTERN.zip
-cd open-hardware-control-3.4.29.158-INTERN
+unzip open_hardware_control_v3_4_29_159.zip
+cd open-hardware-control-3.4.29.159
 chmod +x install.sh
 ./install.sh
 ```
@@ -129,7 +129,7 @@ German version: [README.md](../README.md)
 
 ## Status
 
-Internal test build, provided without warranty. Channel **INTERN**, license **GPL-3.0-or-later**. No public GitHub release. Contributing: [.github/CONTRIBUTING.md](../.github/CONTRIBUTING.md) · Help: [.github/SUPPORT.md](../.github/SUPPORT.md) · Security reports: [SECURITY.md](../.github/SECURITY.md)
+Public stable build, provided without warranty. Channel **STABLE**, license **GPL-3.0-or-later**. Contributing: [.github/CONTRIBUTING.md](../.github/CONTRIBUTING.md) · Help: [.github/SUPPORT.md](../.github/SUPPORT.md) · Security reports: [SECURITY.md](../.github/SECURITY.md)
 
 ## Modules
 
@@ -164,12 +164,12 @@ Reads only local Steam Workshop metadata, selects wallpapers through Plasma's of
 
 ## Version history
 
+**3.4.29.159** – Public build with OHC-only designs and visible feature maturity/version labels.
+
 **3.4.29.158** – Correct OpenRGB profile-callback synchronization and a stable GPU-clock boundary guard.
 
 **3.4.29.157** – Programs/profiles, complete GitHub downloads and automatic recovery of OHC's own Levita daemon.
 
 **3.4.29.156** – Editable LED paths, corrected spatial direction and restored animated RGB fan previews.
-
-**3.4.29.155** – Ubuntu startup profile separated from legacy NZXT setup; occupied Levita USB stops OHC retries.
 
 All earlier versions back to 2.9.x: [CHANGELOG.md](CHANGELOG.md) and [docs/releases/](releases).

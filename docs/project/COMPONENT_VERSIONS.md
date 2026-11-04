@@ -1,4 +1,4 @@
-# Komponenten- und Versionsübersicht – Version 3.4.29.158
+# Komponenten- und Versionsübersicht – Version 3.4.29.159
 
 ## OHC-Modulstand und aktuelle Ubuntu-Konfiguration
 
@@ -22,7 +22,8 @@ behaupteter erfolgreicher Live-Test auf Fedora.
 
 | Komponente | Version / Stand |
 |---|---|
-| Open Hardware Control by Frelidon | 3.4.29.158 INTERN · SDK-6-Profilmeldung 157 korrekt synchronisiert und TRCC-GPU-Taktgrenzschutz mit drei gültigen Erholungsproben stabilisiert; Fedora-Liveprüfung und optische Kontrolle bleiben offen |
+| Open Hardware Control by Frelidon | 3.4.29.159 STABLE · öffentlicher OHC-eigener Designkatalog, sichtbare unabhängige Feature-Reifegrade/-Versionen; SDK-6-Profilmeldung und TRCC-GPU-Taktgrenzschutz aus `.158` erhalten; Fedora-Liveprüfung und optische Kontrolle bleiben offen |
+| OHC Feature Lifecycle | Modul 1.0 · reine zentrale Darstellungsmetadaten; aktiviert/deaktiviert keine Funktion und verändert weder Einstellungen noch Hardwarebesitz |
 | OHC Snapshot-Manager | Modul 1.0 · read-only Distribution-/Dateisystem-/Backend-/Snapper-/Btrfs-Erkennung · GameMode/Gamescope/Programmliste/KDE-Vollbild plus optionale Mehrkern-CPU-und-GPU-Hysterese · moderne gekoppelte Regler-/Zahlenkarten · manuelle Zeit-/Dauersperre · feste Snapper-Timer und begrenzte Btrfs-Discard-Werte ausschließlich über eigenen root-owned Polkit-Helfer · atomarer JSON-Metadatenexport · einzeln bestätigtes Löschen ab Snapshot 1 · kein Ein-Klick-Rollback und keine beliebigen Befehle/Pfade |
 | OHC GPU-Steuerung | Modul 1.0 · LACT 0.10.1+ als optionale lokale API · responsives Drei-Spalten-Cockpit mit vertikalem Scroll-Rückfall für kleine Fenster · vollständige umbrochene Lüftertexte · fünf direkt ziehbare und zahlengekoppelte Lüfterpunkte · lokaler GPU-Bildimport/-reset · reiner Lüftertest garantiert ohne Grafiklast · Leistungslimit standardmäßig höchstens LACT-Werkswert, darüber explizite Freischaltung · Kurztest mit automatischer LACT-Rückstellung · nur bestätigte Werte dauerhaft · CoolerControl-GPU-Lüfter muss freigegeben sein · OpenRGB-RGB getrennt |
 | OHC Prozesslaufzeit / LCD Runtime | Module 1.1 / 1.1 · bestätigte Sendefortschritte, Befehls-/Framefristen, isolierte Spielerkennung und privates Moduljournal |
@@ -74,6 +75,28 @@ behaupteter erfolgreicher Live-Test auf Fedora.
 | LACT | Ubuntu: 0.10.1 installiert · Paket `0.10.1-0` · OHC-Schreibzugriffe nur ab 0.10.1; Versionsprüfung bestätigt keine Takt-/Übertaktungsfähigkeit jeder GPU |
 | CoolerControl | Ubuntu: nicht installiert; kein Upgrade oder installierter Steuerungsdienst behauptet |
 | vkmark / glmark2 / Gamescope / Snapper / MangoHud / Wallpaper Engine for KDE | Ubuntu: nicht installiert; jeweils weder passendes Paket noch Programm im PATH beim lokalen Audit bestätigt |
+
+## Reifegrade der Hauptbereiche
+
+| Bereich | Feature-Version | Reifegrad |
+|---|---:|---|
+| Übersicht | 0.9.0 | Beta |
+| Grafikkarte | 0.8.0 | Beta |
+| Gehäuse | 0.9.0 | Beta |
+| Hardware-Checker | 0.6.0 | Alpha |
+| Snapshot-Manager | 0.5.0 | Alpha |
+| Automationszentrale | 0.4.0 | Alpha |
+| Programme | 0.5.0 | Alpha |
+| Kühlung | 0.9.0 | Beta |
+| RGB-Studio | 0.9.0-rc1 | Release Candidate |
+| LCD | 0.9.0-rc1 | Release Candidate |
+| Display-Effekte | 0.8.0 | Beta |
+| Profile | 0.9.0 | Beta |
+| Corsair · OpenLinkHub | 0.4.0 | Alpha |
+| Wallpaper Engine | 0.8.0 | Beta |
+| Desktop-Designs | 0.5.0 | Alpha |
+| Einstellungen / Über | 1.0.0 | Stabil |
+| Log | 0.9.0 | Beta |
 
 ## Historische Fedora-Referenz, nicht aktueller Ubuntu-Installationsstand
 

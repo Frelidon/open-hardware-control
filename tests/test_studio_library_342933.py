@@ -26,9 +26,7 @@ def test_bundled_space_layouts_are_valid_native_levita_themes() -> None:
     }
     expected = {
         "ohc-nebula-drift", "ohc-nebula-drift-minimal",
-        "ohc-nebula-drift-performance", "ohc-orbital-command", "kenney-space-console",
-        "kenney-orbital-reticle", "kenney-navigator-grid", "kenney-ambient-glow",
-        "kenney-clean-telemetry", "ohc-orbit", "ohc-aqua-pulse",
+        "ohc-nebula-drift-performance", "ohc-orbital-command", "ohc-orbit", "ohc-aqua-pulse",
         "ohc-horizon-glass", "ohc-split-core", "ohc-spectrum-ring",
         "ohc-neon-double-arc", "ohc-prism-segments", "ohc-aurora-radar",
     }

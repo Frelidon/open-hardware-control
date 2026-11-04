@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.158 INTERN
+# Open Hardware Control by Frelidon 3.4.29.159 STABLE
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -51,20 +51,20 @@ Projekt-Repository: <https://github.com/Frelidon/open-hardware-control>
 
 ## Thermalright Levita Vision Display
 
-**Das 1600×720-Display der Thermalright Levita Vision 360 ARGB Black wird unterstützt.** Das lokale Display-Studio kombiniert eigene Bilder und Videos (Ebene 1) mit einem vollständigen TRCC-Hardwaredesign oder frei verschiebbaren OHC-Live-Werten für CPU, GPU, RAM, Uhrzeit und eigenen Text (Ebene 2). Mitgeliefert werden elf eigene OHC-Hintergründe, siebzehn editierbare Datenlayouts, fünf eigene Animationen sowie 44 Effektvarianten aus 20 freien Quellen und zwei originalen OHC-Designs. Thermalright-/TRCC-Katalogmedien werden weder kopiert noch heruntergeladen.
+**Das 1600×720-Display der Thermalright Levita Vision 360 ARGB Black wird unterstützt.** Das lokale Display-Studio kombiniert eigene Bilder und Videos (Ebene 1) mit einem vollständigen TRCC-Hardwaredesign oder frei verschiebbaren OHC-Live-Werten für CPU, GPU, RAM, Uhrzeit und eigenen Text (Ebene 2). Mitgeliefert werden elf eigene OHC-Hintergründe, zwölf eigene editierbare Datenlayouts, vier eigene Ebene-1-Animationen sowie fünf OHC-Effektfamilien mit zwölf Varianten. Hersteller-/TRCC-Katalogmedien, importierte Benutzerdateien, Stock-Clips und fremde Designbestandteile werden nicht mitgeliefert.
 
 Der sichere Testmodus ist standardmäßig aktiv; echte USB-Übertragung erfolgt nur über das separat installierte GPL-Backend **TRCC Linux** (9.10.4 empfohlen). Pumpe und Radiatorlüfter der Levita laufen über getrennt bestätigte Mainboard-PWM-Header (`PUMP_FAN`, `CPU_FAN`) mit sicherem 70-%-/10-s-Test; CoolerControl blockiert parallele Schreibzugriffe.
 
-## Neu in 3.4.29.158 INTERN
+## Neu in 3.4.29.159 STABLE
 
-- OpenRGB-SDK-v6-Profilmeldungen werden als dokumentierte asynchrone
-  Benachrichtigungen verarbeitet und unterbrechen MSI-Mystic-Light-Frames nicht.
-- Der TRCC-GPU-Taktgrenzschutz wartet drei gültige 5-Sekunden-Messungen ab,
-  bevor er von der korrigierten 1-MHz-Anzeige zur Livequelle zurückschaltet.
-- Fehlende oder fehlerhafte GPU-Taktmessungen gelten nicht mehr versehentlich
-  als Beleg für eine wieder plausible Livequelle.
-- OpenRGB-Paketvalidierung, unbekannte Meldungen und Inventarwechsel bleiben
-  weiterhin streng begrenzt und fail-closed.
+- Öffentliche Ausgabe mit vollständig bereinigtem Designkatalog: Im Repository
+  und in allen Paketen liegen ausschließlich projekt-eigene OHC-Designs.
+- Jeder Hauptbereich zeigt eine eigene Feature-Version und seinen Reifegrad als
+  Alpha, Beta, Release Candidate oder Stabil, ohne Funktionspfade zu verändern.
+- Hersteller-/TRCC-Kataloge, Stock-Medien, Kenney-Bestandteile und importierte
+  Benutzerdateien sind ausdrücklich nicht Bestandteil der Veröffentlichung.
+- Der TRCC-GPU-Taktgrenzschutz verlangt drei plausible Messungen, bevor die
+  dynamische Livequelle nach dem 1-MHz-Grenzfall wieder übernommen wird.
 
 Ältere Versionen: [Versionsverlauf](#versionsverlauf) · [docs/CHANGELOG.md](docs/CHANGELOG.md) · [docs/releases/](docs/releases/)
 
@@ -72,30 +72,30 @@ Der sichere Testmodus ist standardmäßig aktiv; echte USB-Übertragung erfolgt 
 
 ### Fedora und Nobara – RPM
 
-Lade `open-hardware-control-3.4.29.158-0.intern2.noarch.rpm` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control-3.4.29.159-1.noarch.rpm` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.158-0.intern2.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.159-1.noarch.rpm
 ```
 
 ### Debian, Ubuntu und Linux Mint – DEB
 
-Lade `open-hardware-control_3.4.29.158~intern2_all.deb` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control_3.4.29.159_all.deb` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.158~intern2_all.deb'
+sudo apt install './open-hardware-control_3.4.29.159_all.deb'
 ```
 
 ### Universelles Installationspaket – ZIP
 
-Für Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_158_INTERN.zip` herunter und führe aus:
+Für Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_159.zip` herunter und führe aus:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_158_INTERN.zip
-cd open-hardware-control-3.4.29.158-INTERN
+unzip open_hardware_control_v3_4_29_159.zip
+cd open-hardware-control-3.4.29.159
 chmod +x install.sh
 ./install.sh
 ```
@@ -129,7 +129,7 @@ English version: [docs/README.en.md](docs/README.en.md)
 
 ## Status
 
-Interne Testversion, bereitgestellt ohne Garantie. Kanal **INTERN**, Lizenz **GPL-3.0-or-later**. Kein öffentliches GitHub-Release. Mitwirken: [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) · Hilfe: [.github/SUPPORT.md](.github/SUPPORT.md) · Sicherheitsmeldungen: [.github/SECURITY.md](.github/SECURITY.md)
+Öffentliche stabile Version, bereitgestellt ohne Garantie. Kanal **STABLE**, Lizenz **GPL-3.0-or-later**. Mitwirken: [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) · Hilfe: [.github/SUPPORT.md](.github/SUPPORT.md) · Sicherheitsmeldungen: [.github/SECURITY.md](.github/SECURITY.md)
 
 ## Module
 
@@ -164,12 +164,12 @@ Liest nur lokale Steam-Workshop-Metadaten, wählt Wallpaper über Plasmas offizi
 
 ## Versionsverlauf
 
+**3.4.29.159** – Öffentliche Ausgabe mit ausschließlich OHC-eigenen Designs und vollständiger Herkunftsprüfung.
+
 **3.4.29.158** – OpenRGB-Profilmeldungen korrekt synchronisiert und GPU-Taktgrenzschutz stabilisiert.
 
 **3.4.29.157** – Programme/Profile, vollständige GitHub-Downloads und automatische Wiederherstellung des eigenen Levita-Daemons.
 
 **3.4.29.156** – LED-Verlauf bedienbar, räumliche Richtung korrigiert und animierte RGB-Lüftervorschau wiederhergestellt.
-
-**3.4.29.155** – Ubuntu-Startprofil von altem NZXT-Setup getrennt; belegtes Levita-USB stoppt eigene Wiederholungen.
 
 Alle früheren Versionen bis 2.9.x: [docs/CHANGELOG.md](docs/CHANGELOG.md) und [docs/releases/](docs/releases/).

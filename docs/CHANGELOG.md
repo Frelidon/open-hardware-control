@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+## 3.4.29.159 STABLE · 04.11.26
+
+- Add a hardware-inert feature lifecycle 1.0 catalog with an independent
+  semantic version and Alpha/Beta/Release Candidate/Stable maturity stage for
+  every major application area. Show it in feature cards, navigation settings
+  without changing feature enablement or ownership.
+- Use the standard `Release Candidate` label for the former “Beta Plus” working
+  description; keep RGB Studio and LCD at `0.9.0-rc1`.
+- Prepare the public catalog with project-owned OHC media only. Remove bundled
+  stock clips and third-party design components while retaining import,
+  catalog, editor, preview and hardware handoff functionality.
+- Preserve the `.158` OpenRGB callback synchronization, TRCC clock recovery,
+  case-fan RGB animation and all existing profile/LED/PWM behavior.
+
 ## 3.4.29.158 INTERN · 31.10.26
 
 - Treat OpenRGB SDK v6 packet 157 as the documented asynchronous active-profile

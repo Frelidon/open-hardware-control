@@ -222,6 +222,13 @@ def control_widget_stylesheet(*, accent, base_px, brand_color, brand_logo_bg, br
                 border-radius: 8px; padding: 5px 8px; background: rgba({accent.red()}, {accent.green()}, {accent.blue()}, 24);
                 font-weight: 700;
             }}
+            QLabel#featureLifecycleBadge {{
+                color: {accent.lighter(125).name()};
+                border: 1px solid rgba({accent.red()}, {accent.green()}, {accent.blue()}, 92);
+                border-radius: 7px; padding: 2px 6px;
+                background: rgba({accent.red()}, {accent.green()}, {accent.blue()}, 18);
+                font-size: 11px; font-weight: 700;
+            }}
             QFrame#fanChannelCardSelected {{ border: 1px solid {accent.name()}; }}
             QFrame#fanInlineDetail {{ background: {fan_detail_bg}; }}
             QFrame#hardwareListRow {{

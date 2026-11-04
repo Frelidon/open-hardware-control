@@ -79,24 +79,19 @@ def test_effect_page_explains_and_exposes_canonical_startup_saving():
 
 
 def test_bundled_effect_catalog_is_complete_attributed_and_bounded():
-    assert len(DESIGNS) == 25
-    assert all(
-        len(design.variants) == 4
-        for design in designs_for_category("abstract")
-        if design.ident != "ohc-light-bands"
-    )
+    assert len(DESIGNS) == 5
     assert len(next(design for design in DESIGNS if design.ident == "ohc-light-bands").variants) == 8
-    assert all(len(design.variants) == 1 for design in DESIGNS if design.category != "abstract")
-    assert {key: len(designs_for_category(key)) for key in ("abstract", "space", "landscape", "water", "ohc_original")} == {
-        "abstract": 6, "space": 5, "landscape": 5, "water": 5, "ohc_original": 4,
-    }
+    assert all(len(design.variants) == 1 for design in DESIGNS if design.ident != "ohc-light-bands")
+    assert len(designs_for_category("ohc_original")) == 5
+    assert all(design.ident.startswith("ohc-") for design in DESIGNS)
+    assert all(design.creator == "Frelidon / Open Hardware Control" for design in DESIGNS)
     rejected = " ".join(f"{design.ident} {design.title} {design.description}" for design in DESIGNS).casefold()
     assert "saturn" not in rejected
     assert "grand canyon" not in rejected
     assert "fly-through" not in rejected
     assert "ohc-spectrum-motion" not in {design.ident for design in DESIGNS}
     assert {variant.ident for variant in DESIGNS[0].variants} == {
-        "original", "ice", "plasma", "ember",
+        "right", "left", "down", "up", "down-right", "up-left", "down-left", "up-right",
     }
     for design in DESIGNS:
         assert design.creator and design.creator_url.startswith("https://")
@@ -124,7 +119,7 @@ def test_library_uses_graphical_cards_and_keeps_attribution_links():
     assert all(not button.icon().isNull() for button in cards)
     assert "Originalquelle" in library.credit_label.text()
     assert library.credit_label.text().count("<a href=") == 3
-    library.category_combo.setCurrentIndex(library.category_combo.findData("water"))
+    library.category_combo.setCurrentIndex(library.category_combo.findData("ohc_original"))
     assert len(library._design_cards) == 5
     app.processEvents()
 
@@ -171,8 +166,8 @@ class _FakeStudio:
 
 def test_effect_page_mirrors_active_library_design_without_restaging(tmp_path: Path):
     app = QApplication.instance() or QApplication([])
-    design = next(item for item in DESIGNS if item.ident == "dark-smoke")
-    media = validated_asset(design.variants[2])
+    design = next(item for item in DESIGNS if item.ident == "ohc-prism-drift")
+    media = validated_asset(design.variants[0])
     studio = _FakeStudio(media, tmp_path / "generated")
     settings = QSettings(str(tmp_path / "settings.ini"), QSettings.Format.IniFormat)
     page = DisplayEffectsPage(
@@ -181,21 +176,21 @@ def test_effect_page_mirrors_active_library_design_without_restaging(tmp_path: P
         hero_factory=lambda *_args: QFrame(),
     )
     assert page.effect_combo.currentData() == "library"
-    assert page.stock_library.current_design().ident == "dark-smoke"
-    assert page.stock_library.current_variant().ident == "plasma"
-    assert page.stock_library.category_combo.currentData() == "abstract"
+    assert page.stock_library.current_design().ident == "ohc-prism-drift"
+    assert page.stock_library.current_variant().ident == "original"
+    assert page.stock_library.category_combo.currentData() == "ohc_original"
     assert studio.staged == []
     page.shutdown()
     app.processEvents()
 
 
-def test_dark_smoke_preview_starts_on_visible_motion_and_pauses_decoder():
+def test_ohc_prism_preview_starts_on_visible_motion_and_pauses_decoder():
     app = QApplication.instance() or QApplication([])
-    design = next(item for item in DESIGNS if item.ident == "dark-smoke")
+    design = next(item for item in DESIGNS if item.ident == "ohc-prism-drift")
     preview = BundledVideoPreview()
     frames = []
     preview.frame_ready.connect(frames.append)
-    preview.load(validated_asset(design.variants[0]), preview_start_ms=3000)
+    preview.load(validated_asset(design.variants[0]), preview_start_ms=0)
     preview.set_active(True)
     loop = QEventLoop()
     QTimer.singleShot(1400, loop.quit)

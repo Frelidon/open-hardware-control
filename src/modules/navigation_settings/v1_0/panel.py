@@ -16,6 +16,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from modules.feature_lifecycle.v1_0 import feature_lifecycle
+
 
 MODULE_ROWS = (
     ("gpu", "◈", "Grafikkarte"),
@@ -79,9 +81,18 @@ def build_module_visibility_settings(host) -> QGroupBox:
         icon_label.setObjectName("moduleVisibilityIcon")
         icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         icon_label.setFixedSize(34, 34)
+        title_box = QVBoxLayout()
+        title_box.setSpacing(1)
         title_label = QLabel(host.tr_static(title))
         title_label.setObjectName("moduleVisibilityTitle")
         title_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        lifecycle = feature_lifecycle(key)
+        lifecycle_label = QLabel(
+            f"{host.tr_static(lifecycle.stage)} · v{lifecycle.version}" if lifecycle else ""
+        )
+        lifecycle_label.setObjectName("featureLifecycleBadge")
+        title_box.addWidget(title_label)
+        title_box.addWidget(lifecycle_label)
         dot = QLabel()
         dot.setAlignment(Qt.AlignmentFlag.AlignCenter)
         dot.setFixedWidth(20)
@@ -97,7 +108,7 @@ def build_module_visibility_settings(host) -> QGroupBox:
             )
         )
         row.addWidget(icon_label)
-        row.addWidget(title_label, 1)
+        row.addLayout(title_box, 1)
         row.addWidget(dot)
         row.addWidget(checkbox)
         host.navigation_module_checkboxes[key] = checkbox

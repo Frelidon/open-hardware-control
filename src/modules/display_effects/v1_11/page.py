@@ -97,7 +97,7 @@ class DisplayEffectsPage(BasePage):
             self._fallback_frame()
             self._refresh_preview_driver()
             return
-        start = 3000 if self._library_selected() and self.stock_library.current_design().ident == 'dark-smoke' else 0
+        start = 0
         changed = video.load(path, preview_start_ms=start)
         if changed or video.latest_image.isNull():
             if self._library_selected():

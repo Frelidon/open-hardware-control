@@ -4,14 +4,13 @@ Original Light Bands remove permanent cold outlines and idle narrow centre
 highlights. Eight four-second loops are regenerated from actual 4800×2160
 frames, reduced to native 1600×720 and encoded at CRF 10, 24 FPS with two threads.
 Previous supersampling requests were clamped by the renderer; bounds now admit
-the real source resolution. Foreign-source media and their credits are unchanged.
+the real source resolution.
 
-The four project-owned `ohc_original` designs from the complete .148 release
-are retained under their original IDs: Prism Drift, Twin Wyrm Orbit,
-Neon Particle Garden, and Circuit Chase. Their packaged video/poster pairs are
-byte-identical to the original release; four-language descriptions and the
-category selector remain part of the ordinary library. Catalog tests guard
-the stable IDs, attribution, assets, and selection without hardware access.
+The project-owned catalog contains only OHC Light Bands, Prism Drift, Twin Wyrm
+Orbit, Neon Particle Garden and Circuit Chase. Stock-library clips, Kenney-based
+layouts, manufacturer media and imported user content are not bundled. Catalog
+and release-provenance tests guard the stable IDs, creator, filenames, assets
+and selection without hardware access.
 
 `page.py` owns transient exploration: explicit cards/variants or procedural
 controls select an effect; outside click, Escape, Clear selection and page hide

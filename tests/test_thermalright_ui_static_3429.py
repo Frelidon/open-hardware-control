@@ -259,9 +259,7 @@ def test_project_owned_levita_media_are_packaged_from_an_explicit_allowlist() ->
     assert {path.name for path in designs.iterdir() if path.is_file()} == expected_top_level
     expected_themes = {
         "ohc-nebula-drift", "ohc-nebula-drift-minimal",
-        "ohc-nebula-drift-performance", "ohc-orbital-command", "kenney-space-console",
-        "kenney-orbital-reticle", "kenney-navigator-grid", "kenney-ambient-glow",
-        "kenney-clean-telemetry", "ohc-orbit", "ohc-aqua-pulse",
+        "ohc-nebula-drift-performance", "ohc-orbital-command", "ohc-orbit", "ohc-aqua-pulse",
         "ohc-horizon-glass", "ohc-split-core", "ohc-spectrum-ring",
         "ohc-neon-double-arc", "ohc-prism-segments", "ohc-aurora-radar",
     }

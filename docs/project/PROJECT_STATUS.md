@@ -1,10 +1,22 @@
 # Open Hardware Control — Project Status
 
-**Current development version:** 3.4.29.158 INTERN
+**Current development version:** 3.4.29.159 STABLE
 
-**Status date:** 31 October 2026
+**Status date:** 4 November 2026
 
-**Release channel:** INTERN — no GitHub push, tag or public release unless the project owner requests it later.
+**Release channel:** STABLE — the project owner explicitly requested GitHub publication and local installation after the complete release gate.
+
+Version 3.4.29.159 prepares the public OHC-only design catalog and adds the
+hardware-inert Feature Lifecycle 1.0 registry. Every main area now has an
+independent semantic version and Alpha, Beta, Release Candidate or Stable
+maturity label in feature cards and navigation settings.
+The former “Beta Plus” description is represented by the standard Release
+Candidate label. These values are presentation metadata only and do not enable,
+disable, migrate or own hardware. Existing profiles, case-fan RGB animation,
+spatial LED routes, PWM mappings and hardware handoff paths remain unchanged.
+Bundled stock media and third-party design components are excluded from the
+public package while all import, editor, preview and transfer functions remain.
+Real Fedora hardware and optical case-RGB confirmation remain open.
 
 Version 3.4.29.158 addresses the two actionable faults in the owner's 3.4.29.157
 runtime log. OpenRGB SDK 6 packet 157 is the documented active-profile-change
@@ -40,8 +52,9 @@ Rust remains possible only for a demonstrated isolated CPU hotspot with Python
 fallback and identical fixtures. The case fan preview applies a small bounded,
 cached brightness lift to non-black RGB segments and a slightly wider light ring,
 without changing effect phase, physical mapping, hardware writes or hidden-timer
-behavior. The broader Programs module remains the next phased feature and is not
-claimed as implemented by this maintenance step.
+behavior. The Programs module is implemented within the bounded inventory,
+profile, verified-download and confirmed-installation scope described below;
+generic distribution system packages remain intentionally fail-closed.
 
 Versions `.151` through `.156` were audited individually against their release
 notes, registered modules, regressions and later status evidence. Their described
@@ -58,7 +71,7 @@ folder. Per-file and total limits, final-host validation, byte-count checks,
 SHA256SUMS, a JSON manifest, atomic publication and no-overwrite behavior apply.
 It executes no discovered desktop command, package manager or installation.
 
-The next Programs stage adds explicit manual installation profiles. Flatpak uses
+The current Programs stage includes explicit manual installation profiles. Flatpak uses
 the already configured Flathub remote as a per-user install, Snap uses its exact
 validated name and optional channel through Polkit, and AppImage only adds the
 current user's execute bit after the file is confirmed inside the selected base

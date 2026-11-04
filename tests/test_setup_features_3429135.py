@@ -13,6 +13,7 @@ from modules.control_authority.v1_0 import (  # noqa: E402
     ohc_may_write,
 )
 from modules.setup_features.v1_0 import feature_choices, normalize_selection  # noqa: E402
+from modules.feature_lifecycle.v1_0 import feature_lifecycle  # noqa: E402
 
 
 def test_feature_catalog_tracks_platform_and_legacy_default() -> None:
@@ -25,6 +26,7 @@ def test_feature_catalog_tracks_platform_and_legacy_default() -> None:
         key for key, item in linux.items() if item.default_enabled
     }
     assert "snapshots" not in normalize_selection(["snapshots", "rgb"], platform="win32")
+    assert all(feature_lifecycle(item.key) is not None for item in linux.values())
 
 
 def test_navigation_shaped_152_selection_preserves_feature_choices() -> None:

@@ -6,6 +6,8 @@ from __future__ import annotations
 from PySide6.QtCore import QEasingCurve, QPropertyAnimation, Qt
 from PySide6.QtWidgets import QCheckBox, QFrame, QGraphicsOpacityEffect, QHBoxLayout, QLabel, QVBoxLayout
 
+from modules.feature_lifecycle.v1_0 import feature_lifecycle
+
 from .model import FeatureChoice
 
 
@@ -31,6 +33,13 @@ class FeatureCard(QFrame):
         self.status_label.setObjectName("muted" if feature.available else "warningText")
         copy.addWidget(self.title_label)
         copy.addWidget(self.status_label)
+        lifecycle = feature_lifecycle(feature.key)
+        self.lifecycle_label = QLabel(
+            f"{translate(lifecycle.stage)} · v{lifecycle.version}" if lifecycle else ""
+        )
+        self.lifecycle_label.setObjectName("featureLifecycleBadge")
+        self.lifecycle_label.setVisible(lifecycle is not None)
+        copy.addWidget(self.lifecycle_label)
         self.toggle = QCheckBox(translate("Feature verwenden"))
         self.toggle.setChecked(feature.default_enabled)
         self.toggle.setEnabled(feature.available)
@@ -56,6 +65,9 @@ class FeatureCard(QFrame):
         self.setToolTip(translate(self.feature.description))
         self.title_label.setText(translate(self.feature.title))
         self.status_label.setText(translate(self.feature.availability))
+        lifecycle = feature_lifecycle(self.feature.key)
+        if lifecycle is not None:
+            self.lifecycle_label.setText(f"{translate(lifecycle.stage)} · v{lifecycle.version}")
         self.toggle.setText(translate("Feature verwenden"))
         self.details.setText(translate(self.feature.description))
 
