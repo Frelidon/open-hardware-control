@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 3.4.29.164 STABLE · 05.11.26
+
+- Run the isolated real-viewport preview regression in a responsive 760×700
+  window that fits Qt's minimum CI offscreen screen. This removes the invalid
+  assumption that a 1600×1000 native window exists while preserving real
+  scroll-area visibility and video pause/resume coverage.
+- Carry forward all `.163` lifecycle, catalog and feature-preservation work.
+
 ## 3.4.29.163 STABLE · 04.11.26
 
 - Re-run the real scroll-area visibility request while the bounded offscreen

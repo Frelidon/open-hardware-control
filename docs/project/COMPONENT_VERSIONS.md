@@ -1,4 +1,4 @@
-# Komponenten- und Versionsübersicht – Version 3.4.29.163
+# Komponenten- und Versionsübersicht – Version 3.4.29.164
 
 ## OHC-Modulstand und aktuelle Ubuntu-Konfiguration
 
@@ -22,7 +22,7 @@ behaupteter erfolgreicher Live-Test auf Fedora.
 
 | Komponente | Version / Stand |
 |---|---|
-| Open Hardware Control by Frelidon | 3.4.29.163 STABLE · öffentlicher OHC-eigener Designkatalog, sichtbare unabhängige Feature-Reifegrade/-Versionen, hardwareunabhängiger Levita-UI-Test, zeitunabhängige Vorschauprüfung und zuverlässiges Ausblenden eigener LCD-Medien ohne TRCC-Systemkatalog; SDK-6-Profilmeldung und TRCC-GPU-Taktgrenzschutz aus `.158` erhalten; Fedora-Liveprüfung und optische Kontrolle bleiben offen |
+| Open Hardware Control by Frelidon | 3.4.29.164 STABLE · öffentlicher OHC-eigener Designkatalog, sichtbare unabhängige Feature-Reifegrade/-Versionen, hardwareunabhängiger Levita-UI-Test, zeitunabhängige Vorschauprüfung und zuverlässiges Ausblenden eigener LCD-Medien ohne TRCC-Systemkatalog; SDK-6-Profilmeldung und TRCC-GPU-Taktgrenzschutz aus `.158` erhalten; Fedora-Liveprüfung und optische Kontrolle bleiben offen |
 | OHC Feature Lifecycle | Modul 1.0 · reine zentrale Darstellungsmetadaten; aktiviert/deaktiviert keine Funktion und verändert weder Einstellungen noch Hardwarebesitz |
 | OHC Snapshot-Manager | Modul 1.0 · read-only Distribution-/Dateisystem-/Backend-/Snapper-/Btrfs-Erkennung · GameMode/Gamescope/Programmliste/KDE-Vollbild plus optionale Mehrkern-CPU-und-GPU-Hysterese · moderne gekoppelte Regler-/Zahlenkarten · manuelle Zeit-/Dauersperre · feste Snapper-Timer und begrenzte Btrfs-Discard-Werte ausschließlich über eigenen root-owned Polkit-Helfer · atomarer JSON-Metadatenexport · einzeln bestätigtes Löschen ab Snapshot 1 · kein Ein-Klick-Rollback und keine beliebigen Befehle/Pfade |
 | OHC GPU-Steuerung | Modul 1.0 · LACT 0.10.1+ als optionale lokale API · responsives Drei-Spalten-Cockpit mit vertikalem Scroll-Rückfall für kleine Fenster · vollständige umbrochene Lüftertexte · fünf direkt ziehbare und zahlengekoppelte Lüfterpunkte · lokaler GPU-Bildimport/-reset · reiner Lüftertest garantiert ohne Grafiklast · Leistungslimit standardmäßig höchstens LACT-Werkswert, darüber explizite Freischaltung · Kurztest mit automatischer LACT-Rückstellung · nur bestätigte Werte dauerhaft · CoolerControl-GPU-Lüfter muss freigegeben sein · OpenRGB-RGB getrennt |

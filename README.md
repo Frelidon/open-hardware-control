@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.163 STABLE
+# Open Hardware Control by Frelidon 3.4.29.164 STABLE
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -55,7 +55,7 @@ Projekt-Repository: <https://github.com/Frelidon/open-hardware-control>
 
 Der sichere Testmodus ist standardmäßig aktiv; echte USB-Übertragung erfolgt nur über das separat installierte GPL-Backend **TRCC Linux** (9.10.4 empfohlen). Pumpe und Radiatorlüfter der Levita laufen über getrennt bestätigte Mainboard-PWM-Header (`PUMP_FAN`, `CPU_FAN`) mit sicherem 70-%-/10-s-Test; CoolerControl blockiert parallele Schreibzugriffe.
 
-## Neu in 3.4.29.163 STABLE
+## Neu in 3.4.29.164 STABLE
 
 - Öffentliche Ausgabe mit vollständig bereinigtem Designkatalog: Im Repository
   und in allen Paketen liegen ausschließlich projekt-eigene OHC-Designs.
@@ -67,8 +67,8 @@ Der sichere Testmodus ist standardmäßig aktiv; echte USB-Übertragung erfolgt 
   hardwarefreien GitHub-Runnern mit demselben ausdrücklich gesetzten Testzustand.
 - Eigene LCD-Medien bleiben beim Abwählen auch ohne systemweiten TRCC-Katalog
   ausgeblendet; Dateien bleiben erhalten und OHC-Designs weiterhin verfügbar.
-- Der isolierte Vorschautest bringt die LCD-Fläche während der begrenzten
-  Layoutprüfung erneut ins Sichtfeld und setzt keine feste Runner-Geschwindigkeit voraus.
+- Der isolierte Vorschautest nutzt ein kleines responsives Fenster innerhalb
+  der minimalen virtuellen CI-Bildschirmfläche und prüft echtes Scrollen/Sichtbarwerden.
 - Der TRCC-GPU-Taktgrenzschutz verlangt drei plausible Messungen, bevor die
   dynamische Livequelle nach dem 1-MHz-Grenzfall wieder übernommen wird.
 
@@ -78,30 +78,30 @@ Der sichere Testmodus ist standardmäßig aktiv; echte USB-Übertragung erfolgt 
 
 ### Fedora und Nobara – RPM
 
-Lade `open-hardware-control-3.4.29.163-1.noarch.rpm` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control-3.4.29.164-1.noarch.rpm` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.163-1.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.164-1.noarch.rpm
 ```
 
 ### Debian, Ubuntu und Linux Mint – DEB
 
-Lade `open-hardware-control_3.4.29.163_all.deb` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control_3.4.29.164_all.deb` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.163_all.deb'
+sudo apt install './open-hardware-control_3.4.29.164_all.deb'
 ```
 
 ### Universelles Installationspaket – ZIP
 
-Für Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_163.zip` herunter und führe aus:
+Für Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_164.zip` herunter und führe aus:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_163.zip
-cd open-hardware-control-3.4.29.163
+unzip open_hardware_control_v3_4_29_164.zip
+cd open-hardware-control-3.4.29.164
 chmod +x install.sh
 ./install.sh
 ```
@@ -170,7 +170,7 @@ Liest nur lokale Steam-Workshop-Metadaten, wählt Wallpaper über Plasmas offizi
 
 ## Versionsverlauf
 
-**3.4.29.163** – Öffentliche Ausgabe mit OHC-eigenen Designs, Feature-Reifegraden, robuster LCD-Medienauswahl und zeitunabhängigem Vorschautest.
+**3.4.29.164** – Öffentliche Ausgabe mit OHC-eigenen Designs, Feature-Reifegraden, robuster LCD-Medienauswahl und zeitunabhängigem Vorschautest.
 
 **3.4.29.159** – Veröffentlichungskandidat mit OHC-eigenem Designkatalog und Feature-Reifegraden.
 

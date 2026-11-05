@@ -77,7 +77,10 @@ def exercise():
         window = application.KrakenControl()
         window.settings.setValue('setup/completed', True)
         window.settings.setValue('dependencies/desktop_design_offer_330', True)
-        window.resize(1600, 1000); window.show()
+        # Stay within Qt's smallest CI offscreen screen. A window larger than
+        # that virtual screen can never satisfy the real parent-intersection
+        # visibility contract even after the scroll area exposes the canvas.
+        window.resize(760, 700); window.show()
         studio = window.thermalright_display_studio
         page = window.display_effects_page
         first = ROOT / 'src/assets/levita-designs/ohc-3d-quantum-core-10s.mp4'

@@ -1,9 +1,9 @@
 # Open Hardware Control — verbindliches Modulregister
 
-**Stand:** 04.11.26
-**Anwendung:** 3.4.29.163 STABLE
+**Stand:** 05.11.26
+**Anwendung:** 3.4.29.164 STABLE
 
-Entwicklung 04.11.26: Anwendung 3.4.29.163 setzt im vollständigen Levita-
+Entwicklung 05.11.26: Anwendung 3.4.29.164 setzt im vollständigen Levita-
 UI-Test den isolierten Kühlertyp ausdrücklich und hält eigene LCD-Medien auch
 ohne systemweiten TRCC-Katalog zuverlässig ausgeblendet. Eingebaute OHC-Designs
 bleiben sichtbar, Benutzerdateien unverändert. Produktive Geräteerkennung,
@@ -819,6 +819,7 @@ dreizeilige persönliche Callouts.
 
 | Datum | Modul | Version | Änderung |
 |---|---|---:|---|
+| 05.11.26 | LCD-Vorschau / responsive Oberfläche / Release-Test | Testfix / geprüft / Testfix · Anwendung 3.4.29.164 | Reale Offscreen-Viewport-Prüfung verwendet ein responsives 760×700-Fenster innerhalb der kleinsten virtuellen CI-Bildschirmfläche statt eines dort unmöglichen nativen 1600×1000-Fensters. Echtes Scrollen, Sichtbarkeit und Video-Pause/-Fortsetzung bleiben geprüft; produktive Oberfläche unverändert. |
 | 04.11.26 | LCD-Vorschau / Release-Test | Testfix / Testfix · Anwendung 3.4.29.163 | Isolierte Offscreen-Prüfung wiederholt den echten Scrollbereich-Sichtbarkeitsaufruf während der begrenzten Layoutstabilisierung. Damit wird auch ein Runner geprüft, dessen endgültige Geometrie erst nach dem ersten Aufruf steht; produktive Vorschau unverändert. |
 | 04.11.26 | LCD-Vorschau / Snapshot-Prozesslaufzeit / Release-Test | Testfix / 1.0 / Testfix · Anwendung 3.4.29.162 | Isolierte Offscreen-Vorschau wartet begrenzt auf die reale Viewport-Geometrie statt eine feste Runner-Geschwindigkeit vorauszusetzen und beendet ihren Snapshot-Probe vor dem Testfenster. Produktive Vorschau-, Snapshot- und Hardwarepfade bleiben unverändert. |
 | 04.11.26 | LCD-Medienverwaltung / Release-Test | 1.0 / Testfix · Anwendung 3.4.29.161 | Gemerkte eigene Medien bleiben beim Abwählen auch auf Rechnern ohne systemweiten TRCC-Standardkatalog ausgeblendet; der eingebaute OHC-Katalog bleibt verfügbar und Dateien werden nicht verändert. Hardwarefreier Levita-Test wählt weiterhin den isolierten Kühlertyp. |
