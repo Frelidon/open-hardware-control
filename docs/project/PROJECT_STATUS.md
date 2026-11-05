@@ -1,17 +1,18 @@
 # Open Hardware Control — Project Status
 
-**Current development version:** 3.4.29.164 STABLE
+**Current development version:** 3.4.29.165 STABLE
 
 **Status date:** 5 November 2026
 
 **Release channel:** STABLE — the project owner explicitly requested GitHub publication and local installation after the complete release gate.
 
-Version 3.4.29.164 carries the public OHC-only design catalog, Feature Lifecycle
+Version 3.4.29.165 carries the public OHC-only design catalog, Feature Lifecycle
 registry and portable LCD catalog behavior. Its isolated real-viewport preview
-regression uses a responsive 760×700 window inside Qt's minimum CI offscreen
-screen rather than assuming a native 1600×1000 display. Real scroll visibility,
-video pause/resume and bounded shutdown remain covered. Production preview,
-snapshot, application detection and hardware paths are unchanged.
+regression uses Qt's headless `minimal` QPA, which provides deterministic
+exposure geometry unlike the runner-dependent `offscreen` QPA. The responsive
+760×700 window, real scroll visibility, video pause/resume and bounded shutdown
+remain covered. Production QPA selection, preview, snapshot and hardware paths
+are unchanged.
 
 Version 3.4.29.159 prepared the public OHC-only design catalog and added the
 hardware-inert Feature Lifecycle 1.0 registry. Every main area now has an

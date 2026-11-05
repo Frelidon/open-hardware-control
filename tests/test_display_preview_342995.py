@@ -7,7 +7,10 @@ import tempfile
 import time
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src'))
-os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
+# The offscreen QPA intentionally does not promise window exposure on every
+# runner. The minimal headless QPA keeps deterministic widget/viewport geometry
+# so this test can exercise the real exposure contract without a display server.
+os.environ.setdefault('QT_QPA_PLATFORM', 'minimal')
 
 
 def test_light_bands_use_real_supersampling_and_no_cold_edge_stripes():

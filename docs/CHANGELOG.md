@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 3.4.29.165 STABLE · 05.11.26
+
+- Run the isolated real-viewport regression on Qt's headless `minimal` QPA,
+  which provides deterministic window exposure geometry. The `offscreen` QPA
+  intentionally does not guarantee exposure on GitHub-hosted runners.
+- Preserve the responsive 760×700 test window and all `.164` application work.
+
 ## 3.4.29.164 STABLE · 05.11.26
 
 - Run the isolated real-viewport preview regression in a responsive 760×700

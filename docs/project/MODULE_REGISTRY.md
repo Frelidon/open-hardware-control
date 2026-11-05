@@ -1,9 +1,9 @@
 # Open Hardware Control — verbindliches Modulregister
 
 **Stand:** 05.11.26
-**Anwendung:** 3.4.29.164 STABLE
+**Anwendung:** 3.4.29.165 STABLE
 
-Entwicklung 05.11.26: Anwendung 3.4.29.164 setzt im vollständigen Levita-
+Entwicklung 05.11.26: Anwendung 3.4.29.165 setzt im vollständigen Levita-
 UI-Test den isolierten Kühlertyp ausdrücklich und hält eigene LCD-Medien auch
 ohne systemweiten TRCC-Katalog zuverlässig ausgeblendet. Eingebaute OHC-Designs
 bleiben sichtbar, Benutzerdateien unverändert. Produktive Geräteerkennung,
@@ -819,6 +819,7 @@ dreizeilige persönliche Callouts.
 
 | Datum | Modul | Version | Änderung |
 |---|---|---:|---|
+| 05.11.26 | LCD-Vorschau / Release-Test | Testfix / Testfix · Anwendung 3.4.29.165 | Isolierte echte Viewport-Prüfung nutzt Qt `minimal`, das headless eine definierte Fensterexposition liefert; GitHubs `offscreen`-Backend garantiert diese Semantik nicht. Responsives 760×700-Fenster sowie Scroll-, Sichtbarkeits- und Videoverträge bleiben geprüft; produktive QPA-Auswahl unverändert. |
 | 05.11.26 | LCD-Vorschau / responsive Oberfläche / Release-Test | Testfix / geprüft / Testfix · Anwendung 3.4.29.164 | Reale Offscreen-Viewport-Prüfung verwendet ein responsives 760×700-Fenster innerhalb der kleinsten virtuellen CI-Bildschirmfläche statt eines dort unmöglichen nativen 1600×1000-Fensters. Echtes Scrollen, Sichtbarkeit und Video-Pause/-Fortsetzung bleiben geprüft; produktive Oberfläche unverändert. |
 | 04.11.26 | LCD-Vorschau / Release-Test | Testfix / Testfix · Anwendung 3.4.29.163 | Isolierte Offscreen-Prüfung wiederholt den echten Scrollbereich-Sichtbarkeitsaufruf während der begrenzten Layoutstabilisierung. Damit wird auch ein Runner geprüft, dessen endgültige Geometrie erst nach dem ersten Aufruf steht; produktive Vorschau unverändert. |
 | 04.11.26 | LCD-Vorschau / Snapshot-Prozesslaufzeit / Release-Test | Testfix / 1.0 / Testfix · Anwendung 3.4.29.162 | Isolierte Offscreen-Vorschau wartet begrenzt auf die reale Viewport-Geometrie statt eine feste Runner-Geschwindigkeit vorauszusetzen und beendet ihren Snapshot-Probe vor dem Testfenster. Produktive Vorschau-, Snapshot- und Hardwarepfade bleiben unverändert. |
