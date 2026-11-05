@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 3.4.29.166 STABLE · 05.11.26
+
+- Set `QT_QPA_PLATFORM=minimal` explicitly on the isolated preview child
+  process. This prevents an earlier suite module's inherited `offscreen` value
+  from overriding the viewport test's selected headless geometry backend.
+- Carry forward the complete `.165` application and release state unchanged.
+
 ## 3.4.29.165 STABLE · 05.11.26
 
 - Run the isolated real-viewport regression on Qt's headless `minimal` QPA,

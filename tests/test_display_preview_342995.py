@@ -180,7 +180,8 @@ def exercise():
 
 def test_real_preview_visibility_and_selection_fallback():
     result = subprocess.run([sys.executable, str(Path(__file__).resolve()), '--child'], cwd=ROOT,
-                            env={**os.environ, 'PYTHONDONTWRITEBYTECODE': '1'},
+                            env={**os.environ, 'PYTHONDONTWRITEBYTECODE': '1',
+                                 'QT_QPA_PLATFORM': 'minimal'},
                             text=True, capture_output=True, timeout=30)
     assert result.returncode == 0, result.stdout + result.stderr
     assert 'four languages: passed' in result.stdout
