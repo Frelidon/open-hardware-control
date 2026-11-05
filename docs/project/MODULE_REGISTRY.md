@@ -1,13 +1,14 @@
 # Open Hardware Control — verbindliches Modulregister
 
 **Stand:** 05.11.26
-**Anwendung:** 3.4.29.167 STABLE
+**Anwendung:** 3.4.29.168 STABLE
 
-Entwicklung 05.11.26: Anwendung 3.4.29.167 setzt im vollständigen Levita-
-UI-Test den isolierten Kühlertyp ausdrücklich und hält eigene LCD-Medien auch
-ohne systemweiten TRCC-Katalog zuverlässig ausgeblendet. Eingebaute OHC-Designs
-bleiben sichtbar, Benutzerdateien unverändert. Produktive Geräteerkennung,
-Einstellungen und Hardwarepfade bleiben unverändert.
+Entwicklung 05.11.26: Anwendung 3.4.29.168 trennt echte, deterministische
+Scroll-Viewport-Sichtbarkeit von der vollständigen Levita-UI-Integration. Diese
+prüft weiterhin Medienwahl, Pause/Fortsetzung, Bestätigungsfallback und vier
+Sprachen ohne virtuelle Desktopannahme. Ein später Snapshot-Prozesscallback
+greift nicht mehr auf einen bereits zerstörten Qt-Eigentümer zu. Produktive
+Geräteerkennung, Oberfläche, Einstellungen und Hardwarepfade bleiben unverändert.
 
 Entwicklung 04.11.26: Feature Lifecycle 1.0 hält unabhängige semantische
 Feature-Versionen und die Reifegrade Alpha, Beta, Release Candidate und Stabil
@@ -819,6 +820,7 @@ dreizeilige persönliche Callouts.
 
 | Datum | Modul | Version | Änderung |
 |---|---|---:|---|
+| 05.11.26 | LCD-Vorschau / Snapshot-Prozesslaufzeit / Release-Test | Testfix / 1.0 / Testfix · Anwendung 3.4.29.168 | Echte verschachtelte Scroll-Sichtbarkeit wird in einer kontrollierten Qt-Hierarchie geprüft; vollständige Anwendung prüft getrennt Medienwahl, Pause/Fortsetzung, Bestätigung und vier Sprachen ohne virtuelle Desktopannahme. Spätes Activity-Probe-Signal nach Zerstörung seines Qt-Eigentümers wird ohne Neustart verworfen. Produktive UI-, Profil-, Vorschau- und Hardwarepfade unverändert. |
 | 05.11.26 | LCD-Vorschau / Release-Test | Testfix / Testfix · Anwendung 3.4.29.167 | Isolierter Vorschauvertrag setzt vor Fensterbau den Levita-Kühlertyp in seinem privaten QSettings-Bereich, sodass die LCD-Seite auf hardwarefreiem Runner und Besitzerrechner gleich vorhanden ist. Produktive USB-Erkennung und Hardwarepfade unverändert. |
 | 05.11.26 | LCD-Vorschau / Release-Test | Testfix / Testfix · Anwendung 3.4.29.166 | Isolierter Vorschau-Kindprozess erhält `QT_QPA_PLATFORM=minimal` ausdrücklich in seiner eigenen Umgebung, sodass ein zuvor von der Gesamtsuite geerbtes `offscreen` den Sichtbarkeitsvertrag nicht überschreibt. Produktive QPA-/Vorschaupfade unverändert. |
 | 05.11.26 | LCD-Vorschau / Release-Test | Testfix / Testfix · Anwendung 3.4.29.165 | Isolierte echte Viewport-Prüfung nutzt Qt `minimal`, das headless eine definierte Fensterexposition liefert; GitHubs `offscreen`-Backend garantiert diese Semantik nicht. Responsives 760×700-Fenster sowie Scroll-, Sichtbarkeits- und Videoverträge bleiben geprüft; produktive QPA-Auswahl unverändert. |

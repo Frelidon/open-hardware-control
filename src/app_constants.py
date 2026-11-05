@@ -14,7 +14,7 @@ from modules.backend_updates.v1_0.executables import resolve_liquidctl_executabl
 
 APP_NAME = "Open Hardware Control"
 DISPLAY_NAME = "Open Hardware Control by Frelidon"
-APP_VERSION = "3.4.29.167"
+APP_VERSION = "3.4.29.168"
 BUILD_CHANNEL = "STABLE"
 APP_DISPLAY_VERSION = f"{APP_VERSION} {BUILD_CHANNEL}"
 ORG_NAME = "FloriLinuxTools"

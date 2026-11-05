@@ -92,6 +92,14 @@ class ActivityProbeRuntime(QObject):
     def _finished(
         self, process: QProcess, exit_code: int, _status: QProcess.ExitStatus,
     ) -> None:
+        # A QProcess error can still deliver its queued Python callback while
+        # the owning page is already being destroyed (for example during an
+        # early application/test shutdown). Never schedule work on that stale
+        # C++ owner; the child can still be released independently.
+        if not isValid(self):
+            if isValid(process):
+                process.deleteLater()
+            return
         if isValid(process):
             process.deleteLater()
         if self.process is not process:

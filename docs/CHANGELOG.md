@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 3.4.29.168 STABLE · 05.11.26
+
+- Verify real nested scroll-viewport exposure in a deterministic Qt hierarchy,
+  while the complete application fixture continues to cover video selection,
+  pause/resume, confirmation fallback and all four UI languages independently
+  of a headless runner's virtual desktop geometry.
+- Ignore a queued Snapshot Manager activity-probe completion after its owning
+  Qt object has already been destroyed; no process is restarted in that state.
+- Preserve all `.167` application features, UI, hardware paths, profiles and
+  animated case-fan/RGB previews unchanged.
+
 ## 3.4.29.167 STABLE · 05.11.26
 
 - Select the Levita cooling type explicitly in the isolated preview fixture

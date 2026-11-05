@@ -81,6 +81,23 @@ def test_activity_runtime_reuses_one_worker_and_bounds_partial_json(monkeypatch)
     app.sendPostedEvents(None, QEvent.Type.DeferredDelete)
 
 
+def test_activity_runtime_ignores_finished_signal_after_owner_deletion(monkeypatch) -> None:
+    app = QApplication.instance() or QApplication([])
+    parent = QObject()
+    runtime = ActivityProbeRuntime(parent, Path("/fixture/activity_probe.py"), lambda _sample: None, lambda _line: None)
+    process = QProcess(runtime)
+    runtime.process = process
+    runtime.enabled = True
+    monkeypatch.setattr("modules.snapshot_manager.v1_0.activity_runtime.isValid", lambda value: value is process)
+
+    # The wrapper can receive a queued callback after its C++ owner vanished.
+    # It may release the child, but must not touch or restart the stale owner.
+    runtime._finished(process, -1, QProcess.ExitStatus.NormalExit)
+    assert runtime.enabled and runtime.process is process
+    parent.deleteLater()
+    app.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+
+
 def test_page_shutdown_cancels_helper_and_queued_callback_and_retains_user_thresholds(tmp_path: Path, monkeypatch) -> None:
     app = QApplication.instance() or QApplication([])
     monkeypatch.setenv("OHC_SNAPSHOT_MANAGER_DEMO", "1")
