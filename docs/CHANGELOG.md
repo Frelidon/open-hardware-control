@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 3.4.29.167 STABLE · 05.11.26
+
+- Select the Levita cooling type explicitly in the isolated preview fixture
+  before constructing the window. The LCD page is now present on hardware-free
+  runners exactly as it is on the owner's Levita host.
+- Leave production USB discovery and all application behavior unchanged.
+
 ## 3.4.29.166 STABLE · 05.11.26
 
 - Set `QT_QPA_PLATFORM=minimal` explicitly on the isolated preview child

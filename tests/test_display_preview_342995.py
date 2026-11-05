@@ -64,7 +64,7 @@ def exercise():
                     'OHC_DESKTOP_DESIGN_CONFIG_DIR', 'OHC_DESKTOP_DESIGN_STATE_DIR'):
             os.environ[key] = str(Path(temp) / key)
         os.environ['OHC_DISABLE_HARDWARE_IO'] = '1'
-        from PySide6.QtCore import Qt
+        from PySide6.QtCore import QSettings, Qt
         from PySide6.QtGui import QPixmap
         from PySide6.QtTest import QTest
         from PySide6.QtWidgets import QApplication, QScrollArea
@@ -76,6 +76,9 @@ def exercise():
                 QTest.qWait(20)
             return bool(predicate())
         application.KrakenControl.check_dependencies = lambda self: ['hardware-free-preview']
+        settings = QSettings(application.ORG_NAME, application.APP_NAME)
+        settings.setValue('cooling/hardware_kind', application.LEVITA_COOLER_KEY)
+        settings.sync()
         app = QApplication([]); app.setQuitOnLastWindowClosed(False)
         window = application.KrakenControl()
         window.settings.setValue('setup/completed', True)

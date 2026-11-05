@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.166 STABLE
+# Open Hardware Control by Frelidon 3.4.29.167 STABLE
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](../LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -55,7 +55,7 @@ Project repository: <https://github.com/Frelidon/open-hardware-control>
 
 The safe preview-only test mode is active by default; real USB transfer happens only through the separately installed GPL backend **TRCC Linux** (9.10.4 recommended). Levita pump and radiator fans run through separately confirmed motherboard PWM headers (`PUMP_FAN`, `CPU_FAN`) with a safe 70 %/10 s test; CoolerControl blocks concurrent writes.
 
-## New in 3.4.29.166 STABLE
+## New in 3.4.29.167 STABLE
 
 - Public build with a fully cleaned design catalog: the repository and packages
   contain only project-owned OHC designs.
@@ -69,6 +69,8 @@ The safe preview-only test mode is active by default; real USB transfer happens 
   catalog; files remain untouched and built-in OHC designs remain available.
 - The isolated preview child process enforces Qt `minimal`: fully headless,
   with defined geometry independent of the inherited test-suite environment.
+- The test explicitly selects Levita in private settings and therefore does not
+  depend on a USB device being attached to the runner.
 - OpenRGB SDK v6 callbacks and the guarded TRCC GPU-clock recovery from `.158`
   remain included.
 
@@ -78,30 +80,30 @@ Older versions: [Version history](#version-history) · [CHANGELOG.md](CHANGELOG.
 
 ### Fedora and Nobara – RPM
 
-Download `open-hardware-control-3.4.29.166-1.noarch.rpm` to your Downloads folder and run:
+Download `open-hardware-control-3.4.29.167-1.noarch.rpm` to your Downloads folder and run:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.166-1.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.167-1.noarch.rpm
 ```
 
 ### Debian, Ubuntu and Linux Mint – DEB
 
-Download `open-hardware-control_3.4.29.166_all.deb` to your Downloads folder and run:
+Download `open-hardware-control_3.4.29.167_all.deb` to your Downloads folder and run:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.166_all.deb'
+sudo apt install './open-hardware-control_3.4.29.167_all.deb'
 ```
 
 ### Universal installer – ZIP
 
-For Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS and openSUSE. Download `open_hardware_control_v3_4_29_166.zip` and run:
+For Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS and openSUSE. Download `open_hardware_control_v3_4_29_167.zip` and run:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_166.zip
-cd open-hardware-control-3.4.29.166
+unzip open_hardware_control_v3_4_29_167.zip
+cd open-hardware-control-3.4.29.167
 chmod +x install.sh
 ./install.sh
 ```
@@ -170,7 +172,7 @@ Reads only local Steam Workshop metadata, selects wallpapers through Plasma's of
 
 ## Version history
 
-**3.4.29.166** – Public build with OHC-only designs, feature maturity labels, robust LCD media selection and a timing-independent preview test.
+**3.4.29.167** – Public build with OHC-only designs, feature maturity labels, robust LCD media selection and a timing-independent preview test.
 
 **3.4.29.159** – Publication candidate with the OHC-only design catalog and feature maturity labels.
 

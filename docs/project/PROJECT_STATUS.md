@@ -1,17 +1,18 @@
 # Open Hardware Control — Project Status
 
-**Current development version:** 3.4.29.166 STABLE
+**Current development version:** 3.4.29.167 STABLE
 
 **Status date:** 5 November 2026
 
 **Release channel:** STABLE — the project owner explicitly requested GitHub publication and local installation after the complete release gate.
 
-Version 3.4.29.166 carries the public OHC-only design catalog, Feature Lifecycle
+Version 3.4.29.167 carries the public OHC-only design catalog, Feature Lifecycle
 registry and portable LCD catalog behavior. Its isolated real-viewport child
-process explicitly receives Qt's headless `minimal` QPA, so an earlier suite
-module cannot replace it with inherited `offscreen`. The responsive 760×700
-window, real scroll visibility, video pause/resume and bounded shutdown remain
-covered. Production QPA selection, preview, snapshot and hardware paths are unchanged.
+process explicitly selects the Levita cooling type in private settings before
+window construction, so the LCD page exists on a hardware-free runner exactly
+as on the owner's host. Qt backend isolation, responsive viewport, video
+pause/resume and bounded shutdown remain covered. Production USB discovery,
+preview, snapshot and hardware paths are unchanged.
 
 Version 3.4.29.159 prepared the public OHC-only design catalog and added the
 hardware-inert Feature Lifecycle 1.0 registry. Every main area now has an
