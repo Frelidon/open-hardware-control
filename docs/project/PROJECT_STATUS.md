@@ -6,6 +6,14 @@
 
 **Release channel:** STABLE — the project owner explicitly requested GitHub publication and local installation after the complete release gate.
 
+Post-tag test-only follow-up 10 November 2026: GitHub's Python 3.14 lane passes,
+but Python 3.13 exposed a missing `Callable` name in the isolated AST reclaim
+fixture (not in the application). The main branch supplies that real annotation
+dependency and explicitly resolves hints so Python 3.14 also tests the failure.
+Production sources, the confirmed hardware setup and immutable v3.4.29.169 tag
+remain unchanged. This small test correction is retained separately in Git and
+the additional private backup rather than force-moving a published tag.
+
 Release preparation 10 November 2026: the owner explicitly requested public
 version 3.4.29.169 and complete local backups. The full local release gate passes
 1,347 tests and five subtests, including four-language real Qt UI construction,

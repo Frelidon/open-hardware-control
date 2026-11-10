@@ -3,6 +3,7 @@ import ast
 import json
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Callable, get_type_hints
 import time
 import sys
 import pytest
@@ -107,8 +108,10 @@ def test_actual_reclaim_drains_only_last_ram_frame_without_starving_other_frames
     method = next(node for node in cls.body if isinstance(node, ast.FunctionDef) and node.name == "run_rgb_command_sequence")
     queued, commands, stopped, results = [], [], [], []
     namespace = {"Path": Path, "QTimer": SimpleNamespace(singleShot=lambda ms, callback: queued.append((ms, callback))),
-                 "OpenRGBError": ValueError, "CommandResult": object}
+                 "OpenRGBError": ValueError, "CommandResult": object, "Callable": Callable}
     exec(compile(ast.Module([method], type_ignores=[]), "actual-reclaim", "exec"), namespace)
+    # Resolve lazy annotations too: this must work both before and after 3.14.
+    assert get_type_hints(namespace["run_rgb_command_sequence"])["finished"] == Callable[[bool], None] | None
     state = host()
     state.run_rgb_command_sequence = namespace["run_rgb_command_sequence"].__get__(state)
     state.openrgb_write_enabled = state.openrgb_effect_active = True

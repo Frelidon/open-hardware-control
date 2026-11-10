@@ -3,6 +3,11 @@
 **Stand:** 10.11.26
 **Anwendung:** 3.4.29.169 STABLE
 
+Nach Tag-Veröffentlichung 10.11.26: Reiner Testfix im Hauptzweig ergänzt
+`Callable` im isolierten AST-Namensraum von `test_rgb_stream_reclaim_342990.py`.
+Explizite Typauflösung prüft denselben Fehler auch unter Python 3.14. Keine
+Produktionsquelle, Hardwarefunktion oder Verschiebung des unveränderten Tags.
+
 Release 10.11.26: Anwendung 3.4.29.169 dokumentiert den vom Eigentümer
 bestätigten RGB-/GPU-/LCD-Funktionsstand. `docs/hardware/NATIVE_RGB_SETUP.md`
 trennt das plattformneutrale OHC-Paket vom optionalen Qt-6-/OpenRGB-1.1-Bau,
