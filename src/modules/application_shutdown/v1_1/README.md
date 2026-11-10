@@ -8,6 +8,12 @@ free mode retains phase journaling but starts neither observer nor fault timer.
 `qt_processes.py` reaps remaining window-owned QProcesses only after existing
 hardware restoration. The backend retains its own callback-suppressing shutdown.
 Explicit exit calls Qt directly after cleanup; this is not forced interpreter exit.
+After the software RGB worker stops, the host applies the persisted final
+solid colour or reported native Rainbow mode synchronously and best-effort,
+then releases the RGB session lock and managed engine. This phase is limited
+to a real exit; close-to-tray never enters shutdown and a program restart skips
+the final light so startup does not visibly fight the handoff. Command success
+does not claim physical LED readback.
 An explicit application restart starts a tiny detached standard-library waiter.
 It validates the current Linux PID start time, waits until the old process and
 its single-instance lock owner have ended, and only then executes the same OHC

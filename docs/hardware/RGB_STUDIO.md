@@ -1,6 +1,65 @@
 # RGB-Studio – Open Hardware Control
 
+## OpenRGB-Unterbau · 09.11.26
+
+OpenRGB 1.1 bleibt der alleinige Hardwarebesitzer. OHC stellt Oberfläche,
+Designvorschau und die konfigurierten LED-/Lüfterzahlen bereit. Für jedes
+Gerät wird genau ein Steuerweg gewählt: jedes gemeldete Direct-Gerät nutzt den
+begrenzten OHC-Stream, damit Farben, Übergänge und Phase exakt dem gewählten
+OHC-Design entsprechen. Nur Geräte ohne Direct-Fähigkeit erhalten einen
+passenden gemeldeten Hardwaremodus. Dadurch kann ein Controller nicht mehr
+gleichzeitig von einem OpenRGB-Modus und einem OHC-Frame überschrieben werden.
+
+Die Sapphire RX 9070 XT meldet „External Control“ als eigenen Eingangsschalter,
+nicht als Direct-Pixelmodus. Solange OHC eine ausgewählte Direct-Quelle steuert,
+wird die Karte deshalb ausdrücklich auf External Control gehalten. Eine
+gespeicherte Anschlussroute bleibt für räumliche Gruppen und Zonen maßgeblich.
+
+## Mehrgeräte-Flüssigkeit · 09.11.26
+
+Der Laufzeitnachweis mit fünf ausgewählten Direct-Geräten zeigte 350–370 ms
+für einen seriellen Gesamtframe und damit nur etwa 2,7 bestätigte Bilder pro
+Sekunde. OHC hält deshalb weiterhin genau eine geordnete Verbindung je
+Controller, überträgt verschiedene Controller aber gleichzeitig innerhalb des
+einen begrenzten SDK-Arbeiters. Im nativen Plugin besitzt jeder Controller
+seinen eigenen dauerhaften Arbeiter und genau einen neuesten wartenden Frame.
+Die langsame MSI-Übertragung hält Airgoo dadurch nicht auf. Die angeforderten
+festen 60 Hz sind keine Garantie für die physische Ausgabe jedes Controllers.
+
+Die USB-Messung vom 10.11.26 unter Ubuntu zeigt am Airgoo 58,52 vollständige
+1025-Byte-Frames/s nach der Entkopplung gegenüber zuvor 3,83 Frames/s. Ein
+MSI-761-Feature-Report benötigt hier etwa 93 ms; vier Reports pro Gesamtbild
+begrenzen den GPU-Anschluss auf rund 2,8 Bilder/s. Die gesonderte
+Dirty-Zone-Korrektur liegt unter `tools/openrgb/msi-761-dirty-zones.patch`.
+Queue-Annahme, Übergabe an die OpenRGB-API und echte USB-Schreibvorgänge werden
+bei der Diagnose auseinandergehalten. Keine davon ist eine optische Rücklesung.
+Die installierte Dirty-Zone-Korrektur erreicht hier rund 10,64 vollständige
+Frames/s für die einzelne geänderte MSI-Zone. Der Eigentümer bestätigt inzwischen
+flüssige Gehäuse- und Grafikkartenbewegung. Die zusätzliche RGB-Kanalkorrektur
+im Plugin beseitigt Grauwerte durch eine fehlerhafte Makroauswertung; die GPU-
+Farben sind anschließend vom Eigentümer ebenfalls als korrekt bestätigt.
+
+Der offene GPU-/Halterungsstreifen verwendet nun dieselbe sichtbare Umlaufdauer
+wie Spinner beziehungsweise Komet in der Galerie. Seine weichen, nicht um den
+Streifenrand springenden Lichtkanten und die getrennten realen LED-Zahlen
+bleiben erhalten.
+
 ## Start, Wiederaufnahme und OpenRGB-Profilimport · nächste Version
+
+Oben im RGB-Studio stehen nun zusätzlich **PLAY** und **STOPP**. STOPP hält
+die laufende Bewegung an, ohne Design, Farben, Tempo, Helligkeit oder
+Geräteauswahl zu verwerfen; der letzte OpenRGB-Hardwarezustand bleibt stehen.
+PLAY übernimmt dieselbe Auswahl anschließend erneut. Bei nativ angebundenen
+NZXT-Kanälen wird zum Anhalten die aktuelle Hauptfarbe statisch gesetzt.
+
+Direkt im oberen Bereich kann außerdem die Beleuchtung nach einem echten
+Programmende gewählt werden: standardmäßig Weiß, eine beliebige Einzelfarbe
+oder Rainbow. Rainbow wird nur als vom jeweiligen Gerät gemeldeter nativer
+Hardwaremodus gesetzt; fehlt dieser oder schlägt er fehl, wird die gespeicherte
+Einzelfarbe verwendet. OHC schreibt ausschließlich ausgewählte, konfliktfreie
+Geräte innerhalb der bereits bestätigten RGB-Freigabe. Minimieren in den
+Infobereich ändert das Licht nicht, und ein Programmneustart überspringt die
+Abschlussbeleuchtung. Die Befehlsantwort ist keine optische Rücklesung.
 
 Direkt unter dem Seitenkopf steht ein großer gemeinsamer Status für gewähltes
 Startprofil, Profilautomatik, passive Wiederaufnahme und den aktuellen
@@ -162,7 +221,7 @@ Start-/Endrichtung bleibt konfigurierbar. Ringverläufe bleiben unverändert.
 Neon-Kreisel und Lichtspuren werden an offenen Streifen zeitlich/räumlich weich
 abgetastet, langsamer bewegt und an den Enden ausgeblendet. Andere Anschlüsse
 und native GPU-Modi bleiben unverändert. Der bestehende einzelne SDK-Arbeiter
-bleibt bei nominal 25 Hz; reale USB-/Firmware-Verzögerungen sind nicht damit
+bleibt bei einer festen Anforderung von 60 Hz; reale USB-/Firmware-Verzögerungen sind nicht damit
 behoben oder optisch rückgelesen. ARGB-DIAG ergänzt den Strip-Bewegungsplan.
 Das Komplettpaket enthält auch die Synchronisationseinstellung.
 
@@ -231,7 +290,7 @@ Neonkreisel/Komet besitzen weiche führende Kanten und Mehrpixel-Spuren; sehr
 kurze Streifen bewegen sich langsamer. Wellen/Regenbogen werden flächenweise
 gemittelt, Wechselmuster/Funkeln/Pulsfarben weich überblendet. Statisch/Atmen
 bleiben kontinuierlich, Blitz behält absichtliche Blitze. Kein Effekt erhöht
-den vorhandenen 25-Hz-Transport-Sollwert oder garantiert physische FPS.
+den festen 60-Hz-Anforderungstakt oder garantiert physische FPS.
 
 Die volle „Übertragung“-Karte zeigt abgeschlossene SDK-Aufträge, Batchdauer
 und zusammengefasste Frames. `ARGB-DIAG` protokolliert bei Einrichtung,

@@ -378,7 +378,8 @@ def draw_slot_label(painter, rect, name, connection, selected, *, badge=None, me
     painter.setFont(font)
     metrics = QFontMetrics(font)
     if metadata:
-        for index, (text, tone) in enumerate(zip((name, *metadata), ("#e4f0f8", "#8ca9be", "#a8d8ec"))):
+        tones = ("#e4f0f8", "#8ca9be", "#a8d8ec", "#b7c9d7", "#b7c9d7")
+        for index, (text, tone) in enumerate(zip((name, *metadata), tones)):
             painter.setPen(QColor(tone))
             line = QRectF(badge.left() + 5, badge.top() + index * 15, badge.width() - 10, 15)
             painter.drawText(line, Qt.AlignmentFlag.AlignCenter,

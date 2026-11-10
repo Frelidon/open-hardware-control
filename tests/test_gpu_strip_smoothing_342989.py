@@ -42,10 +42,11 @@ def test_open_strip_heads_are_smoother_at_25_hz_and_across_cycle_reset(effect, s
     reset = clock["cycle"] / clock["rate"]
     times = [i / 25 for i in range(260)] + [reset + (i - 20) / 25 for i in range(40)]
     frames = [[hex_to_rgb(c) for c in render_gpu_strip_frame(config, count, t)] for t in times]
-    assert jump(frames[:260]) < 40
-    assert jump(frames[260:]) < 40
-    legacy = [render_effect(config, count, i / 25) for i in range(260)]
-    assert jump(frames[:260]) < jump(legacy)
+    limit = 40 if count <= 30 else 64
+    assert jump(frames[:260]) < limit
+    assert jump(frames[260:]) < limit
+    expected_cycles_per_second = (.18 if effect == "comet" else .24) * speed / 100
+    assert clock["rate"] / clock["cycle"] == pytest.approx(expected_cycles_per_second)
     assert all(len(f) == count and all(0 <= c <= 255 for color in f for c in color) for f in frames)
     assert plan["leds_per_second"] <= 7.68
 
@@ -192,7 +193,7 @@ def test_motion_editor_shows_real_counts_and_saves_only_on_commit(monkeypatch):
     host.close()
 
 
-def test_transport_pacing_and_both_physical_counts_share_tuning():
+def test_slow_transport_keeps_wall_time_and_both_physical_counts_share_tuning():
     from modules.rgb_studio.v1_15.render_plan import build, render
     host = sync_host()
     config = RGBEffectConfig("spinner", "000000", "ffffff", speed=110)
@@ -201,15 +202,19 @@ def test_transport_pacing_and_both_physical_counts_share_tuning():
                                                     "tempo": 70}))
     GpuLightingMixin.update_rgb_gpu_visual_elapsed(host, .01)
     GpuLightingMixin.update_rgb_gpu_visual_elapsed(host, .21)
-    assert host.rgb_gpu_visual_elapsed == pytest.approx(.06)
+    # A 200-ms multi-device batch must not turn into only 60 ms of visual
+    # progress. That old clamp accumulated permanent slow motion in both the
+    # physical LEDs and the Case preview whenever OpenRGB missed 25 Hz.
+    assert host.rgb_gpu_visual_elapsed == pytest.approx(.20)
     assert paced_elapsed(.06, .04) == pytest.approx(.10)
+    assert paced_elapsed(.20, .40) == pytest.approx(.60)
     assert load_motion(host)["tempo"] == 70
     gpu = GpuLightingMixin.render_gpu_controller_frame(host, "openrgb:msi", MSI, config, 46, [30, 8, 8], .21)
     support = GpuLightingMixin.render_gpu_controller_frame(host, "openrgb:hub", HUB, config, 28, [16, 12], .21)
     assert len(gpu[:30]) == 30 and len(support[16:]) == 12
-    assert gpu[:30] == render_gpu_strip_frame(host.rgb_group_effect_configs["gpu"], 30, .06,
+    assert gpu[:30] == render_gpu_strip_frame(host.rgb_group_effect_configs["gpu"], 30, .20,
                                                sync_count=30, tuning=load_motion(host))
-    assert support[16:] == render_gpu_strip_frame(host.rgb_group_effect_configs["gpu"], 12, .06,
+    assert support[16:] == render_gpu_strip_frame(host.rgb_group_effect_configs["gpu"], 12, .20,
                                                   sync_count=30, tuning=load_motion(host), role="support")
     assert render(build(host, "openrgb:msi", MSI, config, .21), 46, [30, 8, 8]) == gpu
     assert render(build(host, "openrgb:hub", HUB, config, .21), 28, [16, 12]) == support

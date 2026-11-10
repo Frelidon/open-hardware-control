@@ -1,6 +1,11 @@
 # Installation unter Linux
 
-Diese Anleitung gilt für **Open Hardware Control by Frelidon 3.4.29.103 INTERN**. Lade das interne Testpaket zuerst in `~/Downloads`. Diese Version ist noch nicht für ein öffentliches GitHub-Release bestimmt.
+Diese Anleitung gilt für **Open Hardware Control by Frelidon 3.4.29.169 STABLE**.
+Lade die Pakete aus dem [GitHub-Release](https://github.com/Frelidon/open-hardware-control/releases/tag/v3.4.29.169)
+und prüfe sie mit der dortigen `SHA256SUMS` (`sha256sum -c SHA256SUMS`).
+Vor einem Update OHC über **Beenden** im Tray ordentlich schließen; ein
+Fenster-X kann die Anwendung nur ausblenden. Bestehende Profile, LED-Topologien,
+Displaydesigns und getrennt installierte Backends werden nicht zurückgesetzt.
 
 ## Fedora und Nobara
 
@@ -8,7 +13,7 @@ Empfohlenes RPM-Paket:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.103-0.intern2.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.169-1.noarch.rpm
 ```
 
 Alternativ das universelle ZIP verwenden. Die benötigten Pakete lauten:
@@ -23,7 +28,7 @@ Empfohlenes DEB-Paket:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.103~intern2_all.deb'
+sudo apt install './open-hardware-control_3.4.29.169_all.deb'
 ```
 
 Alternativ das universelle ZIP verwenden. Die benötigten Pakete lauten:
@@ -38,8 +43,8 @@ sudo apt install liquidctl python3-pyside6.qtwidgets python3-pyside6.qtsvg pytho
 ```bash
 sudo pacman -S --needed liquidctl pyside6 python-pillow qt6-svg polkit unzip
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_103_INTERN.zip
-cd open-hardware-control-3.4.29.103-INTERN
+unzip open_hardware_control_v3_4_29_169.zip
+cd open-hardware-control-3.4.29.169
 chmod +x install.sh
 ./install.sh
 ```
@@ -49,8 +54,8 @@ chmod +x install.sh
 ```bash
 sudo zypper install liquidctl python3-pyside6 python3-Pillow libQt6Svg6 polkit unzip
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_103_INTERN.zip
-cd open-hardware-control-3.4.29.103-INTERN
+unzip open_hardware_control_v3_4_29_169.zip
+cd open-hardware-control-3.4.29.169
 chmod +x install.sh
 ./install.sh
 ```
@@ -63,8 +68,8 @@ Für alle oben genannten Distributionen:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_103_INTERN.zip
-cd open-hardware-control-3.4.29.103-INTERN
+unzip open_hardware_control_v3_4_29_169.zip
+cd open-hardware-control-3.4.29.169
 chmod +x install.sh
 ./install.sh
 ```
@@ -73,13 +78,20 @@ Die vorhandene Version wird aktualisiert. Danach findest du **Open Hardware Cont
 
 ## Optionales Thermalright-Levita-Backend
 
-Für das Levita-Display wird TRCC Linux 9.10.4 empfohlen. Es bleibt separat installiert und ist keine harte Abhängigkeit des OHC-Pakets, damit Systeme ohne Thermalright-Display keine fremde Paketquelle benötigen. Version 9.10.4 räumt abgeschlossene Daemon-IPC-Worker fortlaufend auf und besitzt den Video-/Sensor-Takt selbst; OHC 3.4.29.131 erkennt diese erfolgreiche Übergabe. Aktualisiere TRCC über dessen offizielle Paketquelle beziehungsweise Release-Anleitung, bevor du die Levita-Hardware in OHC testest.
+Für das Levita-Display wird TRCC Linux 9.10.4 empfohlen. Es bleibt separat installiert und ist keine harte Abhängigkeit des OHC-Pakets, damit Systeme ohne Thermalright-Display keine fremde Paketquelle benötigen. Version 9.10.4 räumt abgeschlossene Daemon-IPC-Worker fortlaufend auf und besitzt den Video-/Sensor-Takt selbst; OHC 3.4.29.169 erkennt diese erfolgreiche Übergabe. Aktualisiere TRCC über dessen offizielle Paketquelle beziehungsweise Release-Anleitung, bevor du die Levita-Hardware in OHC testest.
 
 Der vollständige Modell-/Geometrie-Handshake und Farbzyklus wurde mit TRCC Linux 9.9.11 bestätigt; die dauerhafte 1600×720-Designausgabe und stabile Daemon-Ressourcennutzung zusätzlich mit 9.10.4. OHC startet niemals einen zweiten Levita-USB-Besitzer neben dem TRCC-Daemon.
 
 ## Geprüfte Versionsstände und Sicherheitsbasis
 
-Der offizielle Abgleich vom 01.10.2026 ergab TRCC Linux 9.10.4, OpenRGB 1.0 und OpenLinkHub 0.9.1. TRCC 9.10.4 wurde auf dem Referenzsystem mit laufender Levita-Ausgabe, stabilem Speicher sowie konstanten Thread-/Dateideskriptorzahlen bestätigt. OpenRGB 1.0 meldet SDK-Protokoll 6; OHC handelt bewusst das unterstützte Protokoll 5 aus. LACT 0.10.1 ist die Mindestversion für GPU-Schreibzugriffe. Auf dem Referenzsystem sind liquidctl 1.16.0, Qt/PySide 6.11.2 und Pillow 12.3.0 vorhanden. Für Pillow wird 12.3.0 oder eine vom Distributionsanbieter nachweislich mit denselben Sicherheitskorrekturen versehene Rückportierung empfohlen.
+Der lokale RGB-Nachweis vom 10.11.2026 verwendet OpenRGB 1.1 mit dem OHC-
+Plugin 0.2, MSI-Dirty-Zone-Patch und System-Qt 6.11.2. Das ist ein gesonderter
+nativer Aufbau, keine Aussage über die aktuellste Distributionsversion.
+Unter Ubuntu wird SDK 6 ausdrücklich unterstützt; der bestehende Standard-
+SDK-Pfad anderer Distributionen bleibt erhalten. TRCC 9.10.4 bleibt das getrennte
+Levita-Backend. LACT 0.10.1 ist die Mindestversion für GPU-Schreibzugriffe.
+Die Ubuntu-Liveprüfung ersetzt keinen Fedora-Hardwaretest. Frühere Auditstände
+stehen in [COMPONENT_VERSIONS.md](project/COMPONENT_VERSIONS.md).
 
 OHC installiert keine fremden Binärdateien stillschweigend und ersetzt keine Systembibliotheken. Nutze bevorzugt die Sicherheitsaktualisierungen deiner Distribution. OpenLinkHub besitzt zusätzlich den ausdrücklich zu bestätigenden, SHA-256-geprüften OHC-Aktualisierungsweg; TRCC bleibt nach seiner offiziellen Anleitung separat installiert.
 
@@ -94,6 +106,12 @@ Die automatische Zuordnung unterstützt außerdem `libkf6config-bin`/`qdbus-qt6`
 Ohne sie bleiben NZXT- und OpenLinkHub-Steuerung vollständig verfügbar.
 
 ## Automatisch verwaltetes OpenRGB-Backend für das RGB-Studio
+
+Für den neuen nativen Pfad zuerst die vollständige
+[RGB-Einrichtungs- und Wiederherstellungsanleitung](hardware/NATIVE_RGB_SETUP.md)
+lesen. OHC-Pakete enthalten keinen universellen OpenRGB-Binärtreiber. Ohne
+passend gebautes Plugin bleibt der parallele SDK-Pfad verfügbar. Vorhandene
+private Engine-/Plugin-Installationen werden nicht ersetzt.
 
 Das RGB-Studio kann OpenRGB direkt aus den bereits eingerichteten Paketquellen anbieten. Unter Fedora/Nobara werden `openrgb` und `openrgb-udev-rules` installiert; unter APT, Pacman und Zypper wird das jeweilige `openrgb`-Paket verwendet. Es werden keine fremden Repositories hinzugefügt.
 

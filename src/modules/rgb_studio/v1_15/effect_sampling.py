@@ -23,7 +23,7 @@ def smooth_fraction(value):
 
 
 def motion_scale(count):
-    """Small strips move more slowly; the real 25-Hz transport target is unchanged."""
+    """Small strips move more slowly; the fixed 60-Hz request target is unchanged."""
     return min(1.0, max(.25, count / 24.0))
 
 

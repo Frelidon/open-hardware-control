@@ -72,9 +72,9 @@
   </screenshots>
   <content_rating type="oars-1.1" />
   <releases>
-    <release version="@VERSION@" date="2026-10-05">
+    <release version="@VERSION@" date="2026-11-10">
       <description>
-        <p>@CHANNEL@ build with guided Wallpaper Engine setup, a SHA256-verified opt-in Fedora plugin installer, stable gallery sizing, the requested default navigation order and the existing coordinated LCD/RGB hardware paths.</p>
+        <p>@CHANNEL@ build with independently paced RGB controllers, corrected design colours and Sapphire external-input handoff, PLAY/STOP controls, configurable exit lighting and complete native-engine rebuild documentation. Existing coordinated LCD and cooling paths are preserved.</p>
       </description>
     </release>
   </releases>

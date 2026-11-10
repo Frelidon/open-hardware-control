@@ -152,6 +152,14 @@ def validate_package_profiles(runtime: Path, developer: Path) -> None:
         "tests/test_hardware_diagnostics_342937.py",
         ".github/workflows/ci.yml",
         "tools/analyze_usbpcap.py",
+        "src/native/openrgb/OHCNativePlugin.cpp",
+        "src/native/openrgb/LatestFrameWorker.h",
+        "src/native/openrgb/ColorCodec.h",
+        "src/native/openrgb/CMakeLists.txt",
+        "tests/fixtures/native_color_codec.cpp",
+        "tests/fixtures/native_frame_worker.cpp",
+        "tools/openrgb/msi-761-dirty-zones.patch",
+        "docs/hardware/NATIVE_RGB_SETUP.md",
     )
     missing = [name for name in required if not (developer / name).is_file()]
     development_roots = ("tests", "scripts", ".github", ".cursor", "tools")

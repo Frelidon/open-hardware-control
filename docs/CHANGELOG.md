@@ -1,6 +1,69 @@
 # Changelog
 
-## Unreleased
+## 3.4.29.169 STABLE · 10.11.26
+
+- Extract the unchanged shared RAM-bank inspection/dialog into its focused
+  mixin, preserving the main-window size budget, ownership guards and serial
+  inspection. Update installation, native rebuild, source and recovery guides;
+  CI explicitly installs the native colour fixtures' compiler/JSON dependencies.
+
+- Fix native-plugin RGB packing: OpenRGB's colour macro evaluated bitwise
+  arguments with the wrong precedence and repeated the red channel as grey.
+  A validated explicit 0x00BBGGRR codec now preserves hex and array colours,
+  with compiled primary-colour, gradient and invalid-input regressions.
+  The owner confirms smooth GPU/case playback and correct GPU colours after
+  installation. Normal startup also restores the existing LCD design; no LCD
+  source, protocol, layout or FPS setting was changed.
+- Keep every selected OpenRGB `Direct` controller on OHC's exact software
+  design instead of substituting a merely similar hardware effect. This fixes
+  ignored secondary colours, white-only RAM output and mismatched breathing or
+  chase designs. An external-capable Sapphire GPU is explicitly returned to
+  `External Control` while an OHC Direct signal is selected.
+- Give each controller a persistent independently paced worker inside the
+  native plugin. The old global batch barrier reduced actual Airgoo USB writes
+  to 3.83 Hz behind four ~93-ms MSI feature transfers; independent mailboxes
+  measured 58.52 Airgoo full-frame USB writes/s on Ubuntu. STOP drains pending
+  submissions. Current-generation API results now confirm design application,
+  while queue acceptance alone cannot leave a false success or an endless wait.
+- Preserve the native plugin sources under `src/native/openrgb/` and record
+  the separately built MSI dirty-zone backend patch under `tools/openrgb/`.
+  PLAY/STOP and original-mode controls now have all four supported translations.
+- Run the managed system-Qt OpenRGB engine with its verified offscreen platform
+  plugin so no separate OpenRGB task/tray symbol is exposed to the user.
+- Treat the pinned `1.1-qt6.11-ohc-native` backend as OpenRGB 1.1 when
+  selecting the inventory command. The former exact-version comparison fell
+  back to the names-only list, which the strict inventory guard correctly
+  rejected forever as incomplete and left RGB playback waiting at 0/6.
+- Fix the native OpenRGB transport plugin returning a null settings widget.
+  OpenRGB 1.1 unconditionally wraps and dereferences that widget after device
+  detection, which previously caused a reproducible exit 139. The corrected
+  plugin now survives complete detection, start/stop transport and an empty
+  worker frame; the former binary remains preserved outside the load folder.
+- Add prominent PLAY and STOPP controls to the top of RGB Studio. STOPP
+  freezes the active design while retaining its selected design, colours,
+  speed, brightness and device selection; PLAY resumes that same setup.
+- Drive the case schematic with its own precise 16-ms monotonic presentation
+  clock. Slow controller acknowledgements and latest-frame coalescing can no
+  longer make the local fan, GPU or support-strip preview advance in steps.
+- Write distinct selected Direct controllers concurrently through separate
+  ordered loopback SDK sessions. The supplied runtime log measured five serial
+  acknowledgements at 350–370 ms per batch (about 2.7 complete frames/s); the
+  bounded parallel worker now waits for the slowest controller rather than the
+  sum of all five. Each controller still has one ordered writer and latest-frame
+  coalescing. Open GPU/support strips now use the same traversal duration as
+  their gallery design instead of the former five-times-slower special clock.
+- Add a persisted RGB Studio exit-light choice near the top of the page.
+  A real program exit now leaves selected, conflict-free OHC RGB devices on
+  white by default, a chosen solid colour, or a device-reported native Rainbow
+  mode. Close-to-tray does nothing, restart deliberately skips the handoff,
+  and unsupported Rainbow devices fall back to the chosen solid colour.
+- Include the extracted dashboard layout module in source-tree/user installs,
+  preventing an immediate missing-module error after reinstallation.
+- Keep RGB hardware and Case-preview motion on real monotonic time when a
+  multi-device OpenRGB batch misses the 25-Hz target. The former 60-ms cap per
+  completed batch accumulated permanent slow motion and made selected profiles
+  visibly lag behind their fluid gallery preview. Single-writer ownership,
+  latest-frame-wins coalescing, LED topology and hardware commands are unchanged.
 
 ## 3.4.29.168 STABLE · 05.11.26
 

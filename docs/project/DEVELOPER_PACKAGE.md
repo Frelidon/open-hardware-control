@@ -1,67 +1,53 @@
-# Entwicklerpaket 3.4.29.92
+# Entwicklerpaket 3.4.29.169 STABLE
 
-> **Wichtiger Hinweis:** Diese Seite beschreibt nur das Entwicklerpaket und ist **nicht** die Hauptübersicht des Projekts.
->
-> **Zur offiziellen Startseite:** [README.md](../../README.md)
->
-> Wenn du Open Hardware Control kennenlernen, installieren oder die aktuellen Releases sehen willst, nutze bitte immer die Hauptseite im Repository.
+Dies beschreibt das Entwicklerpaket, nicht die Projektstartseite:
+[README.md](../../README.md).
 
-Das Entwicklerpaket enthält:
+Das Entwickler-ZIP und Quellarchiv enthalten den vollständigen editierbaren
+Stand: Python- und nativen C++-Quellcode, eigene Ressourcen, vier Sprachkataloge,
+Tests/C++-Fixtures, Werkzeuge, Installer, Dokumentation, CI und Release-Workflows.
+Das normale Benutzer-ZIP ist schlanker und enthält keine Tests/Release-Skripte.
+Der Builder vergleicht den Entwicklerbestand mit dem Projekt und bricht bei
+fehlenden Dateien ab. Private Einstellungen, Logs und Aufnahmen fehlen bewusst.
 
-- den vollständigen editierbaren Quellbaum von Open Hardware Control 3.4.29.92 INTERN
-- alle Python-, Shell-, Test-, Dokumentations- und GitHub-Workflow-Dateien
-- den reproduzierbaren Builder für ZIP, DEB, RPM, Quellarchiv und Prüfsummen
-- die fünf eigenen OpenLinkHub-Maus-SVGs und ihre Zuordnungslogik
-- den verwalteten Loopback-only RGB-Treiberclient, Geräte-/Gruppenlogik, NZXT-Validierung, zehn eigene RGB-Effekte und ihre Tests
-- das reversible KDE-Desktop-Design-Modul und zwei eigene GPL-SVG-Hintergründe
-- zentrale Projekt- und OpenLinkHub-Dokumentation
-- SHA-256-Prüfsummen
-- Cursor/AI-Projektgedächtnis, Regeln, Hooks und Slash-Workflows
+## Prüfen und bauen
 
-Das normale `open_hardware_control_…zip` ist bewusst das schlanke Benutzer-/Installationspaket und enthält daher keine Entwicklungsordner `tests/` und `scripts/`. Für KI-Arbeit, vollständige Tests und reproduzierbare Builds ist ausschließlich das separate `Entwicklerpaket …zip`, das Quellarchiv oder der Repository-Ordner vorgesehen. Der Builder bricht ab, falls im Entwicklerpaket Tests, Release-Skripte, Workflows oder Werkzeuge fehlen.
-
-Die Anwendung wird direkt aus `src/kraken_control.py` gestartet. Der Dateiname bleibt intern erhalten, weil er das vollständige historische NZXT-Modul trägt; der sichtbare Programmname und der installierte Starter lauten `Open Hardware Control` beziehungsweise `open-hardware-control`.
-
-Kompletter Release-Test:
+Python-Testabhängigkeiten sind pytest, Pillow und PySide6; zusätzlich werden
+ffmpeg und die Qt-Laufzeitbibliotheken benötigt. Die kompilierten nativen
+Regressionsfixtures benötigen einen C++17-Compiler und `nlohmann-json3-dev`
+(Ubuntu) beziehungsweise die entsprechende Distributions-Entwicklerbibliothek.
+Die GitHub-Workflows installieren diese Abhängigkeiten ausdrücklich.
 
 ```bash
 ./scripts/check_release.sh
+./scripts/build_release.sh 3.4.29.169
+cd dist
+sha256sum -c SHA256SUMS
 ```
 
-Einzelne Regressionstests:
+Der Builder erzeugt ZIP, Entwickler-ZIP, Quellarchiv, Git-Bundle und die
+verfügbaren DEB-/RPM-Pakete. Ohne `rpmbuild` existiert ein geprüfter Python-
+RPM-Builder. Ohne `dpkg-deb` wird das DEB ausdrücklich übersprungen; für eine
+vollständige Veröffentlichung muss es tatsächlich erzeugt und geprüft werden.
+Es gibt keine erfundenen Paket- oder Hardwareerfolge.
 
-```bash
-python3 tests/test_security_static.py
-python3 tests/test_runtime_logic_stub.py
-python3 tests/test_gif_streamer_logic.py
-python3 tests/test_lcd_designs.py
-python3 tests/test_sensors.py
-python3 tests/test_live_render_worker.py
-python3 -m unittest tests/test_gif_cooling_handoff.py -v
-python3 -m unittest tests/test_openlinkhub_integration.py -v
-python3 -m unittest tests/test_openlinkhub_mouse_visuals.py -v
-python3 tests/test_desktop_designs.py
-python3 -m unittest tests/test_openrgb_integration.py -v
-python3 -m unittest tests/test_openrgb_sdk.py -v
-python3 -m unittest tests/test_rgb_devices.py -v
-python3 -m unittest tests/test_nzxt_rgb.py -v
-python3 -m unittest tests/test_rgb_effects.py -v
-```
+## Native Engine und Hardwaretests
 
-Für einen echten GUI-Test werden PySide6 und eine Desktop-Sitzung benötigt. Schreibtests des NZXT-, OpenLinkHub- oder RGB-Moduls dürfen nur an der passenden Testhardware erfolgen. Die Schreibaktionen sind validiert und standardmäßig bis zur Sitzungsbestätigung gesperrt. OHC startet genau eine eigene lokale Engine; eine fremd gestartete OpenRGB-Instanz blockiert Schreibzugriffe.
+Die [native RGB-Anleitung](../hardware/NATIVE_RGB_SETUP.md) erklärt den passenden
+OpenRGB-1.1-/Qt-6-Bau, das Plugin und den kleinen MSI-Patch. Ein noarch-Paket
+installiert keinen architekturspezifischen RGB-Treiber. Ein C++-Plugin ist immer
+an die passende OpenRGB-/Qt-ABI gebunden. SDK-/Queue-Erfolg ist keine optische
+Bestätigung. Ubuntu-Liveergebnisse und offene Fedora-Liveprüfungen sind getrennt.
 
-Der Installer kann für einen isolierten Pakettest mit `OHC_INSTALL_HOME=/absoluter/testpfad ./install.sh` in ein separates Benutzerverzeichnis schreiben. Ohne diese optionale Variable verwendet er unverändert das normale Benutzerverzeichnis.
+GUI-/Hardwaretests niemals vollständig mit `sudo` starten. Schreibtests erfordern
+passende Geräte, ausdrückliche Freigabe und einen einzigen Eigentümer.
+`OHC_INSTALL_HOME=/absoluter/testpfad ./packaging/install.sh` erlaubt einen
+isolierten Benutzerinstallationstest ohne Veränderung der echten Installation.
 
-Alle Release-Artefakte werden mit folgendem Befehl gebaut. Auf Debian/Ubuntu muss zusätzlich das Paket `rpm` für den Fedora-RPM-Build installiert sein:
+## Sicherungen
 
-```bash
-./scripts/build_release.sh 3.4.29.92
-```
-
-Auf Fedora wird ein nicht installiertes `dpkg-deb` jetzt automatisch erkannt und nur das DEB übersprungen; RPM, ZIPs, Quellarchiv und Prüfsummen werden weiterhin gebaut. Mit folgender Variable kann das DEB auch auf anderen Systemen ausdrücklich übersprungen werden:
-
-```bash
-OHC_SKIP_DEB=1 ./scripts/build_release.sh 3.4.29.92
-```
-
-Nach erfolgreichem Abschluss legt der Builder automatisch eine vollständige Sicherung im Geschwisterordner `Open Hardware Control Backup` an. `RELEASE_BACKUP_POLICY.md` beschreibt Inhalt, atomaren Aufbau und die Aufbewahrung der zwei neuesten Versionen. Ein übersprungenes DEB wird nicht vorgetäuscht; bei einem Bau mit DEB wird es automatisch mitgesichert.
+Jeder erfolgreiche Bau ergänzt die vollständige atomare Zwei-Versionen-Sicherung
+außerhalb des Repositorys. Beide aufbewahrten `SHA256SUMS` kontrollieren.
+Das lokale private Funktionsbackup umfasst zusätzlich installierte RGB-Binärdateien,
+Plugin und Konfiguration; es gehört nicht auf GitHub. Siehe
+[SOURCE_CODE.md](SOURCE_CODE.md) und [RELEASE_BACKUP_POLICY.md](RELEASE_BACKUP_POLICY.md).

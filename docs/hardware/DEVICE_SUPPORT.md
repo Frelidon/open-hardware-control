@@ -1,5 +1,18 @@
 # Open Hardware Control — Agent Device-Support Summary
 
+10 November 2026 live Ubuntu RGB diagnosis: six OpenRGB devices detected and
+Sapphire RX 9070 XT confirmed in External Control. Independent native-plugin
+workers raise measured Airgoo full-frame USB writes from 3.83 to 58.52 Hz.
+MSI 761-byte feature reports take approximately 93 ms each on this host; the
+original four-zone loop limits GPU-header frames to ~2.8 Hz. No optical 60-Hz
+GPU claim is justified. LED counts and Thermalright protocols are unchanged;
+the MSI dirty-zone optimization is a separate source-controlled backend patch.
+After installing that patch, the single changed MSI zone measures about
+10.64 USB frames/s. The owner confirms smooth case/GPU motion and correct GPU
+colours after correcting native colour packing. The unchanged Levita design
+plays again after normal startup/recovery, confirmed by IPC and the owner.
+No display protocol, layout, LED count or LCD FPS setting changed.
+
 25 September post-.124: the supplied session logs show short exact 0 MHz GPU
 clock samples followed by normal recovery. For AMD GPUs this is a valid
 power-gated idle state, so OHC no longer reports 0 MHz as implausible; negative

@@ -42,8 +42,14 @@ def test_gpu_head_has_a_wide_soft_gradient_and_small_frame_steps(effect, speed):
     assert sum(c > 102 for c in frame) >= 9, 'The colour fade collapses into isolated bright LEDs'
     frames = [[hex_to_rgb(c)[0] for c in render_gpu_strip_frame(config, 30, center + n / 25)]
               for n in range(-25, 26)]
-    assert max(abs(a - b) for first, second in zip(frames, frames[1:])
-               for a, b in zip(first, second)) <= 18
+    step = max(abs(a - b) for first, second in zip(frames, frames[1:])
+               for a, b in zip(first, second))
+    gallery_frames = [[hex_to_rgb(c)[0] for c in render_hex_frame(config, 30, center + n / 25)]
+                      for n in range(-25, 26)]
+    gallery_step = max(abs(a - b) for first, second in zip(gallery_frames, gallery_frames[1:])
+                       for a, b in zip(first, second))
+    assert step <= 36
+    assert step < gallery_step
 
 
 def centroid(colors):

@@ -1,0 +1,24 @@
+--- a/Controllers/MSIMotherboardController/MSIMotherboard761Controller/MSIMotherboard761Controller.cpp
++++ b/Controllers/MSIMotherboardController/MSIMotherboard761Controller/MSIMotherboard761Controller.cpp
+@@ -450,7 +450,7 @@ bool MSIMotherboard761Controller::Update
+             continue;
+         }
+ 
+-        if((numof_pipe1_leds > 0) && !packet->dirty)
++        if(!packet->dirty)
+         {
+             continue;
+         }
+@@ -685,7 +685,11 @@ void MSIMotherboard761Controller::SetZoneLEDCount
+         setup_dirty                     = true;
+     }
+ 
+-    packet->packet.hdr2 = led_num;
++    if(packet->packet.hdr2 != led_num)
++    {
++        packet->packet.hdr2 = led_num;
++        packet->dirty = true;
++    }
+ }
+ 
+ void MSIMotherboard761Controller::SendConfiguration()

@@ -1,5 +1,51 @@
 # RGB Studio 1.15
 
+`ram_bank.py:RgbRamBankMixin` contains the unchanged shared RAM-bank inspection
+and dialog methods extracted from the main window for its size budget. Device
+identity, serialized backend inspection, per-DIMM settings and ENE reclaim
+remain unchanged; the mixin introduces no writer or import of the host class.
+
+## OpenRGB ownership policy
+
+Each selected controller receives exactly one owner for an effect. Direct
+controllers always receive the exact OHC-rendered software design; approximate
+native effects are reserved for devices without a Direct frame path. Physical
+LED counts and fan/header topology remain user configuration only; they do not
+implement a second hardware backend.
+
+The persistent SDK helper uses one ordered loopback connection per selected
+Direct controller and writes distinct controllers concurrently. A five-device
+batch therefore waits for its slowest acknowledgement rather than adding all
+controller latencies. There is still one OHC worker process, one writer per
+controller, complete frames, latest-frame coalescing and a fixed 60-Hz request cadence.
+The optional `src/native/openrgb/` plugin gives each controller its own persistent
+worker and latest-frame mailbox. One slow MSI write cannot gate Airgoo or RAM.
+Queue ACKs and API submissions are reported separately; all devices must submit
+in the current stream generation before the design is confirmed. STOP drains
+pending work before a mode handoff. Neither API submission nor a USB syscall is
+optical readback.
+The GPU/support open-strip clock matches the gallery spinner/comet traversal
+duration while retaining its non-wrapping soft leading and trailing envelopes.
+
+`shutdown_lighting.py` owns the persisted final-light UI and the bounded,
+synchronous handoff command. A real exit uses white by default, a selected
+solid colour, or only a Rainbow mode actually reported by the device. It runs
+after the software effect stops and before the RGB session lock and managed
+engine are released. It respects the existing selected-device, conflict and
+write-consent boundaries; close-to-tray and program restart never apply it.
+Hardware command success is not physical readback.
+
+`design_tuning.py` owns the compact per-design speed scale, colour/speed reset
+menu and their bounded persisted overrides. It delegates every live apply to
+the existing host authorization and single RGB worker.
+
+Slow multi-device OpenRGB batches no longer dilate the shared animation clock.
+Every completed frame advances by the full monotonic interval since the prior
+frame, so physical Direct LEDs and the Case preview retain the selected design
+tempo even when the physical commit cadence is missed. Latest-frame-wins,
+single-writer ownership, bounded queues and the honest optical-FPS limitation
+remain unchanged.
+
 Ubuntu's trusted OpenRGB 1.0 CLI uses `--list-detailed`: its plain
 `--list-devices` now reports names only. Older explicit/distro executables and
 Fedora retain their existing command. Runtime inventory rejects any entry
@@ -103,21 +149,22 @@ paced shared visual clock. `gpu_motion_editor.py` previews the two actual
 configured LED rows and measured SDK acknowledgement rates in the existing
 GPU dialog. The editor is draft-only until that dialog saves. `render_plan.py`
 ships the same timestamp and tuning to the sole SDK worker for both strips;
-cancel never touches the hardware or saved settings. Slow transfers lower
-visual motion speed rather than skipping physical LEDs. Optical frame delivery
-remains unobservable from OHC.
+cancel never touches the hardware or saved settings. Slow transfers may lower
+the number of physical frames, but the shared motion clock retains real elapsed
+time instead of accumulating slow motion. Optical frame delivery remains
+unobservable from OHC.
 Version 3.4.29.113: `strip_clock()` keeps the shared travel cycle fixed when either strip's lead
 or tail changes, preserving the other strip's phase.
 
 The owner's 19 September GPU video shows a broad white moving region over a
 blue 30-LED strip. Sampling now keeps the blue body lit and narrows the moving
 white head for this open-strip effect. The connected header's saved count,
-direction, pairing, 25-Hz transport target and sole writer remain unchanged.
+direction, pairing, fixed 60-Hz request target and sole writer remain unchanged.
 
 Moving open GPU/support strips use broader cubic fronts/tails in
 `gpu_strip_sampling.py`. Pairing shares the existing elapsed clock, virtual
 count and spatial footprint; each header retains its actual LED count. Fixed
-25-Hz target and 3×4 samples, no extra connection or resize. Regression tests
+60-Hz request target and 3×4 samples, no extra connection or resize. Regression tests
 cover 30/24 and 30/12, gradient width/steps, early pixel glow, SDK-worker
 equivalence and settings. The brighter low-intensity approach and afterglow
 soften transitions between adjacent GPU LEDs without changing paired timing.
@@ -148,7 +195,9 @@ with its support, never LED sizes, PWM, selection or write authority. Ambiguous/
 missing/blocked/ring partners stay unpaired. GPU setup saves the checkbox only
 on commit; complete packages retain it. Start diagnostics report real per-header
 counts, the shared clock count, kernel widths and software rate, not optical FPS.
-The existing 25-Hz sole-writer transport and real single-pixel tests are unchanged.
+The existing sole-writer transport and real single-pixel tests are unchanged; the
+requested animation cadence is fixed at 60 Hz and measured commit cadence is
+reported separately.
 
 Version 1.11 adds explicit reversed fan-ring chain order. Physical LED 1 may
 start in the bottom/right fan while per-ring start and clockwise order remain
@@ -220,7 +269,8 @@ configuration/test/start events, never physical readback or every frame.
 `effect_sampling.py` supplies Qt-free bounded count-aware area sampling and
 soft motion envelopes. Every configured zone renders independently, preserving
 GPU overrides. Lazy public exports avoid import cycles and keep pure renderer
-imports Qt-free. The serial sole-writer transport and 25-Hz target are unchanged;
+imports Qt-free. The serial sole-writer transport and fixed 60-Hz request target
+are unchanged;
 the full-width transfer panel shows measured SDK throughput, not physical FPS.
 
 Version 1.4 adds explicit controller-and-zone GPU routing and independent strip

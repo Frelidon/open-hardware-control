@@ -40,8 +40,18 @@ def strip_plan(config, count, tuning=None, role="gpu"):
 
 
 def strip_clock(config, count, tuning=None):
-    """One traversal for both strips, independent of their different light envelopes."""
-    rate = strip_plan(config, count, tuning, "gpu")["rate"]
+    """Match the gallery traversal time while retaining open-strip envelopes."""
+    cfg = config.normalized()
+    base_rate = .18 if cfg.effect_id == "comet" else .24
+    tempo = 1.0
+    if tuning is not None:
+        from .gpu_motion import normalize
+        tempo = normalize(tuning)["tempo"] / 100.0
+    # The open path traverses padding + strip + padding (cycle 2.0), whereas
+    # the gallery head wraps over a 1.0 cycle. Doubling the rate makes their
+    # visible traversal duration identical instead of five times slower on the
+    # confirmed 30-LED GPU reference strip.
+    rate = base_rate * cfg.speed / 100.0 * 2.0 * tempo
     return dict(rate=rate, padding=CLOCK_PADDING, cycle=1. + 2. * CLOCK_PADDING)
 
 

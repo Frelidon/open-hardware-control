@@ -1,6 +1,14 @@
-# Komponenten- und Versionsübersicht – Version 3.4.29.168
+# Komponenten- und Versionsübersicht – Version 3.4.29.169
 
 ## OHC-Modulstand und aktuelle Ubuntu-Konfiguration
+
+Aktueller RGB-Nachweis 10.11.26 für `.169`: OpenRGB 1.1 aus Commit
+`8e16de27858cf2be6af54a33ce003df74cb9fd3e`, MSI-Dirty-Zone-Patch und OHC Native
+Engine 0.2 gemeinsam gegen System-Qt 6.11.2 gebaut. Unabhängige Controller-
+Arbeiter und korrigierte Kanalpackung sind installiert; der Eigentümer bestätigt
+Gehäuse-/GPU-Flüssigkeit, GPU-Farben und das unverändert wieder laufende LCD.
+Das frühere AppImage ist nicht der aktuell laufende RGB-Binärstand.
+Reale Fedora-Hardwareprüfung des nativen Pfads bleibt offen.
 
 Stand 06.10.26: Die unten ausdrücklich als Ubuntu angegebenen externen Versionen wurden auf dem aktuellen Ubuntu-PC geprüft. Versions-/Importprüfungen bestätigen Installation und Benutzerzugriff, nicht die optische Anzeige oder die physische Steuerung jedes Geräts. Frühere Fedora-Hardwaretests sind separat als historische Referenz aufgeführt.
 
@@ -22,7 +30,7 @@ behaupteter erfolgreicher Live-Test auf Fedora.
 
 | Komponente | Version / Stand |
 |---|---|
-| Open Hardware Control by Frelidon | 3.4.29.168 STABLE · öffentlicher OHC-eigener Designkatalog, sichtbare unabhängige Feature-Reifegrade/-Versionen, portable echte Scroll-Sichtbarkeitsprüfung, vollständiger Levita-UI-Pause-/Fortsetzungsvertrag und zuverlässiges Ausblenden eigener LCD-Medien ohne TRCC-Systemkatalog; später Snapshot-Prozesscallback abgesichert; Fedora-Liveprüfung und optische Kontrolle bleiben offen |
+| Open Hardware Control by Frelidon | 3.4.29.169 STABLE · öffentlicher OHC-eigener Designkatalog, sichtbare unabhängige Feature-Reifegrade/-Versionen, portable echte Scroll-Sichtbarkeitsprüfung, vollständiger Levita-UI-Pause-/Fortsetzungsvertrag und zuverlässiges Ausblenden eigener LCD-Medien ohne TRCC-Systemkatalog; später Snapshot-Prozesscallback abgesichert; Fedora-Liveprüfung und optische Kontrolle bleiben offen |
 | OHC Feature Lifecycle | Modul 1.0 · reine zentrale Darstellungsmetadaten; aktiviert/deaktiviert keine Funktion und verändert weder Einstellungen noch Hardwarebesitz |
 | OHC Snapshot-Manager | Modul 1.0 · read-only Distribution-/Dateisystem-/Backend-/Snapper-/Btrfs-Erkennung · GameMode/Gamescope/Programmliste/KDE-Vollbild plus optionale Mehrkern-CPU-und-GPU-Hysterese · moderne gekoppelte Regler-/Zahlenkarten · manuelle Zeit-/Dauersperre · feste Snapper-Timer und begrenzte Btrfs-Discard-Werte ausschließlich über eigenen root-owned Polkit-Helfer · atomarer JSON-Metadatenexport · einzeln bestätigtes Löschen ab Snapshot 1 · kein Ein-Klick-Rollback und keine beliebigen Befehle/Pfade |
 | OHC GPU-Steuerung | Modul 1.0 · LACT 0.10.1+ als optionale lokale API · responsives Drei-Spalten-Cockpit mit vertikalem Scroll-Rückfall für kleine Fenster · vollständige umbrochene Lüftertexte · fünf direkt ziehbare und zahlengekoppelte Lüfterpunkte · lokaler GPU-Bildimport/-reset · reiner Lüftertest garantiert ohne Grafiklast · Leistungslimit standardmäßig höchstens LACT-Werkswert, darüber explizite Freischaltung · Kurztest mit automatischer LACT-Rückstellung · nur bestätigte Werte dauerhaft · CoolerControl-GPU-Lüfter muss freigegeben sein · OpenRGB-RGB getrennt |
@@ -54,7 +62,7 @@ behaupteter erfolgreicher Live-Test auf Fedora.
 | OHC Mainboard-Fan-Modul | 3.4.29.80 · Linux hwmon/NCT6687 · freundliche eindeutige Headernamen ohne doppelte PWM-Angabe · kalibrierungspflichtige PWM-Kanäle · schrittweiser Zuordnungsassistent mit direktem nächsten Lüfter · vollständiges Zurücksetzen aller Gehäuselüfter-Zuordnungen bei erhaltenen Kurven · persistente und sichtbar blau markierte Automatik/Schnellprofile · Backend-Auswahl und asynchroner fail-closed Besitzerstatus · 100-%-Leistungs-Override · rückstellender 0-%-/10-s-Stopptest je Gehäuselüfter · sichere PWM/DC-Umschaltung nur über vorhandenes `pwmN_mode`, sonst BIOS-Erklärung · prozessgebundene Polkit-Helfersitzung · automatische Kurvenänderungen als gebündelte Zustands-/60-s-Heartbeat-Zeile · Fallback/Firmware-Rückgabe |
 | OHC Thermalright-Levita-Modul | Anwendung 3.4.29.80 · nicht vorhandene Kühlmittelquelle wird weder angezeigt noch angeboten · lesbarer separater Sicherheitshinweis · Datenoberfläche Modul 1.7 · Daemongesundheit Modul 1.1 · automatische und manuelle streng validierte Wiederherstellung · sichtbarkeitsgebundene Galerien/Vorschauen · LCD-Medienmanager Modul 1.0 · Leistung/Spielerkennung Modul 1.1 mit Zehn-Sekunden-Abfrage · 15 LCD-FPS Standard, 60 nur experimentell · Abschaltwächter Modul 1.0 mit Stopp eines OHC-eigenen Daemons beim Ende · Display-Effekte Modul 1.11 · Display USB `87ad:70db` · ein TRCC-Daemon als einziger USB-Besitzer |
 | Qt Multimedia | PySide6 QtMultimedia · lokaler H.264-Lesepfad ausschließlich für sichtbare Display-Effektvorschau |
-| OpenRGB | Ubuntu: 1.0 · SHA256-geprüftes offizielles portables Release im root-owned privaten Backend-Verzeichnis `/usr/local/lib/open-hardware-control-backends/openrgb-1.0` · Versionsaufruf als normaler Benutzer geprüft · OHC nutzt SDK-Protokoll 6 auf Ubuntu, Fedora-Kompatibilität bleibt bei Protokoll 5 · von OHC verwalteter fensterloser Kindprozess auf `127.0.0.1:6742`; Direct-Farben über eigenen OHC-SDK-Helfer · Ubuntu-Paket 0.9 bleibt unverändert als Rückfalloption |
+| OpenRGB | Ubuntu: 1.1, lokal gegen System-Qt 6.11.2 gebaut, mit dokumentiertem MSI-761-Patch im root-owned privaten Backend-Verzeichnis `/usr/local/lib/open-hardware-control-backends/openrgb-1.1` · unsichtbarer verwalteter Prozess · Native Engine 0.2 oder paralleler SDK-Fallback · Ubuntu SDK 6, Fedora-Standard SDK 5 · kein mitgelieferter universeller Binärtreiber |
 | OHC OpenRGB-SDK-Helfer | Protokoll 4–6 · Ubuntu 6, Fedora 5 · vollständige Gerätepakete für laufende Effekte; einmaliger Direct-Kompatibilitäts-Fallback bleibt · validiertes `RESIZEZONE` · Controller-/Zonensynchronisation · Modus-/Farbrücklesung · Loopback-only · begrenzte Geräte-/LED-/Paketwerte · Socket-Antwort ist keine optische Bestätigung |
 | OHC Desktop Shell | 1.0 (lokal, ohne Hardwarezugriff) |
 | OHC Desktop-Backupformat | Schema 2, SHA-256-Export |

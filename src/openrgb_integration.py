@@ -31,6 +31,11 @@ SAFE_MODE_RE = re.compile(r"^[\w .+()'/-]{1,80}$", re.UNICODE)
 HEX_COLOR_RE = re.compile(r"^[0-9a-fA-F]{6}$")
 DEVICE_HEADER_RE = re.compile(r"^\s*(\d+)\s*:\s*(.+?)\s*$")
 FIELD_RE = re.compile(r"^\s*(Type|Description|Version|Location|Serial|Modes|Zones|LEDs)\s*:\s*(.*?)\s*$", re.IGNORECASE)
+SYSTEM_QT6_PLATFORM_DIRECTORIES = (
+    Path("/usr/lib/x86_64-linux-gnu/qt6/plugins/platforms"),
+    Path("/usr/lib64/qt6/plugins/platforms"),
+    Path("/usr/lib/qt6/plugins/platforms"),
+)
 class OpenRGBError(RuntimeError):
     pass
 
@@ -48,6 +53,34 @@ def openrgb_subprocess_environment(
     environment = dict(os.environ if source is None else source)
     environment["QT_QPA_PLATFORM"] = "offscreen"
     return environment
+
+
+def managed_openrgb_platform_directory(
+    executable: str | Path,
+    platform: str = "offscreen",
+) -> str:
+    """Locate a Qt platform plugin for the trusted OpenRGB replacement only."""
+
+    trusted = Path(resolve_openrgb_executable("", ubuntu_runtime=True))
+    try:
+        candidate = Path(executable).expanduser().resolve(strict=True)
+        if not str(trusted) or candidate != trusted.resolve(strict=True):
+            return ""
+    except (OSError, RuntimeError):
+        return ""
+    plugin_name = {
+        "offscreen": "libqoffscreen.so",
+        "xcb": "libqxcb.so",
+    }.get(str(platform).casefold())
+    if not plugin_name:
+        return ""
+    for directory in SYSTEM_QT6_PLATFORM_DIRECTORIES:
+        try:
+            if directory.is_dir() and (directory / plugin_name).is_file():
+                return str(directory)
+        except OSError:
+            continue
+    return ""
 
 
 def running_named_process_ids(
@@ -207,6 +240,12 @@ class OpenRGBDevice:
     @property
     def supports_direct(self) -> bool:
         return any(mode.casefold() == "direct" for mode in self.modes)
+
+    @property
+    def supports_external_control(self) -> bool:
+        """Whether hardware can hand its lighting input to an external source."""
+
+        return any(mode.casefold() == "external control" for mode in self.modes)
 
 
 def _parse_named_values(value: str) -> tuple[str, ...]:
@@ -373,6 +412,11 @@ class OpenRGBClient:
         return [
             self.executable,
             "--server",
+            # OpenRGB loads QPluginLoader plugins from the GUI startup path.
+            # --startminimized still keeps the SDK server headless for users
+            # (OHC sets QT_QPA_PLATFORM=offscreen), while activating that
+            # plugin lifecycle in OpenRGB 1.1.
+            "--startminimized",
             "--server-port", str(self.port),
             "--noautoconnect",
             "--loglevel", "error",
@@ -385,10 +429,12 @@ class OpenRGBClient:
         # only for the trusted, explicitly installed Ubuntu 1.0 backend.  Old
         # 0.9 executables, explicit overrides and Fedora keep their old flag.
         trusted = resolve_openrgb_executable("", ubuntu_runtime=self.ubuntu_runtime)
-        detailed = (
-            self.ubuntu_runtime and self.executable == trusted
-            and preferred_backend_version("openrgb", ubuntu_runtime=True) == "1.0"
+        trusted_backend = self.ubuntu_runtime and self.executable == trusted
+        backend_release = (
+            preferred_backend_version("openrgb", ubuntu_runtime=True).split("-", 1)[0]
+            if trusted_backend else ""
         )
+        detailed = trusted_backend and backend_release in {"1.0", "1.1"}
         return self.client_command("--list-detailed" if detailed else "--list-devices")
 
     def profile_command(self, profile: str | Path) -> list[str]:

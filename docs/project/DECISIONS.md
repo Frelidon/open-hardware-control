@@ -1,5 +1,24 @@
 # Open Hardware Control — Durable Decisions
 
+## 10.11.26 – Exact OHC designs own Direct controllers
+
+While an OHC design is active, every selected OpenRGB controller that reports
+`Direct` belongs to the single OHC frame stream. A similar native hardware
+effect must not replace the requested colours, phase or transition. Native
+modes remain the fallback only for devices without a complete software-frame
+path. An external-capable Sapphire GPU is an input handoff rather than a Direct
+pixel target and is kept in `External Control` while an OHC Direct source is
+selected. Explicit invalid saved routes remain fail-closed.
+
+The in-process transport uses one persistent independently paced worker and
+one latest-frame mailbox per controller. A slow controller must never become
+a global batch barrier. STOP drains queued and executing submissions before a
+manual mode handoff. Queue acceptance is not design confirmation: every target
+must report a completed API submission in the current stream generation.
+Actual USB writes and visible LED output remain distinct from API submission.
+The managed system-Qt OpenRGB process uses a verified
+offscreen Qt platform plugin so only OHC exposes an application icon.
+
 ## 20.10.26 – Profile-driven optimization; no full Rust rewrite
 
 Open Hardware Control remains a Python/PySide6 application. Rewriting the whole
@@ -784,6 +803,38 @@ Light and dark application styles live separately under `src/modules/ui_themes/v
 - Externe Backends werden nicht still durch OHC aktualisiert. Die auf dem
   Referenzrechner ausdrücklich installierte offizielle TRCC-Version 9.10.4 ist
   die aktuelle Empfehlung und wurde getrennt von OHC paketiert und geprüft.
+
+## Parallele OpenRGB-Controllerframes · 09.11.26
+
+- Eine einzige OpenRGB-SDK-Verbindung darf fünf voneinander unabhängige
+  Controller nicht seriell auf die Summe ihrer Hardwarebestätigungen begrenzen.
+  Der eine begrenzte OHC-Arbeiter hält deshalb je ausgewähltem Direct-Controller
+  genau eine persistente, geordnete Loopback-Verbindung und schreibt nur
+  verschiedene Controller gleichzeitig. Derselbe Controller erhält niemals
+  parallele Frames.
+- Der nächste gemeinsame Wunsch bleibt latest-frame-wins und beginnt erst nach
+  Abschluss des vorigen parallelen Satzes. Controllerauswahl, vollständige
+  Frames, SDK-6-Bestätigungen, Konfliktsperre und OpenRGB als eigentlicher
+  Hardwarebesitzer bleiben verbindlich. 25 Hz sind eine Anforderungsobergrenze,
+  keine Behauptung über physisch sichtbare FPS.
+- Der offene GPU-/Halterungsweg darf für Spinner und Komet nicht eine eigene
+  fünffach langsamere Umlaufdauer erfinden. Er übernimmt die Galerieperiode,
+  behält aber getrennte LED-Zahlen, weiche Kanten und nicht verbundene Enden.
+
+## RGB-Abschlussbeleuchtung · 09.11.26
+
+- Abschlussbeleuchtung gehört ausschließlich zum echten geordneten
+  Programmende. Verbergen im Infobereich bleibt wirkungslos; ein geplanter
+  Programmneustart überspringt sie, damit alter und neuer Prozess nicht um den
+  sichtbaren Zustand konkurrieren.
+- Der synchrone Best-effort-Schritt läuft nach dem Stopp des Softwareeffekts,
+  aber vor Freigabe von RGB-Sitzungssperre und verwalteter OpenRGB-Engine. Er
+  übernimmt keine neue Hardwarehoheit und beachtet Auswahl, Konfliktsperren und
+  die bestehende ausdrückliche Schreibfreigabe.
+- Standard ist statisches Weiß. Andere Einzelfarben bleiben statisch; Rainbow
+  darf ausschließlich einen vom Gerät gemeldeten nativen Hardwaremodus nutzen
+  und fällt sonst auf die gespeicherte Einzelfarbe zurück. Erfolgreiche
+  Befehlsausführung ist keine physische LED-Rücklesung.
 
 ## GitHub publication
 

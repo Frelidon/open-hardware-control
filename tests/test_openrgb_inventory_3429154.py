@@ -45,6 +45,7 @@ def fixture_listing(*, detailed):
 
 @pytest.mark.parametrize("ubuntu,version,expected", [
     (True, "1.0", "--list-detailed"),
+    (True, "1.1-qt6.11-ohc-native", "--list-detailed"),
     (True, "0.9", "--list-devices"),
     (True, "", "--list-devices"),
     (False, "1.0", "--list-devices"),

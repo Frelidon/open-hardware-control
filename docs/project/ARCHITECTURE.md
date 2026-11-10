@@ -1,5 +1,21 @@
 # Open Hardware Control — Architecture
 
+## 10.11.26 – RGB native transport and preserved LCD boundary (.169)
+
+`rgb_studio/v1_15/native_plugin.py` owns the bounded Unix-socket client and
+generation-aware design confirmation. `src/native/openrgb/OHCNativePlugin.cpp`
+validates complete controller frames and queues one latest frame per device.
+`LatestFrameWorker.h` gives each device an independent persistent worker and
+absolute deadline; slow MSI transfers cannot stall Airgoo. `ColorCodec.h`
+explicitly packs validated RGB channels, avoiding upstream macro precedence.
+The ordinary parallel loopback SDK helper remains the fallback. Direct devices
+receive OHC frames, while external Sapphire mode only selects the physical
+ARGB input. User topology and sole OpenRGB hardware ownership remain intact.
+`tools/openrgb/msi-761-dirty-zones.patch` is separately built into OpenRGB and
+does not alter report formats. Packages preserve the platform-neutral app and
+ship complete source/rebuild instructions, not an ABI-independent driver binary.
+The Levita/TRCC protocol, layout and frame rate remain unchanged and separate.
+
 ## 06.10.26 – LED drafts and case-space projection (.156)
 
 `rgb_studio/v1_15/led_topology_editor.py` owns a private optional-draft group

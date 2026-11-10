@@ -1,5 +1,17 @@
 # Unterstützte Geräte – Open Hardware Control 3.4.29.129
 
+Live-Diagnose 10.11.26 unter Ubuntu: sechs OpenRGB-Geräte erkannt, Sapphire
+RX 9070 XT tatsächlich auf External Control. Unabhängige Plugin-Arbeiter erhöhen
+die gemessenen vollständigen Airgoo-USB-Frames von 3,83 auf 58,52 Hz. Einzelne
+MSI-761-Feature-Reports benötigen hier rund 93 ms; die bisher vier Reports pro
+Bild begrenzen den GPU-Anschluss auf etwa 2,8 Hz. Das ist keine optische
+60-Hz-Bestätigung. LED-Zahlen und Thermalright-Protokolle bleiben unverändert.
+Nach Installation der Dirty-Zone-Korrektur erreicht die einzelne geänderte
+MSI-Zone etwa 10,64 USB-Frames/s. Der Eigentümer bestätigt flüssige Gehäuse-/GPU-
+Bewegung und nach korrigierter RGB-Kanalpackung auch richtige GPU-Farben.
+Das unveränderte Levita-Design läuft nach normalem Start/Wiederherstellung
+wieder; IPC und Eigentümer bestätigen die Wiedergabe. Kein neuer LCD-Schreibweg.
+
 3.4.29.129: Die Geräteunterstützung bleibt unverändert. Die Korrektur betrifft
 ausschließlich die sichere Zuordnung und Bereinigung eines von OHC neu
 gestarteten TRCC-Prozesses. 3.4.29.128: Die Geräteunterstützung bleibt unverändert. Die überarbeitete

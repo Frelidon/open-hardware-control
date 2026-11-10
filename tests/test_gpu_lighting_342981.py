@@ -24,8 +24,8 @@ def test_sapphire_designs_use_reported_animated_modes_not_external_or_single_sta
     assert GPU.led_count == 1
 
 
-def test_existing_profile_needs_no_mapping_and_never_implicitly_enables_external_sync():
-    assert gpu_mode_for_effect(GPU, "wave", IDS, {}, [SOURCE]) == "Rainbow Wave"
+def test_selected_direct_source_keeps_external_capable_gpu_in_external_control():
+    assert gpu_mode_for_effect(GPU, "wave", IDS, {}, [SOURCE]) == "External Control"
     assert normalize_gpu_routes(None) == {}
 
 

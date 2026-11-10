@@ -37,7 +37,7 @@ installer = (ROOT / "packaging/install.sh").read_text(encoding="utf-8")
 helper = (ROOT / "packaging/install-udev-rule.sh").read_text(encoding="utf-8")
 diagnostics = (ROOT / "packaging/collect-diagnostics.sh").read_text(encoding="utf-8")
 
-assert 'APP_VERSION = "3.4.29.168"' in code
+assert 'APP_VERSION = "3.4.29.169"' in code
 assert 'BUILD_CHANNEL = "STABLE"' in code
 assert 'APP_NAME = "Open Hardware Control"' in code
 assert "shell=True" not in wallpaper_installer_code
@@ -91,7 +91,7 @@ assert "AKTIV BESTÄTIGT" in code and "set_active_index" in code
 assert "Bisher besteht keine offizielle Unterstützung, Kooperation, Freigabe oder Verbindung" in code
 assert "show_rgb_setup_wizard" in code and "RGB-EINRICHTUNGSASSISTENT STARTEN" in code
 assert "Nur diese Zone" in code and "prepare_gpu_external_control" in code
-assert "self.openrgb_effect_timer.setInterval(40)" in code
+assert "self.openrgb_effect_timer.setInterval(RGB_TARGET_INTERVAL_MS)" in code
 assert "openrgb_worker_frame_inflight" in code and "openrgb_worker_frame_pending" in code
 assert "openrgb_worker_coalesced_frames" in code and "update_openrgb_performance_status" in code
 assert '"--worker"' in code and "dauerhafter lokaler SDK-Worker" in code
@@ -360,7 +360,7 @@ assert "maybe_offer_desktop_design_dependencies" in code
 assert "Fehlende Pakete &installieren" in code
 
 readme = (ROOT / "README.md").read_text(encoding="utf-8")
-assert "# Open Hardware Control by Frelidon 3.4.29.168" in readme
+assert "# Open Hardware Control by Frelidon 3.4.29.169" in readme
 assert "Inoffizielles unabhängiges Community-Projekt" in readme
 assert "Corsair · OpenLinkHub" in readme
 assert "| NZXT 2023 RGB Controller | `1e71:2012`" in readme

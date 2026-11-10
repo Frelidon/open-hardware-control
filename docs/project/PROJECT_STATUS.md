@@ -1,10 +1,87 @@
 # Open Hardware Control — Project Status
 
-**Current development version:** 3.4.29.168 STABLE
+**Current development version:** 3.4.29.169 STABLE
 
-**Status date:** 5 November 2026
+**Status date:** 10 November 2026
 
 **Release channel:** STABLE — the project owner explicitly requested GitHub publication and local installation after the complete release gate.
+
+Release preparation 10 November 2026: the owner explicitly requested public
+version 3.4.29.169 and complete local backups. The full local release gate passes
+1,347 tests and five subtests, including four-language real Qt UI construction,
+native C++ colour/worker fixtures, RAM-bank ownership and separate distribution
+contracts. Security/privacy scan and module/size/layout checks pass. The unchanged
+RAM-bank dialog now lives in `rgb_studio/v1_15/ram_bank.py`, keeping the existing
+main-file limit. Installation, native-engine rebuilding, developer/source and
+recovery guides are updated. All six release artifacts (including actual DEB
+and fallback-built RPM) are built and independently checked: ZIP manifests,
+source completeness, installed Python parity, package root ownership and Git
+bundle history pass. Both retained .168/.169 backup checksum sets pass; only
+the recognized older .167 rolling release set was rotated. The separate private
+pre-release snapshot is outside that rotation and preserves working installation,
+settings, RGB binaries and their exact build sources. The explicitly authorized
+GitHub publication follows these checks; real Fedora native hardware remains
+unverified. No local reinstall of .169 or change to the confirmed running
+hardware setup is required by this backup/publication step.
+
+Development follow-up 10 November 2026: runtime evidence showed the Sapphire
+RX 9070 XT being changed to Runway/Serial/Spectrum instead of External Control,
+while both Direct ENE RAM modules were also assigned approximate native effects.
+RGB Studio now gives every Direct controller to the exact OHC stream, keeps an
+external-capable GPU on its input handoff while a selected Direct source runs,
+and updates distinct controllers concurrently in the in-process latest-frame
+plugin. The managed system-Qt OpenRGB engine uses the verified offscreen plugin,
+so its own task/tray icon is hidden. Repository tests and an offscreen process
+smoke test pass. Live Ubuntu startup now detects all six devices, confirms the
+Sapphire's active External Control mode and the five Direct streams, and finishes
+the design request in 284 ms. A device-filtered strace measurement found the
+remaining global barrier: MSI sends four 727-byte feature reports at ~93 ms each.
+Independent persistent plugin workers raise actual Airgoo 1025-byte frame writes
+from 3.83 to 58.52 Hz (15-second windows). MSI remains around 2.8 complete frames/s
+before the dirty-zone backend fix. That correction is now installed; actual MSI
+reports/full frames measure about 10.64 Hz with one changed-zone report rather
+than four. This is not physical 60-Hz output. The owner confirms smooth case and
+GPU movement. A separate native-plugin colour bug was isolated by SDK readback:
+passing bitwise expressions to OpenRGB's unparenthesized ToRGBColor macro copied
+red into every channel. `ColorCodec.h` now explicitly packs validated RGB into
+OpenRGB's 0x00BBGGRR representation, with compiled gradient/boundary regressions.
+Live readback now contains distinct colour channels on all five Direct targets;
+the owner confirms correct GPU colours and smooth playback. After the traced
+measurement session ended, normal startup and the existing bounded owned-daemon
+recovery restored the unchanged Levita design; IPC reports video playing at
+15 fps and the owner confirms the LCD works again. No display source, protocol,
+design or frame-rate setting was changed. The final focused RGB, colour codec,
+GPU, LCD ownership/health, TRCC permissions and repository-layout run passes
+140 tests; one Unix-socket unit fixture is skipped by the sandbox. Native plugin
+build/install hashes match, the registry gate and whitespace checks pass, and
+subsequent live metrics report no RGB errors with continued LCD playback.
+That hardware diagnosis used a local development install; the subsequent .169
+release preparation and package evidence are recorded above.
+Real Fedora hardware remains pending.
+
+Development follow-up 9 November 2026: the owner's video confirms that RGB
+hardware and the Case preview accumulate slow motion when a multi-device
+OpenRGB batch takes longer than 60 ms. The shared clock now advances by the
+complete monotonic interval between completed frames instead of truncating
+every interval to 60 ms. This restores the selected design tempo without a new
+writer, queue, LED route or hardware command. Repository regression coverage
+is present; optical confirmation of the corrected build remains pending.
+RGB Studio also exposes a persisted final-light choice: white by default, an
+arbitrary solid colour, or a reported native Rainbow hardware mode. It runs
+synchronously after the software effect stops and before OHC releases its RGB
+lock/engine, only for selected conflict-free devices under the existing write
+consent. Tray hiding and program restart do not apply it; physical confirmation
+of the final light remains pending.
+The follow-up runtime log isolates the remaining cadence limit: five selected
+Direct controllers were acknowledged serially in 350–370 ms, yielding only
+about 2.7 complete multi-device frames per second. The bounded SDK worker now
+uses one persistent ordered loopback connection per controller and transfers
+distinct controllers concurrently, so batch latency follows the slowest
+controller instead of their sum. The special 30-LED GPU/support open-strip
+clock also matches the gallery traversal duration instead of running five times
+slower. The 25-Hz request ceiling, complete frames, explicit selection,
+latest-frame coalescing and sole OHC/OpenRGB ownership remain; real hardware
+measurement and optical confirmation of the parallel path are still pending.
 
 Version 3.4.29.168 carries the public OHC-only design catalog, Feature Lifecycle
 registry and portable LCD catalog behavior. Real nested scroll-viewport

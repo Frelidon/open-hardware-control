@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.168 STABLE
+# Open Hardware Control by Frelidon 3.4.29.169 STABLE
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -55,24 +55,19 @@ Projekt-Repository: <https://github.com/Frelidon/open-hardware-control>
 
 Der sichere Testmodus ist standardmäßig aktiv; echte USB-Übertragung erfolgt nur über das separat installierte GPL-Backend **TRCC Linux** (9.10.4 empfohlen). Pumpe und Radiatorlüfter der Levita laufen über getrennt bestätigte Mainboard-PWM-Header (`PUMP_FAN`, `CPU_FAN`) mit sicherem 70-%-/10-s-Test; CoolerControl blockiert parallele Schreibzugriffe.
 
-## Neu in 3.4.29.168 STABLE
+## Neu in 3.4.29.169 STABLE
 
-- Öffentliche Ausgabe mit vollständig bereinigtem Designkatalog: Im Repository
-  und in allen Paketen liegen ausschließlich projekt-eigene OHC-Designs.
-- Jeder Hauptbereich zeigt eine eigene Feature-Version und seinen Reifegrad als
-  Alpha, Beta, Release Candidate oder Stabil, ohne Funktionspfade zu verändern.
-- Hersteller-/TRCC-Kataloge, Stock-Medien, Kenney-Bestandteile und importierte
-  Benutzerdateien sind ausdrücklich nicht Bestandteil der Veröffentlichung.
-- Der vollständige Levita-UI-Release-Test läuft auf lokaler Hardware und auf
-  hardwarefreien GitHub-Runnern mit demselben ausdrücklich gesetzten Testzustand.
-- Eigene LCD-Medien bleiben beim Abwählen auch ohne systemweiten TRCC-Katalog
-  ausgeblendet; Dateien bleiben erhalten und OHC-Designs weiterhin verfügbar.
-- Der isolierte Vorschau-Kindprozess erzwingt Qt `minimal`: vollständig headless,
-  mit definierter Fenstergeometrie unabhängig von der geerbten Testsuite-Umgebung.
-- Der Test aktiviert seinen Levita-Typ ausdrücklich in privaten Einstellungen
-  und hängt dadurch nicht von einem am Runner vorhandenen USB-Gerät ab.
-- Der TRCC-GPU-Taktgrenzschutz verlangt drei plausible Messungen, bevor die
-  dynamische Livequelle nach dem 1-MHz-Grenzfall wieder übernommen wird.
+- Flüssige RGB-Bewegung mit fester 60-Hz-Animationszeitbasis und unabhängigen
+  Controller-Arbeitern; langsame Geräte bremsen nicht mehr alle anderen aus.
+- Korrekte Designfarben einschließlich RAM und externer Sapphire-GPU; die
+  Grafikkarte wird auf `External Control` gehalten. Gehäuse und GPU live bestätigt.
+- PLAY/STOPP, gespeicherte Designanpassungen, LED-Zahlanzeigen und wählbare
+  Abschlussbeleuchtung: Weiß, Wunschfarbe oder unterstützter Hardware-Rainbow.
+- Stabile unsichtbare Engine, vollständiger nativer Plugin-Quellcode und
+  dokumentierter MSI-Treiberpatch. [Native RGB-Einrichtung](docs/hardware/NATIVE_RGB_SETUP.md)
+  erklärt Voraussetzungen und Wiederherstellung; physische FPS sind geräteabhängig.
+- Bestehendes Levita-LCD und alle bisherigen Funktionen bleiben erhalten;
+  komplette Entwickler-, Quellcode-, Git-Historien- und Installationspakete.
 
 Ältere Versionen: [Versionsverlauf](#versionsverlauf) · [docs/CHANGELOG.md](docs/CHANGELOG.md) · [docs/releases/](docs/releases/)
 
@@ -80,30 +75,30 @@ Der sichere Testmodus ist standardmäßig aktiv; echte USB-Übertragung erfolgt 
 
 ### Fedora und Nobara – RPM
 
-Lade `open-hardware-control-3.4.29.168-1.noarch.rpm` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control-3.4.29.169-1.noarch.rpm` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.168-1.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.169-1.noarch.rpm
 ```
 
 ### Debian, Ubuntu und Linux Mint – DEB
 
-Lade `open-hardware-control_3.4.29.168_all.deb` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control_3.4.29.169_all.deb` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.168_all.deb'
+sudo apt install './open-hardware-control_3.4.29.169_all.deb'
 ```
 
 ### Universelles Installationspaket – ZIP
 
-Für Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_168.zip` herunter und führe aus:
+Für Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_169.zip` herunter und führe aus:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_168.zip
-cd open-hardware-control-3.4.29.168
+unzip open_hardware_control_v3_4_29_169.zip
+cd open-hardware-control-3.4.29.169
 chmod +x install.sh
 ./install.sh
 ```
@@ -172,12 +167,12 @@ Liest nur lokale Steam-Workshop-Metadaten, wählt Wallpaper über Plasmas offizi
 
 ## Versionsverlauf
 
-**3.4.29.168** – Öffentliche Ausgabe mit OHC-eigenen Designs, Feature-Reifegraden, robuster LCD-Medienauswahl und portabler Vorschau-/Prozesslaufzeitprüfung.
+**3.4.29.169** – Flüssiger RGB-Unterbau, korrekte Farben/GPU-Übergabe, PLAY/STOPP und Abschlussbeleuchtung.
+
+**3.4.29.168** – OHC-eigene Designs, Feature-Reifegrade und portable LCD-Vorschauprüfung.
 
 **3.4.29.159** – Veröffentlichungskandidat mit OHC-eigenem Designkatalog und Feature-Reifegraden.
 
 **3.4.29.158** – OpenRGB-Profilmeldungen korrekt synchronisiert und GPU-Taktgrenzschutz stabilisiert.
-
-**3.4.29.157** – Programme/Profile, vollständige GitHub-Downloads und automatische Wiederherstellung des eigenen Levita-Daemons.
 
 Alle früheren Versionen bis 2.9.x: [docs/CHANGELOG.md](docs/CHANGELOG.md) und [docs/releases/](docs/releases/).

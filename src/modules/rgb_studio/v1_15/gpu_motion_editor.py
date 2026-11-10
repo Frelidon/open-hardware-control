@@ -103,7 +103,8 @@ class GpuMotionEditor(QGroupBox):
         note.setWordWrap(True)
         layout.addWidget(note)
         self.timer = QTimer(self)
-        self.timer.setInterval(40)
+        from .timing import RGB_TARGET_INTERVAL_MS
+        self.timer.setInterval(RGB_TARGET_INTERVAL_MS)
         self.timer.timeout.connect(self.refresh)
         self.refresh()
 
@@ -150,7 +151,7 @@ class GpuMotionEditor(QGroupBox):
 
     def elapsed(self):
         # During a running design, show the same paced frame time that the
-        # hardware worker receives; a free-running 25-Hz UI animation can
+        # hardware worker receives; a free-running UI animation can
         # otherwise look smooth while the real controller is falling behind.
         if getattr(self.host, "openrgb_effect_active", False):
             paced = getattr(self.host, "rgb_gpu_visual_elapsed", None)

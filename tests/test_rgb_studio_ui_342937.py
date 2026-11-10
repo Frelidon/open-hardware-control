@@ -12,6 +12,9 @@ GALLERY = (ROOT / "src/modules" / "rgb_studio" / "v1_15" / "design_gallery.py").
 PANELS = (ROOT / "src/modules" / "rgb_studio" / "v1_15" / "studio_panels.py").read_text(
     encoding="utf-8"
 )
+TUNING = (ROOT / "src/modules" / "rgb_studio" / "v1_15" / "design_tuning.py").read_text(
+    encoding="utf-8"
+)
 
 
 def test_engine_controls_are_embedded_toggle_buttons() -> None:
@@ -22,6 +25,17 @@ def test_engine_controls_are_embedded_toggle_buttons() -> None:
     assert "rgb_devices_effects_panel_layout.addWidget(openrgb_box)" in rgb_ui
     assert "devices_effects_layout.addWidget(self.rgb_devices_effects_panel)" in rgb_ui
     assert '("engine", openrgb_box)' not in rgb_ui
+
+
+def test_top_level_play_and_stop_reuse_the_current_design() -> None:
+    rgb_ui = CODE[CODE.index("    def make_rgb_tab("):CODE.index("    def show_rgb_setup_wizard(")]
+    state = CODE[CODE.index("    def update_openrgb_control_state("):]
+    assert 'QPushButton("▶ PLAY")' in rgb_ui
+    assert 'QPushButton("■ STOPP")' in rgb_ui
+    assert "self.request_rgb_direct_apply()" in rgb_ui
+    assert "self.stop_selected_rgb_animations" in rgb_ui
+    assert "self.rgb_studio_play_button.setEnabled" in state
+    assert "self.rgb_studio_stop_button.setEnabled(self.openrgb_effect_active)" in state
 
 
 def test_animated_gallery_replaces_redundant_preview_and_precedes_device_details() -> None:
@@ -47,15 +61,14 @@ def test_gallery_text_is_bounded_and_visible_cards_only_are_painted() -> None:
 def test_color_context_menu_uses_persisted_effect_colors() -> None:
     assert "design_context_requested = Signal(int, QPoint)" in GALLERY
     assert "from modules.rgb_studio.v1_15 import (" in CODE
-    menu = CODE[
-        CODE.index("    def show_rgb_effect_color_menu("):
-        CODE.index("    def request_rgb_direct_apply(")
+    menu = TUNING[
+        TUNING.index("    def show_rgb_effect_color_menu("):
     ]
     assert "color_count = effect_color_count(effect_id)" in menu
     assert 'self.rgb_right_click_hint_label.setText(hint)' in menu
-    assert 'kein separates Popup-Fenster' in menu
-    assert '"rgb_studio/design_color_overrides"' in CODE
-    assert "self.rgb_design_overrides[data] = self.current_rgb_studio_config()" in CODE
+    assert "Kein Extra-Fenster" in menu
+    assert '"rgb_studio/design_color_overrides"' in TUNING
+    assert "self.rgb_design_overrides[data] = self.current_rgb_design_config(data)" in TUNING
 
 
 def test_brightness_native_results_and_sequence_cleanup_stay_in_page() -> None:

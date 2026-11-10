@@ -15,11 +15,11 @@ import sys
 
 
 _APPROVED_EXECUTABLES = {
-    "openrgb": Path("/usr/local/lib/open-hardware-control-backends/openrgb-1.0/openrgb"),
+    "openrgb": Path("/usr/local/lib/open-hardware-control-backends/openrgb-1.1/usr/bin/OpenRGB"),
     "liquidctl": Path("/usr/local/lib/open-hardware-control-backends/liquidctl-1.16.0/bin/liquidctl"),
 }
 _APPROVED_ROOTS = {
-    "openrgb": Path("/usr/local/lib/open-hardware-control-backends/openrgb-1.0"),
+    "openrgb": Path("/usr/local/lib/open-hardware-control-backends/openrgb-1.1"),
     "liquidctl": Path("/usr/local/lib/open-hardware-control-backends/liquidctl-1.16.0"),
 }
 

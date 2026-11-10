@@ -32,17 +32,24 @@ def route_zone(route, source):
 
 
 def gpu_mode_for_effect(device, effect_id, stable_ids, routes, direct_devices):
-    """External sync requires an explicitly mapped, selected Direct source."""
+    """Hand an external-capable GPU to the selected OHC Direct signal.
+
+    The Sapphire switch is only a hardware input selector; it does not identify
+    which physical mainboard header its cable uses.  A saved route is still used
+    for spatial/colour grouping, but it must not be required merely to keep the
+    card in External Control while OHC owns at least one Direct source.
+    """
     if device.device_type.casefold() != "gpu" and "sapphire" not in device.name.casefold():
         return best_native_mode_for_effect(device, effect_id)
     gpu_id = stable_ids.get(device.index, "")
     route = normalize_gpu_routes(routes).get(gpu_id, {})
     source_id = route_source(route)
-    if source_id and any(
+    routed_source_ready = source_id and any(
         source.supports_direct and stable_ids.get(source.index) == source_id
         and (not route.get("zone") or route_zone(route, source))
         for source in direct_devices
-    ):
+    )
+    if routed_source_ready or (not route and any(source.supports_direct for source in direct_devices)):
         external = next((mode for mode in device.modes
                          if mode.casefold() == "external control"), "")
         if external:

@@ -60,6 +60,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QListWidget,
+    QListWidgetItem,
     QMainWindow,
     QMenu,
     QMessageBox,
@@ -107,6 +109,9 @@ from dashboard_layout import DASHBOARD_HINT_KEYS, DashboardLayoutMixin
 from modules.rgb_studio.v1_15.argb_controls import build_slot_led_button, build_zone_test_controls
 from modules.rgb_studio.v1_15.argb_store import save_controller_diagnostics
 from modules.rgb_studio.v1_15.argb_diagnostics import log_effect_plan
+from modules.rgb_studio.v1_15.timing import RGB_TARGET_FPS, RGB_TARGET_INTERVAL_MS
+from modules.rgb_studio.v1_15.native_plugin import NativeOpenRGBPluginClient
+from modules.rgb_studio.v1_15.ram_bank import RgbRamBankMixin
 from modules.rgb_studio.v1_15.openrgb_profiles import (
     import_openrgb_profile,
     list_openrgb_profiles,
@@ -121,6 +126,7 @@ from modules.pc_case_profiles.v1_5.view_state import resize_cooling_slot
 from modules.rgb_studio.v1_15.selection import build_selection_mode, choose_device, refresh_selection, set_individual, configure_selection_row, selection_item_changed, writable_ids
 from modules.rgb_studio.v1_15 import (
     GpuLightingMixin, gpu_mode_for_effect, normalize_gpu_routes,
+    choose_control_path,
     ENE_DRAM_POST_START_RETRY_DELAYS_MS,
     EneDramStartRecoveryMixin,
     RGBDesignGallery,
@@ -129,6 +135,8 @@ from modules.rgb_studio.v1_15 import (
     build_native_hardware_channel_panel,
     startup_profile_caption,
     startup_status_summary,
+    ShutdownLightingMixin,
+    DesignTuningMixin,
 )
 from modules.application_activation.v1_0 import (
     ApplicationActivationServer,
@@ -205,6 +213,7 @@ from openrgb_integration import (
     is_openrgb_apply_options_crash,
     is_openrgb_configuration_error,
     is_suspicious_inventory_drop,
+    managed_openrgb_platform_directory,
     parse_device_listing,
     preferred_reset_mode,
     running_ckb_next_process_ids,
@@ -2019,7 +2028,7 @@ class RGBDropGroup(QGroupBox):
         if device_id:
             self.device_dropped.emit(device_id, self.group_id)
             event.acceptProposedAction()
-class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, GpuLightingMixin, TemperatureRecordingMixin, PcCaseProfilesMixin, ResponsiveStartupMixin, OpenLinkHubUpdateMixin, RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActionsMixin, QMainWindow):
+class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, GpuLightingMixin, ShutdownLightingMixin, RgbRamBankMixin, DesignTuningMixin, TemperatureRecordingMixin, PcCaseProfilesMixin, ResponsiveStartupMixin, OpenLinkHubUpdateMixin, RgbStudioExpandMixin, EneDramStartRecoveryMixin, DashboardLayoutMixin, LogViewActionsMixin, QMainWindow):
     def __init__(self):
         super().__init__()
         # The application draws its own accessible title bar. Window movement
@@ -2252,6 +2261,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.openlinkhub_status_busy = False
         self.openlinkhub_write_busy = False
         self.openrgb_client = OpenRGBClient(address=OPENRGB_LOCAL_ADDRESS, port=OPENRGB_LOCAL_PORT)
+        self.native_openrgb_plugin = NativeOpenRGBPluginClient()
+        self.openrgb_native_plugin_active = False
         self.openrgb_devices: list[OpenRGBDevice] = []
         self.openrgb_stable_ids: dict[int, str] = {}
         self.openrgb_server_reachable = False
@@ -2322,6 +2333,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.openrgb_worker_restart_failures = 0
         self.openrgb_worker_coalesced_frames = 0
         self.openrgb_worker_metrics: dict[str, dict[str, object]] = {}
+        self.openrgb_performance_log_at = 0.0
         # Fedora's OpenRGB 1.0~rc2 can abort in ApplyOptions for individual
         # controller/mode combinations.  A session-only quarantine prevents
         # repeated coredumps without permanently branding the hardware bad.
@@ -2473,6 +2485,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                     continue
                 if config is not None and 0 <= design_index < len(BUILTIN_DESIGNS):
                     self.rgb_design_overrides[design_index] = config
+        self.load_rgb_design_tuning()
+        self.load_rgb_shutdown_lighting()
         self._loading_rgb_design = False
         self.desktop_design_busy = False
         try:
@@ -2526,7 +2540,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.configure_accessibility()
         self.apply_theme()
         self.rgb_preview_timer = QTimer(self)
-        self.rgb_preview_timer.setInterval(40)
+        self.rgb_preview_timer.setTimerType(Qt.TimerType.PreciseTimer)
+        self.rgb_preview_timer.setInterval(RGB_TARGET_INTERVAL_MS)
         self.rgb_preview_timer.timeout.connect(self.update_rgb_studio_preview)
         self.tabs.currentChanged.connect(self.sync_active_page_performance)
         self.sync_active_page_performance(self.tabs.currentIndex())
@@ -2544,7 +2559,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         from modules.process_runtime.v1_1.sdk_supervisor import SDKSupervisor
         self.sdk_supervisor = SDKSupervisor(self)
         self.openrgb_effect_timer = QTimer(self)
-        self.openrgb_effect_timer.setInterval(40)
+        self.openrgb_effect_timer.setTimerType(Qt.TimerType.PreciseTimer)
+        self.openrgb_effect_timer.setInterval(RGB_TARGET_INTERVAL_MS)
         self.openrgb_effect_timer.timeout.connect(self.send_openrgb_effect_frame)
         self.rgb_direct_apply_timer = QTimer(self)
         self.rgb_direct_apply_timer.setSingleShot(True)
@@ -3008,6 +3024,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
 
     def refresh_dynamic_translations(self) -> None:
         """Refresh captions whose values are assembled at runtime."""
+        if hasattr(self, "rgb_shutdown_lighting_color_button"):
+            self.sync_rgb_shutdown_lighting_controls()
         if hasattr(self, "pump_curve_table"):
             self.apply_temperature_unit_to_controls(
                 warning_c=self.safety_temperature_c(self.warning_temp),
@@ -8196,6 +8214,22 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         )
         self.rgb_setup_wizard_button.clicked.connect(self.show_rgb_setup_wizard)
         top_actions.addWidget(self.rgb_setup_wizard_button, 1)
+        self.rgb_studio_play_button = QPushButton("▶ PLAY")
+        self.rgb_studio_play_button.setMinimumHeight(38)
+        self.rgb_studio_play_button.setToolTip(
+            "Startet das aktuell ausgewählte RGB-Design erneut, ohne Farben, Tempo oder Geräteauswahl zu verändern."
+        )
+        self.rgb_studio_play_button.clicked.connect(
+            lambda _checked=False: self.request_rgb_direct_apply()
+        )
+        top_actions.addWidget(self.rgb_studio_play_button)
+        self.rgb_studio_stop_button = QPushButton("■ STOPP")
+        self.rgb_studio_stop_button.setMinimumHeight(38)
+        self.rgb_studio_stop_button.setToolTip(
+            "Hält das laufende Design vollständig an. Auswahl und Einstellungen bleiben für PLAY erhalten."
+        )
+        self.rgb_studio_stop_button.clicked.connect(self.stop_selected_rgb_animations)
+        top_actions.addWidget(self.rgb_studio_stop_button)
         layout.addLayout(top_actions)
         # Kept as an internal compatibility editor for old profiles only.  All
         # visible NZXT control now happens through the common device cards.
@@ -8536,6 +8570,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         startup_panel_layout.addWidget(self.rgb_startup_automation_summary)
         startup_panel_layout.addLayout(startup_buttons)
         layout.insertWidget(1, self.rgb_startup_automation_panel)
+        self.rgb_shutdown_lighting_panel = self.build_rgb_shutdown_lighting_panel()
+        layout.insertWidget(2, self.rgb_shutdown_lighting_panel)
 
         design_gallery_box = QGroupBox("OHC-Designgalerie · eigene prozedurale Animationen")
         design_gallery_layout = QVBoxLayout(design_gallery_box)
@@ -8577,6 +8613,26 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             self.tr_static, self.select_rgb_design_category
         )
         design_gallery_layout.addWidget(self.rgb_design_category_host)
+        self.rgb_openrgb_originals_panel = QGroupBox("OpenRGB Originalmodi")
+        native_gallery_layout = QVBoxLayout(self.rgb_openrgb_originals_panel)
+        native_gallery_note = QLabel(
+            "Diese Effekte laufen direkt in OpenRGB und werden nicht von der OHC-Frame-Engine nachgebildet. "
+            "Damit umgehst du den langsamen SDK-Transport. Angezeigt werden nur Modi, die OpenRGB für deine "
+            "aktuell ausgewählten Geräte meldet."
+        )
+        native_gallery_note.setWordWrap(True)
+        native_gallery_note.setObjectName("muted")
+        native_gallery_layout.addWidget(native_gallery_note)
+        self.rgb_openrgb_originals_list = QListWidget()
+        self.rgb_openrgb_originals_list.setMinimumHeight(150)
+        self.rgb_openrgb_originals_list.setMaximumHeight(260)
+        self.rgb_openrgb_originals_list.itemDoubleClicked.connect(self.apply_rgb_openrgb_original_mode)
+        native_gallery_layout.addWidget(self.rgb_openrgb_originals_list)
+        native_gallery_apply = QPushButton("Ausgewählten OpenRGB-Originalmodus anwenden")
+        native_gallery_apply.clicked.connect(lambda: self.apply_rgb_openrgb_original_mode())
+        native_gallery_layout.addWidget(native_gallery_apply)
+        self.rgb_openrgb_originals_panel.setVisible(False)
+        design_gallery_layout.addWidget(self.rgb_openrgb_originals_panel)
         self.rgb_design_gallery = RGBDesignGallery(translator=self.tr_static)
         self.rgb_design_gallery.set_design_overrides(self.rgb_design_overrides)
         self.rgb_design_gallery.set_favorite_indices(self.rgb_favorite_design_indices)
@@ -8586,6 +8642,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             self.show_rgb_design_color_menu
         )
         design_gallery_layout.addWidget(self.rgb_design_gallery)
+        design_gallery_layout.addWidget(self.build_rgb_design_speed_panel())
         spatial_row = QHBoxLayout()
         self.rgb_spatial_editor_button = QPushButton(self.tr_static("Räumlichen Ablauf einstellen"))
         self.rgb_spatial_editor_button.setObjectName("gpuCommitAction")
@@ -8596,8 +8653,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         gallery_note = QLabel(
             "Die Kacheln werden lokal aus OHC-Code animiert. Es werden keine Effekte, Bilder oder Profile "
             "kommerzieller RGB-Programme kopiert. Ein Klick wendet das Muster direkt auf die ausgewählten "
-            "Geräte an. Die blau umrandete Auswahl bleibt nach einem Neustart erhalten. Unter „Modusfarben“ "
-            "ändert ein Linksklick auf Haupt- oder Zweitfarbe die Farben genau dieses ausgewählten Designs."
+            "Geräte an. Die blau umrandete Auswahl bleibt nach einem Neustart erhalten. Ein Rechtsklick auf "
+            "ein Design öffnet Farben, Tempo-Reset und vollständigen Reset; eigene Werte bleiben pro Design gespeichert."
         )
         gallery_note.setWordWrap(True)
         gallery_note.setObjectName("muted")
@@ -14099,6 +14156,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.shutdown_lcd_request_id = 0
         run.run("kraken-safety", self.restore_safe_hardware_fallback_sync_on_quit)
         run.run("rgb-effect", self.stop_openrgb_effect)
+        run.run("rgb-shutdown-light", lambda: self.apply_rgb_shutdown_lighting_sync(reason))
         run.run("rgb-lock", self.rgb_session_lock.release)
         run.run("rgb-engine", lambda: self.stop_managed_rgb_engine(wait=True))
         from modules.application_shutdown.v1_1.qt_processes import stop_remaining
@@ -16066,9 +16124,13 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                 self.rgb_session_lock.release()
             return
         environment = QProcessEnvironment.systemEnvironment()
-        # The process provides hardware drivers only.  Offscreen prevents a
-        # separate OpenRGB window even on desktops where a display is present.
+        # The managed system-Qt build includes the offscreen platform plugin.
+        # Keep the private driver and its API-5 plugin completely invisible;
+        # users should see only Open Hardware Control's own application icon.
         environment.insert("QT_QPA_PLATFORM", "offscreen")
+        platform_directory = managed_openrgb_platform_directory(command[0], "offscreen")
+        if platform_directory:
+            environment.insert("QT_QPA_PLATFORM_PLUGIN_PATH", platform_directory)
         self.openrgb_server_process.setProcessEnvironment(environment)
         self.openrgb_server_process.setProgram(command[0])
         self.openrgb_server_process.setArguments(command[1:])
@@ -17756,171 +17818,6 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
 
         self.backend.run_async(command, callback=inspected, timeout=8, log_output=False)
 
-    def configure_openrgb_ram_bank(
-        self, target_devices: list[OpenRGBDevice] | tuple[OpenRGBDevice, ...] | None = None,
-    ) -> None:
-        """Inspect and edit all RGB DIMMs through one shared bank dialog."""
-
-        if not self.openrgb_server_reachable or self.openrgb_external_server_detected:
-            self.show_error(
-                "Die von OHC verwaltete OpenRGB-Engine muss erreichbar sein. Bitte ein separates OpenRGB-Fenster "
-                "schließen und danach die Geräte neu erkennen."
-            )
-            return
-        devices = list(target_devices or [
-            device for device in self.openrgb_devices
-            if self.is_rgb_ram_device(device) and not self.openrgb_device_conflict(device)
-        ])
-        devices = [
-            device for device in devices
-            if self.is_rgb_ram_device(device) and not self.openrgb_device_conflict(device)
-        ]
-        if not devices:
-            self.show_error("Es wurde kein schreibbereiter RGB-Arbeitsspeicher erkannt.")
-            return
-        inspections: list[tuple[OpenRGBDevice, dict[str, object]]] = []
-        pending = list(devices)
-        self.footer_status.setText(
-            f"RGB-Studio: gemeinsame RAM-Bank mit {len(devices)} Riegel(n) wird gelesen …"
-        )
-
-        def inspect_next() -> None:
-            if not pending:
-                self.show_openrgb_ram_bank_dialog(inspections)
-                return
-            device = pending.pop(0)
-            try:
-                command = self.openrgb_client.sdk_inspect_command(device.index)
-            except (OpenRGBError, ValueError) as exc:
-                self.show_error(str(exc))
-                return
-
-            def inspected(result: CommandResult, current: OpenRGBDevice = device) -> None:
-                if not result.ok:
-                    self.show_error(
-                        f"Die RAM-Zone von {self.rgb_device_display_name(current)} konnte nicht gelesen werden:\n"
-                        + (result.combined or f"Exit-Code {result.returncode}")[:800]
-                    )
-                    return
-                try:
-                    payload = json.loads(result.stdout.strip())
-                except (TypeError, ValueError, json.JSONDecodeError):
-                    self.show_error("Der OpenRGB-Zonenbericht des Arbeitsspeichers war nicht gültig.")
-                    return
-                if not isinstance(payload, dict) or not isinstance(payload.get("zones"), list):
-                    self.show_error("OpenRGB hat keine auswertbare RAM-Zonenliste geliefert.")
-                    return
-                inspections.append((current, payload))
-                inspect_next()
-
-            self.backend.run_async(command, callback=inspected, timeout=8, log_output=False)
-
-        inspect_next()
-
-    def show_openrgb_ram_bank_dialog(
-        self, inspections: list[tuple[OpenRGBDevice, dict[str, object]]],
-    ) -> None:
-        rows: list[tuple[OpenRGBDevice, str, int, int, int]] = []
-        for device, inspection in inspections:
-            zones = [zone for zone in inspection.get("zones", []) if isinstance(zone, dict)]
-            if not zones:
-                self.show_error(f"{self.rgb_device_display_name(device)} meldet keine RAM-LED-Zone.")
-                return
-            zone = zones[0]
-            name = str(zone.get("name", device.zones[0] if device.zones else "Unknown"))
-            current = max(1, int(zone.get("current", device.led_count or 1)))
-            minimum = max(1, int(zone.get("minimum", current)))
-            maximum = max(minimum, min(512, int(zone.get("maximum", current))))
-            rows.append((device, name, current, minimum, maximum))
-        lower = max(row[3] for row in rows)
-        upper = min(row[4] for row in rows)
-        if lower > upper:
-            self.show_error("Die erkannten RAM-Riegel haben keinen gemeinsamen erlaubten LED-Bereich.")
-            return
-        stored_counts = []
-        for device, zone, current, _minimum, _maximum in rows:
-            stable_id = self.openrgb_stable_ids.get(device.index, f"openrgb:index-{device.index}")
-            saved = self.rgb_zone_configurations.get(stable_id, {}).get(zone, {})
-            stored_counts.append(int(saved.get("leds_per_unit", current) or current))
-        initial = stored_counts[0] if len(set(stored_counts)) == 1 else rows[0][2]
-        initial = max(lower, min(upper, initial))
-
-        dialog = QDialog(self)
-        dialog.setWindowTitle(f"Arbeitsspeicher gemeinsam einrichten · {len(rows)} Riegel")
-        dialog.setMinimumWidth(620)
-        layout = QVBoxLayout(dialog)
-        note = QLabel(
-            "Alle erkannten RGB-Riegel werden als eine RAM-Bank gesteuert. Die Einstellung gilt gemeinsam, "
-            "wird intern aber für jeden Riegel separat gespeichert und übertragen. Später erkannte weitere "
-            "Riegel erscheinen automatisch in derselben Bank."
-        )
-        note.setWordWrap(True)
-        layout.addWidget(note)
-        form = QFormLayout()
-        led_spin = QSpinBox()
-        led_spin.setRange(lower, upper)
-        led_spin.setValue(initial)
-        led_spin.setSuffix(" LEDs je Riegel")
-        form.addRow("LED-Anzahl", led_spin)
-        form.addRow("Erkannte Riegel", QLabel(str(len(rows))))
-        form.addRow("OpenRGB erlaubt gemeinsam", QLabel(f"{lower}–{upper} LEDs je Riegel"))
-        layout.addLayout(form)
-        details = QLabel("\n".join(
-            f"• {self.rgb_device_display_name(device)} · OpenRGB #{device.index} · {current} LEDs gemeldet"
-            for device, _zone, current, _minimum, _maximum in rows
-        ))
-        details.setObjectName("muted")
-        layout.addWidget(details)
-        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        buttons.button(QDialogButtonBox.StandardButton.Ok).setText(
-            "Speichern und gemeinsam anwenden" if self.openrgb_write_enabled else "Gemeinsam speichern"
-        )
-        buttons.rejected.connect(dialog.reject)
-        layout.addWidget(buttons)
-
-        def save_bank() -> None:
-            count = led_spin.value()
-            member_ids: set[str] = set()
-            for device, zone, _current, minimum, maximum in rows:
-                if not minimum <= count <= maximum:
-                    self.show_error(
-                        f"{self.rgb_device_display_name(device)} erlaubt {minimum}–{maximum} LEDs."
-                    )
-                    return
-                stable_id = self.openrgb_stable_ids.get(device.index, f"openrgb:index-{device.index}")
-                configuration = dict(self.rgb_zone_configurations.get(stable_id, {}))
-                configuration[zone] = {"units": 1, "leds_per_unit": count}
-                self.rgb_zone_configurations[stable_id] = configuration
-                self.rgb_group_assignments[stable_id] = "arbeitsspeicher"
-                self.openrgb_sdk_ready_devices.discard(stable_id)
-                member_ids.add(stable_id)
-            self.rgb_selected_devices.update(member_ids)
-            self.save_rgb_workspace()
-            dialog.accept()
-            self.rebuild_rgb_workspace()
-            self.log_message(
-                f"RGB-RAM-BANK: {len(rows)} Riegel gemeinsam gespeichert · je {count} LEDs · "
-                "ein Menü, getrennte Geräteframes"
-            )
-            if not self.openrgb_write_enabled:
-                self.openrgb_effect_status.setText(
-                    f"RAM-Bank gespeichert · {len(rows)} Riegel mit je {count} LEDs"
-                )
-                return
-
-            def apply_after_ene_reclaim() -> None:
-                self.request_rgb_direct_apply(80)
-
-            if any(self.is_ene_dram_device(device) for device, *_rest in rows):
-                for device, *_rest in rows:
-                    stable_id = self.openrgb_stable_ids.get(device.index, "")
-                    self.ene_dram_cli_prime_done.discard(stable_id)
-                self.prime_ene_dram_cold_start(apply_after_ene_reclaim, force_all=True)
-            else:
-                apply_after_ene_reclaim()
-
-        buttons.accepted.connect(save_bank)
-        dialog.exec()
 
     def show_openrgb_zone_configuration_dialog(
         self,
@@ -18345,14 +18242,11 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.openrgb_native_mode_combo.blockSignals(True)
         self.openrgb_native_mode_combo.clear()
         mode_support: dict[str, tuple[str, int]] = {}
-        native_devices = [selected for selected in devices if not selected.supports_direct]
+        native_devices = list(devices)
         for selected in devices:
-            # A Direct-capable device is never sent through the Fedora rc2 CLI
-            # ApplyOptions path. Its effects are rendered through OHC's SDK
-            # helper; native CLI modes remain available only for non-Direct
-            # hardware such as the tested Sapphire GPU.
-            if selected.supports_direct:
-                continue
+            # Native OpenRGB modes are safe for Direct-capable devices too;
+            # the effect planner guarantees that OHC will not stream frames to
+            # the same controller at the same time.
             seen_for_device: set[str] = set()
             for mode in selected.modes:
                 key = mode.casefold()
@@ -18372,13 +18266,12 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             if native_devices:
                 names = ", ".join(self.rgb_device_display_name(item) for item in native_devices)
                 self.openrgb_native_scope_label.setText(
-                    f"Wirkt ausschließlich auf: {names}. Das ist der geräteeigene Modus; „Aus/Off/Dark“ schaltet "
-                    "die Beleuchtung dieses Geräts aus. OHC-Effekte verwenden diese Auswahlliste nicht automatisch."
+                    f"Wirkt ausschließlich auf: {names}. Das ist der geräteeigene OpenRGB-Modus; „Aus/Off/Dark“ schaltet "
+                        "die Beleuchtung dieses Geräts aus. Die Kategorie „OpenRGB Originale“ verwendet genau diese Modi."
                 )
             else:
                 self.openrgb_native_scope_label.setText(
-                    "Nur für Geräte ohne Direct Mode – bei deinem System vor allem die Sapphire-Grafikkarte. "
-                    "RAM, Airgoo und NZXT werden hier nicht umgeschaltet."
+                    "OpenRGB meldet für die aktuelle Auswahl keinen nutzbaren nativen Hardwaremodus."
                 )
         if not devices:
             self.openrgb_device_info.setText("Kein OpenRGB-Gerät ausgewählt.")
@@ -18410,6 +18303,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                 details.append(f"Schreibsperre: {conflict}")
             self.openrgb_device_info.setText(" · ".join(details))
         self.openrgb_native_mode_combo.blockSignals(False)
+        self.refresh_openrgb_original_gallery()
         self.update_openrgb_control_state()
         self.update_rgb_studio_preview()
 
@@ -18880,6 +18774,11 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         )
         self.openrgb_effect_start_button.setEnabled(writable and effect_available and not self.openrgb_effect_active)
         self.openrgb_effect_stop_button.setEnabled(self.openrgb_effect_active)
+        if hasattr(self, "rgb_studio_play_button"):
+            self.rgb_studio_play_button.setEnabled(
+                writable and effect_available and not self.openrgb_effect_active
+            )
+            self.rgb_studio_stop_button.setEnabled(self.openrgb_effect_active)
         if hasattr(self, "openrgb_reinitialize_button"):
             self.openrgb_reinitialize_button.setEnabled(
                 bool(
@@ -19179,7 +19078,15 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             button.blockSignals(True)
             button.setChecked(title == category)
             button.blockSignals(False)
-        self.rgb_design_gallery.set_category(category)
+        native_category = category == "OpenRGB Originale"
+        if native_category:
+            self.rgb_design_gallery.set_category("Alle")
+            self.rgb_openrgb_originals_panel.setVisible(True)
+            self.refresh_openrgb_original_gallery()
+        else:
+            self.rgb_design_gallery.set_category(category)
+            if hasattr(self, "rgb_openrgb_originals_panel"):
+                self.rgb_openrgb_originals_panel.setVisible(False)
         if hasattr(self, "tabs") and self.tabs.currentIndex() == 2:
             self.sync_navigation_to_page(2)
 
@@ -19192,9 +19099,50 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             button.setChecked(mode == view_mode)
             button.blockSignals(False)
         self.rgb_design_category_host.setVisible(view_mode == "all")
+        if view_mode != "all" and hasattr(self, "rgb_openrgb_originals_panel"):
+            self.rgb_openrgb_originals_panel.setVisible(False)
         self.rgb_design_gallery.set_view_mode(view_mode)
         if hasattr(self, "tabs") and self.tabs.currentIndex() == 2:
             self.sync_navigation_to_page(2)
+
+    def refresh_openrgb_original_gallery(self) -> None:
+        """List native OpenRGB modes without routing them through OHC effects."""
+        if not hasattr(self, "rgb_openrgb_originals_list"):
+            return
+        selected = self.selected_openrgb_devices()
+        mode_support: dict[str, tuple[str, int]] = {}
+        for device in selected:
+            for mode in device.modes:
+                clean = str(mode).strip()
+                key = clean.casefold()
+                if not clean or key == "direct":
+                    continue
+                title, count = mode_support.get(key, (clean, 0))
+                mode_support[key] = (title, count + 1)
+        current = self.openrgb_native_mode_combo.currentData() if hasattr(self, "openrgb_native_mode_combo") else None
+        self.rgb_openrgb_originals_list.blockSignals(True)
+        self.rgb_openrgb_originals_list.clear()
+        for key, (mode, count) in sorted(mode_support.items(), key=lambda item: item[1][0].casefold()):
+            item = QListWidgetItem(f"{mode} · {count}/{len(selected)} ausgewählte Geräte")
+            item.setData(Qt.ItemDataRole.UserRole, mode)
+            self.rgb_openrgb_originals_list.addItem(item)
+            if current and str(current).casefold() == key:
+                self.rgb_openrgb_originals_list.setCurrentItem(item)
+        if not mode_support:
+            self.rgb_openrgb_originals_list.addItem("Keine nativen OpenRGB-Originalmodi gemeldet")
+        self.rgb_openrgb_originals_list.blockSignals(False)
+
+    def apply_rgb_openrgb_original_mode(self, _item=None) -> None:
+        if not hasattr(self, "rgb_openrgb_originals_list"):
+            return
+        item = self.rgb_openrgb_originals_list.currentItem()
+        mode = item.data(Qt.ItemDataRole.UserRole) if item is not None else None
+        if not mode:
+            return
+        index = self.openrgb_native_mode_combo.findData(mode)
+        if index >= 0:
+            self.openrgb_native_mode_combo.setCurrentIndex(index)
+            self.apply_openrgb_native_mode()
 
     def toggle_rgb_design_favorite(self, design_index: int, favorite: bool) -> None:
         if favorite:
@@ -19243,36 +19191,6 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             effect_id,
             item.text(0),
             self.rgb_studio_mode_list.viewport().mapToGlobal(position),
-        )
-
-    def show_rgb_effect_color_menu(
-        self, effect_id: str, title: str, global_position: QPoint
-    ) -> None:
-        color_count = effect_color_count(effect_id)
-        _unused = global_position
-        index = self.rgb_studio_effect_combo.findData(effect_id)
-        if index >= 0 and index != self.rgb_studio_effect_combo.currentIndex():
-            self.rgb_studio_effect_combo.setCurrentIndex(index)
-        self.sync_rgb_studio_mode_controls()
-        if hasattr(self, "rgb_right_click_hint_label"):
-            if color_count == 0:
-                hint = (
-                    f"⌖ {title}: Farbspektrum wird automatisch erzeugt. "
-                    "Kein Extra-Fenster: Bearbeitung bleibt direkt im RGB-Studio."
-                )
-            elif color_count == 1:
-                hint = (
-                    f"⌖ {title}: Rechtsklick erkannt. Farbe 1 jetzt direkt unten bei Modusfarben ändern "
-                    "(Hex, Preset oder Farbwähler)."
-                )
-            else:
-                hint = (
-                    f"⌖ {title}: Rechtsklick erkannt. Farbe 1 und Farbe 2 jetzt direkt unten bei Modusfarben ändern "
-                    "(Hex, Preset oder Farbwähler)."
-                )
-            self.rgb_right_click_hint_label.setText(hint)
-        self.openrgb_effect_status.setText(
-            f"{title}: Farbanpassung im RGB-Studio aktiv · kein separates Popup-Fenster"
         )
 
     def request_rgb_direct_apply(self, delay_ms: int = 140) -> None:
@@ -19363,6 +19281,17 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         except (IndexError, TypeError):
             return
         config = self.rgb_design_overrides.get(data, config)
+        if data in self.rgb_design_speed_scales:
+            _base_title, base = BUILTIN_DESIGNS[data]
+            config = RGBEffectConfig(
+                effect_id=config.effect_id,
+                primary=config.primary,
+                secondary=config.secondary,
+                brightness=config.brightness,
+                speed=max(10, min(200, round(base.speed * self.rgb_design_speed_scales[data] / 100))),
+                direction=config.direction,
+                seed=base.seed,
+            ).normalized()
         self.rgb_selected_design_index = data
         self.settings.setValue("rgb_studio/selected_design_index", data)
         if hasattr(self, "rgb_design_gallery"):
@@ -19384,6 +19313,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         finally:
             self._loading_rgb_design = False
         self.on_rgb_studio_effect_changed(mark_custom=False)
+        self.sync_rgb_design_speed_control(data, config)
         self.update_rgb_design_selection_status("")
 
     def on_rgb_studio_effect_changed(self, _index: int = -1, *, mark_custom: bool = True) -> None:
@@ -19475,15 +19405,9 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         data = self.rgb_studio_design_combo.currentData()
         builtin_selected = isinstance(data, int) and 0 <= data < len(BUILTIN_DESIGNS)
         if builtin_selected:
-            self.rgb_design_overrides[data] = self.current_rgb_studio_config()
+            self.rgb_design_overrides[data] = self.current_rgb_design_config(data)
             self.rgb_design_gallery.set_design_overrides(self.rgb_design_overrides)
-            self.settings.setValue(
-                "rgb_studio/design_color_overrides",
-                json.dumps({
-                    str(index): self.rgb_config_payload(config)
-                    for index, config in sorted(self.rgb_design_overrides.items())
-                }),
-            )
+            self.persist_rgb_design_tuning()
             self.settings.setValue("rgb_studio/selected_design_index", data)
             self.update_rgb_design_selection_status("")
         else:
@@ -19727,15 +19651,20 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             self.openrgb_effect_assignments.pop(stable_id, None)
         commands: list[list[str]] = []
         try:
-            # NZXT is a separate liquidctl backend. Apply it first so the
-            # radiator does not wait behind several serialized OpenRGB SDK
-            # readback transactions.
             for channel in coalesce_selected_channels(nzxt_channels):
                 commands.extend(
                     build_nzxt_effect_arguments(Backend.rgb_args(), channel, "fixed", [color])
                 )
             for device in openrgb_devices:
-                if device.supports_direct:
+                choice = choose_control_path(device, "static")
+                if choice.uses_openrgb_mode:
+                    commands.append(
+                        self.openrgb_client.native_mode_command(
+                            device.index, choice.mode, [color], config.brightness
+                        )
+                    )
+                    continue
+                if choice.uses_ohc_stream:
                     stable_id = self.openrgb_stable_ids.get(device.index, "")
                     led_count, zone_sizes = self.openrgb_device_write_shape(device)
                     commands.append(
@@ -19745,20 +19674,6 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                             led_count,
                             direct=stable_id not in getattr(self, "openrgb_sdk_ready_devices", set()),
                             zone_sizes=zone_sizes,
-                        )
-                    )
-                    continue
-                available = {
-                    mode.casefold(): mode for mode in device.modes if mode.casefold() != "direct"
-                }
-                mode = next(
-                    (available[name] for name in ("static", "fixed") if name in available),
-                    "",
-                )
-                if mode:
-                    commands.append(
-                        self.openrgb_client.native_mode_command(
-                            device.index, mode, [color], config.brightness
                         )
                     )
         except (OpenRGBError, ValueError) as exc:
@@ -19784,8 +19699,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         if not devices or not mode:
             self.update_openrgb_control_state()
             self.show_error(
-                "Bitte mindestens ein schreibbereites Gerät ohne Direct Mode auswählen. "
-                "Bei deinem System ist das vor allem die Sapphire-Grafikkarte."
+                "Bitte mindestens ein schreibbereites OpenRGB-Gerät mit diesem nativen Modus auswählen."
             )
             return
         if self.openrgb_external_server_detected:
@@ -19793,13 +19707,13 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             return
         compatible = [
             device for device in devices
-            if not device.supports_direct
-            and any(item.casefold() == str(mode).casefold() for item in device.modes)
+            if any(item.casefold() == str(mode).casefold() for item in device.modes)
         ]
         if not compatible:
             self.show_error(f"Keines der ausgewählten Geräte meldet den Modus „{mode}“.")
             return
         commands: list[list[str]] = []
+        direct_fallback = []
         try:
             for device in compatible:
                 commands.append(
@@ -19810,17 +19724,38 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                         self.rgb_studio_brightness.value(),
                     )
                 )
+            # OpenRGB's native mode list is controller-specific.  In
+            # particular, MSI/Airgoo expose only Direct while RAM exposes
+            # modes such as Off/Chase.  "Off" is a global user action, so
+            # make it deterministic for every selected Direct-only device as
+            # well instead of silently leaving part of the case illuminated.
+            if str(mode).casefold() in {"off", "dark"}:
+                for device in devices:
+                    if device in compatible or not device.supports_direct:
+                        continue
+                    stable_id = self.openrgb_stable_ids.get(device.index, "")
+                    led_count, zone_sizes = self.openrgb_device_write_shape(device)
+                    commands.append(
+                        self.openrgb_client.sdk_color_command(
+                            device.index,
+                            ["000000"],
+                            led_count,
+                            direct=stable_id not in getattr(self, "openrgb_sdk_ready_devices", set()),
+                            zone_sizes=zone_sizes,
+                        )
+                    )
+                    direct_fallback.append(self.rgb_device_display_name(device))
         except (OpenRGBError, ValueError) as exc:
             self.show_error(str(exc))
             return
         for device in compatible:
             self.openrgb_effect_assignments.pop(self.openrgb_stable_ids.get(device.index, ""), None)
-        result_entries = [
-            (self.rgb_device_display_name(device), str(mode)) for device in compatible
-        ]
+        result_entries = [(self.rgb_device_display_name(device), str(mode)) for device in compatible]
+        result_entries.extend((name, "Off · Direct-Fallback") for name in direct_fallback)
+        fallback_note = f" · Direct-Fallback={len(direct_fallback)}" if direct_fallback else ""
         self.run_rgb_command_sequence(
             commands,
-            f"Gerätemodus „{mode}“ seriell auf {len(compatible)} Gerät(en)",
+            f"Gerätemodus „{mode}“ auf {len(compatible)} nativen Gerät(en){fallback_note}",
             finished=lambda ok, entries=result_entries: self.update_rgb_native_results(entries, ok),
         )
 
@@ -19921,8 +19856,12 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         nzxt_commands: list[list[str]] = []
         native_fallback_commands: list[list[str]] = []
         native_result_entries: list[tuple[str, str]] = []
-        direct_devices = [device for device in openrgb_devices if device.supports_direct]
-        native_devices = [device for device in openrgb_devices if not device.supports_direct]
+        # One controller, one owner.  The previous implementation could put
+        # a device into both the OpenRGB hardware-mode list and the OHC SDK
+        # stream, which made RAM/GPU effects visibly stutter and lose colors.
+        direct_candidates = [device for device in openrgb_devices if device.supports_direct]
+        direct_devices: list[OpenRGBDevice] = []
+        native_devices: list[OpenRGBDevice] = []
         nzxt_mode = closest_nzxt_mode(config.effect_id)
         nzxt_effect = NZXT_EFFECT_BY_MODE[nzxt_mode]
         nzxt_colors = [config.primary, config.secondary][:max(1, nzxt_effect.min_colors)]
@@ -19941,12 +19880,14 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                     )
                 )
                 native_result_entries.append((f"NZXT · {channel}", nzxt_effect.title))
-            for device in native_devices:
+            for device in openrgb_devices:
+                choice = choose_control_path(device, config.effect_id)
                 mode = gpu_mode_for_effect(
                     device, config.effect_id, self.openrgb_stable_ids,
-                    self.rgb_gpu_routes, direct_devices,
-                )
+                    self.rgb_gpu_routes, direct_candidates,
+                ) if device.device_type.casefold() == "gpu" or "sapphire" in device.name.casefold() else choice.mode
                 if mode:
+                    native_devices.append(device)
                     native_fallback_commands.append(
                         self.openrgb_client.native_mode_command(
                             device.index,
@@ -19956,6 +19897,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                         )
                     )
                     native_result_entries.append((self.rgb_device_display_name(device), mode))
+                elif choice.uses_ohc_stream:
+                    direct_devices.append(device)
                 else:
                     self.log_message(
                         f"RGB-STUDIO: {self.rgb_device_display_name(device)} übersprungen · "
@@ -19971,14 +19914,10 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                 log_effect_plan(self, device, config)
                 self.openrgb_effect_assignments[stable_id] = config
         self.openrgb_effect_active = bool(self.openrgb_effect_assignments or nzxt_channels)
-        # Every accepted editor/profile transfer starts from a defined phase.
-        # Changing the speed therefore cannot reuse an old elapsed time and
-        # jump to an apparently unrelated point in the animation.
         self.openrgb_effect_started = time.monotonic()
         self.rgb_visual_elapsed = self.rgb_gpu_visual_elapsed = 0.0
         self.rgb_last_wall_elapsed = self.rgb_gpu_last_wall_elapsed = None
-        self.openrgb_effect_failures_by_device.clear()
-        self.openrgb_effect_custom_initialized.clear()
+        self.openrgb_effect_failures_by_device.clear(); self.openrgb_effect_custom_initialized.clear()
         self.openrgb_worker_coalesced_frames = 0
         self.openrgb_worker_restart_failures = 0
         for stable_id in self.openrgb_effect_assignments:
@@ -19986,12 +19925,14 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         if hasattr(self, "sdk_supervisor"):
             self.sdk_supervisor.reset()
         if self.openrgb_effect_assignments:
+            self.openrgb_native_plugin_active = bool(self.native_openrgb_plugin.available and self.native_openrgb_plugin.start(RGB_TARGET_FPS).ok)
+            self.log_message(
+                "RGB-STUDIO: OpenRGB Native-Plugin aktiv · 60 Hz latest-frame-wins"
+                if self.openrgb_native_plugin_active else
+                "RGB-STUDIO: OpenRGB Native-Plugin nicht verfügbar · SDK-Fallback"
+            )
             self.openrgb_effect_timer.start()
             self.send_openrgb_effect_frame()
-        # Confirm an animated design only after BOTH transport families have
-        # completed.  3.4.21 could report success after the NZXT/GPU command
-        # even though the Direct worker had not yet delivered its first RAM
-        # frame.
         hardware_commands = [*nzxt_commands, *native_fallback_commands]
         self.begin_rgb_design_confirmation(
             snapshot,
@@ -20017,16 +19958,15 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             self.mark_rgb_design_transfer_failed("keine schreibbereite Hardware in der Auswahl")
         effect = config.effect_id
         self.openrgb_effect_status.setText(
-            f"OHC-Design „{effect}“ · Direct={len(direct_devices)} · native Fallbacks={len(native_devices)} · "
-            f"NZXT={len(nzxt_channels)} · dauerhafte gemeinsame SDK-Frames mit 25-Hz-Ziel"
+            f"OpenRGB-Design „{effect}“ · native OpenRGB={len(native_devices)} · "
+            f"OHC-Stream-Fallback={len(direct_devices)} · NZXT={len(nzxt_channels)}"
         )
         self.log_message(
-            f"RGB-STUDIO: OHC-Design {effect} gestartet · Direct={len(direct_devices)} · "
-            f"native Fallbacks={len(native_devices)} · NZXT={len(nzxt_channels)} · "
+            f"RGB-STUDIO: OpenRGB-Design {effect} gestartet · native OpenRGB={len(native_devices)} · "
+            f"OHC-Stream-Fallback={len(direct_devices)} · NZXT={len(nzxt_channels)} · "
             f"Tempo={config.speed}% · NZXT-Stufe={self.nzxt_speed_for_percent(config.speed)}"
         )
         self.update_openrgb_control_state()
-
     def send_openrgb_effect_frame(self) -> None:
         if not self.openrgb_effect_active:
             return
@@ -20072,6 +20012,37 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                 self.stop_openrgb_effect("Animation angehalten · keine steuerbaren Geräte mehr vorhanden")
             return
 
+        if self.openrgb_native_plugin_active:
+            elapsed = self.update_rgb_gpu_visual_elapsed(wall_elapsed)
+            self.rgb_last_sent_elapsed = elapsed
+            devices: list[dict[str, object]] = []
+            try:
+                from modules.rgb_studio.v1_15.render_plan import render
+                for stable_id, config, device in assignments:
+                    led_count, zone_sizes = self.openrgb_device_write_shape(device)
+                    payload = self.rgb_worker_render_payload(stable_id, device, config, led_count, zone_sizes, elapsed)
+                    colors = render(payload["render_plan"], led_count, list(zone_sizes) if zone_sizes is not None else None)
+                    devices.append({
+                        "device": device.index,
+                        "name": device.name,
+                        "mode": "Direct",
+                        "colors": colors,
+                    })
+            except (OpenRGBError, ValueError, KeyError, TypeError) as exc:
+                self.openrgb_native_plugin_active = False
+                self.log_message(f"RGB-STUDIO: nativer Plugin-Frame fehlgeschlagen · SDK-Fallback · {exc}")
+            else:
+                result = self.native_openrgb_plugin.frame(self.openrgb_worker_frame_sequence + 1, devices)
+                if result.ok:
+                    self.openrgb_worker_frame_sequence += 1
+                    self.openrgb_worker_coalesced_frames = 0
+                    from modules.rgb_studio.v1_15.native_plugin import record_native_status
+                    record_native_status(self, result, assignments, now)
+                    self.update_openrgb_performance_status()
+                    return
+                self.openrgb_native_plugin_active = False
+                self.log_message(f"RGB-STUDIO: natives Plugin nicht erreichbar · SDK-Fallback · {result.detail}")
+
         if self.openrgb_effect_process.state() == QProcess.ProcessState.NotRunning:
             self.start_openrgb_worker()
             self.openrgb_worker_frame_pending = True
@@ -20114,8 +20085,6 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             self.openrgb_worker_frame_snapshots[
                 self.openrgb_worker_frame_sequence
             ] = self.rgb_pending_design_snapshot
-            # Only one frame is in flight, but keep the map defensively
-            # bounded if a malformed worker never acknowledges an old ID.
             for old_id in sorted(self.openrgb_worker_frame_snapshots)[:-4]:
                 self.openrgb_worker_frame_snapshots.pop(old_id, None)
         payload = (json.dumps(request, ensure_ascii=True, separators=(",", ":")) + "\n").encode("utf-8")
@@ -20344,6 +20313,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             if self.openrgb_stable_ids.get(device.index)
         }
         parts: list[str] = []
+        rates: list[float] = []
         for stable_id in sorted(self.openrgb_effect_assignments):
             metrics = self.openrgb_worker_metrics.get(stable_id, {})
             times = metrics.get("success_times", [])
@@ -20361,14 +20331,24 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             )
             if last_success:
                 parts.append(f"{title}: {rate:.1f} Hz · zuletzt vor {age:.1f} s")
+                if rate > 0:
+                    rates.append(rate)
             else:
                 parts.append(f"{title}: Vorbereitung läuft")
         batch = f" · Batch {batch_duration_ms:.1f} ms" if batch_duration_ms is not None else ""
         skipped = f" · zusammengefasst {self.openrgb_worker_coalesced_frames}" if self.openrgb_worker_coalesced_frames else ""
         detail = " | ".join(parts[:8]) or "noch keine Direct-Geräte aktiv"
         self.openrgb_performance_label.setText(
-            f"Mehrgeräte-SDK 25-Hz-Ziel{batch}{skipped} · {detail} · physische Ausgabe nicht rücklesbar"
+            f"Mehrgeräte-SDK {RGB_TARGET_FPS}-Hz-Anforderung{batch}{skipped} · {detail} · physische Ausgabe nicht rücklesbar"
         )
+        if batch_duration_ms is not None and rates and now >= self.openrgb_performance_log_at:
+            self.openrgb_performance_log_at = now + 10.0
+            minimum_rate = min(rates)
+            pacing = "stabil" if minimum_rate >= RGB_TARGET_FPS * 0.9 else "Commit unter 60 Hz; Effektgeschwindigkeit bleibt unverändert"
+            self.log_message(
+                f"RGB-STUDIO: reale SDK-Taktrate · Minimum={minimum_rate:.1f} Hz · "
+                f"Batch={batch_duration_ms:.1f} ms · zusammengefasst={self.openrgb_worker_coalesced_frames} · {pacing}"
+            )
 
     def on_openrgb_worker_finished(self, exit_code: int, _status) -> None:
         self.openrgb_worker_draining_exit = True
@@ -20421,6 +20401,9 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.cancel_ene_dram_post_start_retries()
         was_active = self.openrgb_effect_active
         self.openrgb_effect_active = False
+        if getattr(self, "openrgb_native_plugin_active", False):
+            self.native_openrgb_plugin.stop()
+            self.openrgb_native_plugin_active = False
         if hasattr(self, "sdk_supervisor"):
             self.sdk_supervisor.stop()
         self.openrgb_effect_assignments.clear()

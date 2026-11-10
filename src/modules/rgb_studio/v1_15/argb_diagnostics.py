@@ -48,7 +48,7 @@ def log_effect_plan(host, source, config):
         logger(f"ARGB-DIAG: op=effect-plan · controller={source.name[:128]} · zone={name[:96]}"
                f" · declared={values['units']}x{values['leds_per_unit']}={count} · effect={config.effect_id}"
                f" · area_samples={sampling_plan(count) if count else 0} · motion_scale={motion_scale(count) if count else 0:.3f}"
-               f"{topology} · target_hz=25 · measured_hz=transfer-status · physical_readback=unavailable")
+               f"{topology} · target_hz=60 · measured_hz=transfer-status · physical_readback=unavailable")
     from .gpu_routing import gpu_zone_overrides
     from .gpu_support_sync import pair
     from .gpu_strip_sampling import strip_plan, strip_clock, TEMPORAL_SAMPLES
@@ -77,4 +77,4 @@ def log_effect_plan(host, source, config):
                f" · renderer=gpu-open-strip · count={count} · clock_count={reference} · effect={effect.effect_id}"
                f" · cycles_per_s={clock['rate'] / clock['cycle']:.4f} · leading_fraction={plan['leading']:.3f}"
                f" · tail_fraction={plan['tail']:.3f} · time_samples={TEMPORAL_SAMPLES} · blend=cubic · open_ends=1"
-               f" · support_sync={int(name in sync_counts)} · target_hz=25 · physical_readback=unavailable")
+               f" · support_sync={int(name in sync_counts)} · target_hz=60 · physical_readback=unavailable")

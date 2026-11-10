@@ -1,0 +1,8 @@
+{
+  "Id": "org.frelidon.openhardwarecontrol.native",
+  "Name": "Open Hardware Control Native Engine",
+  "VersionStr": "0.2.0",
+  "Commit": "local",
+  "Url": "https://github.com/Frelidon/open-hardware-control",
+  "OpenRGBPluginAPIVersion": 5
+}

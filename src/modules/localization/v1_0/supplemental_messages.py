@@ -5,6 +5,8 @@ from .next_version_messages import NEXT_VERSION_MESSAGES
 from .snapshot_messages import SNAPSHOT_MESSAGES
 from .program_messages import PROGRAM_MESSAGES
 from .lifecycle_messages import LIFECYCLE_MESSAGES
+from .shutdown_lighting_messages import SHUTDOWN_LIGHTING_MESSAGES
+from .rgb_speed_messages import RGB_SPEED_MESSAGES
 
 SUPPLEMENTAL_MESSAGES = {
     code: {
@@ -12,6 +14,8 @@ SUPPLEMENTAL_MESSAGES = {
         **NEXT_VERSION_MESSAGES[code],
         **PROGRAM_MESSAGES[code],
         **LIFECYCLE_MESSAGES[code],
+        **SHUTDOWN_LIGHTING_MESSAGES[code],
+        **RGB_SPEED_MESSAGES[code],
     }
     for code in SNAPSHOT_MESSAGES
 }

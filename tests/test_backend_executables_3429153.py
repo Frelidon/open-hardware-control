@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from modules.backend_updates.v1_0 import executables, policy
+import openrgb_integration
 
 
 def test_non_ubuntu_keeps_original_commands_without_preferred_path_probe():
@@ -23,10 +24,26 @@ def test_non_ubuntu_keeps_original_commands_without_preferred_path_probe():
 def test_ubuntu_preference_is_fixed_and_missing_or_untrusted_falls_back(monkeypatch):
     monkeypatch.setenv("OHC_OPENRGB", "/tmp/untrusted/openrgb")
     with patch.object(executables, "_trusted_file", return_value=True):
-        assert executables.resolve_openrgb_executable(ubuntu_runtime=True) == "/usr/local/lib/open-hardware-control-backends/openrgb-1.0/openrgb"
+        assert executables.resolve_openrgb_executable(ubuntu_runtime=True) == "/usr/local/lib/open-hardware-control-backends/openrgb-1.1/usr/bin/OpenRGB"
         assert executables.resolve_liquidctl_executable(ubuntu_runtime=True) == "/usr/local/lib/open-hardware-control-backends/liquidctl-1.16.0/bin/liquidctl"
     with patch.object(executables, "_trusted_file", return_value=False):
         assert executables.resolve_openrgb_executable(ubuntu_runtime=True) == "openrgb"
+
+
+def test_managed_system_qt_backend_gets_only_the_fixed_offscreen_directory(tmp_path):
+    executable = tmp_path / "OpenRGB"
+    executable.write_bytes(b"binary")
+    platform = tmp_path / "qt6" / "platforms"
+    platform.mkdir(parents=True)
+    (platform / "libqoffscreen.so").write_bytes(b"plugin")
+    with (
+        patch.object(openrgb_integration, "resolve_openrgb_executable", return_value=str(executable)),
+        patch.object(openrgb_integration, "SYSTEM_QT6_PLATFORM_DIRECTORIES", (platform,)),
+    ):
+        assert openrgb_integration.managed_openrgb_platform_directory(executable) == str(platform)
+        foreign = tmp_path / "foreign-openrgb"
+        foreign.write_bytes(b"binary")
+        assert openrgb_integration.managed_openrgb_platform_directory(foreign) == ""
 
 
 def test_trust_rejects_symlinks_user_owned_or_writable_parents():
@@ -62,7 +79,7 @@ def test_version_requires_trusted_matching_manifest_without_guessing(tmp_path):
 
 def test_audit_prefers_verified_pinned_metadata_to_stale_system_package():
     with (
-        patch.object(policy, "resolve_openrgb_executable", return_value="/usr/local/lib/open-hardware-control-backends/openrgb-1.0/openrgb"),
+        patch.object(policy, "resolve_openrgb_executable", return_value="/usr/local/lib/open-hardware-control-backends/openrgb-1.1/usr/bin/OpenRGB"),
         patch.object(policy, "preferred_backend_version", return_value="1.0"),
         patch.object(policy, "_package_version") as package,
     ):

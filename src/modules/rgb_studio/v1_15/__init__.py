@@ -7,6 +7,8 @@ _EXPORTS = {
     "build_category_selector": "design_gallery",
     "GpuLightingMixin": "gpu_lighting",
     "gpu_mode_for_effect": "gpu_routing",
+    "choose_control_path": "openrgb_backend",
+    "split_control_paths": "openrgb_backend",
     "normalize_gpu_routes": "gpu_routing",
     "ENE_DRAM_POST_START_RETRY_DELAYS_MS": "ene_start_recovery",
     "EneDramStartRecoveryMixin": "ene_start_recovery",
@@ -14,6 +16,8 @@ _EXPORTS = {
     "build_native_hardware_channel_panel": "studio_panels",
     "startup_profile_caption": "startup_status",
     "startup_status_summary": "startup_status",
+    "ShutdownLightingMixin": "shutdown_lighting",
+    "DesignTuningMixin": "design_tuning",
 }
 __all__ = tuple(_EXPORTS)
 

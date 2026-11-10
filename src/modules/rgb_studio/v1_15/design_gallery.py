@@ -25,7 +25,7 @@ def build_category_selector(translator, callback):
     layout = QGridLayout(host)
     layout.setContentsMargins(0, 0, 0, 0)
     buttons = {}
-    categories = ("Alle", "Ruhig", "Spektrum", "Bewegung", "Energie", "Impuls", "Räumlich", "OHC Originale")
+    categories = ("Alle", "Ruhig", "Spektrum", "Bewegung", "Energie", "Impuls", "Räumlich", "OHC Originale", "OpenRGB Originale")
     for index, category in enumerate(categories):
         button = QPushButton(translator(category))
         button.setCheckable(True)

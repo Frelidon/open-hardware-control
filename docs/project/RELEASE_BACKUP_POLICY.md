@@ -32,6 +32,19 @@ Die Bereinigung darf ausschließlich Ordner mit dem exakten Schema `Version <Ver
 
 Die Sicherung ersetzt weder Git-Historie noch Tags und ist keine Freigabe oder Voraussetzung für einen GitHub-Push. Der frühere Google-Drive-/Cloud-Backup-Ablauf bleibt entfernt.
 
+## Zusätzlicher Funktionsstand · 10.11.26
+
+Auf ausdrücklichen Eigentümerwunsch wird `.169` zusätzlich in einem eigenen,
+nicht von der Zwei-Versionen-Rotation erfassten lokalen Ordner gesichert.
+Der öffentliche Release-Satz enthält keine persönlichen Daten. Die private
+Funktionssicherung enthält außerdem den vollständigen Arbeitsbaum mit Git,
+die installierte Anwendung, den exakt funktionierenden OpenRGB-Binärstand,
+Plugin, zugehörigen Bauquellen und persönlichen OHC-/RGB-Einstellungen.
+Private Archive werden restriktiv lokal gespeichert und niemals hochgeladen.
+SHA256-Prüfungen und Archivprüfung sichern die Kopien ab. Zwei Ordner auf
+derselben Festplatte ersetzen keine räumlich getrennte Sicherung; GitHub
+ergänzt deshalb den öffentlichen Quell-/Release-Stand, nicht die privaten Daten.
+
 ## Manuelle Wiederholung
 
 Falls die Pakete bereits in `dist/` liegen, kann die Sicherung wiederholt werden:

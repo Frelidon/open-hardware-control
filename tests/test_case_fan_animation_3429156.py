@@ -25,6 +25,7 @@ from modules.rgb_studio.v1_15.led_topology import render_physical_frame
 from modules.rgb_studio.v1_15.led_topology_store import case_rectangles
 from modules.rgb_studio.v1_15.render_plan import build, render
 from modules.rgb_studio.v1_15.slot_routes import KEY
+from modules.rgb_studio.v1_15.timing import RGB_TARGET_INTERVAL_MS
 
 APP = QApplication.instance() or QApplication([])
 SOURCE = "openrgb:1111111111111111"
@@ -212,7 +213,7 @@ def test_real_qt_timer_shows_shared_phase_and_stops_when_ancestor_hidden(host, v
     parent.show()
     APP.processEvents()
     assert diagram.isVisible() and diagram.animation_timer.isActive()
-    assert diagram.animation_timer.interval() == 40
+    assert diagram.animation_timer.interval() == RGB_TARGET_INTERVAL_MS
     first_frame = diagram.slot_animation_colors(slot)
     first_image = diagram.grab().toImage()
     paint_count = diagram.paint_count
@@ -239,7 +240,7 @@ def test_real_qt_timer_shows_shared_phase_and_stops_when_ancestor_hidden(host, v
     assert not diagram.animation_timer.isActive()
     parent.show()
     APP.processEvents()
-    assert diagram.animation_timer.isActive() and diagram.animation_timer.interval() == 40
+    assert diagram.animation_timer.isActive() and diagram.animation_timer.interval() == RGB_TARGET_INTERVAL_MS
     assert diagram.slot_animation_colors(slot) != second_frame
     host.openrgb_effect_active = False
     diagram.tick_led_animation()
@@ -260,7 +261,7 @@ def test_visible_preview_starts_fast_when_effect_becomes_active(host):
     assert diagram.animation_timer.interval() == 500
     host.openrgb_effect_active = True
     diagram.set_led_animations(specs, host)
-    assert diagram.animation_timer.interval() == 40
+    assert diagram.animation_timer.interval() == RGB_TARGET_INTERVAL_MS
     diagram.close()
 
 

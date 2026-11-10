@@ -5,7 +5,9 @@ import socket
 import struct
 import sys
 import threading
+import time
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -28,6 +30,7 @@ from openrgb_sdk import (
     normalize_colors,
     parse_controller_data,
     process_worker_frame,
+    process_worker_frame_parallel,
     receive_packet,
     validate_loopback,
     write_device_colors,
@@ -70,6 +73,36 @@ def test_bad_render_plan_is_contained_to_one_device_and_worker_frame_continues()
     assert calls == [(2, 2, ["112233", "445566"], {
         "zone_sizes": None, "force_prepare": False,
     })]
+
+
+def test_parallel_worker_uses_one_session_per_controller_without_serial_delay():
+    sessions = {}
+
+    class Session:
+        def __init__(self, device):
+            self.device = device
+
+        def write_frame(self, device, count, colors, **_kwargs):
+            assert device == self.device
+            time.sleep(0.08)
+            return {"ok": True, "device": device, "led_count": count,
+                    "prepared": False, "write_path": "device", "protocol": 6}
+
+    def session_for(device):
+        return sessions.setdefault(device, Session(device))
+
+    request = {"id": 9, "devices": [
+        {"key": f"device-{device}", "device": device, "led_count": 1, "colors": ["112233"]}
+        for device in (1, 2, 3)
+    ]}
+    started = time.monotonic()
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        response = process_worker_frame_parallel(session_for, executor, request)
+    elapsed = time.monotonic() - started
+    assert response["ok"] is True
+    assert [item["device"] for item in response["devices"]] == [1, 2, 3]
+    assert set(sessions) == {1, 2, 3}
+    assert elapsed < 0.18
 
 
 def sdk_string(value: str) -> bytes:

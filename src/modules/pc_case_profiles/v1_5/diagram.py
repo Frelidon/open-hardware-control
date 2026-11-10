@@ -13,6 +13,7 @@ from PySide6.QtWidgets import QWidget
 
 from rgb_devices import RGBLayoutSlot, infer_layout_position, layout_visual_kind, reorder_layout_device_ids
 from modules.rgb_studio.v1_15.led_topology import path_points
+from modules.rgb_studio.v1_15.timing import RGB_TARGET_INTERVAL_MS
 
 from .case_renderer import draw_chassis, draw_fan, draw_component, draw_gpu_component, draw_slot_label, case_aspect_ratio, slot_label_placements
 from .case_geometry import fitted_slot_rect, fan_radius
@@ -53,6 +54,7 @@ class PCLayoutDiagram(ResizeInteraction, QWidget):
         self.led_animations = {}
         self.animation_host = None
         self.animation_timer = QTimer(self)
+        self.animation_timer.setTimerType(Qt.TimerType.PreciseTimer)
         self.animation_timer.setInterval(500)
         self.animation_timer.timeout.connect(self.tick_led_animation)
         self.case_title = "Thermaltake · Retro 360 TG"
@@ -149,7 +151,7 @@ class PCLayoutDiagram(ResizeInteraction, QWidget):
 
     def animation_interval(self):
         active = bool(self.led_animations and getattr(self.animation_host, "openrgb_effect_active", False))
-        return 40 if active else 500
+        return RGB_TARGET_INTERVAL_MS if active else 500
 
     def tick_led_animation(self):
         if not self.isVisible():
@@ -159,7 +161,7 @@ class PCLayoutDiagram(ResizeInteraction, QWidget):
         changed = self.animation_timer.interval() != interval
         if changed:
             self.animation_timer.setInterval(interval)
-        if interval == 40 or changed:
+        if interval == RGB_TARGET_INTERVAL_MS or changed:
             self.update()
 
     def showEvent(self, event):
@@ -324,7 +326,7 @@ class PCLayoutDiagram(ResizeInteraction, QWidget):
     def label_rectangles(self):
         return slot_label_placements(QRectF(self.rect()), self.canvas_area(),
                                      [self.slot_rect(slot) for slot in self.slots],
-                                     height=46, side_first=True)
+                                     height=61, side_first=True)
 
     def label_at(self, point):
         return next((slot for slot, badge in zip(self.slots, self.label_rectangles())
@@ -488,7 +490,7 @@ class PCLayoutDiagram(ResizeInteraction, QWidget):
             connection = " · ".join(value for value in (pwm, slot.connection) if value)
             metadata = self.topology_labels.get(slot.slot_id or slot.position, ("LEDs: —", f"PWM: {pwm or '—'}", ""))
             draw_slot_label(painter, rect, slot.name, connection,
-                            (slot.slot_id or slot.position) == self.selected_slot_id, badge=badge, metadata=metadata[:2])
+                            (slot.slot_id or slot.position) == self.selected_slot_id, badge=badge, metadata=metadata[:3])
         self.draw_resize_handle(painter)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:  # noqa: N802 - Qt API

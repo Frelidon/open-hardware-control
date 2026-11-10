@@ -11,11 +11,12 @@ use the device packet; the explicitly routed GPU controller can instead use
 validated zone packets. This avoids the OpenRGB CLI ``ApplyOptions`` crash
 path and lets OHC verify the server-side initial color state.
 
-The optional JSON-lines worker keeps one SDK connection open while an OHC
-animation is running. It prepares every selected controller once and then
-sends one complete frame per Direct device in each request. No hardware
-driver is implemented here; OpenRGB remains the controller owner and the
-worker remains restricted to the configured loopback endpoint.
+The optional JSON-lines worker keeps one SDK connection per selected controller
+while an OHC animation is running. Distinct controllers are written concurrently
+inside one bounded worker process; every controller still has exactly one
+ordered connection and complete frame. No hardware driver is implemented here;
+OpenRGB remains the controller owner and all connections stay on the configured
+loopback endpoint.
 """
 
 from __future__ import annotations
@@ -28,6 +29,7 @@ import select
 import struct
 import sys
 import time
+from concurrent.futures import Executor, ThreadPoolExecutor
 from dataclasses import dataclass, replace
 from typing import Iterable, TextIO
 
@@ -838,65 +840,63 @@ class OpenRGBPersistentSession:
         }
 
 
-def process_worker_frame(
-    session: OpenRGBPersistentSession,
-    request: dict[str, object],
-) -> dict[str, object]:
-    """Validate and execute one latest-frame-wins worker request."""
-
+def _worker_request_devices(request: dict[str, object]) -> tuple[int, list[dict[str, object]]]:
     request_id = max(0, int(request.get("id", 0)))
     raw_devices = request.get("devices")
     if not isinstance(raw_devices, list) or not 1 <= len(raw_devices) <= MAX_WORKER_DEVICES:
         raise ValueError("Ein Worker-Frame benötigt 1–64 Geräte.")
     seen: set[int] = set()
-    results: list[dict[str, object]] = []
-    started = time.monotonic()
     for raw_device in raw_devices:
         if not isinstance(raw_device, dict):
             raise ValueError("Ungültiger Geräteauftrag im Worker-Frame.")
-        key = str(raw_device.get("key", ""))[:128]
         device_id = int(raw_device.get("device", -1))
         if device_id in seen:
             raise ValueError("Ein OpenRGB-Gerät darf pro Frame nur einmal vorkommen.")
         seen.add(device_id)
-        device_started = time.monotonic()
-        try:
-            colors = raw_device.get("colors")
-            render_ms = 0.0
-            if "render_plan" in raw_device:
-                from modules.rgb_studio.v1_15.render_plan import render
-                render_started = time.monotonic()
-                colors = render(raw_device["render_plan"], raw_device.get("led_count"), raw_device.get("zone_sizes"))
-                render_ms = (time.monotonic() - render_started) * 1000
-            if not isinstance(colors, list):
-                raise ValueError("Die Worker-Farben müssen als Liste übertragen werden.")
-            zone_sizes_value = raw_device.get("zone_sizes")
-            if zone_sizes_value is not None and not isinstance(zone_sizes_value, list):
-                raise ValueError("Die Worker-Zonengrößen müssen als Liste übertragen werden.")
-            result = session.write_frame(
-                device_id,
-                int(raw_device.get("led_count", 0)),
-                [str(color) for color in colors],
-                zone_sizes=[int(value) for value in zone_sizes_value] if zone_sizes_value is not None else None,
-                force_prepare=bool(raw_device.get("prepare", False)),
-            )
-            result["key"] = key
-            result["render_ms"] = round(render_ms, 3)
-            result["duration_ms"] = round((time.monotonic() - device_started) * 1000.0, 3)
-            results.append(result)
-        except Exception as exc:  # Worker-process containment boundary.
-            results.append({
-                "ok": False,
-                "key": key,
-                "device": device_id,
-                "error": str(exc)[:800],
-                "duration_ms": round((time.monotonic() - device_started) * 1000.0, 3),
-            })
-            # A short/invalid socket transaction leaves packet boundaries
-            # uncertain. Reconnect before the next device instead of risking
-            # a write to the wrong controller.
-            if isinstance(exc, (OSError, OpenRGBSDKError)) or "Verbindung" in str(exc) or "Antwort" in str(exc):
-                session.close()
+    return request_id, raw_devices
+
+
+def _process_worker_device(session: OpenRGBPersistentSession, raw_device: dict[str, object]) -> dict[str, object]:
+    key = str(raw_device.get("key", ""))[:128]
+    device_id = int(raw_device.get("device", -1))
+    device_started = time.monotonic()
+    try:
+        colors = raw_device.get("colors")
+        render_ms = 0.0
+        if "render_plan" in raw_device:
+            from modules.rgb_studio.v1_15.render_plan import render
+            render_started = time.monotonic()
+            colors = render(raw_device["render_plan"], raw_device.get("led_count"), raw_device.get("zone_sizes"))
+            render_ms = (time.monotonic() - render_started) * 1000
+        if not isinstance(colors, list):
+            raise ValueError("Die Worker-Farben müssen als Liste übertragen werden.")
+        zone_sizes_value = raw_device.get("zone_sizes")
+        if zone_sizes_value is not None and not isinstance(zone_sizes_value, list):
+            raise ValueError("Die Worker-Zonengrößen müssen als Liste übertragen werden.")
+        result = session.write_frame(
+            device_id,
+            int(raw_device.get("led_count", 0)),
+            [str(color) for color in colors],
+            zone_sizes=[int(value) for value in zone_sizes_value] if zone_sizes_value is not None else None,
+            force_prepare=bool(raw_device.get("prepare", False)),
+        )
+        result["key"] = key
+        result["render_ms"] = round(render_ms, 3)
+        result["duration_ms"] = round((time.monotonic() - device_started) * 1000.0, 3)
+        return result
+    except Exception as exc:  # Worker-process containment boundary.
+        if isinstance(exc, (OSError, OpenRGBSDKError)) or "Verbindung" in str(exc) or "Antwort" in str(exc):
+            session.close()
+        return {
+            "ok": False,
+            "key": key,
+            "device": device_id,
+            "error": str(exc)[:800],
+            "duration_ms": round((time.monotonic() - device_started) * 1000.0, 3),
+        }
+
+
+def _worker_frame_response(request_id: int, results: list[dict[str, object]], started: float) -> dict[str, object]:
     return {
         "type": "frame",
         "id": request_id,
@@ -904,6 +904,32 @@ def process_worker_frame(
         "duration_ms": round((time.monotonic() - started) * 1000.0, 3),
         "devices": results,
     }
+
+
+def process_worker_frame(
+    session: OpenRGBPersistentSession,
+    request: dict[str, object],
+) -> dict[str, object]:
+    """Validate and execute one worker request on one compatibility session."""
+
+    request_id, raw_devices = _worker_request_devices(request)
+    started = time.monotonic()
+    results = [_process_worker_device(session, raw_device) for raw_device in raw_devices]
+    return _worker_frame_response(request_id, results, started)
+
+
+def process_worker_frame_parallel(session_for, executor: Executor,
+                                  request: dict[str, object]) -> dict[str, object]:
+    """Write distinct controllers concurrently while preserving result order."""
+
+    request_id, raw_devices = _worker_request_devices(request)
+    started = time.monotonic()
+    futures = [
+        executor.submit(_process_worker_device, session_for(int(raw["device"])), raw)
+        for raw in raw_devices
+    ]
+    results = [future.result() for future in futures]
+    return _worker_frame_response(request_id, results, started)
 
 
 def run_worker(
@@ -916,7 +942,16 @@ def run_worker(
 ) -> int:
     """Run the bounded JSON-lines worker until stdin closes or stop arrives."""
 
-    session = OpenRGBPersistentSession(address, port, max_protocol=max_protocol)
+    sessions: dict[int, OpenRGBPersistentSession] = {}
+    executor = ThreadPoolExecutor(max_workers=8, thread_name_prefix="ohc-openrgb")
+
+    def session_for(device_id: int) -> OpenRGBPersistentSession:
+        session = sessions.get(device_id)
+        if session is None:
+            session = OpenRGBPersistentSession(address, port, max_protocol=max_protocol)
+            sessions[device_id] = session
+        return session
+
     print(json.dumps({"type": "ready", "protocol_max": int(max_protocol)}), file=output_stream, flush=True)
     try:
         for raw_line in iter(lambda: input_stream.readline(MAX_WORKER_REQUEST_SIZE + 1), ""):
@@ -935,12 +970,14 @@ def run_worker(
                         return 0
                     if operation != "frame":
                         raise ValueError("Unbekannter Worker-Auftrag.")
-                    response = process_worker_frame(session, request)
+                    response = process_worker_frame_parallel(session_for, executor, request)
                 except (TypeError, ValueError, json.JSONDecodeError, OpenRGBSDKError) as exc:
                     response = {"type": "error", "id": 0, "error": str(exc)[:800]}
             print(json.dumps(response, ensure_ascii=False), file=output_stream, flush=True)
     finally:
-        session.close()
+        executor.shutdown(wait=True, cancel_futures=True)
+        for session in sessions.values():
+            session.close()
     return 0
 
 

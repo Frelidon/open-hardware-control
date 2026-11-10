@@ -43,13 +43,13 @@ def save(host, value):
     return result
 
 
-def paced_elapsed(previous, wall_delta, *, maximum_step=.06):
-    """Advance at wall speed on healthy transfers, without skipping many LEDs on a stall."""
+def paced_elapsed(previous, wall_delta):
+    """Advance by real monotonic time without dilating slow hardware batches."""
     if not all(type(v) in (int, float) and math.isfinite(v) for v in (previous, wall_delta)):
         raise ValueError("GPU_MOTION_CLOCK")
-    if previous < 0 or wall_delta < 0 or not 0 < maximum_step <= .2:
+    if previous < 0 or wall_delta < 0:
         raise ValueError("GPU_MOTION_CLOCK")
-    return previous + min(wall_delta, maximum_step)
+    return previous + wall_delta
 
 
 def configured_count(host, controller, zone):

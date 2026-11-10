@@ -20,6 +20,15 @@ Bundled Levita backgrounds, animations, data layouts and display effects are
 project-owned OHC assets. Manufacturer/TRCC catalogs, imported user files,
 stock-library clips and third-party design components are not redistributed.
 
+The independently implemented OHC Native Engine source is in `src/native/openrgb/`.
+It builds against the separately obtained OpenRGB plugin interface. The small
+MSI driver modification in `tools/openrgb/msi-761-dirty-zones.patch` is a patch
+to OpenRGB 1.1 (commit `8e16de27858cf2be6af54a33ce003df74cb9fd3e`) and retains
+the upstream GPL-2.0-or-later licence for those lines. No OpenRGB binary or full
+upstream checkout is bundled in OHC's platform-neutral packages. The JSON C++
+development dependency is nlohmann/json (MIT), obtained from the distribution;
+Qt and OpenRGB must be ABI-compatible when building the optional plugin.
+
 NZXT, Kraken, Corsair, OpenRGB, Wallpaper Engine, Steam, Windows 8, Windows 8.1, Windows 11, macOS and other product names are used only to describe compatibility or a general layout style. All trademarks belong to their respective owners. The four desktop wallpapers, OHC icon/cursor variants and OHC RGB effects are original project src/assets/code; no Microsoft, Apple, Valve, Wallpaper Engine, CaptSilver or OpenRGB media/source is included. Open Hardware Control by Frelidon is independent and is not affiliated with or endorsed by NZXT, Corsair, OpenLinkHub, OpenRGB, Valve, Wallpaper Engine, CaptSilver, Microsoft, Apple, OpenAI, KDE, The Qt Company, the Python Software Foundation, Pillow or liquidctl.
 
 ## NZXT-ESC preset compatibility

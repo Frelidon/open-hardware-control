@@ -2,6 +2,8 @@
 """Read-only LED frames for GPU, support and RAM in the case schematic."""
 from __future__ import annotations
 
+import time
+
 from rgb_effects import render_hex_frame
 from modules.rgb_studio.v1_15.gpu_motion import configured_count, load
 from modules.rgb_studio.v1_15.gpu_strip_sampling import render_gpu_strip_frame
@@ -13,6 +15,14 @@ from modules.gpu_profiles.v1_0.visual_catalog import resolve_gpu_visual
 from .topology_labels import display_header_targets
 
 FAN_ROLES = {"top", "front", "side", "bottom", "rear"}
+
+
+def _preview_elapsed(host):
+    """Return the independent UI clock, with a legacy-fixture fallback."""
+    started = float(getattr(host, "openrgb_effect_started", 0.0) or 0.0)
+    if started > 0.0:
+        return max(0.0, time.monotonic() - started), True
+    return max(0.0, float(getattr(host, "rgb_last_sent_elapsed", 0.0) or 0.0)), False
 
 
 def _gpu_identity(host, slot):
@@ -105,7 +115,15 @@ def frame(host, spec):
     if not getattr(host, "openrgb_effect_active", False):
         return ()
     assignments = getattr(host, "openrgb_effect_assignments", {})
-    elapsed = max(0., float(getattr(host, "rgb_last_sent_elapsed", 0.)))
+    # The case view is a presentation clock, not hardware readback.  Tying it
+    # to the last completed USB/I2C write makes the local preview stutter when
+    # a controller is slow or the SDK worker coalesces frames.  Use the same
+    # monotonic start time as the renderer so every 16 ms paint advances even
+    # while the hardware path applies only the newest queued frame.
+    elapsed, independent_clock = _preview_elapsed(host)
+    gpu_elapsed = elapsed if independent_clock else max(
+        0.0, float(getattr(host, "rgb_gpu_visual_elapsed", elapsed) or 0.0)
+    )
     gpu_id = spec.get("gpu_id")
     if spec["role"] == "gpu" and gpu_id:
         if gpu_id not in getattr(host, "rgb_selected_devices", set()):
@@ -120,7 +138,7 @@ def frame(host, spec):
         # fluid even when OpenRGB exposes the board as one logical LED.
         return tuple(render_gpu_strip_frame(
             config, int(spec.get("preview_count", 30)),
-            max(0., float(getattr(host, "rgb_gpu_visual_elapsed", elapsed))),
+            gpu_elapsed,
             path=spec.get("path", (None,))[0] if spec.get("path") else None,
             sync_count=spec.get("sync_count"),
             tuning=getattr(host, "rgb_gpu_motion_preview", None) or load(host),
@@ -156,7 +174,7 @@ def frame(host, spec):
             horizontal=bool(spec.get("horizontal", True)),
         ))
     return tuple(render_gpu_strip_frame(
-        config, count, max(0., float(getattr(host, "rgb_gpu_visual_elapsed", elapsed))),
+        config, count, gpu_elapsed,
         path=path[0] if path else None, sync_count=spec.get("sync_count"),
         tuning=getattr(host, "rgb_gpu_motion_preview", None) or load(host),
         role="support" if spec["role"] == "gpu-support" else "gpu",

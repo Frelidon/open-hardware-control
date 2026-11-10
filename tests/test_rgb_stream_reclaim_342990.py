@@ -62,6 +62,7 @@ def test_actual_frames_continue_gpu_and_support_at_the_same_elapsed_clock():
                                                   write=lambda data: payloads.append(json.loads(data)) or len(data))
     state.openrgb_device_conflict = lambda _device: False
     state.openrgb_worker_ready = True
+    state.openrgb_native_plugin_active = False
     state.openrgb_worker_frame_inflight = False
     state.rgb_pending_design_snapshot = None
     state.openrgb_device_write_shape = lambda _device: (30, None)

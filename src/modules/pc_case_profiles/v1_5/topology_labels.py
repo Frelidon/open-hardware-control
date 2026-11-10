@@ -37,15 +37,19 @@ def slot_topology_label(host, slot):
         config = next((v for name, v in configurations.get(source_id, {}).items()
                        if name.casefold() == zone.casefold()), None)
         count = str(config["units"] * config["leds_per_unit"]) if config else "—"
-        counts.append((zone, count))
-    values = " / ".join(count for _zone, count in counts) or "—"
+        detail = (
+            f"{zone}: {config['units']} Lüfter × {config['leds_per_unit']} LEDs = {count} LEDs"
+            if config else f"{zone}: {count} LEDs"
+        )
+        counts.append((zone, count, detail))
+    values = " / ".join(count for _zone, count, _detail in counts) or "—"
     # Multiple lengths refer to controller zones, never a guessed block total.
     led_line = f"LEDs{'/ARGB' if len(counts) > 1 else ''}: {values}"
     channel_by_id = {c.stable_id: c for c in host.chassis_mainboard_channels()}
     connectors = [channel_caption(host, channel_by_id[key]) for key, value in host.mainboard_layout_assignments.items()
                   if value == (slot.slot_id or slot.position) and key in channel_by_id]
     pwm_line = "PWM: " + (" / ".join(connectors) or "—")
-    details = "\n".join(f"{zone}: {count} LEDs" for zone, count in counts)
+    details = "\n".join(detail for _zone, _count, detail in counts)
     return led_line, pwm_line, details
 
 
