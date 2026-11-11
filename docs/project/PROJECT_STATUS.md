@@ -1998,3 +1998,13 @@ Schleifennaht dokumentiert. Bestehende Medien-Prüfsummen unverändert.
 Dunkle, helle und schmale Qt-Ansicht geprüft. Vorhandene Fedora-/Ubuntu-Fixtures
 bestanden; kein realer Fedora- oder optischer LCD-Livetest wird behauptet.
 Paketbau, Sicherungsverifikation und lokaler Versionswechsel folgen.
+
+Lokaler Abschluss .178: Alle sechs Artefakte, beide .177/.178-INTERN-Sicherungen
+und 433 identische Python-Quellen in ZIP/DEB/RPM geprüft. Alle neuen Videos und
+Poster sind in den drei Laufzeitpaketen bytegleich. Private .177-Installation
+sowie endgültige Einstellungen/Profile/beide Plugins vor Start gesichert.
+Benutzer- und Systemkopie .178 installiert; DPKG 3.4.29.178~intern2 bestätigt.
+Profile und beide Plugins erhalten, gestartete Benutzerkopie ohne Python-Traceback.
+Der Benutzer meldet anschließend einen CPU-Sensorfehler beim Profilstart;
+dieser steht bereits im Log und wird als gesonderte .179 untersucht.
+Keine GitHub-Veröffentlichung.
