@@ -20,7 +20,9 @@ beide .174/.175-Sicherungen geprüft; ZIP/DEB/RPM mit 406 Quellen identisch.
 Benutzerinstallation gestartet, vor Start alle Einstellungs-/Profil-/Plugin-
 Hashes erhalten. Native Engine: fünf Arbeiter, null gemeldete Fehler;
 Sapphire External Control und gespeichertes Levita-Design aktiv. Systemkopie
-wartet noch auf Linux-Authentifizierung (.174); interner GitHub-Upload folgt.
+wartet noch auf Linux-Authentifizierung (.174). Interner GitHub-Upload
+auf `codex/3.4.29-intern` bestätigt (Quellcommit `5fd7989`); kein öffentlicher
+Release-Tag und keine Änderung des Standardzweigs.
 
 **Stand:** 11.11.26
 **Anwendung:** 3.4.29.175 INTERN

@@ -6,8 +6,9 @@ Reviewed model-level links and category/vendor filters are implemented. The
 reproducible shifted-row pointer selection is fixed. Full gate: 1,556 tests and
 five subtests pass. Packages and both rolling backups are verified; the user
 installation is running with preserved settings and healthy native workers.
-The system copy awaits OS authentication. Upload the committed internal source
-version as requested; no public tag/release is part of this upload.
+The system copy awaits OS authentication. The internal source upload to
+`codex/3.4.29-intern` is verified (`5fd7989`); no public tag/release or default
+branch change is part of this upload.
 
 Open Hardware Control is developed incrementally. Features are tested before they
 are treated as stable. This file contains only active work; completed planning

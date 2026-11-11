@@ -12,7 +12,7 @@ model profiles with explicit backend-dependent limits, the confirmed Sapphire
 variant, and separate Corsair mouse/headset entries. Unknown exact product links
 remain absent. No new hardware support or write path is inferred from a model
 name. Local upgrade/restart and subsequent GitHub upload are now authorized;
-prepare an internal development-branch upload without a public tag/release.
+the internal development-branch upload is completed without a public tag/release.
 Prior .174 installation evidence below remains historical.
 
 Local .175 checkpoint: all six artifact checksums, both retained .174/.175
@@ -28,6 +28,14 @@ APT process is waiting for the Linux/Polkit dialog; DPKG still reports .174.
 The owner is asked to authenticate only in that existing OS window. Upload
 of the validated internal user/source version is authorized independently;
 no public tag/release or broad administrator grant is created.
+
+GitHub upload is verified: source commit
+`5fd798960845d215280f4101b07b03b64e725f92` is on
+`origin/codex/3.4.29-intern`. The branch now includes the previously local
+.170–.174 work plus .175, with no private logs/settings or local backups.
+The default branch and public release tags remain unchanged. This development
+branch does not trigger the main-only CI workflow; full local release-gate
+results above are the available test evidence.
 
 
 The .175 test suite passes 1,556 tests and five subtests, including 220 real
