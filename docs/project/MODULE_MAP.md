@@ -1,5 +1,12 @@
 # Open Hardware Control — Modulkarte für Coding-KIs
 
+## .179 Profilstart und Laufzeitfehler
+
+`profile_cooling/v1_0/restore.py`: frischen Sensor abwarten, Auftrag abbrechen,
+bestehende Hardwarepfade erneut prüfen. `runtime_logging/v1_0/error_capture.py`:
+Python-/Qt-/Modulfehler begrenzt erfassen; `error_bridge.py`: allgemeines GUI-Log.
+`privacy_logging.py` bleibt die gemeinsame private redigierte Fehlerdatei.
+
 ## .178 Profile und Programm-Hintergründe
 
 `profiles_workspace/v1_0/`: Bibliothek/Karten, reine Filter/Zusammenfassung und

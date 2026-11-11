@@ -74,3 +74,7 @@ for _language, _messages in DESIGN_HUB_MESSAGES.items():
 from .profile_background_messages import PROFILE_BACKGROUND_MESSAGES
 for _language, _messages in PROFILE_BACKGROUND_MESSAGES.items():
     CONTENT_UI_MESSAGES[_language].update(_messages)
+
+from .profile_cooling_messages import PROFILE_COOLING_MESSAGES
+for _language, _messages in PROFILE_COOLING_MESSAGES.items():
+    CONTENT_UI_MESSAGES[_language].update(_messages)

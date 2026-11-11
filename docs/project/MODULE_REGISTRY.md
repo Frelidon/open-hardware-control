@@ -1,5 +1,22 @@
 # Open Hardware Control — verbindliches Modulregister
 
+Entwicklung 11.11.26 (.179): Profil-Kühlungsbereitschaft 1.0 unter
+`src/modules/profile_cooling/v1_0/` ergänzt `restore.py` für höchstens zehn Sekunden
+Warten auf frische Sensordaten. Keine Änderung an ProcessRuntime 1.1s 2,5-s-Frische,
+Timeout oder Hardwarebesitz. Hauptorchestrator verwirft alte Profil-/Kühlaufträge;
+Bedienungsänderung/Shutdown/Frist/fehlendes Gerät verhindern spätes Anwenden.
+Laufzeitprotokoll 1.0 ergänzt `error_capture.py` und `error_bridge.py`: begrenzte
+thread-sichere Python-/Thread-/Unraisable-/Qt-Erfassung, zentraler Privatlog-Sink
+in `src/privacy_logging.py` und GUI-seitige Übernahme durch `src/log_view_support.py`
+ohne Rückkopplung oder doppeltes Fehlerdateischreiben. Hauptfenster verbindet
+und löst Hooks explizit. Bestehende Sys-/Native-Crash-Protokolle bleiben erhalten.
+Lokalisierung 1.0 ergänzt `profile_cooling_messages.py`, atomar DE/EN/ES/FR:
+2.507 gemeinsame IDs. Keine Firmware-/PWM-/RGB-/LCD-Transportänderung.
+ProcessRuntime 1.1-Diagnose bewahrt die bekannte APP_VERSION als technische
+Buildangabe; sie wird nicht mehr fälschlich als IPv4 in [IP] umgewandelt.
+Private Detailwerte bleiben weiterhin redigiert. Die gemeinsame Fehlerdatei
+serialisiert Rotation und Schreiben über einen reentranten Thread-Lock.
+
 Entwicklung 11.11.26 (.178): Profil-Arbeitsbereich 1.0 unter
 `src/modules/profiles_workspace/v1_0/` trennt `model.py`, `cards.py` und `page.py`.
 Die unsichtbare elterngebundene Kompatibilitätstabelle bewahrt bestehende
@@ -105,7 +122,7 @@ auf `codex/3.4.29-intern` bestätigt (Quellcommit `5fd7989`); kein öffentlicher
 Release-Tag und keine Änderung des Standardzweigs.
 
 **Stand:** 11.11.26
-**Anwendung:** 3.4.29.178 INTERN
+**Anwendung:** 3.4.29.179 INTERN
 
 Lokaler Stand 11.11.26: .174-Benutzerinstallation mit allen 403 Python-Quellen
 verifiziert und gestartet. Fünf native RGB-Arbeiter ohne gemeldete Fehler,
@@ -956,6 +973,7 @@ Datum: 13.09.26.
 | Levita Leistung/Spielerkennung | 1.1 | `src/modules/levita_performance/v1_1/` | Reine Normalisierung der sicheren/experimentellen FPS, Rückstufungskette, konservative GameMode-/Gamescope-/Programmlisten-Signale und Zehn-Sekunden-Abfrageintervall | Keine Lastheuristik, kein Hardwarezugriff, keine allgemeine Wayland-Fensterbeobachtung |
 | Bereichs-Unterreiter | 1.0 | `src/modules/section_tabs/v1_0/` | Wiederverwendbare browserähnliche Unterreiter für Hauptbereiche mit Seitenleisten-Unterpunkten; mehrere Leisten und Hauptseite bleiben über stabile Seiten-IDs synchron | Reines Navigationsmodul ohne Hardwarezugriff; zunächst für LCD verwendet |
 | Reaktionsfähiger Start | 1.0 | `src/modules/responsive_startup/v1_0/` | `probe.py` koordiniert eine begrenzte, zusammengefasste Qt-Hintergrundprüfung, `ownership_probe.py` kapselt die blockierenden read-only Systemabfragen und `controller.py` hält Mainboard-PWM bis zum bestätigten Besitzerstatus fail-closed | Versioniertes Start-/Besitzmodul; keine Hardware-Schreibbefehle |
+| Profil-Kühlungsbereitschaft | 1.0 | `src/modules/profile_cooling/v1_0/` | `restore.py`: asynchroner frischer CPU-Wert, Zehn-Sekunden-Frist, neuester Auftrag und Bedien-/Shutdown-Abbruch | Keine neue Hardwarefreigabe oder synchrone Sensorlesung |
 | Profil-Arbeitsbereich | 1.0 | `src/modules/profiles_workspace/v1_0/` | Reine Filter/Zusammenfassung, auswählbare Karten, responsive Bibliothek, Bearbeitung/Details/Transfers; versteckte ID-Tabelle | Keine neue Persistenz und keine Hardwareaktion bei Auswahl |
 | Programm-Hintergründe | 1.0 | `src/modules/app_backgrounds/v1_0/` | Feste lokale Videos, ein Decoder, Profil-Snapshot und bestehende CPU-Komposition; Offline-Renderer unter tools | Sichtbarkeitsgebunden, keine Netzwerk-/Hardware-Schreibwege |
 | Hauptfenster und Seitenkomposition | Legacy 3.4.29.99 | `src/kraken_control.py`, `src/dashboard_layout.py`, `src/localization_catalog.py` | Anwendungseinstieg und noch nicht extrahierte Controller; aufklappbare Kühlungs-/LCD-Unterseiten, hardwareabhängige Lüfterquellen, Zuordnungsreset/-assistent, unabhängige Bildschirm-/Fensterzustandswahl, globale leichte Seitenübergänge und 60-Minuten-Logansicht | X/Fensterschließen hält OHC im Infobereich am Leben; sichtbares manuelles Programmende ausschließlich über **Beenden** im Rechtsklickmenü des Tray-Symbols, Sitzungsende separat |
@@ -976,7 +994,7 @@ Datum: 13.09.26.
 | UI-Themes | 1.0 | `src/modules/ui_themes/v1_0/` | `light.py`, `dark.py` und `studio.py` liefern Paletten-/Semantikwerte; `controller.py` wendet die getrennten reinen `style_base.py`-/`style_controls.py`-Qt-Selektoren einschließlich Kühlungs-Sicherheitsfläche und adaptiver Diagnose-/Gehäuse-/Temperaturtabellen an | Reines Darstellungsmodul; Systemmodus übernimmt die native Palette und passende Semantikwerte, keine Hardwarelogik |
 | PC-Gehäuseprofile | 1.5 | `src/modules/pc_case_profiles/v1_5/` | `editor_sections.py` ordnet lebende Felder in Spalten/Reitern; `inline_editor.py` hält Entwürfe bis Speichern/Abbrechen/Escape/Schließen offen; `profiles.py` validiert den vollständigen einstellungsbasierten RGB-/Lüfter-Topologiesnapshot; `controller.py` synchronisiert CPU_FAN-/PUMP_FAN-/Gehäusezuordnungen in das ausgewählte Profil und bestätigt Konflikte; `case_renderer.py` zeichnet 30 originale Modellansichten; `workspace.py`/`case_page.py` besitzen Gehäuse-Seite und fähigkeitsabhängige Topologie; `spatial_layout.py` verwaltet Richtung, Tempo, echten LED-Reihenfolgeeditor und selbst gemessene Beziehungen | Raumdaten und Zuordnungen sind Einstellungen, keine elektrische Erkennung; Profilübernahme schreibt keine Hardware; keine Kalibrierung/Aktivierung oder Hardwarewrites durch Zuordnung/Abstand; keine Herstellerbilder oder erfundene Maße/LED-Topologie |
 | Programme | 1.0 | `src/modules/programs/v1_0/` | `model.py` liest begrenzt Desktop-Einträge und validiert Profile/Grundordner; `github_release.py` prüft offizielle GitHub-Releasepläne, schreibt Assets, beide Source-Archive, Manifest und SHA256SUMS atomar und liefert nur tatsächlich vorhandene größenpassende AppImages zur Profilwahl; `install_plan.py` baut validierte Flatpak-/Snap-/AppImage-Pläne; `page.py` besitzt Inventar, Suche, Profilverwaltung und getrennte Hintergrundarbeiter | Keine Ausführung entdeckter Desktop-`Exec`; GitHub nur nach Klick, erlaubte HTTPS-Hosts, höchstens 100 Assets/1 GiB je Datei/4 GiB gesamt, keine Überschreibung; AppImage-Zuordnung nur aus dem geprüften heruntergeladenen Plan; Installationsplan sichtbar und nochmals bestätigt, kein Shellaufruf, Systempakete fail-closed |
-| Lokalisierung | 1.0 | `src/modules/localization/v1_0/` | Je ein vollständiges Laufzeitmodul für Deutsch, Englisch, Spanisch und Französisch; 2.501 gleiche Nachrichten-Einträge; reine vierfache Zusatzblöcke liegen budgetgerecht in `snapshot_messages.py`, `next_version_messages.py`, `program_messages.py`, `lifecycle_messages.py`, `shutdown_lighting_messages.py`, `rgb_speed_messages.py`, `retained_lcd_messages.py`, `retained_feature_messages.py`, `retained_ui_messages.py`, `content_ui_messages.py`, `profile_background_messages.py`; Programme sowie Reifegrad-, Snapshot-, GPU-, RGB-, Gehäuse-, CPU- und Hardwaretexte werden werttreu übersetzt | Versionierter Modulordner; alle vier Sprachmodule bei jeder sichtbaren Änderung atomar pflegen |
+| Lokalisierung | 1.0 | `src/modules/localization/v1_0/` | Je ein vollständiges Laufzeitmodul für Deutsch, Englisch, Spanisch und Französisch; 2.507 gleiche Nachrichten-Einträge; reine vierfache Zusatzblöcke liegen budgetgerecht in `snapshot_messages.py`, `next_version_messages.py`, `program_messages.py`, `lifecycle_messages.py`, `shutdown_lighting_messages.py`, `rgb_speed_messages.py`, `retained_lcd_messages.py`, `retained_feature_messages.py`, `retained_ui_messages.py`, `content_ui_messages.py`, `profile_background_messages.py`; Programme sowie Reifegrad-, Snapshot-, GPU-, RGB-, Gehäuse-, CPU- und Hardwaretexte werden werttreu übersetzt | Versionierter Modulordner; alle vier Sprachmodule bei jeder sichtbaren Änderung atomar pflegen |
 | NZXT Kraken | 1.0 legacy | `src/nzxt_backend.py`, `src/kraken_sensors.py`, `src/kraken_cam_streamer.py`, `src/kraken_lcd_designs.py`, `src/nzxt_rgb.py` | Erkennung, Sensoren, LCD-Transport und RGB | Ordner-Migration ausstehend |
 | Mainboard-Kühlung | 1.0 legacy | `src/mainboard_fan_control.py`, `src/ohc_fan_helper.py`, `src/cooling_ownership.py` | hwmon/NCT6687, Polkit-Helfer und Besitzschutz; freundlicher Kernelname getrennt von `PWM N`; bestätigter Gesamtzuordnungsreset bei Kurvenerhalt; konstantes 100-%-Leistungsprofil und optionale `pwmN_mode`-Umschaltung; Kurvenschreibvorgänge werden bei Zustandsänderung, Notfall oder spätestens nach 60 Sekunden einmal gebündelt protokolliert | Ordner-Migration ausstehend; Rücksetzen stoppt laufende OHC-Regelung und gibt zuerst an Firmware/BIOS zurück |
 | Mainboard-Treiber-/MOK-Assistent | 1.1 | `src/modules/mainboard_driver_setup/v1_1/` | Asynchron geprüfter read-only Distributions-/DMI-/Secure-Boot-/MOK-/Modulstatus; getrennte feste Ubuntu-/Fedora-/Arch-Abhängigkeitsbefehle; Ubuntu-Update und Installation separat; vorhandener fester Checkout nur per `pull --ff-only`; gemeinsame DKMS-Schritte; MSI-X870-Optionen nur bei passender DMI-Erkennung; optionale per-user Polkit-Dauerfreigabe als fünfter Schritt | Fremdquellen werden nie automatisch verändert; Konfliktordner/Distributionen fallen geschlossen aus; Dauerfreigabe gilt nur für den festen Lüfterhelfer; kein Passwortzugriff, automatischer Neustart oder Secure-Boot-Umbau |
@@ -1286,3 +1304,12 @@ Profile und beide Plugins erhalten, gestartete Benutzerkopie ohne Python-Traceba
 Der Benutzer meldet anschließend einen CPU-Sensorfehler beim Profilstart;
 dieser steht bereits im Log und wird als gesonderte .179 untersucht.
 Keine GitHub-Veröffentlichung.
+
+Prüfabschluss .179: Vollständiger Release-Wächter mit 1.642 Tests und fünf
+Untertests bestanden. 438 Python-Laufzeitquellen und 2.507 gemeinsame Sprach-IDs.
+Echte viersprachige Qt-Konstruktion einschließlich fehlend→frisch-Profilwarten
+ohne Hardwareaktion geprüft. Strikter Fristablauf, Neuauftrag, Bedienänderung,
+Shutdown, Geräteverlust, Hook-Delegation, zentraler Modul-Sink und konkurrierende
+Fehlerschreiber bestehen. Sicherheit/Datenschutz/Modulbudgets unverändert erfüllt.
+Bestehende Fedora-/Ubuntu-Fixtures bestanden; kein realer Fedora-/PWM-Ausfalltest.
+Paketbau und lokaler Upgrade-Nachweis folgen. Keine GitHub-Veröffentlichung.

@@ -1,5 +1,14 @@
 # Open Hardware Control — Durable Decisions
 
+## 11.11.26 · Sensorbereitschaft ist kein Grund für veraltete Werte
+
+Ein kurz fehlender CPU-Snapshot beim Profilstart wird bis zu zehn Sekunden
+asynchron abgewartet. Die bestehende Frischegrenze wird nicht erhöht. Ein echter
+Sensorausfall bleibt fail-closed und mit Zustand/Frist im Log sichtbar; keine
+Kurve wird mit geratenen Temperaturen übertragen. Neuere Nutzerabsicht verwirft
+jede wartende Anwendung. Python-/Qt-/Modulfehler erhalten zusätzlich zu privaten
+Dateien eine begrenzte GUI-Logübernahme ohne neue Rechte oder Netzübertragung.
+
 ## 11.11.26 · Angewendete Profile und temporärer Hintergrund
 
 Die letzte bearbeitete Profil-ID gilt nicht als Nachweis eines angewendeten

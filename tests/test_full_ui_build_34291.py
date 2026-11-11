@@ -412,7 +412,7 @@ for _refresh in range(2):
     )
 assert application._GIF_SAFETY_TEXT in labels
 assert application._ABOUT_SUMMARY_TEXT in labels
-assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.178 INTERN")
+assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.179 INTERN")
 assert window.temp_card.isHidden()
 assert not window.cpu_temp_card.isHidden()
 assert window.mainboard_sensor_source.findData("liquid") == -1
@@ -717,6 +717,16 @@ for language in ("de", "en", "es", "fr"):
     wizard.reject()
 window.mainboard_channels = {}
 window.mainboard_fan_profiles.pop(channel.stable_id, None)
+
+# .179 temporarily missing sensors wait without a modal dialog or direct write.
+with patch.object(window, 'defer_cooling_action_for_gif', return_value=False), patch.object(window, 'read_amd_cpu_temperature', return_value=(None, 'synthetic unavailable')), patch.object(window, 'show_error', side_effect=AssertionError('sensor wait must be nonmodal')):
+    window.kraken_write_busy = False
+    window.transmit_profile_cooling({'fan_mode':'curve'}, 'synthetic profile')
+    assert window.profile_cooling_wait.pending is not None
+with patch.object(window, 'read_amd_cpu_temperature', return_value=(52., 'synthetic CPU')), patch.object(window, 'cooling_device_ready', return_value=True), patch.object(window, 'transmit_profile_cooling') as retry_existing:
+    window.profile_cooling_wait.check()
+    assert retry_existing.call_count == 1
+    assert window.profile_cooling_wait.pending is None
 
 # .178 profile cards keep legacy IDs/CRUD and never apply on selection/filter.
 workspace = window.profile_workspace

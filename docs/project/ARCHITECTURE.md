@@ -1,5 +1,15 @@
 # Open Hardware Control — Architecture
 
+## .179 · Profil-Bereitschaft und zentrale Fehlerbrücke
+
+`profile_cooling/v1_0/restore.py` verwaltet genau einen ausstehenden Auftrag und
+dessen unveränderte Bedienwert-Baseline. Frische Werte kommen ausschließlich aus
+dem vorhandenen Sensorprozess. Die Wiederholung nutzt die bisherigen geschützten
+Kühlpfade. Laufzeitprotokoll `error_capture.py` hält eine begrenzte thread-sichere
+Warteschlange; `error_bridge.py` überträgt sie ausschließlich im GUI-Thread.
+`append_error_event` benachrichtigt einen privaten Sink, GUI-Logging unterdrückt
+die Benachrichtigung und die Brücke das erneute Persistieren. Keine Endlosschleife.
+
 ## .178 · Profil-Arbeitsbereich und Hintergrundkomposition
 
 `profiles_workspace/v1_0` komponiert UI um bestehende sichere Profile-Controller;

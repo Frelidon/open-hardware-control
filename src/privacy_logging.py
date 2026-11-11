@@ -11,6 +11,7 @@ import platform
 import re
 import sys
 import time
+import threading
 import traceback
 from pathlib import Path
 
@@ -22,6 +23,8 @@ from app_constants import APP_DISPLAY_VERSION
 ERROR_LOG_MAX_BYTES = 2 * 1024 * 1024
 ERROR_LOG_RETAIN_BYTES = 1024 * 1024
 _native_fault_stream = None
+_error_listener = None
+_error_log_lock = threading.RLock()
 
 
 def redact_private_text(text: str) -> str:
@@ -89,8 +92,26 @@ def append_startup_event(message: str) -> Path | None:
         return None
 
 
-def append_error_event(message: str) -> Path | None:
+def set_error_listener(listener):
+    """Register a bounded thread-safe sink; the listener must never access Qt UI."""
+    global _error_listener
+    previous, _error_listener = _error_listener, listener
+    return previous
+
+
+def append_error_event(message: str, *, notify: bool = True) -> Path | None:
     """Append one durable, bounded and privacy-filtered runtime failure."""
+    if notify and _error_listener is not None:
+        try:
+            _error_listener(redact_private_text(message))
+        except Exception:  # Error reporting must not replace the original failure.
+            pass
+    with _error_log_lock:
+        return _append_error_event_file(message)
+
+
+def _append_error_event_file(message: str) -> Path | None:
+    """Serialize file rotation/writes from Python and Qt worker threads."""
     try:
         directory = application_state_directory()
         directory.mkdir(parents=True, exist_ok=True, mode=0o700)

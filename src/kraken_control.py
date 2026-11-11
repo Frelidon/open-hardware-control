@@ -12121,6 +12121,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.apply_profile_payload(payload, str(profile.get("name", "Profil")))
 
     def apply_profile_payload(self, payload: dict[str, object], name: str, *, startup: bool = False) -> None:
+        from modules.profile_cooling.v1_0.restore import cancel as cancel_profile_cooling
+        cancel_profile_cooling(self)
         gpu = payload.get("gpu")
         if isinstance(gpu, dict) and hasattr(self, "gpu_control_page"): self.gpu_control_page.restore_main_profile_payload(gpu, startup=startup)
 
@@ -12382,6 +12384,9 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         mark_applied(self, payload)
         self.profile_status_label.setText(f"Aktiv: {name}")
         self.footer_status.setText(f"Profil „{name}“ angewendet")
+        pending_cooling = getattr(getattr(self, "profile_cooling_wait", None), "pending", None)
+        if pending_cooling is not None:
+            self.footer_status.setText(self.tr_static("Kühlprofil wartet auf frische CPU-Temperatur."))
 
     def load_profile_cooling_controls(self, cooling: dict[str, object]) -> None:
         self.pump_slider.setValue(self.safe_cooling_duty("pump", int(cooling.get("pump", self.pump_slider.value()))))
@@ -12414,6 +12419,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.cpu_curve_force_update = True
 
     def transmit_profile_cooling(self, cooling: dict[str, object], name: str) -> None:
+        from modules.profile_cooling.v1_0.restore import cancel, wait_for_cpu
+        cancel(self)
         if self.defer_cooling_action_for_gif(
             "Kühlprofil",
             lambda: self.transmit_profile_cooling(cooling, name),
@@ -12429,10 +12436,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         needs_cpu = any(self.cooling_mode_kind(mode) == "curve" for mode in requested_modes.values())
         cpu_temp, sensor_label = self.read_amd_cpu_temperature()
         if needs_cpu and cpu_temp is None:
-            self.show_error(
-                "Das Profil enthält eine CPU-Temperaturkurve, aber der CPU-Sensor ist nicht verfügbar.\n\n"
-                + sensor_label
-            )
+            wait_for_cpu(self, cooling, name)
             return
         if getattr(self, "is_thermalright_cooling", lambda: False)():
             applied: list[tuple[str, int, str, str, bool]] = []
@@ -14359,9 +14363,12 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                 self.pump_card.set_value(f"{int(pump_speed)} rpm", f"{pump_duty:.0f} % Leistung" if pump_duty is not None else "")
             if fan_speed is not None:
                 self.fan_card.set_value(f"{int(fan_speed)} rpm", f"{fan_duty:.0f} % Leistung" if fan_duty is not None else "")
-            if pump_duty is not None:
+            # Keep the loaded target controls stable while a curve profile waits
+            # for sensors; live duty/RPM cards above still show actual readback.
+            waiting_for_profile_cpu = getattr(getattr(self, "profile_cooling_wait", None), "pending", None) is not None
+            if pump_duty is not None and not waiting_for_profile_cpu:
                 self.pump_slider.setValue(int(round(pump_duty)))
-            if fan_duty is not None:
+            if fan_duty is not None and not waiting_for_profile_cpu:
                 self.fan_slider.setValue(int(round(fan_duty)))
             self.apply_dashboard_card_visibility(save=False)
             self.refresh_cooling_dashboard_summary()
@@ -22583,10 +22590,10 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         )
 
     def show_error(self, message: str) -> None:
+        self.log_message("FEHLER: " + message)
         if re.search(r"insufficient permissions|permission denied|could not open.*permissions", message, re.IGNORECASE):
             self.show_permission_error(message)
             return
-        self.log_message("FEHLER: " + message)
         QMessageBox.critical(self, APP_NAME, message)
 
 
@@ -22652,6 +22659,9 @@ def run_application(argv: list[str] | None = None) -> int:
 
     try:
         install_application_exception_logging()
+        from modules.runtime_logging.v1_0.error_capture import ErrorCapture
+        runtime_error_capture = ErrorCapture()
+        runtime_error_capture.install()
         from modules.application_shutdown.v1_1.diagnostics import latest_shutdown_report
         from modules.application_shutdown.v1_1.journal import observe_lifetime
         from modules.crash_recovery.v1_0 import recover_crash_context
@@ -22677,6 +22687,8 @@ def run_application(argv: list[str] | None = None) -> int:
         activation_server = ApplicationActivationServer(activation_endpoint, app)
         activation_available = activation_server.start()
         window = KrakenControl()
+        from modules.runtime_logging.v1_0.error_bridge import ErrorLogBridge
+        window.runtime_error_bridge = ErrorLogBridge(window, runtime_error_capture)
         if unexpected_previous_exit:
             detail = previous_shutdown.reason or "unbekannte Ursache"
             phase = previous_shutdown.phase or "—"
@@ -22710,6 +22722,8 @@ def run_application(argv: list[str] | None = None) -> int:
         append_startup_event(f"ENDE: normaler Programmabschluss · Exit-Code {exit_code}")
         return int(exit_code)
     finally:
+        if "runtime_error_capture" in locals():
+            runtime_error_capture.restore()
         instance_lock.release()
 
 

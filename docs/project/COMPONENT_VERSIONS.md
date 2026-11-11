@@ -1,4 +1,11 @@
-# Komponenten- und Versionsübersicht – Version 3.4.29.178 INTERN
+# Komponenten- und Versionsübersicht – Version 3.4.29.179 INTERN
+
+## Entwicklung .179 · 11.11.26
+
+Profil-Kühlungsbereitschaft 1.0 ergänzt höchstens zehn Sekunden asynchrones
+Sensorwarten. Laufzeitprotokoll 1.0 ergänzt Fehler-Hooks und GUI-Brücke;
+Lokalisierung 1.0 besitzt 2.507 IDs. ProcessRuntime 1.1 und sämtliche Schreib-
+Unterbauten bleiben unverändert. Kein veralteter Sensorwert wird akzeptiert.
 
 ## Entwicklung .178 · 11.11.26
 

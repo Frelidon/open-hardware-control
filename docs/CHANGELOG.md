@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.4.29.179 INTERN · 11.11.26
+
+- Wait up to ten seconds for a fresh CPU sample when a curve profile meets temporary sensor unavailability; keep the existing 2.5-second freshness and hardware guards.
+- Cancel pending applies on new requests, cooling edits, shutdown, timeout or a missing cooling device. Real sensor failures remain nonmodal and explicitly logged with context.
+- Capture Python, thread, unraisable and Qt errors in bounded privacy-filtered logs and forward module failures to the general UI/session log without feedback loops or duplicate durable entries.
+- Preserve Matrix sizes, video backgrounds, profiles and settings from .178. No GitHub publication requested.
+
 ## 3.4.29.178 INTERN · 11.11.26
 
 - Replace the visible profile table with searchable cards, saved-section summaries and collapsed editor/details/backup panels; retain IDs, startup behavior and protected apply paths.

@@ -1,5 +1,36 @@
 # Open Hardware Control — Project Status
 
+## Lokale Entwicklung .179 · 11.11.26
+
+Nach dem .178-Start meldet der Eigentümer eine CPU-Sensorwarnung beim Profilstart.
+Das bereitgestellte Sitzungslog enthält den Fehler bereits: zuvor war eine gültige
+Temperatur vorhanden, beim Profilaufruf fehlte ein frischer Snapshot. Das passt zu
+einem Start-/Bereitschaftsrennen; keine dauerhafte Sensorabwesenheit ist bewiesen.
+
+Profil-Kühlungsbereitschaft 1.0 wartet bei fehlender frischer CPU-Temperatur bis zu
+zehn Sekunden asynchron auf den vorhandenen Sensorprozess. Die 2,5-s-Frischegrenze,
+Sensorvalidierung und bestehenden Schreib-/Besitz-/Kalibrierungswege bleiben
+unverändert. Geänderte Bedienelemente, ein neuer Profil-/Kühlungsauftrag, Shutdown,
+verlorenes Kühlgerät oder Fristablauf verwerfen die wartende Anwendung. Bei Erfolg
+wird nur der bisherige geprüfte Anwendenpfad erneut aufgerufen. Kein synchroner
+sysfs-Ersatz und keine verspätete Anwendung nach einem fehlgeschlagenen Versuch.
+
+Laufzeitprotokoll 1.0 ergänzt begrenzte, thread-sichere Python-/Thread-/Unraisable-
+und Qt-Warnungs-/Fehlererfassung mit erhaltenen ursprünglichen Hooks. Private
+Fehlerdatei und sichtbares allgemeines Log erhalten dieselben Ereignisse. Ein
+GUI-Timer überträgt vorhandene Modulfehler ohne Rückkopplung und doppeltes
+Fehlerdateischreiben; identische Warnungsfluten werden kurz dedupliziert.
+Explizite show_error-Meldungen werden auch vor Berechtigungsweiterleitung geloggt.
+
+Gezielte synthetische Regressionen bestanden: fehlend→frisch, strikte Frist
+auch bei verspätet gültigen Werten, Abbruch/neuer Auftrag/Bedienung/Shutdown,
+Geräteverlust, Hook-Delegation, Datenschutz, Fehlerbrücke ohne Rückkopplung,
+Versionserhalt und gleichzeitige Fehlerschreiber. NZXT-Livewerte bleiben
+sichtbar, während wartende Profil-Zielwerte vor Readback-Überschreiben geschützt
+werden. Qt-Warnungen sind ausdrücklich Warnungen, keine behaupteten Abstürze.
+Vollständige Abschlussprüfung und lokaler Versionswechsel folgen.
+Kein GitHub-Auftrag für .179.
+
 ## Lokale Entwicklung .178 · 11.11.26
 
 Profil-Arbeitsbereich 1.0 ersetzt die sichtbare Tabelle durch durchsuchbare
@@ -2008,3 +2039,12 @@ Profile und beide Plugins erhalten, gestartete Benutzerkopie ohne Python-Traceba
 Der Benutzer meldet anschließend einen CPU-Sensorfehler beim Profilstart;
 dieser steht bereits im Log und wird als gesonderte .179 untersucht.
 Keine GitHub-Veröffentlichung.
+
+Prüfabschluss .179: Vollständiger Release-Wächter mit 1.642 Tests und fünf
+Untertests bestanden. 438 Python-Laufzeitquellen und 2.507 gemeinsame Sprach-IDs.
+Echte viersprachige Qt-Konstruktion einschließlich fehlend→frisch-Profilwarten
+ohne Hardwareaktion geprüft. Strikter Fristablauf, Neuauftrag, Bedienänderung,
+Shutdown, Geräteverlust, Hook-Delegation, zentraler Modul-Sink und konkurrierende
+Fehlerschreiber bestehen. Sicherheit/Datenschutz/Modulbudgets unverändert erfüllt.
+Bestehende Fedora-/Ubuntu-Fixtures bestanden; kein realer Fedora-/PWM-Ausfalltest.
+Paketbau und lokaler Upgrade-Nachweis folgen. Keine GitHub-Veröffentlichung.
