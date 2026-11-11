@@ -1,0 +1,57 @@
+{
+  "aurora-silk": {
+    "seam": 0.29593930844907407,
+    "max_adjacent": 0.2986885127314815,
+    "exact_periodicity": true,
+    "size": [
+      1280,
+      720
+    ],
+    "fps": 24,
+    "seconds": 12
+  },
+  "nebula-depth": {
+    "seam": 0.2596390335648148,
+    "max_adjacent": 0.3208810763888889,
+    "exact_periodicity": true,
+    "size": [
+      1280,
+      720
+    ],
+    "fps": 24,
+    "seconds": 12
+  },
+  "liquid-prism": {
+    "seam": 3.8583582899305555,
+    "max_adjacent": 3.8583904803240743,
+    "exact_periodicity": true,
+    "size": [
+      1280,
+      720
+    ],
+    "fps": 24,
+    "seconds": 12
+  },
+  "ocean-caustics": {
+    "seam": 1.177443214699074,
+    "max_adjacent": 1.4186454716435186,
+    "exact_periodicity": true,
+    "size": [
+      1280,
+      720
+    ],
+    "fps": 24,
+    "seconds": 12
+  },
+  "solar-orbit": {
+    "seam": 0.26072844328703704,
+    "max_adjacent": 0.5838990162037037,
+    "exact_periodicity": true,
+    "size": [
+      1280,
+      720
+    ],
+    "fps": 24,
+    "seconds": 12
+  }
+}

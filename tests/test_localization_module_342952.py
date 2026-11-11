@@ -19,7 +19,7 @@ def test_each_supported_language_has_one_complete_data_file():
     assert tuple(module.LANGUAGE_CODE for module in language_modules) == ("de", "en", "es", "fr")
     assert {path.name for path in module_dir.glob("??.py")} == {"de.py", "en.py", "es.py", "fr.py"}
     assert all(set(module.UI_MESSAGES) == set(de.UI_MESSAGES) for module in language_modules)
-    assert len(de.UI_MESSAGES) == 2468
+    assert len(de.UI_MESSAGES) == 2501
     assert len(set(de.UI_MESSAGES.values())) == len(de.UI_MESSAGES)
 
 
@@ -28,7 +28,7 @@ def test_all_language_surfaces_are_assembled_without_data_loss():
     assert tuple(SETUP_TRANSLATIONS) == ("de", "en", "es", "fr")
     assert tuple(HELP_TOPICS) == ("de", "en", "es", "fr")
     for language in UI_TRANSLATIONS:
-        assert len(UI_TRANSLATIONS[language]) == 2468
+        assert len(UI_TRANSLATIONS[language]) == 2501
         assert len(SETUP_TRANSLATIONS[language]) == 37
         assert len(HELP_TOPICS[language]) == 11
     assert UI_TRANSLATIONS["de"]["Ausbalanciert"] == "Ausbalanciert"

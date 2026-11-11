@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.177 INTERN
+# Open Hardware Control by Frelidon 3.4.29.178 INTERN
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](../LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -51,16 +51,16 @@ Project repository: <https://github.com/Frelidon/open-hardware-control>
 
 ## Thermalright Levita Vision display
 
-**The 1600×720 display of the Thermalright Levita Vision 360 ARGB Black is supported.** The local display studio combines your own images and videos (layer 1) with a complete TRCC hardware design or freely movable OHC live values for CPU, GPU, RAM, clock and custom text (layer 2). Eleven original OHC backgrounds, twelve original editable data layouts, four original layer-1 animations and six OHC effect families with thirteen variants ship with the app. Manufacturer/TRCC catalogs, imported user files, stock clips and third-party design components are not bundled.
+**The 1600×720 display of the Thermalright Levita Vision 360 ARGB Black is supported.** The local display studio combines your own images and videos (layer 1) with a complete TRCC hardware design or freely movable OHC live values for CPU, GPU, RAM, clock and custom text (layer 2). Eleven original OHC backgrounds, twelve original editable data layouts, four original layer-1 animations and six OHC effect families with sixteen variants ship with the app. Manufacturer/TRCC catalogs, imported user files, stock clips and third-party design components are not bundled.
 
 The safe preview-only test mode is active by default; real USB transfer happens only through the separately installed GPL backend **TRCC Linux** (9.10.4 recommended). Levita pump and radiator fans run through separately confirmed motherboard PWM headers (`PUMP_FAN`, `CPU_FAN`) with a safe 70 %/10 s test; CoolerControl blocks concurrent writes.
 
-## New in 3.4.29.177 INTERN
+## New in 3.4.29.178 INTERN
 
-- Original Matrix Code Rain for fans and a seamless LCD background with the existing sensor layer.
-- Designs & Games between RGB and LCD, with matching designs, games and the Automation Center.
-- Five matching design pairs with independent RGB/LCD apply actions and a visibility-bound preview.
-- Editable ATMOSFAR, Mirage and Witcher 3 profile rules; no live game telemetry yet.
+- Profile library with cards, search, saved sections and a collapsible editor.
+- Matrix and five further original video backgrounds with visibility-bound playback.
+- Active profile LCD/RGB backdrop on Profiles; the global choice on other pages.
+- Matrix LCD characters +30% by default, plus +50%, +100% and the retained original.
 
 ## Installation
 
@@ -68,30 +68,30 @@ The following filenames describe the upcoming local build; packages are not yet 
 
 ### Fedora and Nobara – RPM
 
-Download `open-hardware-control-3.4.29.177-0.intern2.noarch.rpm` to your Downloads folder and run:
+Download `open-hardware-control-3.4.29.178-0.intern2.noarch.rpm` to your Downloads folder and run:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.177-0.intern2.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.178-0.intern2.noarch.rpm
 ```
 
 ### Debian, Ubuntu and Linux Mint – DEB
 
-Download `open-hardware-control_3.4.29.177~intern2_all.deb` to your Downloads folder and run:
+Download `open-hardware-control_3.4.29.178~intern2_all.deb` to your Downloads folder and run:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.177~intern2_all.deb'
+sudo apt install './open-hardware-control_3.4.29.178~intern2_all.deb'
 ```
 
 ### Universal installer – ZIP
 
-For Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS and openSUSE. Download `open_hardware_control_v3_4_29_177_INTERN.zip` and run:
+For Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS and openSUSE. Download `open_hardware_control_v3_4_29_178_INTERN.zip` and run:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_177_INTERN.zip
-cd open-hardware-control-3.4.29.177-INTERN
+unzip open_hardware_control_v3_4_29_178_INTERN.zip
+cd open-hardware-control-3.4.29.178-INTERN
 chmod +x install.sh
 ./install.sh
 ```
@@ -160,12 +160,13 @@ Reads only local Steam Workshop metadata, selects wallpapers through Plasma's of
 
 ## Version history
 
-**3.4.29.177** – Matrix RGB/LCD pair and the Designs & Games section.
+**3.4.29.178** – Profile cards, video backgrounds and larger Matrix LCD characters.
+
+**3.4.29.177** – Matrix design pair and shared Designs & Games section.
 
 **3.4.29.176** – Fan mapping with unused headers and redesigned temperature recording.
 
 **3.4.29.175** – Model catalog with product links and stable menu selection.
 
-**3.4.29.174** – Independent startup DPI per mouse profile.
 
 All earlier versions back to 2.9.x: [CHANGELOG.md](CHANGELOG.md) and [docs/releases/](releases).

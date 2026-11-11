@@ -1,5 +1,11 @@
 # Funktionsübersicht nach Version
 
+## 3.4.29.178 INTERN · 11.11.26
+
+- Profilbibliothek mit Karten, Suche und gespeicherten Bereichskacheln.
+- Sechs eigene Videohintergründe und temporärer aktiver Profilhintergrund.
+- Matrix-LCD-Zeichen +30 %, +50 % und +100 %, Original bleibt verfügbar.
+
 ## 3.4.29.153 INTERN · 05.10.26
 
 - Levita-Vorschauwarteschlange verwirft gelöschte Qt-Kacheln nach schnellen

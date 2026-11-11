@@ -1,5 +1,35 @@
 # Open Hardware Control — Project Status
 
+## Lokale Entwicklung .178 · 11.11.26
+
+Profil-Arbeitsbereich 1.0 ersetzt die sichtbare Tabelle durch durchsuchbare
+Profilkarten, echte gespeicherte Bereichskacheln und aufklappbare Bearbeitung,
+technische Details und Import/Export/Sicherung. Bestehende IDs, JSON-Schema,
+Startprofile, sichere Anwendenwege und vollständige Werte bleiben erhalten.
+Benutzerprofile werden durch Auswahl, Suche oder Sprachwechsel nicht angewendet.
+
+Programm-Hintergründe 1.0 ergänzt sechs eigene lokale Videohintergründe: Matrix
+Code Rain, Aurora Silk, Nebula Depth, Liquid Prism, Ocean Caustics und Solar Orbit.
+Ein Decoder mit begrenzter Darstellung gibt bei deaktivierter, unsichtbarer oder
+minimierter Oberfläche die Quelle frei. Die Profilseite zeigt das zuletzt
+angewendete LCD-Basismedium oder die gespeicherte RGB-Animation; andere Seiten
+verwenden wieder die globale Auswahl. Die Vorschau verändert keine Einstellungen
+oder Hardware. Ohne wirklich angewendetes Startprofil wird kein aktives Profil
+allein aus der zuletzt bearbeiteten ID geraten. Globale Animation-Abschaltung,
+Studio-Themes und Inaktivitätsregeln haben weiter Vorrang.
+
+Matrix LCD erhält additive Zeichenvarianten +30 %, +50 % und +100 %. +30 % ist
+die neue Standardauswahl; Original und bereits gespeicherte Dateipfade bleiben
+unverändert. Keine Sensordaten sind eingebrannt; die bestehende Ebene 2 bleibt.
+Gezielte Regressionen bestanden: reine Filter/Zusammenfassungen, lokale Medienprüfung,
+Matrix-Varianten und Decoderlebensdauer sowie echte vierfache Qt-Sprachwechsel,
+ungespeicherte Eingaben, Standardprofilschutz und temporäre Hintergrundrückkehr.
+Alle acht neuen MP4s vollständig dekodiert, ursprüngliche Medienhashes erhalten;
+Schleifen periodisch und an der Naht mit normalen Frame-Abständen verglichen.
+Dunkle/helle/schmale Qt-Ansichten geprüft; Kontrast der Karten und Symbole auch
+nach Themenwechsel korrigiert. Vollständiger Wächter und Installation folgen.
+Kein GitHub-Auftrag für .178.
+
 ## Local development .177 · 11.11.26
 
 Owner-approved implementation in progress: original Matrix RGB/LCD pair, five matching design pairs and a Designs & Games sidebar parent with Games/Automation children. Native rendering, existing sensor layers, settings and hardware boundaries remain. ATMOSFAR ProjectVenus-Win64-Shipping.exe, ACMirage.exe and witcher3.exe basenames are verified read-only from installed executables; game cards prepare editable existing automation rules only. No screen capture/live telemetry is claimed. The running .176 installation is unchanged until validation and local upgrade; no publication is requested for this work.
@@ -1959,3 +1989,12 @@ The 3.4.29 codebase has also begun an incremental local-AI-oriented split of the
 - Confirm no secrets/personal logs are present.
 - Complete the local package build and the two-version external backup.
 - Require an explicit project-owner request before any GitHub push/tag/release.
+
+Prüfabschluss .178: Vollständiger Release-Wächter mit 1.624 Tests und fünf
+Untertests bestanden. 433 Python-Laufzeitquellen und 2.501 gemeinsame Sprach-IDs.
+Sicherheits-/Datenschutzprüfung, Modulbudgets und Repository-Verträge bestanden.
+Alle acht neuen Videos vollständig dekodiert; periodische Renderer und
+Schleifennaht dokumentiert. Bestehende Medien-Prüfsummen unverändert.
+Dunkle, helle und schmale Qt-Ansicht geprüft. Vorhandene Fedora-/Ubuntu-Fixtures
+bestanden; kein realer Fedora- oder optischer LCD-Livetest wird behauptet.
+Paketbau, Sicherungsverifikation und lokaler Versionswechsel folgen.

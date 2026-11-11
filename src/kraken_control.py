@@ -1336,6 +1336,9 @@ class InteractionAuditLogger(QObject):
         return False
 
 
+from modules.app_backgrounds.v1_0.catalog import VIDEO_THEMES
+
+
 class AnimatedBackgroundWidget(QWidget):
     """Procedural background rendered to a CPU-side QImage for Wayland/HiDPI safety."""
 
@@ -1353,7 +1356,7 @@ class AnimatedBackgroundWidget(QWidget):
         "Sonnenaufgang",
         "Eisnebel",
         "Minimaler Fluss",
-    )
+    ) + tuple(VIDEO_THEMES)
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -1379,6 +1382,8 @@ class AnimatedBackgroundWidget(QWidget):
         ]
         self._timer = QTimer(self)
         self._timer.timeout.connect(self._tick)
+        from modules.app_backgrounds.v1_0.media import MediaBackground
+        self.media_background = MediaBackground(self)
 
     def configure(self, *, enabled: bool, theme: str, fps: int, intensity: int, pause_inactive: bool) -> None:
         self._enabled = bool(enabled) and theme != "Aus"
@@ -1388,6 +1393,7 @@ class AnimatedBackgroundWidget(QWidget):
         self._pause_inactive = bool(pause_inactive)
         self._timer.setInterval(max(16, round(1000 / self._fps)))
         self._frame_dirty = True
+        self.media_background.configure()
         self._sync_timer()
         if not self._enabled:
             self._frame = QImage()
@@ -1399,6 +1405,9 @@ class AnimatedBackgroundWidget(QWidget):
         self._sync_timer()
 
     def _sync_timer(self) -> None:
+        if hasattr(self, "media_background"):
+            self.media_background.sync()
+            return
         if self._enabled and self._window_active and self.isVisible():
             self._timer.start()
         else:
@@ -1484,6 +1493,8 @@ class AnimatedBackgroundWidget(QWidget):
             painter.drawPixmap(self.rect(), self._pixmap)
 
     def _paint_scene(self, painter: QPainter, w: int, h: int, base: QColor) -> None:
+        if self.media_background.paint(painter, w, h, base):
+            return
         canvas = QRectF(0, 0, w, h)
         accent = self.palette().color(QPalette.ColorRole.Highlight)
         dark = QColor("#07111f") if base.lightness() < 150 else QColor("#dcefff")
@@ -2899,6 +2910,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         if hasattr(self, "hardware_checker_page"): self.hardware_checker_page.refresh_language()
         if hasattr(self, "snapshot_manager_page"): self.snapshot_manager_page.refresh_language()
         if hasattr(self, "programs_page"): self.programs_page.refresh_language()
+        if hasattr(self, "profile_workspace"):
+            self.profile_workspace.refresh_language()
         if hasattr(self, "design_hub_page"): self.design_hub_page.refresh_language()
         if hasattr(self, "refresh_runtime_health"): self.refresh_runtime_health()
         if hasattr(self, "feature_setting_cards"): refresh_feature_settings(self)
@@ -10982,10 +10995,9 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.background_enabled_checkbox.setChecked(self.background_enabled)
         self.background_enabled_checkbox.setAccessibleName("Animation aktivieren")
         self.background_theme_combo = QComboBox()
-        self.background_theme_combo.addItems(AnimatedBackgroundWidget.THEMES)
-        self.background_theme_combo.setCurrentText(
-            self.background_theme if self.background_theme in AnimatedBackgroundWidget.THEMES else DEFAULT_BACKGROUND_THEME
-        )
+        for theme in AnimatedBackgroundWidget.THEMES:
+            self.background_theme_combo.addItem(theme, theme)
+        self.background_theme_combo.setCurrentIndex(max(0, self.background_theme_combo.findData(self.background_theme)))
         self.background_theme_combo.setAccessibleName("Hintergrundthema")
         self.background_enabled_checkbox.toggled.connect(self.on_background_enabled_toggled)
         self.background_fps_combo = QComboBox()
@@ -11006,10 +11018,9 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         background_buttons_layout.addWidget(apply_background)
         background_buttons_layout.addWidget(disable_background)
         background_note = QLabel(
-            f"Alle vierzehn Animationen werden prozedural aus dem GPL-Quellcode erzeugt. Version {APP_DISPLAY_VERSION} rendert sie "
-            "in einer sicheren CPU-Offscreen-Ebene hinter der Bedienoberfläche. Beim Ausschalten bleibt das zuletzt "
-            "gewählte Thema gespeichert und kann direkt wieder aktiviert werden. Es werden keine fremden Videos, "
-            "Bilder oder Online-Downloads mitgeliefert."
+            "Prozedurale Animationen und sechs eigene Videohintergründe. Auf der Profilseite erscheint "
+            "das zuletzt angewendete LCD- oder RGB-Design; andere Seiten behalten den eingestellten Hintergrund. "
+            "Ausgeschaltete oder unsichtbare Videos geben ihren Decoder frei."
         )
         background_note.setWordWrap(True)
         background_note.setObjectName("muted")
@@ -11162,117 +11173,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         return page
 
     def make_profiles_tab(self) -> QWidget:
-        page = QWidget()
-        outer = QVBoxLayout(page)
-        outer.setContentsMargins(16, 14, 22, 22)
-        outer.setSpacing(14)
-        outer.addWidget(self.make_module_hero(
-            "☷", "Profile", "Kühlung, GPU, LCD, RGB, Design und Anzeige gemeinsam sichern.", "Profile"))
-
-        startup_box = QGroupBox("Profil beim Start")
-        startup_form = QFormLayout(startup_box)
-        self.profile_startup_combo = QComboBox()
-        self.profile_startup_combo.currentIndexChanged.connect(self.profile_startup_changed)
-        startup_form.addRow("Automatisch laden", self.profile_startup_combo)
-        startup_note = QLabel("Kühlungsprofile werden erst nach erfolgreicher Kraken-Erkennung übertragen.")
-        startup_note.setWordWrap(True)
-        startup_note.setObjectName("muted")
-        startup_form.addRow(startup_note)
-        outer.addWidget(startup_box)
-
-        editor = QGroupBox("Profil erstellen oder aktualisieren")
-        form = QFormLayout(editor)
-        self.profile_name_input = QLineEdit()
-        self.profile_name_input.setPlaceholderText("z. B. Gaming, Leise Nacht oder Sommer")
-        self.profile_category_combo = QComboBox()
-        for category in ("Gesamt", "Kühlung", "GPU", "LCD", "RGB", "Design", "Benutzerdefiniert"):
-            self.profile_category_combo.addItem(category, category)
-        self.profile_description_input = QLineEdit()
-        self.profile_description_input.setPlaceholderText("Kurze Beschreibung")
-        profile_editor_buttons = QWidget()
-        peb = QHBoxLayout(profile_editor_buttons)
-        peb.setContentsMargins(0, 0, 0, 0)
-        create_profile = QPushButton("Als neues Profil speichern")
-        create_profile.clicked.connect(self.create_profile_from_current)
-        update_profile = QPushButton("Ausgewähltes Profil aktualisieren")
-        update_profile.clicked.connect(self.update_selected_profile)
-        peb.addWidget(create_profile)
-        peb.addWidget(update_profile)
-        form.addRow("Name", self.profile_name_input)
-        form.addRow("Kategorie", self.profile_category_combo)
-        form.addRow("Beschreibung", self.profile_description_input)
-        profile_sections = QWidget()
-        profile_sections_layout = QHBoxLayout(profile_sections)
-        profile_sections_layout.setContentsMargins(0, 0, 0, 0)
-        self.profile_section_checks: dict[str, QCheckBox] = {}
-        for key, title in (("cooling", "Kühlung"), ("gpu", "GPU"), ("lcd", "LCD"), ("rgb", "RGB"), ("design", "Design & Anzeige")):
-            checkbox = QCheckBox(title); checkbox.setChecked(True)
-            checkbox.toggled.connect(self.on_profile_sections_changed)
-            self.profile_section_checks[key] = checkbox; profile_sections_layout.addWidget(checkbox)
-        profile_sections_layout.addStretch()
-        self.profile_category_combo.currentIndexChanged.connect(self.apply_profile_category_to_sections)
-        form.addRow("Gespeicherte Bereiche", profile_sections)
-        form.addRow(profile_editor_buttons)
-        outer.addWidget(editor)
-
-        self.profiles_table = QTableWidget(0, 4)
-        self.profiles_table.setHorizontalHeaderLabels(["Name", "Kategorie", "Beschreibung", "Typ"])
-        self.profiles_table.verticalHeader().setVisible(False)
-        self.profiles_table.horizontalHeader().setStretchLastSection(True)
-        self.profiles_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.profiles_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        header = self.profiles_table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
-        self.profiles_table.itemSelectionChanged.connect(self.on_profile_selection_changed)
-        self.profiles_table.doubleClicked.connect(lambda _index: self.apply_selected_profile())
-        outer.addWidget(self.profiles_table, 1)
-
-        contents_box = QGroupBox("Gespeicherter Profilinhalt")
-        contents_layout = QVBoxLayout(contents_box)
-        self.profile_contents_summary = QLabel("Profil auswählen, um alle gespeicherten Bereiche und Werte zu sehen.")
-        self.profile_contents_summary.setWordWrap(True)
-        self.profile_contents_summary.setObjectName("infoText")
-        contents_layout.addWidget(self.profile_contents_summary)
-        self.profile_contents_tree = QTreeWidget()
-        self.profile_contents_tree.setHeaderLabels(["Bereich / Einstellung", "Gespeicherter Wert"])
-        self.profile_contents_tree.setRootIsDecorated(True)
-        self.profile_contents_tree.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        self.profile_contents_tree.header().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        self.profile_contents_tree.setMinimumHeight(190)
-        contents_layout.addWidget(self.profile_contents_tree)
-        outer.addWidget(contents_box)
-
-        buttons = QHBoxLayout()
-        apply_profile = QPushButton("Profil anwenden")
-        apply_profile.clicked.connect(self.apply_selected_profile)
-        duplicate_profile = QPushButton("Duplizieren")
-        duplicate_profile.clicked.connect(self.duplicate_selected_profile)
-        rename_profile = QPushButton("Umbenennen")
-        rename_profile.clicked.connect(self.rename_selected_profile)
-        delete_profile = QPushButton("Löschen")
-        delete_profile.clicked.connect(self.delete_selected_profile)
-        import_profile = QPushButton("Importieren")
-        import_profile.clicked.connect(self.import_profiles)
-        export_profile = QPushButton("Exportieren")
-        export_profile.clicked.connect(self.export_selected_profile)
-        for button in (apply_profile, duplicate_profile, rename_profile, delete_profile, import_profile, export_profile):
-            buttons.addWidget(button)
-        buttons.addStretch()
-        outer.addLayout(buttons)
-
-        from modules.profile_bundle.v1_0.controller import build_bundle_controls
-        build_bundle_controls(self, outer)
-
-        self.profile_status_label = QLabel("Noch kein Profil ausgewählt.")
-        self.profile_status_label.setWordWrap(True)
-        self.profile_status_label.setObjectName("muted")
-        outer.addWidget(self.profile_status_label)
-        self.load_profiles()
-        self.refresh_profiles_table()
-        return page
+        from modules.profiles_workspace.v1_0.page import build_page
+        return build_page(self)
 
     @staticmethod
     def make_external_link(text: str, url: str) -> QLabel:
@@ -11799,6 +11701,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                 self.add_profile_payload_tree(item, child_value, depth + 1)
 
     def refresh_profile_contents(self, profile: dict[str, object] | None) -> None:
+        if hasattr(self, "profile_workspace"):
+            self.profile_workspace.show_profile(profile)
         if not hasattr(self, "profile_contents_tree"):
             return
         self.profile_contents_tree.clear()
@@ -11831,45 +11735,12 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             self.profile_contents_tree.addTopLevelItem(root)
             self.add_profile_payload_tree(root, value)
             root.setExpanded(True)
+        if hasattr(self, "profile_workspace"):
+            self.profile_workspace.show_profile(profile)
 
     def refresh_profiles_table(self) -> None:
-        if not hasattr(self, "profiles_table"):
-            return
-        current_item = self.profiles_table.item(self.profiles_table.currentRow(), 0) if self.profiles_table.currentRow() >= 0 else None
-        selected_before = str(current_item.data(Qt.ItemDataRole.UserRole) or "") if current_item is not None else ""
-        profiles = self.all_profiles()
-        self.profiles_table.setRowCount(len(profiles))
-        for row, profile in enumerate(profiles):
-            values = (
-                str(profile.get("name", "Unbenannt")),
-                str(profile.get("category", "Gesamt")),
-                str(profile.get("description", "")),
-                "Standard" if profile.get("builtin") else "Eigenes Profil",
-            )
-            for column, value in enumerate(values):
-                item = QTableWidgetItem(value)
-                if column == 0:
-                    item.setData(Qt.ItemDataRole.UserRole, str(profile.get("id", "")))
-                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-                self.profiles_table.setItem(row, column, item)
-        if hasattr(self, "profile_startup_combo"):
-            saved_startup = str(self.settings.value("profiles/startup", "none"))
-            self.profile_startup_combo.blockSignals(True)
-            self.profile_startup_combo.clear()
-            self.profile_startup_combo.addItem("Kein automatisches Profil", "none")
-            self.profile_startup_combo.addItem("Zuletzt verwendetes Profil", "last")
-            for profile in profiles:
-                self.profile_startup_combo.addItem(str(profile.get("name", "Profil")), str(profile.get("id", "")))
-            startup_index = self.profile_startup_combo.findData(saved_startup)
-            self.profile_startup_combo.setCurrentIndex(max(0, startup_index))
-            self.profile_startup_combo.blockSignals(False)
-        target_profile_id = selected_before or self.current_profile_id
-        if target_profile_id:
-            for row in range(self.profiles_table.rowCount()):
-                item = self.profiles_table.item(row, 0)
-                if item and item.data(Qt.ItemDataRole.UserRole) == target_profile_id:
-                    self.profiles_table.selectRow(row)
-                    break
+        if hasattr(self, "profile_workspace"):
+            self.profile_workspace.refresh()
 
     def apply_profile_by_id(self, profile_id: str, *, startup: bool = False) -> None:
         profile = next((item for item in self.all_profiles() if str(item.get("id")) == profile_id), None)
@@ -11927,7 +11798,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
     def on_profile_selection_changed(self) -> None:
         profile = self.selected_profile()
         if profile is None:
-            self.profile_status_label.setText("Noch kein Profil ausgewählt.")
+            self.profile_status_label.setText(self.tr_static("Noch kein Profil ausgewählt."))
             self.refresh_profile_contents(None)
             return
         self.profile_name_input.setText(str(profile.get("name", "")))
@@ -11943,8 +11814,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             self.profile_category_combo.setCurrentIndex(max(0, self.profile_category_combo.findData(category)))
         finally:
             self._syncing_profile_sections = False
-        profile_type = "Standardprofil" if profile.get("builtin") else "eigenes Profil"
-        self.profile_status_label.setText(f"Ausgewählt: {profile.get('name')} · {profile_type}")
+        profile_type = self.tr_static("Standardprofil" if profile.get("builtin") else "Eigenes Profil")
+        self.profile_status_label.setText(f"{self.tr_static('Profile')}: {profile.get('name')} · {profile_type}")
         self.refresh_profile_contents(profile)
 
     def current_lcd_profile_mode(self) -> str:
@@ -12200,6 +12071,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.current_profile_id = str(copy_profile["id"])
         self.save_profiles()
         self.refresh_profiles_table()
+        if hasattr(self, "profile_workspace"):
+            self.profile_workspace.select(str(copy_profile["id"]))
 
     def rename_selected_profile(self) -> None:
         profile = self.selected_profile()
@@ -12505,6 +12378,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             if self.cooling_device_ready():
                 self.transmit_profile_cooling(cooling, name)
         self.save_settings()
+        from modules.app_backgrounds.v1_0.profile import mark_applied
+        mark_applied(self, payload)
         self.profile_status_label.setText(f"Aktiv: {name}")
         self.footer_status.setText(f"Profil „{name}“ angewendet")
 
@@ -12936,7 +12811,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
 
     def _restorable_background_theme(self) -> str:
         """Return a real animation theme that can be restored after disabling."""
-        current = self.background_theme_combo.currentText() if hasattr(self, "background_theme_combo") else self.background_theme
+        current = (self.background_theme_combo.currentData() or self.background_theme_combo.currentText()) if hasattr(self, "background_theme_combo") else self.background_theme
         if current in AnimatedBackgroundWidget.THEMES and current != "Aus":
             return current
         if self.background_last_theme in AnimatedBackgroundWidget.THEMES and self.background_last_theme != "Aus":
@@ -12947,14 +12822,14 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         """Immediately toggle animation while preserving the selected theme."""
         if enabled:
             theme = self._restorable_background_theme()
-            if self.background_theme_combo.currentText() == "Aus":
+            if (self.background_theme_combo.currentData() or self.background_theme_combo.currentText()) == "Aus":
                 self.background_theme_combo.blockSignals(True)
-                self.background_theme_combo.setCurrentText(theme)
+                self.background_theme_combo.setCurrentIndex(max(0, self.background_theme_combo.findData(theme)))
                 self.background_theme_combo.blockSignals(False)
             self.background_theme = theme
             self.background_last_theme = theme
         else:
-            current = self.background_theme_combo.currentText()
+            current = (self.background_theme_combo.currentData() or self.background_theme_combo.currentText())
             if current != "Aus" and current in AnimatedBackgroundWidget.THEMES:
                 self.background_last_theme = current
                 self.background_theme = current
@@ -12978,7 +12853,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.footer_status.setText("Animation aktiviert" if self.background_enabled else "Animation ausgeschaltet")
 
     def apply_background_settings(self) -> None:
-        selected_theme = self.background_theme_combo.currentText()
+        selected_theme = (self.background_theme_combo.currentData() or self.background_theme_combo.currentText())
         requested_enabled = self.background_enabled_checkbox.isChecked()
         if selected_theme == "Aus":
             requested_enabled = False
@@ -13010,7 +12885,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
 
     def disable_background(self) -> None:
         # Disabling must not overwrite the selected theme with 'Aus'.
-        current = self.background_theme_combo.currentText()
+        current = (self.background_theme_combo.currentData() or self.background_theme_combo.currentText())
         if current != "Aus" and current in AnimatedBackgroundWidget.THEMES:
             self.background_last_theme = current
             self.background_theme = current
@@ -13032,7 +12907,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             self.background_enabled_checkbox.blockSignals(True)
             self.background_enabled_checkbox.setChecked(self.background_enabled)
             self.background_enabled_checkbox.blockSignals(False)
-            self.background_theme_combo.setCurrentText(self.background_theme)
+            self.background_theme_combo.setCurrentIndex(max(0, self.background_theme_combo.findData(self.background_theme)))
             index = self.background_fps_combo.findData(self.background_fps)
             self.background_fps_combo.setCurrentIndex(max(0, index))
             self.background_intensity_slider.setValue(self.background_intensity)
@@ -13225,7 +13100,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             self.background_enabled_checkbox.blockSignals(True)
             self.background_enabled_checkbox.setChecked(self.background_enabled)
             self.background_enabled_checkbox.blockSignals(False)
-            self.background_theme_combo.setCurrentText(self.background_theme)
+            self.background_theme_combo.setCurrentIndex(max(0, self.background_theme_combo.findData(self.background_theme)))
             fps_index = self.background_fps_combo.findData(self.background_fps)
             self.background_fps_combo.setCurrentIndex(max(0, fps_index))
             self.background_intensity_slider.setValue(self.background_intensity)
@@ -13695,6 +13570,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             run.run("design-automation", self.design_automation_controller.shutdown)
         if hasattr(self, "design_hub_page"):
             run.run("design-hub", self.design_hub_page.shutdown)
+        if hasattr(self, "background_widget"):
+            run.run("app-background", self.background_widget.media_background.shutdown)
         if hasattr(self, "process_runtime"):
             run.run("sensor-runtime", self.process_runtime.shutdown)
         thermalright_studio = getattr(self, "thermalright_display_studio", None)
@@ -18540,6 +18417,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         window_active = self.isVisible() and not self.isMinimized()
         sync_visible_page_timer(self, timer, tabs, getattr(self, "rgb_page_scroll", None), self.update_rgb_studio_preview)
         self.background_widget.set_window_active(window_active)
+        from modules.app_backgrounds.v1_0.profile import sync as sync_profile_background
+        sync_profile_background(self)
         self.display_effects_page.set_window_active(window_active)
         lcd_active = active_page_visible(self, tabs, getattr(self, "lcd_scroll_page", None))
         for movie in (getattr(self, "lcd_preview_movie", None), getattr(self, "hardware_animation_movie", None)):

@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.177 INTERN
+# Open Hardware Control by Frelidon 3.4.29.178 INTERN
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -51,16 +51,16 @@ Projekt-Repository: <https://github.com/Frelidon/open-hardware-control>
 
 ## Thermalright Levita Vision Display
 
-**Das 1600×720-Display der Thermalright Levita Vision 360 ARGB Black wird unterstützt.** Das lokale Display-Studio kombiniert eigene Bilder und Videos (Ebene 1) mit einem vollständigen TRCC-Hardwaredesign oder frei verschiebbaren OHC-Live-Werten für CPU, GPU, RAM, Uhrzeit und eigenen Text (Ebene 2). Mitgeliefert werden elf eigene OHC-Hintergründe, zwölf eigene editierbare Datenlayouts, vier eigene Ebene-1-Animationen sowie sechs OHC-Effektfamilien mit dreizehn Varianten. Hersteller-/TRCC-Katalogmedien, importierte Benutzerdateien, Stock-Clips und fremde Designbestandteile werden nicht mitgeliefert.
+**Das 1600×720-Display der Thermalright Levita Vision 360 ARGB Black wird unterstützt.** Das lokale Display-Studio kombiniert eigene Bilder und Videos (Ebene 1) mit einem vollständigen TRCC-Hardwaredesign oder frei verschiebbaren OHC-Live-Werten für CPU, GPU, RAM, Uhrzeit und eigenen Text (Ebene 2). Mitgeliefert werden elf eigene OHC-Hintergründe, zwölf eigene editierbare Datenlayouts, vier eigene Ebene-1-Animationen sowie sechs OHC-Effektfamilien mit sechzehn Varianten. Hersteller-/TRCC-Katalogmedien, importierte Benutzerdateien, Stock-Clips und fremde Designbestandteile werden nicht mitgeliefert.
 
 Der sichere Testmodus ist standardmäßig aktiv; echte USB-Übertragung erfolgt nur über das separat installierte GPL-Backend **TRCC Linux** (9.10.4 empfohlen). Pumpe und Radiatorlüfter der Levita laufen über getrennt bestätigte Mainboard-PWM-Header (`PUMP_FAN`, `CPU_FAN`) mit sicherem 70-%-/10-s-Test; CoolerControl blockiert parallele Schreibzugriffe.
 
-## Neu in 3.4.29.177 INTERN
+## Neu in 3.4.29.178 INTERN
 
-- Eigenes Matrix Code Rain für Lüfter und nahtloser LCD-Hintergrund mit erhaltener Datenebene.
-- Designs & Spiele zwischen RGB und LCD mit Designpaaren, Spielen und Automationszentrale.
-- Fünf passende Designpaare, getrennte RGB-/LCD-Aktionen und sichtbarkeitsgebundene Vorschau.
-- Editierbare Profilwechsel für ATMOSFAR, Mirage und Witcher 3; noch keine Live-Spieldaten.
+- Profilbibliothek mit Karten, Suche, gespeicherten Bereichen und aufklappbarer Bearbeitung.
+- Matrix und fünf weitere eigene Videohintergründe mit sichtbarkeitsgebundener Wiedergabe.
+- LCD-/RGB-Hintergrund des aktiven Profils auf der Profilseite, sonst globale Auswahl.
+- Matrix-LCD-Zeichen +30 % als Standard sowie +50 %, +100 % und bisheriges Original.
 
 ## Installation
 
@@ -68,30 +68,30 @@ Die folgenden Dateinamen gelten für den kommenden lokalen Bau; Pakete sind noch
 
 ### Fedora und Nobara – RPM
 
-Lade `open-hardware-control-3.4.29.177-0.intern2.noarch.rpm` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control-3.4.29.178-0.intern2.noarch.rpm` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.177-0.intern2.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.178-0.intern2.noarch.rpm
 ```
 
 ### Debian, Ubuntu und Linux Mint – DEB
 
-Lade `open-hardware-control_3.4.29.177~intern2_all.deb` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control_3.4.29.178~intern2_all.deb` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.177~intern2_all.deb'
+sudo apt install './open-hardware-control_3.4.29.178~intern2_all.deb'
 ```
 
 ### Universelles Installationspaket – ZIP
 
-Für Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_177_INTERN.zip` herunter und führe aus:
+Für Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_178_INTERN.zip` herunter und führe aus:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_177_INTERN.zip
-cd open-hardware-control-3.4.29.177-INTERN
+unzip open_hardware_control_v3_4_29_178_INTERN.zip
+cd open-hardware-control-3.4.29.178-INTERN
 chmod +x install.sh
 ./install.sh
 ```
@@ -160,12 +160,13 @@ Liest nur lokale Steam-Workshop-Metadaten, wählt Wallpaper über Plasmas offizi
 
 ## Versionsverlauf
 
+**3.4.29.178** – Profilkarten, Videohintergründe und größere Matrix-LCD-Zeichen.
+
 **3.4.29.177** – Matrix-Designpaar und gemeinsamer Bereich Designs & Spiele.
 
 **3.4.29.176** – Lüfter-Assistent mit unbenutzten Anschlüssen und neue Temperaturansicht.
 
 **3.4.29.175** – Modellkatalog mit Produktlinks und stabile Menüauswahl.
 
-**3.4.29.174** – Unabhängige Standard-DPI je Mausprofil.
 
 Alle früheren Versionen bis 2.9.x: [docs/CHANGELOG.md](docs/CHANGELOG.md) und [docs/releases/](docs/releases/).

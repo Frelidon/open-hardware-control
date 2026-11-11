@@ -167,6 +167,8 @@ class UiThemeMixin:
             self.design_preview.setText(
                 f"{self.theme_mode_combo.currentText()} · Akzent {self.accent_hex} · Skalierung {self.ui_scale_percent} %"
             )
+        if hasattr(self, "profile_workspace"):
+            self.profile_workspace.refresh_palette()
         if hasattr(self, "background_widget"):
             blocked = not theme.animated_background_allowed
             self._animated_background_theme_blocked = blocked

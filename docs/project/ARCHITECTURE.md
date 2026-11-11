@@ -1,5 +1,16 @@
 # Open Hardware Control — Architecture
 
+## .178 · Profil-Arbeitsbereich und Hintergrundkomposition
+
+`profiles_workspace/v1_0` komponiert UI um bestehende sichere Profile-Controller;
+`model.py` bleibt rein, `cards.py` wählt stabile IDs, `page.py` hält die verborgene
+elterngebundene Tabellenkompatibilität. Keine Schemaänderung.
+`app_backgrounds/v1_0` ergänzt die bestehende RGB32-Hintergrundebene um einen
+sichtbarkeitsgebundenen lokalen Decoder, statische Bilder oder einen kleinen
+RGB-Renderer. Lokales Dateiprüfen/Decoder-Aufbau erfolgt außerhalb paint.
+Ein unabhängiger angewendeter Payload-Snapshot trennt aktive Profile von Auswahl
+und Bearbeitung. Sensor-Overlays auf dem LCD werden weder ersetzt noch erfunden.
+
 ## 11.11.26 – Design Hub 1.0 (.177)
 
 `design_hub/v1_0` separates immutable pair metadata, pure periodic LED sampling, visibility-bound Qt/video previews, rule preparation and host-controller delegation. The RGB renderer gains one appended preset without renumbering. The LCD catalog appends one MP4/JPG and keeps its first/default entry. Applying LCD changes Layer 1 only; existing Layer 2 remains owned by the Levita studio. Both target requests keep their own asynchronous status and ownership gates. Existing automation rules remain in their original store; opening a game draft saves or activates nothing.

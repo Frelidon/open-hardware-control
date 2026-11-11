@@ -1,5 +1,14 @@
 # Open Hardware Control — Modulkarte für Coding-KIs
 
+## .178 Profile und Programm-Hintergründe
+
+`profiles_workspace/v1_0/`: Bibliothek/Karten, reine Filter/Zusammenfassung und
+aufklappbare Editor-/Detail-/Transferpanels. Legacy-CRUD bleibt ID-basiert.
+`app_backgrounds/v1_0/`: feste Medien, ein Decoder und separater angewendeter
+Profilzustand. Keine Vorschau schreibt Hardware oder globale Einstellungen.
+`tools/render_app_backgrounds.py` / `render_code_rain.py`: eigene periodische
+Videos, Matrix-Zeichengrößen; bestehende Dateien unverändert.
+
 ## .95 Display preview paths
 
 `lcd_levita/v1_7/media_preview.py`: selected-video driver, pending/confirmed

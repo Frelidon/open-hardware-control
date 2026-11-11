@@ -1,0 +1,41 @@
+{
+  "characters+30%": {
+    "size": [
+      1600,
+      720
+    ],
+    "frames": 360,
+    "fps": 30,
+    "seconds": 12,
+    "exact_periodicity": true,
+    "seam": 0.0617974537037037,
+    "max_adjacent": 0.06615972222222222,
+    "sensor_values": false
+  },
+  "characters+50%": {
+    "size": [
+      1600,
+      720
+    ],
+    "frames": 360,
+    "fps": 30,
+    "seconds": 12,
+    "exact_periodicity": true,
+    "seam": 0.05272829861111111,
+    "max_adjacent": 0.05372019675925926,
+    "sensor_values": false
+  },
+  "characters+100%": {
+    "size": [
+      1600,
+      720
+    ],
+    "frames": 360,
+    "fps": 30,
+    "seconds": 12,
+    "exact_periodicity": true,
+    "seam": 0.057363136574074075,
+    "max_adjacent": 0.06000665509259259,
+    "sensor_values": false
+  }
+}

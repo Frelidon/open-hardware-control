@@ -1,4 +1,11 @@
-# Komponenten- und Versionsübersicht – Version 3.4.29.176 STABLE
+# Komponenten- und Versionsübersicht – Version 3.4.29.178 INTERN
+
+## Entwicklung .178 · 11.11.26
+
+Profil-Arbeitsbereich 1.0 und Programm-Hintergründe 1.0 sind neue reine
+Oberflächenmodule. Display-Effekte 1.11 erhält additive Matrix-Varianten;
+Lokalisierung 1.0 enthält 2.501 gemeinsame IDs. Bestehende native RGB-/LCD-/GPU-
+Unterbauten bleiben unverändert. Keine neue Hardware-Kompatibilitätsbehauptung.
 
 Öffentliche .176-Veröffentlichung am 11.11.26 beauftragt. STABLE-Wächter:
 1.587 Tests und fünf Untertests bestanden; alle sechs Artefakte, beide

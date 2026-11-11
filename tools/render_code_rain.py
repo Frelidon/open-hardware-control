@@ -29,24 +29,33 @@ def glyph_atlas():
     result = []
     for char in GLYPHS:
         tile = Image.new('L', (CELL, CELL))
-        ImageDraw.Draw(tile).text((CELL / 2, CELL / 2), char, font=font(19),
+        ImageDraw.Draw(tile).text((CELL / 2, CELL / 2), char, font=font(GLYPH_SIZE),
                                   fill=255, anchor='mm')
         result.append(np.asarray(tile, dtype=np.float32) / 255)
     return np.stack(result)
 
 
-ATLAS = glyph_atlas()
-INDEX_A = rng.integers(0, len(GLYPHS), (ROWS, COLS))
-INDEX_B = rng.integers(0, len(GLYPHS), (ROWS, COLS))
-OFFSET = rng.random(COLS) * ROWS
-CYCLES = rng.choice([1, 1, 1, 2], COLS)
-LENGTH = rng.uniform(8, 19, COLS)
-DEPTH = rng.uniform(.36, 1, COLS)
-TWINKLE = rng.random((ROWS, COLS))
-SWITCH = rng.choice([1, 2], (ROWS, COLS))
-Y, X = np.mgrid[0:ROWS, 0:COLS]
-QUIET = 1 - .43 * np.exp(-((X - COLS / 2) / 20) ** 4
-                          - ((Y - ROWS * .64) / 7) ** 4)
+def configure(scale=1.0):
+    global CELL, COLS, ROWS, ATLAS, INDEX_A, INDEX_B, OFFSET, CYCLES, LENGTH, DEPTH, TWINKLE, SWITCH, Y, X, QUIET, GLYPH_SIZE
+    CELL = round(24 * scale)
+    GLYPH_SIZE = round(19 * scale)
+    COLS, ROWS = math.ceil(WIDTH / CELL), math.ceil(HEIGHT / CELL)
+    rng = np.random.default_rng(20261111)
+    ATLAS = glyph_atlas()
+    INDEX_A = rng.integers(0, len(GLYPHS), (ROWS, COLS))
+    INDEX_B = rng.integers(0, len(GLYPHS), (ROWS, COLS))
+    OFFSET = rng.random(COLS) * ROWS
+    CYCLES = rng.choice([1, 1, 1, 2], COLS)
+    LENGTH = rng.uniform(8, 19, COLS)
+    DEPTH = rng.uniform(.36, 1, COLS)
+    TWINKLE = rng.random((ROWS, COLS))
+    SWITCH = rng.choice([1, 2], (ROWS, COLS))
+    Y, X = np.mgrid[0:ROWS, 0:COLS]
+    QUIET = 1 - .43 * np.exp(-((X - COLS / 2) / 20) ** 4
+                              - ((Y - ROWS * .64) / 7) ** 4)
+
+
+configure()
 
 
 def render_background(phase):
@@ -66,10 +75,10 @@ def render_background(phase):
     mix = (.5 - .5 * np.cos(2 * math.pi * (phase * SWITCH + TWINKLE)))
     masks = ATLAS[INDEX_A] * (1 - mix[:, :, None, None])
     masks += ATLAS[INDEX_B] * mix[:, :, None, None]
-    mask = masks.transpose(0, 2, 1, 3).reshape(HEIGHT, COLS * CELL)[:, :WIDTH]
-    light = np.repeat(np.repeat(brightness, CELL, axis=0), CELL, axis=1)[:, :WIDTH]
+    mask = masks.transpose(0, 2, 1, 3).reshape(ROWS * CELL, COLS * CELL)[:HEIGHT, :WIDTH]
+    light = np.repeat(np.repeat(brightness, CELL, axis=0), CELL, axis=1)[:HEIGHT, :WIDTH]
     lead = np.exp(-distance * distance / .8) * DEPTH[None, :]
-    lead = np.repeat(np.repeat(lead, CELL, axis=0), CELL, axis=1)[:, :WIDTH]
+    lead = np.repeat(np.repeat(lead, CELL, axis=0), CELL, axis=1)[:HEIGHT, :WIDTH]
     rgb = np.empty((HEIGHT, WIDTH, 3), dtype=np.float32)
     rgb[:, :, 0] = 1 + mask * (light * 24 + lead * 105)
     rgb[:, :, 1] = 5 + mask * (light * 208 + lead * 42)
@@ -85,7 +94,9 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, default=ROOT / 'ohc-code-rain-original.mp4')
+    parser.add_argument('--scale', type=float, choices=(1., 1.3, 1.5, 2.), default=1.)
     args = parser.parse_args()
+    configure(args.scale)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     process = subprocess.Popen([
         'ffmpeg', '-hide_banner', '-loglevel', 'error', '-y',

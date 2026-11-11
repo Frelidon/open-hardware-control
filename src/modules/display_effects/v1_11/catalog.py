@@ -102,7 +102,12 @@ DESIGNS: tuple[EffectDesign, ...] = (
         "Grüner Code-Regen mit sanften Lichtspuren und Platz für die vorhandene Datenebene.",
         "Frelidon / Open Hardware Control", "https://github.com/Frelidon/open-hardware-control",
         "https://github.com/Frelidon/open-hardware-control", "GPL-3.0-or-later",
-        "https://www.gnu.org/licenses/gpl-3.0.html", _single_variant("ohc-code-rain"),
+        "https://www.gnu.org/licenses/gpl-3.0.html", (
+            EffectVariant("large-30", "Zeichen +30 % · Standard", "ohc-code-rain-large-30.mp4"),
+            EffectVariant("large-50", "Zeichen +50 %", "ohc-code-rain-large-50.mp4"),
+            EffectVariant("large-100", "Zeichen +100 %", "ohc-code-rain-large-100.mp4"),
+            EffectVariant("original", "Original", "ohc-code-rain-original.mp4"),
+        ),
     ),
 )
 

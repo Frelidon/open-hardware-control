@@ -51,6 +51,13 @@ ORIGINAL_IDS = {
 
 # Original .177 render, in addition to the unchanged .148 preservation baseline.
 ADDED_MEDIA_SHA256 = {'ohc-code-rain-original.mp4': 'd3f19ee55b3a06698986feb5e4c4e0f6a371ae26e0e5f965aef1c9a53ad04bf9', 'ohc-code-rain-original.jpg': 'a6ee80fb0e55c32186fa72f8125a261c369e8f8e18b0fb8b4144b669940d1c65'}
+# Additive .178 character-size variants; preceding baseline stays unchanged.
+ADDED_MEDIA_SHA256.update({'ohc-code-rain-large-100.jpg': '0b436eef3a8c598cddb0b7c3a4b2acc42bbf28790177916e3a467e5e123d4c15',
+ 'ohc-code-rain-large-100.mp4': 'fccfb9e7b684f25f39bca7732234503b2ef7f4cd2ad549b7e8c7fa0be7e29798',
+ 'ohc-code-rain-large-30.jpg': 'deadd63af261cc230ae8eb3f57ddd41adef9bfaca504c46236720a539a756706',
+ 'ohc-code-rain-large-30.mp4': 'c5585134c1731b320b7b16ceda7db3a028f786119aab78b2cccd215cf241d84b',
+ 'ohc-code-rain-large-50.jpg': 'a6b7b6ce59dbf914bafb87fa6a57cb5c244b5b804e42c19bb802f9994e493a99',
+ 'ohc-code-rain-large-50.mp4': '1c2387930df9d0af4ab873d6b584dcdb25d961f34bef4452abfad5875fcc7e66'})
 CATALOG_IDS = ORIGINAL_IDS | {"ohc-code-rain"}
 
 

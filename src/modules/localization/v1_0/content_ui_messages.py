@@ -70,3 +70,7 @@ for _language, _messages in FAN_HISTORY_MESSAGES.items():
 from .design_hub_messages import DESIGN_HUB_MESSAGES
 for _language, _messages in DESIGN_HUB_MESSAGES.items():
     CONTENT_UI_MESSAGES[_language].update(_messages)
+
+from .profile_background_messages import PROFILE_BACKGROUND_MESSAGES
+for _language, _messages in PROFILE_BACKGROUND_MESSAGES.items():
+    CONTENT_UI_MESSAGES[_language].update(_messages)

@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.4.29.178 INTERN · 11.11.26
+
+- Replace the visible profile table with searchable cards, saved-section summaries and collapsed editor/details/backup panels; retain IDs, startup behavior and protected apply paths.
+- Add six original local app video backgrounds, including Matrix, with one visibility-bound decoder and aspect-preserving bounded CPU composition.
+- Show the explicitly applied profile's LCD base media or saved RGB animation only on Profiles; restore the global background elsewhere without persisting the transient choice.
+- Add Matrix LCD characters +30% (new default), +50%, +100%; retain original media and saved selections.
+- Translate all controls and background choices atomically in German, English, Spanish and French.
+
 ## 3.4.29.177 INTERN · 11.11.26
 
 - Add original Matrix Code Rain for RGB fans and a seamless 1600×720 LCD background without baked-in sample readings; preserve existing presets, topology and sensor layers.

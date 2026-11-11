@@ -55,6 +55,7 @@ def dispose_window(host: application.KrakenControl) -> None:
     studio = host.thermalright_display_studio
     # The test has exercised startup intent but must not let its delayed retry
     # outlive the window.  Quiesce UI-only owners without firmware restoration.
+    host.background_widget.media_background.shutdown()
     studio.shutdown_started = True
     studio.startup_apply_active = False
     studio.thumbnail_shutting_down = True
@@ -411,7 +412,7 @@ for _refresh in range(2):
     )
 assert application._GIF_SAFETY_TEXT in labels
 assert application._ABOUT_SUMMARY_TEXT in labels
-assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.177 INTERN")
+assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.178 INTERN")
 assert window.temp_card.isHidden()
 assert not window.cpu_temp_card.isHidden()
 assert window.mainboard_sensor_source.findData("liquid") == -1
@@ -629,6 +630,8 @@ if render_dir:
     assert modules_box.grab().save(str(output / "settings-modules-panel.png"))
     window.tabs.setCurrentIndex(5)
     qt_app.processEvents()
+    window.profile_workspace.transfers.button.setChecked(True)
+    qt_app.processEvents()
     assert window.profile_bundle_controller.buttons[0].isVisible()
     assert window.grab().save(str(output / "profiles-complete-package.png"))
 # .172 hardware subnavigation and language refresh retain all existing views.
@@ -714,6 +717,69 @@ for language in ("de", "en", "es", "fr"):
     wizard.reject()
 window.mainboard_channels = {}
 window.mainboard_fan_profiles.pop(channel.stable_id, None)
+
+# .178 profile cards keep legacy IDs/CRUD and never apply on selection/filter.
+workspace = window.profile_workspace
+original_users = list(window.user_profiles)
+original_current = window.current_profile_id
+sample = {'id':'ui-profile-check','name':'Private test name','description':'draft data','category':'RGB','payload':{'rgb':{'studio_effect':'code_rain','studio_brightness':75}},'builtin':False}
+window.user_profiles.append(sample)
+workspace.refresh()
+with patch.object(window, 'apply_profile_payload', side_effect=AssertionError('selection must not apply')), patch.object(window, 'save_profiles', side_effect=AssertionError('browsing must not save')):
+    workspace.select(sample['id'])
+    assert window.selected_profile()['id'] == sample['id']
+    assert workspace.edit.isEnabled() and workspace.delete.isEnabled()
+    workspace.search.setText('Private')
+    assert not workspace.cards[sample['id']].isHidden()
+    workspace.search.setText('no matching name')
+    assert not workspace.empty.isHidden()
+    assert window.selected_profile()['id'] == sample['id']
+    workspace.search.clear()
+    window.profile_name_input.setText('Unsaved name')
+    window.profile_description_input.setText('Unsaved description')
+    for language in ('de','en','es','fr'):
+        window.apply_ui_language(language,persist=False,log_change=False)
+        assert window.selected_profile()['id'] == sample['id']
+        assert window.profile_name_input.text() == 'Unsaved name'
+        assert window.profile_description_input.text() == 'Unsaved description'
+        assert workspace.filter.itemData(0) == 'all'
+        assert workspace.filter.itemText(0) == window.tr_static('Alle Profile')
+        assert window.background_theme_combo.findData('Sternenfeld') >= 0
+        assert window.background_theme_combo.itemText(window.background_theme_combo.findData('Sternenfeld')) == window.tr_static('Sternenfeld')
+    workspace.select('builtin-quiet')
+    assert not workspace.edit.isEnabled() and not workspace.delete.isEnabled()
+    assert workspace.duplicate.isEnabled() and workspace.apply.isEnabled()
+    workspace.new_profile()
+    assert window.selected_profile() is None
+    assert window.profile_name_input.text() == ''
+    assert workspace.editor.button.isChecked()
+    assert not workspace.update.isEnabled()
+workspace.select(sample['id'])
+with patch.object(window, 'save_profiles'):
+    window.duplicate_selected_profile()
+assert window.selected_profile()['id'] != sample['id']
+assert window.selected_profile()['payload'] == sample['payload']
+assert window.selected_profile()['builtin'] is False
+window.user_profiles = original_users
+window.current_profile_id = original_current
+workspace.search.clear();workspace.filter.setCurrentIndex(0);workspace.refresh()
+workspace.editor.button.setChecked(False)
+window.apply_ui_language('de',persist=False,log_change=False)
+assert window.profiles_table.parentWidget() is workspace and window.profiles_table.isHidden()
+# Applied-profile background has independent state; visiting other pages restores
+# the global choice and never changes persisted background preferences.
+from modules.app_backgrounds.v1_0.profile import mark_applied, sync as sync_profile_background
+configured_theme = window.background_theme
+persisted_background = window.settings.value('ui/background_theme')
+window.tabs.setCurrentIndex(5)
+mark_applied(window, {'rgb':{'studio_effect':'code_rain','studio_primary':'00ff66'}})
+assert window.background_widget.media_background.rgb.effect_id == 'code_rain'
+workspace.select('builtin-quiet')
+assert window.background_widget.media_background.rgb.effect_id == 'code_rain'
+window.tabs.setCurrentIndex(4);sync_profile_background(window)
+assert window.background_widget.media_background.rgb is None
+assert window.background_theme == configured_theme
+assert window.settings.value('ui/background_theme') == persisted_background
 
 dispose_window(window)
 

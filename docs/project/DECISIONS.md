@@ -1,5 +1,16 @@
 # Open Hardware Control — Durable Decisions
 
+## 11.11.26 · Angewendete Profile und temporärer Hintergrund
+
+Die letzte bearbeitete Profil-ID gilt nicht als Nachweis eines angewendeten
+Profils. Eine separate sitzungsinterne Kopie des ausdrücklich angewendeten
+Payloads steuert nur den Hintergrund der Profilseite: LCD-Basismedium bevorzugt,
+sonst gespeicherter RGB-Effekt. Außerhalb der Seite gilt die globale Auswahl.
+Kein Hintergrund schreibt Hardware oder speichert seine temporäre Auswahl.
+Ein Video-Decoder wird nach Sichtbarkeit/Minimierung/Animationsfreigabe entladen;
+Bilder/Zeichnung behalten das Seitenverhältnis und begrenzte Renderflächen.
+Matrix-Größen sind zusätzliche Varianten, keine Überschreibung alter Medien.
+
 ## 11.11.26 – Matching designs and game section (.177)
 
 The owner requests Matrix first for fans and LCD, plus one Designs & Games parent between RGB and LCD containing matching designs, games and the existing Automation Center. Preserve rules, personal navigation order, sensor layers and guarded single-writer apply paths. Visual pairing does not promise frame synchronization. Game setup currently prepares existing process/profile rules; telemetry and screen ambience are subsequent implementation work.
