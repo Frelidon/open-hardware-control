@@ -34,7 +34,7 @@ def test_rgb_categories_retain_every_design_and_four_language_native_entry():
                 continue
             gallery.set_category(category)
             seen.extend(gallery.visible_indices())
-        assert sorted(seen) == list(range(34))
+        assert sorted(seen) == list(range(35))
         for index in range(30, 34):
             title, _cfg = BUILTIN_DESIGNS[index]
             assert BUILTIN_DESIGN_CATEGORIES[index] == expected[title]

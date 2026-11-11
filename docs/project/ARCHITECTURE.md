@@ -1,5 +1,9 @@
 # Open Hardware Control — Architecture
 
+## 11.11.26 – Design Hub 1.0 (.177)
+
+`design_hub/v1_0` separates immutable pair metadata, pure periodic LED sampling, visibility-bound Qt/video previews, rule preparation and host-controller delegation. The RGB renderer gains one appended preset without renumbering. The LCD catalog appends one MP4/JPG and keeps its first/default entry. Applying LCD changes Layer 1 only; existing Layer 2 remains owned by the Levita studio. Both target requests keep their own asynchronous status and ownership gates. Existing automation rules remain in their original store; opening a game draft saves or activates nothing.
+
 ## 11.11.26 – Fan mapping lifecycle and sensor cards (.176)
 
 `fan_mapping/v1_0/wizard.py` extracts the existing wizard composition; `runtime.py`

@@ -27,6 +27,7 @@ _FEATURES = (
     FeatureLifecycle("programs", "0.5.0", "Alpha"),
     FeatureLifecycle("cooling", "0.9.0", "Beta"),
     FeatureLifecycle("rgb_studio", "0.9.0-rc1", "Release Candidate"),
+    FeatureLifecycle("design_hub", "0.1.0", "Alpha"),
     FeatureLifecycle("lcd", "0.9.0-rc1", "Release Candidate"),
     FeatureLifecycle("display_effects", "0.8.0", "Beta"),
     FeatureLifecycle("profiles", "0.9.0", "Beta"),

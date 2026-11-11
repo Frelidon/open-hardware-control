@@ -49,10 +49,14 @@ ORIGINAL_IDS = {
     "ohc-light-bands", "ohc-prism-drift", "ohc-twin-wyrm", "ohc-neon-garden", "ohc-circuit-chase",
 }
 
+# Original .177 render, in addition to the unchanged .148 preservation baseline.
+ADDED_MEDIA_SHA256 = {'ohc-code-rain-original.mp4': 'd3f19ee55b3a06698986feb5e4c4e0f6a371ae26e0e5f965aef1c9a53ad04bf9', 'ohc-code-rain-original.jpg': 'a6ee80fb0e55c32186fa72f8125a261c369e8f8e18b0fb8b4144b669940d1c65'}
+CATALOG_IDS = ORIGINAL_IDS | {"ohc-code-rain"}
+
 
 def test_original_media_are_unchanged_and_registered_with_their_stable_ids():
     originals = designs_for_category("ohc_original")
-    assert {design.ident for design in originals} == ORIGINAL_IDS
+    assert {design.ident for design in originals} == CATALOG_IDS
     registered = set()
     for design in originals:
         assert design.creator == "Frelidon / Open Hardware Control"
@@ -62,8 +66,8 @@ def test_original_media_are_unchanged_and_registered_with_their_stable_ids():
             for preview in (False, True):
                 asset = validated_asset(variant, preview=preview)
                 registered.add(asset.name)
-                assert hashlib.sha256(asset.read_bytes()).hexdigest() == ORIGINAL_MEDIA_SHA256[asset.name]
-    assert registered == set(ORIGINAL_MEDIA_SHA256)
+                assert hashlib.sha256(asset.read_bytes()).hexdigest() == (ORIGINAL_MEDIA_SHA256 | ADDED_MEDIA_SHA256)[asset.name]
+    assert registered == set(ORIGINAL_MEDIA_SHA256 | ADDED_MEDIA_SHA256)
 
 
 def test_original_gallery_category_and_descriptions_have_four_language_data():
@@ -84,7 +88,7 @@ def test_original_gallery_cards_are_visible_and_exact_saved_videos_are_selectabl
     category = library.category_combo.findData("ohc_original")
     assert category >= 0
     library.category_combo.setCurrentIndex(category)
-    assert set(library._design_cards) == ORIGINAL_IDS
+    assert set(library._design_cards) == CATALOG_IDS
     assert all(not card.icon().isNull() for card in library._design_cards.values())
     for design in designs_for_category("ohc_original"):
         for variant in design.variants:

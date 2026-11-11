@@ -1,5 +1,22 @@
 # Open Hardware Control — verbindliches Modulregister
 
+Entwicklung 11.11.26 (.177): Neues Modul Designs & Spiele 1.0 unter
+`src/modules/design_hub/v1_0/` enthält `catalog.py`, `rain.py`, `controller.py`,
+`page.py`, `preview.py`, `games.py` und `navigation.py`. Fünf stabile Designpaare
+verbinden bestehende RGB-Vorlagen und LCD-Assets. Matrix Code Rain ergänzt
+additiv den extensiblen RGB-Effekt-/Vorlagenkatalog in `src/rgb_effects.py` und
+den unveränderten Display-Effekte-1.11-Katalogvertrag; bestehende IDs/Indizes
+bleiben erhalten. `tools/render_code_rain.py` erzeugt den originalen 1600×720-
+Hintergrund ohne Demo-Messwerte, mit periodisch überblendeten Glyphen.
+Navigationseinstellungen 1.0/Temperatur-Navigationsmixin hängen Spiele,
+Designpaare und die unveränderte Designautomatik 1.0 unter einen neuen Bereich;
+eigene Reihenfolgen und bisherige Sichtbarkeitsschlüssel bleiben erhalten.
+Lokalisierung 1.0 ergänzt `design_hub_messages.py` in allen vier Sprachdateien;
+Feature-Reifegrade 1.0 kennzeichnet den neuen Bereich als Alpha. Artwork ergänzt
+eigene Designs-/Spielesymbole. Keine Bildschirmaufnahme, Telemetrie oder neue
+Hardwarebesitz-/Schreibschnittstelle. Vollständiger Wächter: 1.609 Tests und fünf Untertests bestanden, vier Sprachen und 448 echte Zeigergesten; 424 Laufzeitquellen und 2.468 Sprach-IDs. Matrix-MP4 vollständig dekodiert und periodisch geprüft; helle/dunkle Oberfläche geprüft. Lokale Paketierung folgt.
+
+
 Veröffentlichung 11.11.26 (.176): Auf ausdrücklichen Eigentümerauftrag wird
 nur der Build-Kanal von INTERN auf STABLE angehoben. Keine Modulschnittstelle,
 Hardwarefunktion oder Einstellung wird geändert; Versions-/Fenstertiteltests
@@ -70,7 +87,7 @@ auf `codex/3.4.29-intern` bestätigt (Quellcommit `5fd7989`); kein öffentlicher
 Release-Tag und keine Änderung des Standardzweigs.
 
 **Stand:** 11.11.26
-**Anwendung:** 3.4.29.176 STABLE (öffentlich veröffentlicht und geprüft)
+**Anwendung:** 3.4.29.177 INTERN
 
 Lokaler Stand 11.11.26: .174-Benutzerinstallation mit allen 403 Python-Quellen
 verifiziert und gestartet. Fünf native RGB-Arbeiter ohne gemeldete Fehler,
@@ -906,6 +923,7 @@ Datum: 13.09.26.
 | Funktionsmodule/Einrichtung | 1.0 | `src/modules/setup_features/v1_0/` | Persistente Funktionskarten und Einrichtungsseite, getrennte Navigation, sichere Migration alter Sichtbarkeitsschlüssel; `ownership.py` kapselt die bestehenden Host-Verträge | Deaktivierte Features sperren Hardwarepfade; keine pauschale Löschung von Einstellungen |
 | Feature-Reifegrade | 1.0 | `src/modules/feature_lifecycle/v1_0/` | Zentrale unabhängige Feature-Versionen und Alpha-/Beta-/Release-Candidate-/Stabil-Einstufung für Hauptbereiche | Reine Darstellungsmetadaten; keine Persistenz, Hardwareaktivierung, Steuerhoheit oder Migration |
 | Steuerbesitz | 1.0 | `src/modules/control_authority/v1_0/` | Bestätigte Besitzerwahl je Fachbereich und fail-closed Schreibfreigabe | Kein zusätzlicher Gerätebesitzer oder direkter Hardwarebefehl |
+| Designs & Spiele | 1.0 | `src/modules/design_hub/v1_0/` | Stabile RGB/LCD-Paare, eigene Matrix-Abtastung, sichtbare Vorschau, Spielregel-Entwurf und feste Untermenüs | Bestehende RGB-/Levita-Anwendenpfade und Automationsregeln; keine Telemetrie-/Screen-Capture-Freigabe |
 | Designautomatik | 1.0 | `src/modules/design_automation/v1_0/` | Wiederhergestellter lokaler Plan-/Programm-/Profilmanager und eigener Navigationsbereich | Bestehende Hardware- und Besitzerprüfungen bleiben maßgeblich |
 | Externe Backend-Versionen | 1.0 | `src/modules/backend_updates/v1_0/` | Begrenzte read-only Prüfworker, offizielle Releasequellen, native Paketmetadaten und Ubuntu-spezifische root-owned Pfad-/Manifestprüfung in `executables.py` | Keine automatische Installation/Serviceänderung; fremde Paketmanager bestimmen nicht die Distribution |
 | Levita LCD-Datenoberfläche | 1.7 | `src/modules/lcd_levita/v1_7/` | Layout-/Geometrie-/Theme-Staging, feste 1600:720-Vorschaugeometrie, bis zu zwölf eigene Texte, vier originale Glow-/Partikelrenderer und lokale Ebenenkomposition | Animiertes Dekor läuft als ein Cache-Videostrom unter editierbaren Daten; kein wiederholtes Maskenschreiben und kein zusätzlicher USB-Besitzer |

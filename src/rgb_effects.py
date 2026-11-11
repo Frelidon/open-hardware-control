@@ -15,6 +15,7 @@ import random
 import re
 from dataclasses import dataclass
 from modules.rgb_studio.v1_15.effect_sampling import averaged_pixel, motion_scale, moving_head_strength, smooth_fraction
+from modules.design_hub.v1_0.rain import rain_pixel
 
 RGB = tuple[int, int, int]
 HEX_COLOR_RE = re.compile(r"^[0-9a-fA-F]{6}$")
@@ -42,6 +43,7 @@ EFFECTS: tuple[EffectDefinition, ...] = (
     EffectDefinition("converge", "3D-Fusion", "Zwei Lichtfronten laufen aus Gegenrichtungen zur Mitte."),
     EffectDefinition("crossflow", "3D-Kreuzstrom", "Zwei gegenläufige Lichtkörper durchqueren den LED-Pfad."),
     EffectDefinition("depthwave", "3D-Tiefenwelle", "Gestaffelte Lichtflächen wandern durch den Gehäuseraum."),
+    EffectDefinition("code_rain", "Digitaler Regen", "Fließende Datenspuren mit hellen Spitzen und weichem Nachleuchten."),
 )
 EFFECT_BY_ID = {effect.effect_id: effect for effect in EFFECTS}
 
@@ -115,6 +117,7 @@ BUILTIN_DESIGNS: tuple[tuple[str, RGBEffectConfig], ...] = (
     ("Twin Wyrm Orbit", RGBEffectConfig("converge", "ff9b32", "38a8ff", 96, 88, -1, 62003)),
     ("Neon Particle Garden", RGBEffectConfig("sparkle", "0c382f", "ff62ba", 90, 58, 1, 62011)),
     ("Circuit Chase", RGBEffectConfig("comet", "24ddff", "ff3da8", 100, 124, 1, 62017)),
+    ("Matrix Code Rain", RGBEffectConfig("code_rain", "00e060", "c8ffd8", 90, 100, 1, 62023)),
 )
 
 # Categories are presentation metadata only.  Keeping them separate preserves
@@ -125,7 +128,7 @@ BUILTIN_DESIGN_CATEGORIES: tuple[str, ...] = (
     "Impuls", "Impuls", "Energie", "Energie", "Spektrum", "Bewegung",
     "Impuls", "Ruhig", "Energie", "Bewegung",
     "Räumlich", "Räumlich", "Räumlich", "Räumlich", "Räumlich", "Räumlich",
-    "Räumlich", "Räumlich", "Energie", "Bewegung",
+    "Räumlich", "Räumlich", "Energie", "Bewegung", "Bewegung",
 )
 
 
@@ -173,7 +176,10 @@ def render_effect(config: RGBEffectConfig, led_count: int, elapsed_seconds: floa
     secondary = hex_to_rgb(cfg.secondary)
     phase = max(0.0, float(elapsed_seconds)) * (cfg.speed / 100.0) * cfg.direction
 
-    if cfg.effect_id == "static":
+    if cfg.effect_id == "code_rain":
+        frame = [averaged_pixel(index, count, lambda p: rain_pixel(
+            p, phase, primary, secondary, cfg.seed)) for index in range(count)]
+    elif cfg.effect_id == "static":
         frame = [primary] * count
     elif cfg.effect_id == "breathing":
         strength = 0.12 + 0.88 * (0.5 + 0.5 * math.sin(phase * math.tau - math.pi / 2))

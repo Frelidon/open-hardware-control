@@ -28,6 +28,7 @@ MODULE_ROWS = (
     ("programs", "▦", "Programme"),
     ("cooling", "▥◉", "Kühlung"),
     ("rgb_studio", "◉", "RGB-Studio"),
+    ("design_hub", "◈", "Designs & Spiele"),
     ("lcd", "▣", "LCD"),
     ("display_effects", "✦", "Display-Effekte"),
     ("wallpaper_engine", "▧", "Wallpaper Engine"),

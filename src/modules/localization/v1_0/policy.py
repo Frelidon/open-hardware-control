@@ -20,7 +20,7 @@ UNCHANGED_UI_NAMES = frozenset({
     "NZXT Kraken über liquidctl", "Thermalright Levita Vision 360 ARGB Black", "OHC Metro 8",
     "OHC Metro Cursor", "OHC Orchard", "OHC Orchard Cursor", "OHC Windowed 11", "OHC Windowed Cursor",
     "CPU", "GPU", "RGB", "LCD", "Python", "PySide6", "Qt", "Pillow", "Web", "Live", "Normal",
-    "Position", "X", "Y",
+    "Position", "X", "Y", "Matrix Code Rain",
 })
 
 

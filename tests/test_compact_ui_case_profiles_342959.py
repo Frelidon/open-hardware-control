@@ -118,14 +118,14 @@ def test_frameless_resize_cursor_is_explicitly_released() -> None:
 
 
 def test_rgb_library_adds_spatial_designs_without_breaking_category_alignment() -> None:
-    assert len(BUILTIN_DESIGNS) == 34
+    assert len(BUILTIN_DESIGNS) == 35
     assert len(BUILTIN_DESIGN_CATEGORIES) == len(BUILTIN_DESIGNS)
     assert [title for title, _config in BUILTIN_DESIGNS[20:30]] == [
         "Nebula Pulse", "Liquid Metal", "Ember Flow", "Arctic Halo",
         "Center Fusion", "Crimson Convergence", "Orbital Crossflow",
         "Dual Vector", "Deep Space Sweep", "Vertical Reactor",
     ]
-    assert [title for title, _config in BUILTIN_DESIGNS[-4:]] == [
+    assert [title for title, _config in BUILTIN_DESIGNS[30:34]] == [
         "Prism Drift", "Twin Wyrm Orbit", "Neon Particle Garden", "Circuit Chase",
     ]
 

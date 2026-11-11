@@ -292,11 +292,14 @@ assert tuple(application.UI_TRANSLATIONS[language]["0 % / 2 min testen"] for lan
     "Test 0% / 2 min", "Probar 0 % / 2 min", "Tester 0 % / 2 min",
 )
 
-assert window.tabs.count() == 19
+assert window.tabs.count() == 21
 assert window.tabs.tabText(window.design_automation_page_index) == "Automationszentrale"
 assert window.navigation_items["automations"].data(0, Qt.ItemDataRole.UserRole) == window.design_automation_page_index
 assert window.tabs.tabText(window.programs_page_index) == "Programme"
 assert window.navigation_items["programs"].data(0, Qt.ItemDataRole.UserRole) == window.programs_page_index
+hub_parent = window.navigation_items["design_hub"]
+assert [window.navigation_item_key(hub_parent.child(i)) for i in range(hub_parent.childCount())] == ["paired_designs", "games", "automations"]
+assert window.navigation_items["automations"].parent() is hub_parent
 assert window.tabs.tabText(13) == "Gehäuse"
 assert window.tabs.tabText(window.gpu_control_page_index) == "Grafikkarte"
 assert window.navigation_items["case"].data(0, Qt.ItemDataRole.UserRole) == 13
@@ -311,7 +314,7 @@ assert window.navigation_items["display_effects"].data(0, Qt.ItemDataRole.UserRo
 assert window.help_page_index == 12
 navigation_root = window.navigation.invisibleRootItem()
 assert [window.navigation_item_key(navigation_root.child(index)) for index in range(navigation_root.childCount())] == [
-    "overview", *(key for key in application.NAVIGATION_DEFAULT_ORDER if key != "display_effects")
+    "overview", *(key for key in application.NAVIGATION_DEFAULT_ORDER if key not in {"display_effects", "automations"})
 ]
 assert window.nav_display_effects.parent() is window.nav_lcd
 assert window.nav_lcd_studio.parent() is window.nav_lcd
@@ -408,7 +411,7 @@ for _refresh in range(2):
     )
 assert application._GIF_SAFETY_TEXT in labels
 assert application._ABOUT_SUMMARY_TEXT in labels
-assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.176 STABLE")
+assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.177 INTERN")
 assert window.temp_card.isHidden()
 assert not window.cpu_temp_card.isHidden()
 assert window.mainboard_sensor_source.findData("liquid") == -1
@@ -654,9 +657,9 @@ window.show_all_navigation_modules()
 window.show()
 for language in ("de", "en", "es", "fr"):
     window.apply_ui_language(language, persist=False, log_change=False)
-    for origin in ("lcd_studio", "display_effects", "temperature_recording", "hardware_fix", "supported_devices"):
+    for origin in ("lcd_studio", "display_effects", "temperature_recording", "hardware_fix", "supported_devices", "paired_designs", "games", "automations"):
         for destination in ("rgb_studio", "settings", "profiles", "about", "lcd_studio", "display_effects",
-                            "cooling_controls", "temperature_recording", "hardware_checker", "hardware_fix", "supported_devices"):
+                            "cooling_controls", "temperature_recording", "hardware_checker", "hardware_fix", "supported_devices", "paired_designs", "games", "automations"):
             window.navigation.setCurrentItem(window.navigation_items[origin])
             item = window.navigation_items[destination]
             qt_app.processEvents()
@@ -678,6 +681,8 @@ for language in ("de", "en", "es", "fr"):
                 assert window.navigation.currentItem() is item, (language, origin, destination)
 
 window.reset_navigation_customization()
+assert window.navigation_items["automations"].parent() is window.navigation_items["design_hub"]
+assert window.navigation_items["design_hub"].childCount() == 3
 assert all(window.navigation_items[key].parent() is window.navigation_items["hardware_checker"]
            for key in ("hardware_fix", "supported_devices"))
 window.tabs.setCurrentIndex(0)

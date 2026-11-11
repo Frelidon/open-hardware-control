@@ -403,7 +403,7 @@ from modules.platform_support.v1_0 import IS_WINDOWS, platform_display_name, run
 # Sidebar customization. Overview, Settings, customization and Help always stay
 # visible. Settings can still be reordered with the functional module rows.
 NAVIGATION_DEFAULT_ORDER = (
-    "gpu", "case", "hardware_checker", "snapshot_manager", "automations", "programs", "cooling", "rgb_studio", "lcd", "display_effects", "wallpaper_engine", "openlinkhub",
+    "gpu", "case", "hardware_checker", "snapshot_manager", "programs", "cooling", "rgb_studio", "design_hub", "automations", "lcd", "display_effects", "wallpaper_engine", "openlinkhub",
     "profiles", "settings", "about", "log", "desktop_designs",
 )
 NAVIGATION_LEGACY_DEFAULTS = (
@@ -2899,6 +2899,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         if hasattr(self, "hardware_checker_page"): self.hardware_checker_page.refresh_language()
         if hasattr(self, "snapshot_manager_page"): self.snapshot_manager_page.refresh_language()
         if hasattr(self, "programs_page"): self.programs_page.refresh_language()
+        if hasattr(self, "design_hub_page"): self.design_hub_page.refresh_language()
         if hasattr(self, "refresh_runtime_health"): self.refresh_runtime_health()
         if hasattr(self, "feature_setting_cards"): refresh_feature_settings(self)
         if hasattr(self, "refresh_backend_update_language"): self.refresh_backend_update_language()
@@ -3255,6 +3256,14 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.navigation_items["programs"].setData(
             0, Qt.ItemDataRole.UserRole, self.programs_page_index
         )
+        from modules.design_hub.v1_0.page import DesignHubPage
+        from modules.design_hub.v1_0.games import GamesPage
+        self.design_hub_page = DesignHubPage(self)
+        self.design_hub_page_index = self.tabs.addTab(self.design_hub_page, "Abgestimmte Designs")
+        self.games_page = GamesPage(self)
+        self.games_page_index = self.tabs.addTab(self.games_page, "Spieleintegration")
+        from modules.design_hub.v1_0.navigation import install as install_design_navigation
+        install_design_navigation(self)
         self.tabs.tabBar().hide()
         self.tabs.currentChanged.connect(self.update_page_header)
         self.tabs.currentChanged.connect(self.sync_navigation_to_page)
@@ -3284,6 +3293,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
 
     def update_page_header(self, page: int) -> None:
         titles = {
+            getattr(self, "design_hub_page_index", -1): ("Abgestimmte Designs", "Passende Farben und Animationen für Lüfter und Display gemeinsam entdecken."),
+            getattr(self, "games_page_index", -1): ("Spieleintegration", "Spiele mit vorhandenen Gesamtprofilen verbinden und nach Spielende zurückwechseln."),
             getattr(self, "gpu_control_page_index", -1): ("Grafikkarte", "LACT-Tuning, Lüfterbesitz und GPU-Hardware."),
             getattr(self, "snapshot_manager_page_index", -1): ("Snapshot-Manager", "Snapshots erkennen, Aufräumlast begrenzen und Spiele schützen."),
             getattr(self, "design_automation_page_index", -1): ("Automationszentrale", "Profile nach Zeit, Anwendung oder Spiel automatisch wechseln."),
@@ -3498,7 +3509,12 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         for key in NAVIGATION_DEFAULT_ORDER:
             if key not in order:
                 order.append(key)
-        return order
+        # Old personal orders lack the new section. Place only that new item
+        # beside RGB; preserve the relative order of every existing section.
+        if "design_hub" not in saved:
+            order.remove("design_hub")
+        from modules.design_hub.v1_0.catalog import normalize_order
+        return normalize_order(order)
 
     def load_navigation_hidden(self) -> set[str]:
         raw = str(self.settings.value("navigation/hidden", "") or "")
@@ -3548,6 +3564,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             "hardware_checker": ("Hardware-Prüfung", 14),
             "snapshot_manager": ("◫   Snapshot-Manager", 16),
             "automations": ("⌁   Automationszentrale", -1),
+            "design_hub": ("Designs & Spiele", -1),
             "programs": ("▦   Programme", -1),
             "cooling": ("▥◉   Kühlung", 1),
             "rgb_studio": ("◉   RGB-Studio", 2),
@@ -3691,7 +3708,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                     item.setText(0, translated_base)
                     item.setFlags((item.flags() | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled) & ~Qt.ItemFlag.ItemIsDragEnabled & ~Qt.ItemFlag.ItemIsDropEnabled)
                     continue
-                if key in {"cooling_controls", "temperature_recording", "lcd_studio", "display_effects", "hardware_fix", "supported_devices"}:
+                if key in {"cooling_controls", "temperature_recording", "lcd_studio", "display_effects", "hardware_fix", "supported_devices", "paired_designs", "games", "automations"}:
                     item.setText(0, translated_base)
                     item.setFlags(
                         (item.flags() | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
@@ -3734,7 +3751,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                 root.takeChild(0)
             root.addChild(self.nav_overview)
             for key in NAVIGATION_DEFAULT_ORDER:
-                if key == "display_effects":
+                if key in {"display_effects", "automations"}:
                     continue
                 item = movable.get(key) or self.navigation_items.get(key)
                 if item is not None:
@@ -3747,6 +3764,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             self.restore_temperature_recording_navigation()
             for key in ("hardware_fix", "supported_devices"):
                 self.navigation_items["hardware_checker"].addChild(self.navigation_items[key])
+            from modules.design_hub.v1_0.navigation import install as install_design_navigation
+            install_design_navigation(self)
         finally:
             self.navigation.blockSignals(False)
         self.save_navigation_preferences()
@@ -3822,7 +3841,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         for action in getattr(self, "kraken_menu_actions", []):
             action.setVisible(show_all or self.devices_ready)
         current = self.navigation.currentItem()
-        if current is not None and current.isHidden():
+        if current is not None and (current.isHidden() or (current.parent() is not None and current.parent().isHidden())):
             self.navigation.setCurrentItem(self.nav_overview)
 
     def refresh_all_devices(self) -> None:
@@ -13674,6 +13693,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         run.run("timers", lambda: stop_owned_timers(self))
         if hasattr(self, "design_automation_controller"):
             run.run("design-automation", self.design_automation_controller.shutdown)
+        if hasattr(self, "design_hub_page"):
+            run.run("design-hub", self.design_hub_page.shutdown)
         if hasattr(self, "process_runtime"):
             run.run("sensor-runtime", self.process_runtime.shutdown)
         thermalright_studio = getattr(self, "thermalright_display_studio", None)

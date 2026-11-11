@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.4.29.177 INTERN · 11.11.26
+
+- Add original Matrix Code Rain for RGB fans and a seamless 1600×720 LCD background without baked-in sample readings; preserve existing presets, topology and sensor layers.
+- Add Designs & Games between RGB and LCD with five matching design pairs, game-profile setup and the existing Automation Center as fixed children. Preserve rules and custom navigation order.
+- Use visibility-bound shared LCD decoding and the existing native/SDK/TRCC apply owners. Apply RGB/LCD independently or request both; report actual completion in their studios.
+- Prepare editable ATMOSFAR, Mirage and Witcher 3 profile rules without saving or enabling them on navigation. Screen ambience and game telemetry remain unimplemented.
+- Provide all labels in DE/EN/ES/FR; validation and local package evidence are recorded in project status.
+
 ## 3.4.29.176 STABLE · 11.11.26
 
 - Add an explicit reversible disconnected-header choice to fan mapping. Skip such ports while retaining curve settings, disable their automation and show a compact unused-header section with remapping access. Never infer absence from zero RPM.

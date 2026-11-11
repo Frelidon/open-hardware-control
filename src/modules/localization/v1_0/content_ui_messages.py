@@ -66,3 +66,7 @@ for _language, _messages in DEVICE_CATALOG_MESSAGES.items():
 from .fan_history_messages import FAN_HISTORY_MESSAGES
 for _language, _messages in FAN_HISTORY_MESSAGES.items():
     CONTENT_UI_MESSAGES[_language].update(_messages)
+
+from .design_hub_messages import DESIGN_HUB_MESSAGES
+for _language, _messages in DESIGN_HUB_MESSAGES.items():
+    CONTENT_UI_MESSAGES[_language].update(_messages)

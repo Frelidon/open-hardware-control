@@ -1,5 +1,9 @@
 # Open Hardware Control — Durable Decisions
 
+## 11.11.26 – Matching designs and game section (.177)
+
+The owner requests Matrix first for fans and LCD, plus one Designs & Games parent between RGB and LCD containing matching designs, games and the existing Automation Center. Preserve rules, personal navigation order, sensor layers and guarded single-writer apply paths. Visual pairing does not promise frame synchronization. Game setup currently prepares existing process/profile rules; telemetry and screen ambience are subsequent implementation work.
+
 11.11.26 · .176-Veröffentlichung: Der Eigentümer fordert ausdrücklich die
 Veröffentlichung der neuen Version auf GitHub. Der bestehende Release-Ablauf
 mit STABLE-Kanal, vollständiger Prüfung/Paketierung, normalem main-Push und

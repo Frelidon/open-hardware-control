@@ -1,5 +1,34 @@
 # Open Hardware Control — Project Status
 
+## Local development .177 · 11.11.26
+
+Owner-approved implementation in progress: original Matrix RGB/LCD pair, five matching design pairs and a Designs & Games sidebar parent with Games/Automation children. Native rendering, existing sensor layers, settings and hardware boundaries remain. ATMOSFAR ProjectVenus-Win64-Shipping.exe, ACMirage.exe and witcher3.exe basenames are verified read-only from installed executables; game cards prepare editable existing automation rules only. No screen capture/live telemetry is claimed. The running .176 installation is unchanged until validation and local upgrade; no publication is requested for this work.
+
+Validation .177: the full release gate passes 1,609 tests and five subtests, including four-language real Qt construction and 448 complete sidebar pointer gestures. All 35 RGB presets pass the common renderer loop audit; old media hashes remain unchanged. Matrix video is 1600×720, 360 frames, 30 source FPS and 12 seconds, fully decoded; exact renderer periodicity passes and seam change 0.06652 is below maximum ordinary adjacent change 0.07044. Original dark/light hub and game-page renders reviewed. Matrix RGB calculation measures about 1.7 ms for 114 LEDs and 4.4 ms for 1,024 LEDs on this host (render timing, not optical delivery). 424 runtime Python files and 2,468 shared language IDs. Security/privacy, module budgets and repository checks pass. Fedora/Ubuntu existing fixture lanes pass; no real Fedora hardware or optical Matrix test is claimed. Packaging/install checks follow.
+
+Private design research · 11.11.26: the owner requests a read-only inspection
+of the installed SignalRGB designs, an overview of independently implementable
+ideas and an original Matrix-like LCD design. Local installation exposes five
+base effect HTML files, 209 component definitions (106 fan models, 47 brands)
+and 480 plugin source files. The configured user effect directory is empty.
+Public marketplace Show-all views expose 455 distinct content IDs: 274 RGB,
+96 LCD (55 information, 27 background, 14 touch), 20 audio and 65 game entries.
+These are shop metadata, not installed/purchased-code or compatibility claims.
+No plugin/effect was executed, no account/cookie data exported and no hardware
+writer started. Only public names/access labels/thumbnail URLs were cataloged.
+
+The private sibling folder `Designstudie-2026-11-11` contains searchable HTML,
+CSV/JSON inventories and an original OHC Code Rain renderer. It produces a
+1600×720, 12-second, 30-FPS seamless background and a separate clearly labeled
+demo overlay. Phase 0/1 matches exactly; the last/first pixel change is within
+ordinary adjacent-frame changes. Both videos decode completely; the preview
+GIF has 144 frames and a 12-second duration. No SignalRGB source/artwork is used
+in the renderer. HTML references/IDs and script syntax pass static checks; an
+integrated-browser file-URL restriction prevents its browser-render QA. There
+is no new installed OHC version, library-setting change, LCD application or
+GitHub publication for this study. Integration into the owned LCD catalog and
+editable live sensor layer remains a subsequent implementation step.
+
 Publication completed · 11.11.26: .176 STABLE is public and marked Latest:
 https://github.com/Frelidon/open-hardware-control/releases/tag/v3.4.29.176
 Main was fast-forwarded normally to release source commit

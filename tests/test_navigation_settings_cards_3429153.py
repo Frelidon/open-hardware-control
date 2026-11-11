@@ -48,13 +48,13 @@ def test_module_visibility_cards_with_real_qt() -> None:
     app.processEvents()
 
     cards = panel.findChildren(QFrame, "moduleVisibilityCard")
-    assert len(cards) == len(MODULE_ROWS) == 17
-    assert len(host.navigation_module_checkboxes) == 16
+    assert len(cards) == len(MODULE_ROWS) == 18
+    assert len(host.navigation_module_checkboxes) == 17
     assert "settings" not in host.navigation_module_checkboxes
     assert host.navigation_module_status_dots["settings"].objectName() == "moduleVisibilityDotOn"
-    assert len(host.navigation_module_status_dots) == 17
+    assert len(host.navigation_module_status_dots) == 18
     lifecycle_badges = panel.findChildren(QLabel, "featureLifecycleBadge")
-    assert len(lifecycle_badges) == 17
+    assert len(lifecycle_badges) == 18
     assert any(label.text() == "Release Candidate · v0.9.0-rc1" for label in lifecycle_badges)
     assert not host.navigation_module_checkboxes["about"].isChecked()
     assert host.navigation_module_status_dots["about"].objectName() == "moduleVisibilityDotOff"
