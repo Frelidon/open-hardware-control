@@ -1,5 +1,37 @@
 # Open Hardware Control — Project Status
 
+Current .176 request: explicit disconnected fan headers, compact reusable unused
+ports, 120-second chassis stop identification with immediate Next/Cancel
+restoration and short refreshed driver crash lease, automatic owned fan RGB
+white/animation pause, and a redesigned temperature recorder with icons,
+drag selection and readable metric cards. No absence is inferred from zero RPM;
+no long stop is offered without an independent driver watchdog. Preserve
+firmware, ownership and user settings. The complete release gate passes 1,587 tests and five subtests, including
+four-language real Qt construction of the wizard/recorder, 220 sidebar gestures,
+synthetic PWM rollback/lease/critical-header tests, ID-only drag/drop and saved
+empty selection. Security/privacy scans and module budgets pass. Runtime sources:
+414 Python files; 2,444 shared language IDs. Isolated light/dark recorder/wizard
+renders were reviewed. Resizable split panels avoid clipping the add button;
+reading rows adapt to font/width.
+
+Local .176 installation is complete: all six artifacts and the retained
+.175/.176 rolling backups pass their checksums; ZIP/DEB/RPM contain the same
+414 runtime Python sources. The private pre-install backup is verified.
+Settings, profiles and the native plugin match the final saved baseline before
+launch; profiles and plugin remain byte-identical after launch. The user app
+runs .176 with five native workers and zero reported native errors, Sapphire
+External Control and the saved Levita design active. After the owner confirmed
+Linux/Polkit, APT completed: DPKG reports 3.4.29.176~intern2. Both installed
+trees match all 414 Python sources byte-for-byte. No further restart is needed.
+No physical stop or forced crash test was performed on the live PC. The remote
+development branch remains the .175 checkpoint; .176 has no public tag/release.
+
+The installed nct6687d watchdog implementation was inspected read-only: its
+independent delayed worker restores tracked manual channels on lease expiry.
+No physical stop test or forced process-crash experiment was made. Ubuntu and
+Fedora continue to share only the established backend contract; separate
+existing distribution fixtures pass, real Fedora hardware remains untested.
+
 Current .175 work: the owner requests a model-level category/vendor catalog,
 separate reviewed manufacturer/product links with no empty product button, and
 reliable menu selection from every submenu. Provided logs show RGB→LCD and
@@ -48,7 +80,7 @@ Ubuntu user and system installations are verified; separate Fedora fixtures pass
 hardware remains untested. Native/RGB/LCD write paths are unchanged by .175.
 
 
-**Current development version:** 3.4.29.175 INTERN (user and system installations verified)
+**Current development version:** 3.4.29.176 INTERN (validated; user and system installation complete)
 
 **Status date:** 11 November 2026
 

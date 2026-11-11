@@ -1,5 +1,33 @@
 # Open Hardware Control — verbindliches Modulregister
 
+Entwicklung 11.11.26 (.176): Neues Modul Lüfterzuordnung 1.0 unter
+`src/modules/fan_mapping/v1_0/` enthält `wizard.py`, `runtime.py` und
+`lighting.py`. Der vorhandene Assistent wird aus dem Hauptfenster ausgelagert;
+explizit nicht angeschlossene Kanäle behalten Kurven und werden kompakt unter
+Ungenutzt angezeigt. 120-s-Stopptests nutzen eine erneuerte kurze Treiberlease,
+stellen bei Weiter/Abbruch/Kanalwechsel sämtliche Kontrastzustände zurück und
+bleiben ohne Watchdog gesperrt. RGB-Weißhilfe nutzt die bestehende Preview-
+Sperre und eine bestätigte native STOP-Übergabe. Temperaturverlauf 1.2 erhält
+Auswahl per Ziehen und kompakte Messwertkarten; vorhandener RAM-Puffer,
+Sensor-IDs, gespeicherte Auswahl und Berichte bleiben unverändert.
+`selection.py` und `readings.py` ergänzen Icons, begrenzte ID-MIME-Daten,
+Auswahl per Ziehen/Knopf/Checkbox und wiederverwendete Messwertkarten. Resizable
+Sensorpanels nutzen `keepViewportHeight`; die versteckte Kompatibilitätstabelle
+bleibt erhalten und besitzt einen Elterncontainer. Lokalisierung 1.0 ergänzt
+`fan_history_messages.py`; DE/EN/ES/FR werden gemeinsam geladen, 2.444 IDs.
+Synthetische hwmon-Tests decken Teilfehler, fehlende Lease, Abbruch, Weiter,
+Shutdown und verlorenen Zielkanal ab; echte Qt-Prüfungen decken Drag-Auswahl,
+Einheiten, leere Auswahl und Geometrie ab. Vollständiger Wächter: 1.587 Tests
+und fünf Untertests bestanden; vier Sprachen, 414 Python-Quellen, Datenschutz,
+Sicherheit und Modulbudgets geprüft. Helle/dunkle Beispieldarstellung geprüft.
+Alle sechs Artefakte und beide .175/.176-Sicherungen geprüft; ZIP/DEB/RPM
+enthalten 414 identische Python-Quellen. Benutzer- und Systeminstallation .176
+abgeschlossen (DPKG 3.4.29.176~intern2); beide installierten Quellbäume bytegleich.
+Einstellungen vor Start erhalten; Profile und Plugin auch nach Start identisch.
+Fünf native Arbeiter ohne gemeldete Fehler, Sapphire External Control und
+wiederhergestelltes Levita-Design bestätigt. Kein physischer Stopptest oder
+absichtlicher Prozessabsturz; GitHub bleibt beim bisherigen .175-Checkpoint.
+
 Entwicklung 11.11.26 (.175): Hardwareprüfung 1.0 ergänzt `device_catalog.py`
 für 41 Modell-/Backend-Einträge mit Geräteart, Hersteller und getrennten,
 geprüften Hersteller-/Produktlinks. `supported_devices.py` filtert acht
@@ -28,7 +56,7 @@ auf `codex/3.4.29-intern` bestätigt (Quellcommit `5fd7989`); kein öffentlicher
 Release-Tag und keine Änderung des Standardzweigs.
 
 **Stand:** 11.11.26
-**Anwendung:** 3.4.29.175 INTERN
+**Anwendung:** 3.4.29.176 INTERN (geprüft und lokal installiert)
 
 Lokaler Stand 11.11.26: .174-Benutzerinstallation mit allen 403 Python-Quellen
 verifiziert und gestartet. Fünf native RGB-Arbeiter ohne gemeldete Fehler,

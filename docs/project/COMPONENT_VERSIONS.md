@@ -1,4 +1,18 @@
-# Komponenten- und Versionsübersicht – Version 3.4.29.175 INTERN
+# Komponenten- und Versionsübersicht – Version 3.4.29.176 INTERN
+
+Entwicklung .176: Lüfterzuordnung 1.0 mit ausdrücklich unbenutzten Anschlüssen,
+120-s-Stopptest über die bestehenden Mainboard-Schreibwege und kurzer
+10-s-Treiberlease. RGB-Weißhilfe nutzt die vorhandene Preview-Sperre und
+Native-STOP-Bestätigung. Temperaturverlauf bleibt 1.2, ergänzt `selection.py`
+und `readings.py` für Symbols-/Ziehauswahl und wiederverwendete Messwertkarten.
+Lokalisierung 1.0: 2.444 gemeinsame Sprach-IDs. Ubuntu/Fedora-Pfade und bestehende
+Backend-Versionen unverändert; keine reale Stopptest-/Absturzsimulation am PC.
+Vollständiger Wächter mit 1.587 Tests und fünf Untertests bestanden;
+414 Python-Laufzeitquellen. Alle sechs Pakete und beide .175/.176-Sicherungen
+geprüft. Benutzer- und Systeminstallation abgeschlossen, DPKG meldet
+3.4.29.176~intern2; beide Kopien entsprechen allen 414 Quellen bytegenau.
+Profile und Native-Plugin erhalten, fünf native Arbeiter ohne gemeldete Fehler,
+Sapphire External Control und gespeichertes Levita-Design aktiv.
 
 Entwicklung .175: Hardwareprüfung 1.0 mit 41 kategorisierten Modellkarten;
 Navigationseinstellungen 1.0 mit abgeschlossener Zeigerauswahl vor Seitenwechsel;

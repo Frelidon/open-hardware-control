@@ -20,3 +20,9 @@ no file is created automatically. Its panel mixin keeps the fixed Cooling
 sidebar children and the internal control/recording views synchronized in both
 directions. The module never writes hardware and writes reports only after the
 user chooses a destination.
+
+.176 adds `selection.py` (original sensor icons and bounded ID-only drag data)
+and `readings.py` (reused current/min/max/time cards). Both directions share the
+existing selected-key set; checkbox, button and Delete access remain. Empty
+explicit selection persists. Recorder split panels retain viewport sizing;
+the hidden parented compatibility table and report API stay available.

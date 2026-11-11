@@ -31,6 +31,8 @@ from .gauge import TemperatureGauge
 from .model import TemperatureHistoryBuffer
 from .sensors import read_linux_temperature_sensors
 from .report_dialog import TemperatureReportDialog
+from .selection import SensorTree, sensor_icon
+from .readings import ReadingList
 
 
 class TemperatureRecordingMixin:
@@ -249,9 +251,10 @@ class TemperatureRecordingMixin:
 
         self.temperature_lower_splitter = QSplitter(Qt.Orientation.Horizontal)
         self.temperature_lower_splitter.setChildrenCollapsible(False)
+        self.temperature_lower_splitter.setMinimumHeight(260)
         sensor_box = QGroupBox("Sensoren im Diagramm")
         sensor_layout = QVBoxLayout(sensor_box)
-        self.temperature_sensor_tree = QTreeWidget()
+        self.temperature_sensor_tree = SensorTree()
         self.temperature_sensor_tree.setObjectName("sensorSelectionTree")
         self.temperature_sensor_tree.setHeaderLabels(["Hardware / Sensor", "Quelle"])
         self.temperature_sensor_tree.setRootIsDecorated(True)
@@ -259,11 +262,16 @@ class TemperatureRecordingMixin:
         self.temperature_sensor_tree.header().setStretchLastSection(True)
         self.temperature_sensor_tree.itemChanged.connect(self.on_temperature_sensor_item_changed)
         sensor_layout.addWidget(self.temperature_sensor_tree)
+        add_sensor = QPushButton("Ausgewählte Sensoren hinzufügen")
+        add_sensor.clicked.connect(lambda: self.choose_temperature_sensors(
+            [item.data(0, Qt.ItemDataRole.UserRole) for item in self.temperature_sensor_tree.selectedItems()], True))
+        sensor_layout.addWidget(add_sensor)
+        self.temperature_sensor_tree.keysDropped.connect(lambda keys: self.choose_temperature_sensors(keys, False))
         self.temperature_lower_splitter.addWidget(sensor_box)
 
         statistics_box = QGroupBox("Messwerte im gewählten Zeitraum")
         statistics_layout = QVBoxLayout(statistics_box)
-        self.temperature_statistics_table = QTableWidget(0, 6)
+        self.temperature_statistics_table = QTableWidget(0, 6, statistics_box)
         self.temperature_statistics_table.setObjectName("diagnosticTable")
         self.temperature_statistics_table.setHorizontalHeaderLabels(
             ["Sensor", "Aktuell", "Minimum", "Maximum", "Zeitpunkt", "Quelle"]
@@ -277,13 +285,18 @@ class TemperatureRecordingMixin:
             stats_header.setSectionResizeMode(column, QHeaderView.ResizeMode.ResizeToContents)
         stats_header.setSectionResizeMode(5, QHeaderView.ResizeMode.Stretch)
         self.temperature_statistics_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        statistics_layout.addWidget(self.temperature_statistics_table)
+        self.temperature_statistics_table.hide()  # Compatibility/export model, not a second visible table.
+        self.temperature_readings = ReadingList(self.tr_static)
+        self.temperature_readings.keysDropped.connect(lambda keys: self.choose_temperature_sensors(keys, True))
+        self.temperature_readings.removeRequested.connect(lambda keys: self.choose_temperature_sensors(keys, False))
+        statistics_layout.addWidget(self.temperature_readings)
         self.temperature_lower_splitter.addWidget(statistics_box)
         self.temperature_lower_splitter.setStretchFactor(0, 2)
         self.temperature_lower_splitter.setStretchFactor(1, 3)
         self.temperature_vertical_splitter.addWidget(self.temperature_lower_splitter)
-        self.temperature_vertical_splitter.setStretchFactor(0, 3)
-        self.temperature_vertical_splitter.setStretchFactor(1, 2)
+        self.temperature_vertical_splitter.setStretchFactor(0, 1)
+        self.temperature_vertical_splitter.setStretchFactor(1, 1)
+        self.temperature_vertical_splitter.setSizes([260, 320])
         vertical_state = self.settings.value("temperature_history/vertical_splitter")
         horizontal_state = self.settings.value("temperature_history/horizontal_splitter")
         if vertical_state:
@@ -308,9 +321,10 @@ class TemperatureRecordingMixin:
         except json.JSONDecodeError:
             decoded_selection = []
         self.temperature_detail_user_configured = bool(raw_selection)
-        self.temperature_detail_selected = {
-            str(key) for key in decoded_selection if isinstance(key, str)
-        } or {"cpu", "gpu", "liquid"}
+        self.temperature_detail_selected = (
+            {str(key) for key in decoded_selection if isinstance(key, str)}
+            if self.temperature_detail_user_configured else {"cpu", "gpu", "liquid"}
+        )
         self.refresh_temperature_sensor_tree()
         self.update_temperature_detail_options()
         return page
@@ -341,6 +355,8 @@ class TemperatureRecordingMixin:
         group_filter = str(self.temperature_detail_group_combo.currentData() or "all")
         if not self.temperature_detail_user_configured:
             self.temperature_detail_selected.update(self.temperature_sensor_catalog)
+        self.temperature_sensor_tree.known_keys = set(self.temperature_sensor_catalog)
+        self.temperature_readings.known_keys = set(self.temperature_sensor_catalog)
         self.temperature_sensor_tree.blockSignals(True)
         self.temperature_sensor_tree.clear()
         parents: dict[str, QTreeWidgetItem] = {}
@@ -354,11 +370,15 @@ class TemperatureRecordingMixin:
             parent = parents.get(group)
             if parent is None:
                 parent = QTreeWidgetItem([self.tr_static(self.temperature_group_title(group)), ""])
-                parent.setFlags(parent.flags() & ~Qt.ItemFlag.ItemIsUserCheckable)
+                parent.setFlags(parent.flags() & ~Qt.ItemFlag.ItemIsUserCheckable & ~Qt.ItemFlag.ItemIsDragEnabled)
+                parent.setData(0, Qt.ItemDataRole.UserRole.value + 1, group)
+                parent.setIcon(0, sensor_icon(group, self.palette()))
                 self.temperature_sensor_tree.addTopLevelItem(parent)
                 parents[group] = parent
             item = QTreeWidgetItem([self.tr_static(label), source])
             item.setData(0, Qt.ItemDataRole.UserRole, key)
+            item.setData(0, Qt.ItemDataRole.UserRole.value + 1, group)
+            item.setIcon(0, sensor_icon(group, self.palette()))
             item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
             checked = key in self.temperature_detail_selected
             item.setCheckState(0, Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked)
@@ -368,6 +388,18 @@ class TemperatureRecordingMixin:
         self.temperature_sensor_tree.blockSignals(False)
         self.temperature_sensor_tree.resizeColumnToContents(0)
         self.refresh_temperature_detail_view()
+
+    def choose_temperature_sensors(self, keys, selected):
+        valid = {key for key in keys if isinstance(key, str) and key in self.temperature_sensor_catalog}
+        if not valid:
+            return
+        self.temperature_detail_user_configured = True
+        if selected:
+            self.temperature_detail_selected.update(valid)
+        else:
+            self.temperature_detail_selected.difference_update(valid)
+        self.update_temperature_detail_options()
+        self.refresh_temperature_sensor_tree()
 
     def on_temperature_sensor_item_changed(self, item: QTreeWidgetItem, _column: int) -> None:
         key = str(item.data(0, Qt.ItemDataRole.UserRole) or "")
@@ -413,6 +445,7 @@ class TemperatureRecordingMixin:
             selected,
             key=lambda key: self.temperature_sensor_catalog[key][0].casefold(),
         )
+        readings = {}
         for row, key in enumerate(ordered):
             label, _group, source = self.temperature_sensor_catalog[key]
             statistics = self.temperature_history.statistics(key, seconds)
@@ -425,7 +458,9 @@ class TemperatureRecordingMixin:
                 datetime.fromtimestamp(latest.timestamp).strftime("%d.%m.%Y %H:%M:%S")
                 if latest is not None else "—"
             )
+            readings[key] = (self.tr_static(label), _group, source, *values, measured)
             for column, value in enumerate((self.tr_static(label), *values, measured, source)):
                 self.temperature_statistics_table.setItem(row, column, QTableWidgetItem(str(value)))
+        self.temperature_readings.update_readings(readings)
         self.temperature_statistics_table.resizeColumnsToContents()
         self.temperature_statistics_table.resizeRowsToContents()

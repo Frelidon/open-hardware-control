@@ -62,3 +62,7 @@ CONTENT_UI_MESSAGES['fr'][1885] = 'Vérification du matériel'
 from .device_catalog_messages import DEVICE_CATALOG_MESSAGES
 for _language, _messages in DEVICE_CATALOG_MESSAGES.items():
     CONTENT_UI_MESSAGES[_language].update(_messages)
+
+from .fan_history_messages import FAN_HISTORY_MESSAGES
+for _language, _messages in FAN_HISTORY_MESSAGES.items():
+    CONTENT_UI_MESSAGES[_language].update(_messages)

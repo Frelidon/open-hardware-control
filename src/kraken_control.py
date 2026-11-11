@@ -2894,6 +2894,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         if hasattr(self, 'display_effects_page'): self.display_effects_page.refresh_language()
         from modules.openlinkhub_update.v1_0.mouse_ui import refresh_mouse_language
         refresh_mouse_language(self)
+        wizard = getattr(self, "chassis_fan_wizard", None)
+        if wizard is not None and wizard.isVisible(): wizard.refresh_language()
         if hasattr(self, "hardware_checker_page"): self.hardware_checker_page.refresh_language()
         if hasattr(self, "snapshot_manager_page"): self.snapshot_manager_page.refresh_language()
         if hasattr(self, "programs_page"): self.programs_page.refresh_language()
@@ -5447,7 +5449,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         save_mb_channel.clicked.connect(self.save_selected_mainboard_fan_profile)
         test_mb_channel = QPushButton("Kanal sicher testen · 70 % / 10 s")
         test_mb_channel.clicked.connect(self.start_mainboard_fan_calibration)
-        stop_test_mb_channel = QPushButton("Kanal stoppen testen · 0 % / 10 s")
+        stop_test_mb_channel = QPushButton("Kanal stoppen testen · 0 % / 2 min")
         stop_test_mb_channel.clicked.connect(lambda _checked=False: self.start_mainboard_fan_calibration(stop_test=True))
         restore_mb_channel = QPushButton("Firmwaresteuerung wiederherstellen")
         restore_mb_channel.clicked.connect(self.restore_selected_mainboard_fan_firmware)
@@ -5797,7 +5799,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
     def chassis_fan_rgb_device_ids(self) -> list[str]:
         result: list[str] = []
         for slot in self.rgb_layout_slots:
-            if slot.position not in {"front", "side", "bottom", "rear"}:
+            if slot.position not in {"front", "side", "bottom", "rear", "top"}:
                 continue
             for device_id in slot.device_ids:
                 if device_id not in result:
@@ -5834,33 +5836,12 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         return commands
 
     def set_chassis_rgb_white_for_assistant(self) -> None:
-        if not self.openrgb_write_enabled:
-            self.show_error("RGB-Testhilfe benötigt die bereits aktivierte OHC-RGB-Hardwaresteuerung.")
-            return
-        commands = self.build_chassis_white_rgb_commands()
-        if not commands:
-            message = (
-                "Im gemeinsamen RGB-/Gehäuselayout ist noch kein einzeln ansprechbares Gehäuselüfter-RGB "
-                "zugeordnet. Der PWM-Test kann trotzdem sicher ohne weiße RGB-Testhilfe fortgesetzt werden."
-            )
-            if hasattr(self, "assistant_rgb_status"):
-                self.assistant_rgb_status.setText(message)
-            self.log_message("MAINBOARD-FAN-ASSISTENT: RGB-Weißtest übersprungen · keine passende RGB-Zuordnung")
-            QMessageBox.information(self, "Optionale RGB-Testhilfe nicht eingerichtet", message)
-            return
-        self.stop_openrgb_effect("Lüfter-Assistent · Gehäuselüfter werden zur Identifikation statisch weiß gesetzt")
-        self.run_rgb_command_sequence(
-            commands,
-            "Lüfter-Assistent · zugeordnete Gehäuselüfter RGB weiß 100 %",
-            finished=lambda ok: self.assistant_rgb_status.setText(
-                "✓ Gehäuselüfter-RGB weiß gesetzt" if ok else "RGB-Weißtest teilweise fehlgeschlagen · siehe Log"
-            ) if hasattr(self, "assistant_rgb_status") else None,
-        )
+        from modules.fan_mapping.v1_0.lighting import begin
+        begin(self)
 
     def restore_rgb_after_chassis_assistant(self) -> None:
-        if hasattr(self, "assistant_rgb_status"):
-            self.assistant_rgb_status.setText("RGB-Studio-Profil wird wiederhergestellt …")
-        self.request_rgb_direct_apply(180)
+        from modules.fan_mapping.v1_0.lighting import finish
+        finish(self)
 
     def assistant_test_selected_channel(self) -> None:
         if self.cooling_owner_status.coolercontrol_active:
@@ -5895,157 +5876,12 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             self.show_error("Es wurden keine steuerbaren System-Fan-Kanäle gefunden.")
             return
 
-        wizard = QWizard(self)
-        wizard.setObjectName("fanMappingWizard")
-        wizard.setWizardStyle(QWizard.WizardStyle.ModernStyle)
-        wizard.setWindowTitle("Lüfter-Zuordnung & Test-Assistent")
-        wizard.setMinimumSize(1040, 760)
-        wizard.setOption(QWizard.WizardOption.NoBackButtonOnStartPage, True)
-
-        detect = QWizardPage()
-        detect.setTitle("1 · Erkennen")
-        detect.setSubTitle("System-Fan-Header erfassen und den sicheren Test vorbereiten.")
-        detect_layout = QVBoxLayout(detect)
-        status = QFrame(); status.setObjectName("dashboardStatusBanner")
-        sl = QHBoxLayout(status)
-        sl.addWidget(QLabel("✓", objectName="dashboardStatusIcon"))
-        sl.addWidget(QLabel(f"<b>{len(channels)} steuerbare Gehäusekanäle erkannt</b><br>CPU_FAN und PUMP_FAN bleiben im separaten CPU-/Kraken-Bereich."), 1)
-        detect_layout.addWidget(status)
-        explain = QLabel(
-            "Der Assistent identifiziert ausschließlich Gehäuselüfter. Für einen deutlichen, aber sicheren Kontrast "
-            "werden andere steuerbare Gehäusekanäle temporär auf 30 % gesetzt und der Zielkanal auf 80 %. "
-            "Alle vorherigen Zustände werden danach wiederhergestellt."
-        )
-        explain.setWordWrap(True); explain.setObjectName("muted")
-        detect_layout.addWidget(explain)
-        detected_list = QFrame(); detected_list.setObjectName("dashboardSection")
-        dl = QVBoxLayout(detected_list)
-        dl.addWidget(QLabel("Erkannte System-Fan-Kanäle", objectName="sectionTitle"))
-        for channel in channels:
-            profile = self.mainboard_profile_for(channel)
-            rpm = channel.rpm if channel.rpm is not None else "—"
-            row = QLabel(f"●  {channel_caption(self, channel)}  ·  {rpm} RPM")
-            row.setToolTip(channel_details(channel))
-            row.setObjectName("infoText")
-            dl.addWidget(row)
-        detect_layout.addWidget(detected_list)
-        detect_layout.addStretch()
-
-        test_page = QWizardPage()
-        test_page.setTitle("2 · Testen")
-        test_page.setSubTitle("RGB-Hilfe einschalten und einen Kanal eindeutig hör- und sichtbar machen.")
-        test_layout = QVBoxLayout(test_page)
-        info = QFrame(); info.setObjectName("dashboardSection")
-        il = QHBoxLayout(info)
-        info_text = QLabel("ⓘ  Optional setzt OHC bereits zugeordnete Gehäuse-RGBs statisch auf Weiß mit 100 % Helligkeit.")
-        info_text.setWordWrap(True); il.addWidget(info_text, 1)
-        white = QPushButton("Alle Gehäuse-RGB auf Weiß")
-        white.clicked.connect(self.set_chassis_rgb_white_for_assistant)
-        il.addWidget(white)
-        test_layout.addWidget(info)
-        choose = QFrame(); choose.setObjectName("coolingSummaryCard")
-        cl = QVBoxLayout(choose)
-        cl.addWidget(QLabel("Aktuell getesteter Kanal", objectName="sectionTitle"))
-        self.assistant_channel_combo = QComboBox()
-        for channel in channels:
-            profile = self.mainboard_profile_for(channel)
-            self.assistant_channel_combo.addItem(channel_caption(self, channel), channel.stable_id)
-            self.assistant_channel_combo.setItemData(self.assistant_channel_combo.count() - 1, channel_details(channel), Qt.ItemDataRole.ToolTipRole)
-        self.assistant_channel_combo.currentIndexChanged.connect(
-            lambda _index: self.assistant_select_channel(str(self.assistant_channel_combo.currentData() or ""))
-        )
-        cl.addWidget(self.assistant_channel_combo)
-        self.assistant_channel_status = QLabel("Aktueller Testkanal: wird gewählt")
-        self.assistant_channel_status.setObjectName("coolingMetrics")
-        cl.addWidget(self.assistant_channel_status)
-        self.assistant_rgb_status = QLabel("RGB-Testhilfe noch nicht verwendet")
-        self.assistant_rgb_status.setObjectName("muted")
-        cl.addWidget(self.assistant_rgb_status)
-        test = QPushButton("80 % / 10 s testen · andere Gehäuselüfter 30 %")
-        test.setObjectName("primaryAction")
-        test.setMinimumHeight(48)
-        test.clicked.connect(self.assistant_test_selected_channel)
-        cl.addWidget(test)
-        stop_test = QPushButton("0 % / 10 s Stopp-Test · andere Gehäuselüfter 45 %")
-        stop_test.setMinimumHeight(42)
-        stop_test.clicked.connect(self.assistant_stop_selected_channel)
-        cl.addWidget(stop_test)
-        repeat = QPushButton("Test wiederholen")
-        repeat.clicked.connect(self.assistant_test_selected_channel)
-        cl.addWidget(repeat)
-        test_layout.addWidget(choose)
-        test_layout.addStretch()
-
-        mapping = QWizardPage()
-        mapping.setTitle("3 · Zuordnen")
-        mapping.setSubTitle("Den getesteten Header einem physischen Einbauplatz im Gehäuse zuordnen.")
-        mapping_layout = QHBoxLayout(mapping)
-        diagram_box = QFrame(); diagram_box.setObjectName("dashboardSection")
-        dbl = QVBoxLayout(diagram_box)
-        dbl.addWidget(QLabel("Gehäuseansicht", objectName="sectionTitle"))
-        self.assistant_layout_diagram = CoolingLayoutDiagram()
-        self.assistant_layout_diagram.slot_resized.connect(lambda slot_id, scale: resize_cooling_slot(self, slot_id, scale))
-        self.assistant_layout_diagram.set_slots(cooling_slots(self))
-        self.assistant_layout_diagram.set_channel_assignments(self.mainboard_layout_assignments)
-        self.assistant_layout_diagram.slot_focused.connect(self.select_cooling_layout_slot)
-        dbl.addWidget(self.assistant_layout_diagram, 1)
-        mapping_layout.addWidget(diagram_box, 2)
-        side = QFrame(); side.setObjectName("coolingSummaryCard")
-        side_layout = QVBoxLayout(side)
-        side_layout.addWidget(QLabel("Position bestätigen", objectName="sectionTitle"))
-        self.assistant_slot_label = QLabel("Ausgewählter Einbauplatz: noch keiner")
-        self.assistant_slot_label.setWordWrap(True); self.assistant_slot_label.setObjectName("muted")
-        side_layout.addWidget(self.assistant_slot_label)
-        assign = QPushButton("✓  Dieser Lüfter ist es")
-        assign.setObjectName("primaryAction")
-        assign.setMinimumHeight(50)
-        assign.clicked.connect(self.assign_selected_channel_to_cooling_slot)
-        side_layout.addWidget(assign)
-        next_fan = QPushButton("Nächsten Lüfter wählen ›")
-        next_fan.clicked.connect(lambda: self.assistant_channel_combo.setCurrentIndex((self.assistant_channel_combo.currentIndex() + 1) % self.assistant_channel_combo.count()))
-        side_layout.addWidget(next_fan)
-        side_layout.addStretch()
-        mapping_layout.addWidget(side, 1)
-
-        save = QWizardPage()
-        save.setTitle("4 · Speichern")
-        save.setSubTitle("Zuordnungen übernehmen und die Kanäle anschließend mit Profilen regeln.")
-        save_layout = QVBoxLayout(save)
-        save_layout.addWidget(QLabel("Aktuelle Zuordnung", objectName="sectionTitle"))
-        summary = QFrame(); summary.setObjectName("dashboardSection")
-        summary_layout = QVBoxLayout(summary)
-        self.assistant_summary_layout = summary_layout
-        self.refresh_chassis_assistant_summary()
-        save_layout.addWidget(summary)
-        save_text = QLabel(
-            "Nach dem Speichern kann jeder bestätigte Kanal direkt in der Kühlungszentrale Leise, Ausbalanciert, "
-            "Leistung oder eine eigene Kurve verwenden. Automatik bleibt bis zur ausdrücklichen Aktivierung aus."
-        )
-        save_text.setWordWrap(True); save_text.setObjectName("muted")
-        save_layout.addWidget(save_text)
-        save_button = QPushButton("Zu Profil übernehmen")
-        save_button.setObjectName("primaryAction")
-        save_button.setMinimumHeight(50)
-        save_button.clicked.connect(self.save_mainboard_fan_settings)
-        save_layout.addWidget(save_button)
-        another_fan = QPushButton(self.tr_static("Nächsten Lüfter zuordnen"))
-        another_fan.clicked.connect(self.assistant_continue_with_next_fan)
-        save_layout.addWidget(another_fan)
-        save_layout.addStretch()
-
-        wizard.addPage(detect)
-        wizard.addPage(test_page)
-        wizard.addPage(mapping)
-        wizard.addPage(save)
-        wizard.currentIdChanged.connect(
-            lambda page_id: self.refresh_chassis_assistant_summary() if page_id == 3 else None
-        )
-        wizard.finished.connect(lambda _result: self.restore_rgb_after_chassis_assistant())
-        wizard.finished.connect(lambda _result: self.refresh_mainboard_fan_table())
-        self.assistant_select_channel(str(self.assistant_channel_combo.currentData() or ""))
-        wizard.show()
-        self.chassis_fan_wizard = wizard
-        self.log_message("MAINBOARD-FAN-ASSISTENT: 3.4.25-Assistent gestartet · Erkennen → Testen → Zuordnen → Speichern")
+        existing = getattr(self, "chassis_fan_wizard", None)
+        if existing is not None and existing.isVisible():
+            existing.raise_()
+            return
+        from modules.fan_mapping.v1_0.wizard import build
+        build(self, channels)
 
     # ---------- mainboard fan control ----------
     @staticmethod
@@ -6085,6 +5921,9 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         defaults = self.mainboard_default_profile(channel)
         for key, value in defaults.items():
             profile.setdefault(key, value)
+        if profile.get("connection") == "disconnected":
+            profile["enabled"] = False
+            profile["calibrated"] = False
         legacy_default_name = f"{channel.display_name} · pwm{channel.index}"
         if str(profile.get("name", "")).strip().casefold() == legacy_default_name.casefold():
             profile["name"] = channel.display_name
@@ -6490,6 +6329,9 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                 empty.setObjectName("muted")
                 self.mainboard_fan_cards_layout.addWidget(empty)
             for channel in channels:
+                from modules.fan_mapping.v1_0.runtime import disconnected
+                if disconnected(self, channel):
+                    continue
                 profile = self.mainboard_profile_for(channel)
                 try:
                     pwm_raw = int(channel.pwm_path.read_text(encoding="ascii").strip())
@@ -6544,7 +6386,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                 header.addWidget(status)
                 test_btn = QPushButton(self.tr_static("Testen"))
                 test_btn.clicked.connect(lambda _checked=False, cid=channel.stable_id: self.test_mainboard_channel_from_card(cid))
-                stop_test_btn = QPushButton(self.tr_static("0 % / 10 s testen"))
+                stop_test_btn = QPushButton(self.tr_static("0 % / 2 min testen"))
                 stop_test_btn.setToolTip(self.tr_static(
                     "Fordert diesen Gehäuselüfter nach Bestätigung kurz mit 0 % an und stellt danach den vorherigen Zustand wieder her."
                 ))
@@ -6646,6 +6488,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                     detail_layout.addWidget(meta, 1)
                     card.addWidget(detail)
                 self.mainboard_fan_cards_layout.addWidget(frame)
+            from modules.fan_mapping.v1_0.runtime import add_unused_section
+            add_unused_section(self, channels)
 
         if refresh_related:
             if hasattr(self, "cooling_layout_diagram"):
@@ -6693,6 +6537,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         if channel is None:
             return
         profile = self.mainboard_profile_for(channel)
+        if profile.get("connection") == "disconnected":
+            return
         if not bool(profile.get("calibrated")):
             self.show_error("Dieser Kanal muss zuerst physisch getestet und bestätigt werden.")
             return
@@ -7296,36 +7142,13 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.mainboard_assistant_contrast_requested = False
         target_percent = 0 if stop_test else (80 if contrast else 70)
         other_percent = 45 if stop_test else 30
-        auth_hint = "\n\nFür den geschützten NCT6687-Schreibzugriff kann einmalig eine Systemauthentifizierung erscheinen." if method == "polkit" else ""
-        if stop_test and contrast:
-            test_text = (
-                f"Der Assistent setzt andere steuerbare Gehäusekanäle vorübergehend auf {other_percent} % und fordert {channel.stable_id} "
-                f"für zehn Sekunden mit 0 % an. Danach werden alle vorherigen Firmware-/hwmon-Zustände wiederhergestellt."
-            )
-        elif stop_test:
-            test_text = (
-                f"OHC fordert {channel.stable_id} für zehn Sekunden mit 0 % an und beobachtet dabei die RPM. "
-                "Danach wird der vorherige Firmware-/hwmon-Zustand wiederhergestellt."
-            )
-        elif contrast:
-            test_text = (
-                f"Der Assistent setzt andere steuerbare Gehäusekanäle vorübergehend auf sichere {other_percent} % und fordert {channel.stable_id} "
-                f"für zehn Sekunden mit {target_percent} % an. Danach werden alle vorherigen Firmware-/hwmon-Zustände wiederhergestellt."
-            )
-        else:
-            test_text = (
-                f"OHC fordert {channel.stable_id} für zehn Sekunden mit {target_percent} % an und beobachtet dabei die RPM. "
-                "Danach wird der vorherige Firmware-/hwmon-Zustand wiederhergestellt."
-            )
+        duration = 120 if stop_test else 10
+        self.mainboard_calibration_duration = duration
+        from modules.fan_mapping.v1_0.runtime import confirmation_text
         answer = QMessageBox.warning(
             self,
-            "PWM-Kanal sicher identifizieren",
-            test_text
-            + "\n\nBei MSI/NCT6687 kann der sichtbare pwmN-Rücklesewert dem Ziel verzögert folgen; entscheidend sind Treibererfolg, RPM-Verlauf und deine physische Bestätigung.\n\n"
-            + ("0 % ist ein kurzzeitiger Identifikationstest. Manche Lüfter stoppen hardwarebedingt erst unterhalb einer gerätespezifischen Schwelle oder gar nicht vollständig.\n\n" if stop_test else "")
-            + "Beobachte oder höre, welche Lüftergruppe ihre Drehzahl verändert. Es wird bewusst kein Kanal automatisch geraten."
-            + auth_hint
-            + "\n\nTest starten?",
+            self.tr_static("PWM-Kanal sicher identifizieren"),
+            confirmation_text(self, channel, duration, target_percent, contrast, other_percent, method, stop_test),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
@@ -7333,6 +7156,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             return
         self.save_selected_mainboard_fan_profile(quiet=True)
         extra_snapshots: dict[str, object] = {}
+        snapshot = None
+        target_attempted = False
         try:
             snapshot = snapshot_mainboard_channel(channel)
             baseline_rpm = None
@@ -7341,17 +7166,31 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                     baseline_rpm = int(channel.rpm_path.read_text(encoding="ascii").strip())
                 except (OSError, ValueError):
                     baseline_rpm = None
-            if self.mainboard_hwmon_controller is not None:
+            if stop_test:
+                from modules.fan_mapping.v1_0.runtime import begin_stop_lease, stop_temperature_safe
+                # Validate the sensor before any PWM write, then arm a short
+                # driver lease. The two-minute UI deadline is never the lease.
+                if not stop_temperature_safe(self):
+                    raise MainboardFanWriteError(self.tr_static("Stopptest benötigt eine aktuelle CPU-Temperatur unter 90 °C."))
+                begin_stop_lease(self)
+            elif self.mainboard_hwmon_controller is not None:
                 set_mainboard_fan_watchdog(self.mainboard_hwmon_controller, 20)
             if contrast:
                 for other in self.chassis_mainboard_channels():
-                    if other.stable_id == channel.stable_id or not mainboard_channel_can_control(other):
+                    from modules.fan_mapping.v1_0.runtime import disconnected
+                    if other.stable_id == channel.stable_id or disconnected(self, other) or not mainboard_channel_can_control(other):
                         continue
                     other_snapshot = snapshot_mainboard_channel(other)
                     extra_snapshots[other.stable_id] = other_snapshot
                     set_mainboard_channel_percent(other, other_percent)
+            target_attempted = True
             set_mainboard_channel_percent(channel, target_percent)
         except MainboardFanWriteError as exc:
+            if target_attempted and snapshot is not None:
+                try:
+                    restore_mainboard_snapshot(channel, snapshot)
+                except MainboardFanWriteError:
+                    pass  # Keep the armed driver lease for independent recovery.
             for other_id, other_snapshot in extra_snapshots.items():
                 other = self.mainboard_channels.get(other_id)
                 if other is not None:
@@ -7359,7 +7198,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                         restore_mainboard_snapshot(other, other_snapshot)
                     except MainboardFanWriteError:
                         pass
-            self.show_error(f"PWM-Test konnte nicht gestartet werden: {exc}")
+            self.show_error(self.tr_static("Lüftertest konnte nicht gestartet werden.") + "\n" + str(exc))
             return
         self.mainboard_calibration_channel_id = channel.stable_id
         self.mainboard_calibration_snapshot = snapshot
@@ -7367,19 +7206,23 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.mainboard_calibration_extra_snapshots = extra_snapshots
         self.mainboard_calibration_baseline_rpm = baseline_rpm
         self.mainboard_calibration_rpm_samples = [baseline_rpm] if baseline_rpm is not None else []
-        self.mainboard_calibration_deadline = time.monotonic() + 10.0
+        self.mainboard_calibration_deadline = time.monotonic() + duration
         mode_text = f"Kontrast {other_percent}/{target_percent} %" if contrast else f"{target_percent} %"
         self.mainboard_runtime_status.setText(
-            f"Kalibrierung läuft · {channel.stable_id} · {mode_text} für 10 s · RPM werden beobachtet · danach Firmware-Rückgabe"
+            self.tr_static("Test läuft · {channel} · {percent} % · höchstens {seconds} s").format(channel=channel.stable_id, percent=target_percent, seconds=duration)
         )
         self.log_message(
-            f"MAINBOARD-FAN-KALIBRIERUNG: {channel.stable_id} · {mode_text} · 10 s · Start · "
+            f"MAINBOARD-FAN-KALIBRIERUNG: {channel.stable_id} · {mode_text} · {duration} s · Start · "
             f"RPM vorher {baseline_rpm if baseline_rpm is not None else 'unbekannt'} · Schreibweg {method}"
         )
         self.mainboard_calibration_sample_timer.start()
-        self.mainboard_calibration_timer.start(10000)
+        self.mainboard_calibration_timer.start(duration * 1000)
 
     def sample_mainboard_fan_calibration(self) -> None:
+        from modules.fan_mapping.v1_0.runtime import refresh_stop_lease
+        if not refresh_stop_lease(self):
+            self.finish_mainboard_fan_calibration(confirm=False)
+            return
         channel = self.mainboard_channels.get(self.mainboard_calibration_channel_id)
         if channel is None or channel.rpm_path is None:
             return
@@ -7392,12 +7235,10 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         delta = rpm - baseline if baseline is not None else 0
         remaining = max(0, int(round(self.mainboard_calibration_deadline - time.monotonic())))
         self.mainboard_runtime_status.setText(
-            f"Kalibrierung läuft · {channel.stable_id} · {rpm} rpm "
-            + (f"({delta:+d}) · " if baseline is not None else "")
-            + f"noch ~{remaining} s"
+            self.tr_static("Test läuft · {channel} · {rpm} rpm · noch etwa {seconds} s").format(channel=channel.stable_id, rpm=rpm, seconds=remaining)
         )
 
-    def finish_mainboard_fan_calibration(self) -> None:
+    def finish_mainboard_fan_calibration(self, *, confirm: bool = True, refresh: bool = True) -> None:
         channel_id = self.mainboard_calibration_channel_id
         snapshot = self.mainboard_calibration_snapshot
         target_percent = int(getattr(self, "mainboard_calibration_target_percent", 70))
@@ -7405,6 +7246,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         baseline_rpm = self.mainboard_calibration_baseline_rpm
         samples = list(self.mainboard_calibration_rpm_samples)
         self.mainboard_calibration_sample_timer.stop()
+        self.mainboard_calibration_timer.stop()
         self.mainboard_calibration_channel_id = ""
         self.mainboard_calibration_snapshot = None
         self.mainboard_calibration_target_percent = 70
@@ -7413,15 +7255,18 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.mainboard_calibration_baseline_rpm = None
         self.mainboard_calibration_rpm_samples = []
         channel = self.mainboard_channels.get(channel_id)
-        if channel is None or snapshot is None:
+        if not channel_id:
             return
-        restored = True
+        restored = channel is not None and snapshot is not None
         restore_errors: list[str] = []
-        try:
-            restore_mainboard_snapshot(channel, snapshot)
-        except MainboardFanWriteError as exc:
-            restored = False
-            restore_errors.append(f"{channel_id}: {exc}")
+        if restored:
+            try:
+                restore_mainboard_snapshot(channel, snapshot)
+            except MainboardFanWriteError as exc:
+                restored = False
+                restore_errors.append(f"{channel_id}: {exc}")
+        else:
+            restore_errors.append(f"{channel_id}: Kanal nicht mehr verfügbar; Treiber-Absturzsicherung bleibt aktiv")
         for other_id, other_snapshot in extra_snapshots.items():
             other = self.mainboard_channels.get(other_id)
             if other is None:
@@ -7433,36 +7278,39 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                 restore_errors.append(f"{other_id}: {exc}")
         for detail in restore_errors:
             self.log_message(f"MAINBOARD-FAN-KALIBRIERUNG: Wiederherstellung fehlgeschlagen · {detail}")
-        observed = "RPM nicht messbar"
+        observed = self.tr_static("RPM nicht messbar")
         if baseline_rpm is not None and samples:
-            observed = f"RPM vor Test {baseline_rpm} · Bereich während Test {min(samples)}–{max(samples)} rpm · max. Änderung {max(abs(v-baseline_rpm) for v in samples)} rpm"
+            observed = self.tr_static("RPM vor Test {before} · während des Tests {low}–{high} rpm").format(before=baseline_rpm, low=min(samples), high=max(samples))
         self.log_message(f"MAINBOARD-FAN-KALIBRIERUNG: {channel_id} · {observed}")
-        answer = QMessageBox.question(
-            self,
-            "PWM-Kanal bestätigen",
-            f"Hat sich während des {target_percent}-%-/10-s-Tests eindeutig die Lüftergruppe verändert, die du diesem Kanal zuordnen möchtest?\n\n"
-            + observed + "\n\n"
-            + ("Alle beteiligten Firmware-/hwmon-Zustände wurden wiederhergestellt." if restored else "ACHTUNG: Mindestens ein vorheriger Zustand konnte nicht vollständig wiederhergestellt werden. Prüfe die Lüfterdrehzahlen."),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
-        )
-        profile = self.mainboard_profile_for(channel)
-        if answer == QMessageBox.StandardButton.Yes:
-            profile["calibrated"] = True
-            self.log_message(f"MAINBOARD-FAN-KALIBRIERUNG: {channel_id} · physische Zuordnung bestätigt")
-            self.footer_status.setText(f"PWM-Kanal bestätigt: {profile.get('name', channel_id)}")
-        else:
-            profile["calibrated"] = False
-            profile["enabled"] = False
-            self.log_message(f"MAINBOARD-FAN-KALIBRIERUNG: {channel_id} · Zuordnung nicht bestätigt")
-        if not self.mainboard_control_active and self.mainboard_hwmon_controller is not None:
+        if confirm and channel is not None and snapshot is not None:
+            answer = QMessageBox.question(
+                self,
+                self.tr_static("PWM-Kanal bestätigen"),
+                self.tr_static("War die getestete Lüftergruppe eindeutig erkennbar?") + "\n\n"
+                + observed + "\n\n"
+                + self.tr_static("Alle beteiligten Firmware-/hwmon-Zustände wurden wiederhergestellt." if restored else "ACHTUNG: Mindestens ein vorheriger Zustand konnte nicht vollständig wiederhergestellt werden. Prüfe die Lüfterdrehzahlen."),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            profile = self.mainboard_profile_for(channel)
+            if restored and answer == QMessageBox.StandardButton.Yes:
+                profile["calibrated"] = True
+                profile["connection"] = "connected"
+                self.log_message(f"MAINBOARD-FAN-KALIBRIERUNG: {channel_id} · physische Zuordnung bestätigt")
+                self.footer_status.setText(f"PWM-Kanal bestätigt: {profile.get('name', channel_id)}")
+            else:
+                profile["calibrated"] = False
+                profile["enabled"] = False
+                self.log_message(f"MAINBOARD-FAN-KALIBRIERUNG: {channel_id} · Zuordnung nicht bestätigt")
+        if restored and not self.mainboard_control_active and self.mainboard_hwmon_controller is not None:
             try:
                 disarm_mainboard_fan_watchdog(self.mainboard_hwmon_controller)
             except MainboardFanWriteError as exc:
                 self.log_message(f"MAINBOARD-FAN-WATCHDOG: Deaktivieren nach Kalibrierung fehlgeschlagen · {exc}")
-        self.save_mainboard_fan_settings()
-        self.refresh_mainboard_fan_table()
-        self.update_thermalright_cooling_ui()
+        if refresh:
+            self.save_mainboard_fan_settings()
+            self.refresh_mainboard_fan_table()
+            self.update_thermalright_cooling_ui()
 
     def restore_selected_mainboard_fan_firmware(self) -> None:
         channel = self.selected_mainboard_channel()
@@ -13852,13 +13700,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             self.shutdown_lcd_request_id = request.request_id
             run.run("usb-begin", lambda: self.usb_coordinator.begin(request.request_id, "Shutdown-Sicherheitsroutine"))
         run.run("exit-log", lambda: self.log_message(f"SYSTEMENDE: {reason} · LCD-Rückstellung hat höchste Priorität."))
-        if self.mainboard_calibration_channel_id and self.mainboard_calibration_snapshot is not None:
-            channel = self.mainboard_channels.get(self.mainboard_calibration_channel_id)
-            if channel is not None:
-                if run.run("fan-calibration", lambda: restore_mainboard_snapshot(channel, self.mainboard_calibration_snapshot)):
-                    run.run("calibration-log", lambda: self.log_message("MAINBOARD-FAN: laufender Kalibrierungstest beim Programmende wiederhergestellt"))
-            self.mainboard_calibration_channel_id = ""
-            self.mainboard_calibration_snapshot = None
+        if self.mainboard_calibration_channel_id:
+            run.run("fan-calibration", lambda: self.finish_mainboard_fan_calibration(confirm=False, refresh=False))
         if self.mainboard_control_active:
             run.run("fan-firmware", lambda: self.restore_all_mainboard_fans_to_firmware(quiet=True))
             self.mainboard_control_active = False

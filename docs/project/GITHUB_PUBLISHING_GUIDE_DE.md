@@ -1,4 +1,4 @@
-# Open Hardware Control 3.4.29.175 STABLE – GitHub-Veröffentlichung (geplant)
+# Open Hardware Control 3.4.29.176 STABLE – GitHub-Veröffentlichung (geplant)
 
 ## Abschluss und Installationsprüfung
 
@@ -37,7 +37,7 @@ Das erwartete Remote ist `https://github.com/Frelidon/open-hardware-control.git`
 
 ```bash
 ./scripts/check_release.sh
-./scripts/build_release.sh 3.4.29.175
+./scripts/build_release.sh 3.4.29.176
 cd dist
 sha256sum -c SHA256SUMS
 ```
@@ -45,11 +45,11 @@ sha256sum -c SHA256SUMS
 Erwartete Dateien:
 
 - `open_hardware_control_v3_4_29_175.zip`
-- `open-hardware-control_3.4.29.175_all.deb`
-- `open-hardware-control-3.4.29.175-1.noarch.rpm`
-- `open-hardware-control-3.4.29.175-source.tar.gz`
-- `Entwicklerpaket 3.4.29.175.zip`
-- `Open_Hardware_Control_3.4.29.175_LOCAL_AI.gitbundle`
+- `open-hardware-control_3.4.29.176_all.deb`
+- `open-hardware-control-3.4.29.176-1.noarch.rpm`
+- `open-hardware-control-3.4.29.176-source.tar.gz`
+- `Entwicklerpaket 3.4.29.176.zip`
+- `Open_Hardware_Control_3.4.29.176_LOCAL_AI.gitbundle`
 - `SHA256SUMS`
 
 Der Build muss außerdem die externe Zwei-Versionen-Sicherung aus `RELEASE_BACKUP_POLICY.md` vollständig aktualisieren; beide aufbewahrten Versionen werden in ihren jeweiligen Ordnern erneut mit `sha256sum -c SHA256SUMS` geprüft.
@@ -60,16 +60,16 @@ Nach sauberem Commit wird der geprüfte Stand zuerst ohne Force-Push auf `main` 
 
 ```bash
 git push origin main
-git tag -a v3.4.29.175 -m "Open Hardware Control v3.4.29.175"
-git push origin v3.4.29.175
+git tag -a v3.4.29.176 -m "Open Hardware Control v3.4.29.176"
+git push origin v3.4.29.176
 ```
 
-Der Workflow `.github/workflows/release.yml` wiederholt die Tests, baut sämtliche Artefakte aus genau diesem Tag und erstellt den öffentlichen Release mit `docs/releases/RELEASE_NOTES_v3.4.29.175.md`.
+Der Workflow `.github/workflows/release.yml` wiederholt die Tests, baut sämtliche Artefakte aus genau diesem Tag und erstellt den öffentlichen Release mit `docs/releases/RELEASE_NOTES_v3.4.29.176.md`.
 
 Kontrolle:
 
 ```bash
-gh release view v3.4.29.175 --web
+gh release view v3.4.29.176 --web
 ```
 
 ## Repository-Beschreibung und Topics

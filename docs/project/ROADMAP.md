@@ -1,5 +1,18 @@
 # Roadmap
 
+## Current .176 work · 11.11.26
+
+Fan mapping now supports explicit disconnected ports, compact remapping access,
+120-second chassis identification with a short refreshed driver crash lease and
+automatic scoped white RGB lighting. Temperature recording has sensor icons,
+ID-only drag selection and reusable current/min/max cards. Four-language real
+UI and safety fixtures pass; the full gate passes 1,587 tests and five subtests.
+All six artifacts and both .175/.176 rolling backups are verified. User and
+system installations are complete (3.4.29.176~intern2), with exact parity for
+414 Python sources. Saved profiles/plugin and the active native/GPU/LCD state
+are preserved. Real fan stop/crash and Fedora hardware checks are not claimed.
+The previous .175 GitHub upload remains unchanged during this follow-up.
+
 ## Current .175 follow-up · 11.11.26
 
 Reviewed model-level links and category/vendor filters are implemented. The

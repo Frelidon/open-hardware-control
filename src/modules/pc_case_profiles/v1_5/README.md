@@ -135,3 +135,8 @@ uses a 40-ms timer; hidden views stop. This is not a rotor/RPM simulation.
 
 
 The .172 workspace reuses all stores and animated diagrams in three tabs. `component_summary.py` edits declared fan count/LED drafts only on Save. `inline_editor.py` sizes for its natural form/footer and reveals Overview before embedding forms. Original profile controls remain in a disclosure.
+
+.176 assistant channel changes cancel active identification before switching;
+continuation skips explicitly disconnected ports and completes when none remain.
+Stored connection flags retain curves; only explicit successful calibration
+restores a connected state. Layout/profile ownership remains unchanged.

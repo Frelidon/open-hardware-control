@@ -95,7 +95,7 @@ class PcCaseProfilesMixin:
         self.cooling_layout_selected_slot_id = str(slot_id)
         if hasattr(self, "assistant_slot_label"):
             slot = next((item for item in self.rgb_layout_slots if (item.slot_id or item.position) == slot_id), None)
-            self.assistant_slot_label.setText(f"Ausgewählter Einbauplatz: {slot.name}" if slot else f"Einbauplatz: {slot_id}")
+            self.assistant_slot_label.setText(self.tr_static("Einbauplatz") + ": " + (slot.name if slot else slot_id))
 
     def _fan_layout_slot(self, slot_id: str) -> RGBLayoutSlot | None:
         slot = next((item for item in self.rgb_layout_slots if (item.slot_id or item.position) == slot_id), None)
@@ -277,8 +277,8 @@ class PcCaseProfilesMixin:
         for channel in self.chassis_mainboard_channels():
             slot_id = self.mainboard_layout_assignments.get(channel.stable_id, "")
             slot = next((item for item in self.rgb_layout_slots if (item.slot_id or item.position) == slot_id), None)
-            position = slot.name if slot else "noch nicht zugeordnet"
             profile = self.mainboard_profile_for(channel)
+            position = self.tr_static("Nicht angeschlossen") if profile.get("connection") == "disconnected" else (slot.name if slot else "noch nicht zugeordnet")
             layout.addWidget(QLabel(f"PWM {channel.index}  ·  {profile.get('name') or channel.display_name}  →  {position}"))
 
     def assistant_continue_with_next_fan(self) -> None:
@@ -288,24 +288,29 @@ class PcCaseProfilesMixin:
             return
         current = combo.currentIndex()
         ordered = [((current + offset) % combo.count()) for offset in range(1, combo.count() + 1)]
-        target = next((
-            index for index in ordered
-            if str(combo.itemData(index) or "") not in self.mainboard_layout_assignments
-            or not bool(self.mainboard_fan_profiles.get(str(combo.itemData(index) or ""), {}).get("calibrated", False))
-        ), ordered[0])
-        combo.setCurrentIndex(target)
+        pending = [index for index in ordered
+                   if self.mainboard_fan_profiles.get(str(combo.itemData(index) or ""), {}).get("connection") != "disconnected"
+                   and (str(combo.itemData(index) or "") not in self.mainboard_layout_assignments
+                        or not bool(self.mainboard_fan_profiles.get(str(combo.itemData(index) or ""), {}).get("calibrated", False)))]
+        if not pending:
+            wizard.setCurrentId(3)
+            return
+        combo.setCurrentIndex(pending[0])
         self.cooling_layout_selected_slot_id = ""
         if hasattr(self, "assistant_slot_label"):
-            self.assistant_slot_label.setText("Ausgewählter Einbauplatz: noch keiner")
+            self.assistant_slot_label.setText(self.tr_static("Ausgewählter Einbauplatz: noch keiner"))
         wizard.setCurrentId(1)
 
     def assistant_select_channel(self, channel_id: str) -> None:
+        from modules.fan_mapping.v1_0.runtime import cancel_test
+        if getattr(self, "mainboard_calibration_channel_id", "") != str(channel_id):
+            cancel_test(self)
         self.mainboard_selected_channel_id = str(channel_id)
         self.load_selected_mainboard_fan_editor()
         if hasattr(self, "assistant_channel_status"):
             channel = self.selected_mainboard_channel()
             self.assistant_channel_status.setText(
-                f"Aktueller Testkanal: {channel.display_name}" if channel else "Kein Kanal ausgewählt"
+                self.tr_static("Aktuell getesteter Kanal") + ": " + (channel.display_name if channel else "—")
             )
 
     def open_rgb_layout_slot_device_editor(self, slot_id: str) -> None:

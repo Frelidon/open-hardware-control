@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.4.29.176 INTERN · 11.11.26
+
+- Add an explicit reversible disconnected-header choice to fan mapping. Skip such ports while retaining curve settings, disable their automation and show a compact unused-header section with remapping access. Never infer absence from zero RPM.
+- Extend chassis-only 0% identification to a maximum 120 seconds, requiring a refreshed 10-second independent driver watchdog. Restore target and contrast snapshots on Next, Cancel, channel change, timeout and clean shutdown. Preserve the watchdog on restoration failure; no new CPU/pump stop path. Keep ordinary speed calibration at ten seconds.
+- Automatically pause the owned RGB stream and set mapped fan controllers, including radiator RGB, to full white. Require confirmed native STOP, wait for old writers, and reuse the existing scoped-preview barrier and unchanged-design restoration.
+- Replace visible temperature statistics with reusable reading cards and original sensor symbols. Add bounded ID-only drag selection in both directions, retain checkbox/button/keyboard access, unit conversion, selected range, session-only history and explicit reports. Preserve an intentionally empty saved selection and resizable panel geometry.
+- All labels are provided in DE/EN/ES/FR. Safety tests use synthetic hwmon and no real fan stop/crash experiment; real Fedora hardware remains untested.
+
 ## 3.4.29.175 INTERN · 11.11.26
 
 - Organize 41 model/backend entries by device category and vendor, with separate manufacturer and reviewed product links. Omit missing product buttons. Existing GPU model profiles remain explicitly backend-dependent, not new hardware approvals.

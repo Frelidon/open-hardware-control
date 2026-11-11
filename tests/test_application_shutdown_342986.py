@@ -145,6 +145,7 @@ def exit_host(fail=""):
     host.rgb_session_lock = SimpleNamespace(release=action("lock"))
     for name, key in {"shutdown_responsive_startup": "probes", "restore_all_mainboard_fans_to_firmware": "fans",
                       "restore_thermalright_cooling_on_quit": "cooling", "shutdown_gif_stream_sync": "stream",
+                      "finish_mainboard_fan_calibration": "calibration",
                       "restore_original_lcd_sync_on_quit": "lcd", "restore_safe_hardware_fallback_sync_on_quit": "safety",
                       "stop_openrgb_effect": "rgb", "apply_rgb_shutdown_lighting_sync": "rgb-shutdown-light",
                       "stop_managed_rgb_engine": "engine", "mark_clean_shutdown": "marker",
@@ -170,6 +171,7 @@ def test_individual_failure_does_not_skip_remaining_phases_or_mark_clean(fail):
 def test_successful_exit_preserves_restore_order_and_completes_once():
     host, calls, logs = exit_host()
     host.quit_app()
+    assert calls.index("calibration") < calls.index("fans") < calls.index("helper")
     assert calls.index("stream") < calls.index("lcd") < calls.index("rgb") < calls.index("rgb-shutdown-light")
     assert calls.index("rgb-shutdown-light") < calls.index("engine")
     assert calls.index("engine") < calls.index("marker") < calls.index("backend") < calls.index("exit")

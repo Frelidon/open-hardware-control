@@ -1,5 +1,32 @@
 # Open Hardware Control — Architecture
 
+## 11.11.26 – Fan mapping lifecycle and sensor cards (.176)
+
+`fan_mapping/v1_0/wizard.py` extracts the existing wizard composition; `runtime.py`
+owns explicit connection flags, unused-header disclosure and wizard lifecycle.
+The mainboard profile/store and existing hardware writers stay authoritative.
+The 120-second stop deadline is distinct from the 10-second driver watchdog;
+existing RPM sampling refreshes that lease every three seconds while measured
+CPU/GPU temperatures are below the established 90 °C emergency boundary.
+No watchdog or invalid/missing CPU measurement refuses the long test before PWM
+writes. A lost lease cancels/restores. Every contrast snapshot is restored on
+normal exits, even if the target disappeared. Clean shutdown skips UI refresh.
+Failed restoration leaves the driver lease armed. The installed nct6687d source
+was inspected read-only: expiry restores its tracked manual channels independently
+of the OHC process. No kernel/firmware/helper permissions are changed.
+
+`lighting.py` uses the existing HeaderPreview ownership scope, a confirmed native
+STOP and bounded wait for prior SDK/manual writes. It never infers RGB wiring or
+enables absent authority. Closing during a queued white command waits for its
+completion before restoring the unchanged selected design. No settings migrate.
+
+`temperature_history/v1_2/selection.py` owns original icons and bounded ID-only
+MIME data; `readings.py` reuses selected reading cards instead of rebuilding them
+every sensor tick. `panel.py` preserves existing IDs, storage keys, chart/history
+and report interface. The compatibility statistics table is hidden and parented.
+Recorder split panels opt out of fixed content heights via the existing
+`keepViewportHeight` contract, preserving splitter sizing without clipping buttons.
+
 ## 11.11.26 – Model-level catalog and stable sidebar clicks (.175)
 
 `hardware_checker/v1_0/device_catalog.py` is immutable metadata using existing

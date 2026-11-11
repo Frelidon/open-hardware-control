@@ -1,5 +1,22 @@
 # Open Hardware Control — Durable Decisions
 
+## 11.11.26 – Fan identification and temperature recorder (.176)
+
+The owner explicitly requests "not connected" as a reversible per-header
+choice, hidden full cards but an accessible unused section, a two-minute
+chassis-only stop test, restoration on Next/Cancel/crash and automatic full
+white fan lighting while identifying. Zero RPM does not prove disconnection.
+Keep calibration/owner gates and CPU/pump exclusions. The long test requires
+an independent short driver watchdog refreshed while healthy; never use a
+120-second watchdog as a replacement for crash recovery. On normal transitions
+restore every target/contrast snapshot before proceeding. No physical stop test
+is executed during development. White lighting stays within already granted
+RGB authority and known mapped fan controllers; restore the unchanged design.
+
+Temperature selection gains symbols and drag from available sensors to chosen
+readings, with keyboard/button alternatives. Keep existing sensor IDs, saved
+selection, bounded session-only history, chart and explicit report exports.
+
 ## 11.11.26 – Model catalog and completed-pointer navigation (.175)
 
 The owner requests a new tested/installed version followed by GitHub upload.

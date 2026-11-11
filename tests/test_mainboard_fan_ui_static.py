@@ -2,6 +2,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CODE = (ROOT / "src/kraken_control.py").read_text(encoding="utf-8")
+WIZARD_CODE = (ROOT / "src/modules/fan_mapping/v1_0/wizard.py").read_text(encoding="utf-8")
 WORKFLOW_CODE = (ROOT / "src/modules/pc_case_profiles/v1_5/controller.py").read_text(encoding="utf-8")
 
 
@@ -31,7 +32,7 @@ def test_case_profiles_match_cpu_card_and_keep_automation_separate() -> None:
 
 
 def test_each_case_fan_card_exposes_bounded_stop_test_and_bios_mode_explanation() -> None:
-    assert 'QPushButton(self.tr_static("0 % / 10 s testen"))' in CODE
+    assert 'QPushButton(self.tr_static("0 % / 2 min testen"))' in CODE
     assert "def test_mainboard_channel_stop_from_card" in CODE
     assert "self.start_mainboard_fan_calibration(stop_test=True)" in CODE
     assert 'self.tr_static("PWM/DC wird im BIOS festgelegt")' in CODE
@@ -59,8 +60,10 @@ def test_341231_calibration_uses_polkit_and_ten_second_rpm_observation() -> None
     assert 'mainboard_channel_can_control(channel)' in CODE
     assert 'mainboard_channel_control_method(channel)' in CODE
     assert 'mainboard_calibration_sample_timer' in CODE
-    assert 'RPM vor Test' in CODE
-    assert 'self.mainboard_calibration_timer.start(10000)' in CODE
+    assert 'RPM vor Test {before}' in CODE
+    assert 'duration = 120 if stop_test else 10' in CODE
+    assert 'self.mainboard_calibration_timer.start(duration * 1000)' in CODE
+    assert 'begin_stop_lease(self)' in CODE
 
 
 def test_persistent_fan_authorization_has_grant_and_revoke_controls() -> None:
@@ -79,5 +82,5 @@ def test_assignments_can_be_safely_reset_and_wizard_can_continue() -> None:
     assert "self.mainboard_layout_assignments.clear()" in reset
     assert "Kurven erhalten" in reset
     assert "def assistant_continue_with_next_fan" in WORKFLOW_CODE
-    assert 'QPushButton(self.tr_static("Nächsten Lüfter zuordnen"))' in CODE
+    assert 'QPushButton(host.tr_static("Nächsten Lüfter zuordnen"))' in WIZARD_CODE
     assert "wizard.setCurrentId(1)" in WORKFLOW_CODE

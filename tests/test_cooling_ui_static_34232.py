@@ -2,6 +2,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CODE = (ROOT / "src/kraken_control.py").read_text(encoding="utf-8")
+WIZARD_CODE = (ROOT / "src/modules/fan_mapping/v1_0/wizard.py").read_text(encoding="utf-8")
 THEME_CONTROLLER = (ROOT / "src/modules/ui_themes/v1_0/controller.py").read_text(encoding="utf-8")
 THEME_CONTROLLER += "".join((ROOT / "src/modules/ui_themes/v1_0" / name).read_text(encoding="utf-8")
                             for name in ("style_base.py", "style_controls.py"))
@@ -35,7 +36,7 @@ def test_kraken_quick_profile_highlight_tracks_confirmed_device_state():
 
 def test_cpu_and_pump_are_excluded_from_chassis_control():
     assert 'mainboard_channel_is_chassis_fan(channel)' in CODE
-    assert 'CPU_FAN und PUMP_FAN bleiben im separaten CPU-/Kraken-Bereich' in CODE
+    assert 'CPU_FAN und PUMP_FAN bleiben im separaten Kühlungsbereich' in WIZARD_CODE
     assert 'if not mainboard_channel_is_chassis_fan(channel):\n                continue' in CODE
 
 
@@ -55,8 +56,8 @@ def test_coolercontrol_ownership_is_exclusive():
 
 def test_guided_assistant_has_safe_contrast_and_layout():
     assert 'Geführten Lüfter-Assistenten starten' in CODE
-    assert 'andere Gehäuselüfter 30 %' in CODE
-    assert 'Alle Gehäuse-RGB auf Weiß' in CODE
+    assert 'andere Gehäuselüfter 30 %' in WIZARD_CODE
+    assert 'QTimer.singleShot(0, lambda: begin(host)' in WIZARD_CODE
     assert 'CoolingLayoutDiagram' in CODE
     assert 'mainboard_fans/layout_assignments' in CODE
     assert 'restore_mainboard_snapshot(other, other_snapshot)' in CODE

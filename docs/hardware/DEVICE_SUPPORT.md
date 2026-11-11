@@ -1,5 +1,14 @@
 # Open Hardware Control — Agent Device-Support Summary
 
+11.11.26 (.176): Existing chassis-only identification can request 0% for up
+to 120 seconds only when the existing driver watchdog can be armed with a short
+10-second lease. Sample ticks refresh the lease every three seconds; Next,
+Cancel, channel change and shutdown restore all target/contrast snapshots.
+CPU_FAN and PUMP_FAN remain excluded from stop tests. Ordinary 70/80% speed
+calibration remains ten seconds. "Not connected" is an explicit reversible
+choice, never a conclusion from zero RPM. No new electrical/protocol support,
+LED count, driver installation or live hardware stop test is claimed.
+
 11.11.26 (.175): The read-only UI catalog lists 41 model/backend entries in
 eight categories. Thirty existing GPU profile models are explicitly marked as
 backend-dependent profiles, not newly hardware-tested devices. The confirmed

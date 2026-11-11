@@ -269,7 +269,7 @@ window.apply_ui_language("en", persist=False, log_change=False)
 window.refresh_dynamic_translations()
 fan_buttons = {button.text() for button in window.mainboard_fan_cards.findChildren(QAbstractButton)}
 fan_labels = {label.text() for label in window.mainboard_fan_cards.findChildren(QLabel)}
-assert {"Test", "Test 0% / 10 s", "Edit curve & details", "Assign", "Enable automatic control", "Quiet", "Balanced", "Performance"} <= fan_buttons
+assert {"Test", "Test 0% / 2 min", "Edit curve & details", "Assign", "Enable automatic control", "Quiet", "Balanced", "Performance"} <= fan_buttons
 assert "Curve profile:" in fan_labels
 assert any(text.startswith("Profile: Balanced") for text in fan_labels)
 assert "System Fan 3" in fan_labels
@@ -288,8 +288,8 @@ window.mainboard_channels = {}
 window.mainboard_fan_profiles.pop(channel.stable_id, None)
 window.apply_ui_language("de", persist=False, log_change=False)
 assert balanced_button.text() == "Ausbalanciert"
-assert tuple(application.UI_TRANSLATIONS[language]["0 % / 10 s testen"] for language in ("en", "es", "fr")) == (
-    "Test 0% / 10 s", "Probar 0 % / 10 s", "Tester 0 % / 10 s",
+assert tuple(application.UI_TRANSLATIONS[language]["0 % / 2 min testen"] for language in ("en", "es", "fr")) == (
+    "Test 0% / 2 min", "Probar 0 % / 2 min", "Tester 0 % / 2 min",
 )
 
 assert window.tabs.count() == 19
@@ -408,7 +408,7 @@ for _refresh in range(2):
     )
 assert application._GIF_SAFETY_TEXT in labels
 assert application._ABOUT_SUMMARY_TEXT in labels
-assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.175 INTERN")
+assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.176 INTERN")
 assert window.temp_card.isHidden()
 assert not window.cpu_temp_card.isHidden()
 assert window.mainboard_sensor_source.findData("liquid") == -1
@@ -659,8 +659,12 @@ for language in ("de", "en", "es", "fr"):
                             "cooling_controls", "temperature_recording", "hardware_checker", "hardware_fix", "supported_devices"):
             window.navigation.setCurrentItem(window.navigation_items[origin])
             item = window.navigation_items[destination]
-            window.navigation.scrollToItem(item)
             qt_app.processEvents()
+            window.navigation.doItemsLayout()
+            window.navigation.scrollToItem(item, application.QAbstractItemView.ScrollHint.PositionAtCenter)
+            qt_app.processEvents()
+            window.navigation.doItemsLayout()
+            window.navigation.scrollToItem(item, application.QAbstractItemView.ScrollHint.PositionAtCenter)
             position = window.navigation.visualItemRect(item).center()
             assert window.navigation.viewport().rect().contains(position), (origin, destination, position, window.navigation.viewport().rect(), item.isHidden())
             QTest.mousePress(window.navigation.viewport(), Qt.MouseButton.LeftButton, pos=position)
@@ -678,6 +682,33 @@ assert all(window.navigation_items[key].parent() is window.navigation_items["har
            for key in ("hardware_fix", "supported_devices"))
 window.tabs.setCurrentIndex(0)
 assert window.sidebar_artwork.category == "overview"
+
+# .176 wizard is built with a synthetic connector in all four languages;
+# automatic white dispatch is invoked, while hardware remains isolated.
+from modules.fan_mapping.v1_0.wizard import build as build_fan_wizard
+window.mainboard_channels = {channel.stable_id: channel}
+window.mainboard_fan_profiles[channel.stable_id] = window.mainboard_default_profile(channel)
+for language in ("de", "en", "es", "fr"):
+    window.apply_ui_language(language, persist=False, log_change=False)
+    with patch("modules.fan_mapping.v1_0.wizard.begin") as automatic_white:
+        build_fan_wizard(window, [channel])
+        qt_app.processEvents()
+        automatic_white.assert_called_once_with(window)
+    wizard = window.chassis_fan_wizard
+    assert wizard.windowTitle() == window.tr_static("Lüfter-Zuordnung & Test-Assistent")
+    assert wizard.button(application.QWizard.WizardButton.NextButton).text() == window.tr_static("Weiter")
+    captions = {button.text() for button in wizard.findChildren(QAbstractButton)}
+    assert window.tr_static("Nicht angeschlossen · überspringen") in captions
+    assert window.tr_static("0 % / 2 min Stopp-Test · andere Gehäuselüfter 45 %") in captions
+    wizard.setCurrentId(1)
+    next(button for button in wizard.findChildren(QAbstractButton)
+         if button.text() == window.tr_static("Nicht angeschlossen · überspringen")).click()
+    assert window.mainboard_fan_profiles[channel.stable_id]["connection"] == "disconnected"
+    assert window.mainboard_fan_profiles[channel.stable_id]["enabled"] is False
+    assert wizard.currentId() == 3
+    wizard.reject()
+window.mainboard_channels = {}
+window.mainboard_fan_profiles.pop(channel.stable_id, None)
 
 dispose_window(window)
 
