@@ -12,8 +12,10 @@ Vollständige Release-Prüfung, Paketbau/Sicherungen und lokale Installation fol
 kein GitHub-Auftrag und kein realer Fedora-Hardwarelauf.
 
 Vollständiger .180-Wächter: 1.644 Tests und fünf Untertests bestanden;
-443 Python-Laufzeitquellen und 2.515 gemeinsame Sprach-IDs. Pakete und beide
-Installationen werden anschließend geprüft. Kein GitHub-Upload.
+443 Python-Laufzeitquellen und 2.515 gemeinsame Sprach-IDs. Alle sechs Pakete,
+beide .179/.180-Sicherungen und beide installierten Quell-/Medienstände geprüft.
+Benutzer- und Systemkopie .180 laufen bzw. sind installiert; keine neue Hardware-
+Kompatibilitätsbehauptung und kein GitHub-Upload.
 
 ## Entwicklung .179 · 11.11.26
 

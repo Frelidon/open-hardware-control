@@ -16,7 +16,8 @@ beim Sprachwechsel. Lokalisierung 1.0 ergänzt `profile_panels_messages.py`, ato
 DE/EN/ES/FR: 2.515 gemeinsame IDs. Gezielte echte Qt-Geometrieprüfung besteht für
 drei Größen, vier Sprachen und zwei Themen, alle Bereiche offen. Vollständiger
 Wächter bestanden: 1.644 Tests und fünf Untertests, 443 Laufzeitquellen.
-Pakete, Sicherungen und Installation folgen; kein GitHub-Auftrag.
+Alle sechs Pakete, beide .179/.180-Sicherungen und beide installierten
+443-Quellbäume geprüft. Kein GitHub-Auftrag.
 
 Entwicklung 11.11.26 (.179): Profil-Kühlungsbereitschaft 1.0 unter
 `src/modules/profile_cooling/v1_0/` ergänzt `restore.py` für höchstens zehn Sekunden

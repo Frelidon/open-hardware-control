@@ -32,8 +32,9 @@ Geprüft sind lesbare Werte/Symbole, überlappungsfreie Kacheln, vollständige
 Bereichsinhalte, erreichbare Sicherungsaktionen und Entwurfs-/Auswahlerhalt.
 Vollständiger Release-Wächter bestanden: 1.644 Tests und fünf Untertests,
 443 Python-Laufzeitquellen und 2.515 gemeinsame Sprach-IDs. Sicherheit, Datenschutz,
-Modulbudgets und bestehende Ubuntu-/Fedora-Verträge bestanden. Alle sechs Pakete,
-beide rollierenden Sicherungen und Benutzer-/Systeminstallation stehen noch aus.
+Modulbudgets und bestehende Ubuntu-/Fedora-Verträge bestanden. Alle sechs Pakete
+und beide .179/.180-Sicherungen sind geprüft; Benutzer- und Systemkopie .180 sind
+installiert. Zusätzlicher nativer Wayland-Sichtnachweis bestanden (unten).
 Kein GitHub-Auftrag; kein realer Fedora-Hardwarelauf wird behauptet.
 
 ## Lokale Entwicklung .179 · 11.11.26
@@ -2102,3 +2103,44 @@ Fünf native RGB-Arbeiter ohne gemeldete Fehlerzähler. Eine nicht fatale
 Qt-Portal-Registrierungswarnung wird jetzt ausdrücklich als Warnung im
 allgemeinen Log erfasst; deren Betriebssystemursache wurde nicht geändert.
 Kein Rechnerneustart-/Fedora-Livetest und kein GitHub-Upload durchgeführt.
+
+
+Lokaler Abschluss .180: Alle sechs Artefakte und die beiden .179/.180-INTERN-
+Sicherungen mit SHA256 geprüft; ZIP-CRC, 443 identische Python-Quellen in
+ZIP/DEB/RPM, gebündelte Hintergründe/Matrix-Medien, DEB-Verzeichnismodi und
+RPM-Eigentümer geprüft. Privater vorheriger .179-Installationsstand einschließlich
+endgültiger Einstellungen, Profile und beider getrennter Native-Plugins gesichert.
+Installationswechsel nach geprüfter Prozessidentität und geordnetem Shutdown.
+Vor dem Neustart bleiben alle vier Dateien bytegleich; unmittelbar nach Start
+sind Profil-JSON und beide Plugins ebenfalls unverändert. Spätere im laufenden
+Programm gespeicherte Profiländerungen werden nicht durch Sicherungen ersetzt.
+
+Benutzer- und Systemkopie .180 installiert, DPKG 3.4.29.180~intern2 bestätigt.
+Beide Kopien entsprechen sämtlichen 443 Python-Laufzeitquellen und den geprüften
+Medien bytegenau; nur profiles_workspace/v1_1 ist vorhanden. Gestartete Benutzerkopie
+ohne Python-Traceback und ohne explizite Fehlerzeilen im Sitzungslog; fünf native
+RGB-Arbeiter melden Fehlerzähler null. Normal gespeicherte Laufzeit-/Fensterwerte
+sind keine Installationsmigration und werden nicht auf den Vorstartstand gesetzt.
+Kein GitHub-Upload, Rechnerneustart oder realer Fedora-Hardwarelauf durchgeführt.
+
+
+Nativer Sichtnachweis .180: Die tatsächlich installierte Benutzerkopie wurde
+zusätzlich in einem eigenen Wayland-Fenster mit isolierten Beispieldaten und
+vollständig deaktivierten Hardwaretransporten geprüft. GNOME weist maximiert
+2560×1341 Pixel zu. In dieser realen Fenstergröße bestehen alle geöffneten
+Bereiche, volle Text-/Symbolhöhen, erreichbare Aktionen, vier Sprachen, beide
+Themen und Entwurfs-/Speicherauswahlprüfungen. Die drei festen Fenstergrößen sind
+separat durch die Offscreen-Regressionsprüfung belegt; ein vom Compositor
+überschriebener Resize-Auftrag wird nicht als nativer Größennachweis ausgegeben.
+Native eigene Fensteraufnahme: [dunkel](../images/rendering-evidence/profiles-installed-3429180-dark.png)
+und [hell](../images/rendering-evidence/profiles-installed-3429180-light.png).
+Beide Aufnahmen wurden angesehen. Persönliche Hardware/Profile bleiben außerhalb
+des isolierten Prüffensters; ein Testprofil ist kein gemessener Livezustand.
+
+
+Der zusätzliche native Hintergrundnachweis aktiviert nach dem Anzeigen den
+vorhandenen Seiten-Sichtbarkeitscallback des normalen App-Starts. Der isolierte
+Abhängigkeits-Test hatte diesen Startschritt ausgelassen. Anschließend läuft der
+bestehende Matrix-Decoder mit nicht leerem 960×432-Bild und ohne Playerfehler;
+helle und dunkle Aufnahmen zeigen den Hintergrund hinter den lesbaren Flächen.
+Keine Produktänderung oder zusätzliche Decoderinstanz wurde dafür eingebaut.
