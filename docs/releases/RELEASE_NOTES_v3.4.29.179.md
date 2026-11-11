@@ -30,3 +30,21 @@ Shutdown, Geräteverlust, Hook-Delegation, zentraler Modul-Sink und konkurrieren
 Fehlerschreiber bestehen. Sicherheit/Datenschutz/Modulbudgets unverändert erfüllt.
 Bestehende Fedora-/Ubuntu-Fixtures bestanden; kein realer Fedora-/PWM-Ausfalltest.
 Paketbau und lokaler Upgrade-Nachweis folgen. Keine GitHub-Veröffentlichung.
+
+Lokaler Abschluss .179: Alle sechs Artefakte und beide .178/.179-INTERN-
+Sicherungen mit SHA256 geprüft. ZIP-CRC, 438 identische Python-Quellen in
+ZIP/DEB/RPM, neue Medien/Poster sowie DEB-Modi und RPM-Eigentümer geprüft.
+Private .178-Installation und endgültige Einstellungen/Profile/Plugins vor
+Start gesichert. Benutzer- und Systemkopie .179 installiert, DPKG bestätigt
+3.4.29.179~intern2; beide Quellbäume und neuen Medien bytegleich. Profile und
+beide nativen Plugins auch nach Start unverändert.
+
+Realer Startnachweis auf dem vorhandenen Ubuntu-System: CPU-Snapshot beim
+Profilaufruf 2,89 s alt, also korrekt nicht verwendbar. Das Profil wartet
+asynchron und erhält noch in derselben Sekunde einen frischen Wert; der
+bisherige modale CPU-Fehler tritt nicht auf. Sensorprozess mit korrekter
+Versionsangabe gestartet, keine neuen expliziten Fehlerzeilen im Sitzungslog.
+Fünf native RGB-Arbeiter ohne gemeldete Fehlerzähler. Eine nicht fatale
+Qt-Portal-Registrierungswarnung wird jetzt ausdrücklich als Warnung im
+allgemeinen Log erfasst; deren Betriebssystemursache wurde nicht geändert.
+Kein Rechnerneustart-/Fedora-Livetest und kein GitHub-Upload durchgeführt.
