@@ -72,6 +72,8 @@ class TemperatureRecordingMixin:
     def on_navigation_changed(self, current: QTreeWidgetItem | None, _previous: QTreeWidgetItem | None) -> None:
         if current is None:
             return
+        from modules.hardware_checker.v1_0.navigation import select
+        select(self, current)
         in_lcd_section = current is self.nav_lcd or current.parent() is self.nav_lcd
         in_cooling_section = current is self.nav_nzxt or current.parent() is self.nav_nzxt
         self.nav_lcd.setExpanded(in_lcd_section)
@@ -92,6 +94,12 @@ class TemperatureRecordingMixin:
             return
         if page == 8 and hasattr(self, "openlinkhub_check_update_button") and not self.openlinkhub_update_status:
             QTimer.singleShot(0, self.check_openlinkhub_updates)
+        if hasattr(self, "hardware_checker_page"):
+            self.navigation_items["hardware_checker"].setExpanded(page == self.hardware_checker_page_index)
+            if page == self.hardware_checker_page_index:
+                from modules.hardware_checker.v1_0.navigation import sync
+                sync(self)
+                return
         self.nav_lcd.setExpanded(page in {3, 11})
         self.nav_nzxt.setExpanded(page == 1)
         if page == 1:

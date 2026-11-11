@@ -9,7 +9,6 @@ from __future__ import annotations
 import json
 import os
 import socket
-import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable
@@ -49,6 +48,7 @@ class NativeOpenRGBPluginClient:
             return True
         if not self.available:
             return False
+        sock = None
         try:
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             sock.settimeout(self.timeout)
@@ -56,6 +56,8 @@ class NativeOpenRGBPluginClient:
             self._socket = sock
             return True
         except OSError:
+            if sock is not None:
+                sock.close()
             self.close()
             return False
 
@@ -84,7 +86,9 @@ class NativeOpenRGBPluginClient:
                     raise OSError("plugin closed socket")
                 reply += chunk
             message = json.loads(reply.split(b"\n", 1)[0].decode("utf-8"))
-            if not isinstance(message, dict) or message.get("ok") is False:
+            if not isinstance(message, dict):
+                return NativePluginResult(False, "invalid native plugin response")
+            if message.get("ok") is False:
                 return NativePluginResult(False, str(message.get("error", "plugin rejected request")))
             return NativePluginResult(True, str(message.get("detail", "")), message)
         except (OSError, ValueError, json.JSONDecodeError) as exc:

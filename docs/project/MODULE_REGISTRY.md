@@ -1,7 +1,128 @@
 # Open Hardware Control — verbindliches Modulregister
 
-**Stand:** 10.11.26
-**Anwendung:** 3.4.29.169 STABLE
+Entwicklung 11.11.26 (.175): Hardwareprüfung 1.0 ergänzt `device_catalog.py`
+für 41 Modell-/Backend-Einträge mit Geräteart, Hersteller und getrennten,
+geprüften Hersteller-/Produktlinks. `supported_devices.py` filtert acht
+Kategorien und Hersteller; fehlende Produktziele erzeugen keinen Knopf.
+GPU-Namen aus GPU-Profile 1.0 sind ausdrücklich nur Modellprofile mit
+Backend-Voraussetzung; bisherige Hardwaregrenzen bleiben erhalten.
+Navigationseinstellungen 1.0 ergänzt `sidebar.py:NavigationTree`; der
+Orchestrator verbindet `pageRequested` statt des rohen currentItemChanged.
+Seitenwechsel erfolgt nach dem vollständigen Mausklick, bevor Untermenüs
+Zeilen verschieben können. Tastatur, programmatische Auswahl und vorhandenes
+Drag-and-drop der Anpassung bleiben erhalten. Lokalisierung 1.0 ergänzt
+`device_catalog_messages.py`, gemeinsam in DE/EN/ES/FR geladen: 2.381 IDs.
+Regressionen: `tests/test_catalog_navigation_3429175.py` und echte Gesten in
+der vollständigen viersprachigen Oberfläche: 220 echte Zeigergesten bestanden.
+1.556 Tests und fünf Untertests bestanden; 406 Python-Laufzeitquellen.
+Isolierte helle/dunkle Katalogdarstellung geprüft. Alle sechs Artefakte und
+beide .174/.175-Sicherungen geprüft; ZIP/DEB/RPM mit 406 Quellen identisch.
+Benutzerinstallation gestartet, vor Start alle Einstellungs-/Profil-/Plugin-
+Hashes erhalten. Native Engine: fünf Arbeiter, null gemeldete Fehler;
+Sapphire External Control und gespeichertes Levita-Design aktiv. Systemkopie
+wartet noch auf Linux-Authentifizierung (.174); interner GitHub-Upload folgt.
+
+**Stand:** 11.11.26
+**Anwendung:** 3.4.29.175 INTERN
+
+Lokaler Stand 11.11.26: .174-Benutzerinstallation mit allen 403 Python-Quellen
+verifiziert und gestartet. Fünf native RGB-Arbeiter ohne gemeldete Fehler,
+Sapphire External Control und gespeichertes Levita-Design aktiv. Einstellungen,
+Profile und Plugin vor Neustart bytegleich. Nach bestätigter Linux-Abfrage ist
+auch die Systemkopie .174 (DPKG 3.4.29.174~intern2); beide installierten Bäume
+entsprechen allen 403 Python-Quellen. OpenLinkHub-Benutzerdienst aktiv;
+keine optionale DPI-Regel und kein Vorstart-Drop-in automatisch angelegt.
+Beide .173/.174-Versionssicherungen und ZIP/DEB/RPM-Inhalte sind geprüft.
+
+Standard-DPI 11.11.26 (.174): OpenLinkHub Update 1.0 ergänzt
+`startup_defaults.py` und `before_start.py`. Die vom Benutzer ausdrücklich
+gewählte Standardstufe wird unabhängig von OpenLinkHubs aktiver `Profile`-Stufe
+privat je Mausprofil gespeichert. Ein optionaler fester Benutzer-ExecStartPre
+stellt sie vor dem USB-Besitzerstart wieder her; ein fehlender OHC-Helfer
+blockiert den Dienst nicht. Keine Systemrechte oder direkten USB-Schreibwege.
+Die native Vorgabe ist wieder auswählbar; Rollback umfasst Profil, Regel und
+Drop-in. Sprachwechsel erneuert den einen dynamischen Vorgabetext; 2.324 IDs.
+Neue Regressionen prüfen DPI-Tastendruck/Neustart, getrennte Profile, Rücksetzen,
+inaktive/fremde/unsichere Dateien und fremde Drop-ins. .174: Voller Wächter mit 1.544 Tests und fünf Untertests bestanden; der
+echte systemd-Parser akzeptiert den optionalen Befehl. 403 Python-Laufzeitquellen.
+
+Nachkontrolle 11.11.26 (.173): OpenLinkHub Update 1.0 ergänzt
+`mouse_ui.py:refresh_mouse_icons`; UI-Themes 1.0 erneuert die eigenen
+Haussymbole beim Paletten-/Akzentwechsel. Der echte Qt-Sprach-/Thementest
+prüft die erneuerte Icon-Generation. Alle .172-Verträge bleiben erhalten;
+.173 ist der neue abschließende interne Kandidat. Voller Wächter: 1.529 Tests
+und fünf Untertests bestanden. Beide .172-Installationen entsprechen 401
+Python-Quellen; Profile und natives Plugin sind bytegleich erhalten.
+
+Abschlussprüfung 11.11.26 (.172): Vollständiger Wächter mit 1.529 Tests und
+fünf Untertests bestanden. Neun Geräte-/Backend-Karten, vier Sprachen und
+erhaltene helle/dunkle Paletten sowie native RGB-/Inline-Geometrie-Prüfungen
+sind abgedeckt. Bau und lokale Installation folgen; kein GitHub-Upload.
+
+Entwicklung 11.11.26 (.172, laufender Umbau): Navigationseinstellungen 1.0
+enthält `artwork.py` mit gerundeter Originalgrafik und originalen, palettenabhängigen
+Kategoriesymbolen. Hardwareprüfung 1.0 ergänzt `navigation.py` und
+`supported_devices.py` für zwei feste Unterpunkte, übersetzte Beschreibungen,
+Herstellerlinks und klare lokale/Backend-Unterstützungsgrenzen. UI-Leistung 1.1
+ergänzt `adaptive_views.py` und `compact_panels.py`; späte Formen übernehmen
+die ereignisgesteuerte Höhenanpassung ohne Polling. PC-Gehäuseprofile 1.5 ergänzt
+`component_summary.py`, teilt vorhandene Widgets in drei Ansichten auf und erhält
+Inline-Editor, Profile und animiertes Diagramm. RGB Studio 1.15 ergänzt
+`generic_fans.py`: eigene Zeichnungen für 21 deklarierte LED-Zahlen; Auswahl ist
+nur ein Entwurf. OpenLinkHub Update 1.0 extrahiert `device_ui.py` und ergänzt
+`mouse_ui.py`, `mouse_profiles.py`, `stage_integrity.py`: DPI-/Profilmetadaten aus
+.9.4-Detailabfragen, getrennte Maus-/Tabellengeometrie, Startstufe mit Backup und
+Dienststopp sowie offizielle benannte Profilaktionen. UI-Themes 1.0 aktualisiert
+Kategoriesymbole bei Palettenwechsel; Hintergrund-/Levita-/RGB-Transport bleiben
+bestehen. Lokalisierung 1.0 ergänzt `redesign_messages.py` gemeinsam für alle vier
+Sprachdateien auf 2.324 IDs. Hauptorchestrator, Temperatur-Navigation, Setup-
+Funktionsmodell, GPU-Prüfaktion und Branding verbinden diese vorhandenen Module.
+Der reale Benutzer-Backendwechsel .9.2→.9.4 ist mit vorherigem privatem Backup
+und gesunder Loopback-API bestätigt. Gezielte Prüfungen laufen; noch kein
+.172-Paket oder GitHub-Upload.
+
+Entwicklung 11.11.26 (laufender Umbau): OpenLinkHub Update 1.0 ergänzt
+`health.py` für eine begrenzte Start-/PID-/Loopback-API-Prüfung. Der getrennte
+Apply-Helfer stoppt bei Fehlern den neuen Dienst vor der Rückkehr zum Backup;
+auch ein fehlgeschlagener erster Verzeichniswechsel liegt im Recovery-Pfad.
+UI-Umbau und nächste Versionspaketierung sind noch in Arbeit.
+
+Entwicklung 11.11.26 (.171): OpenRGB Studio 1.15 und die reine Effektengine
+`src/rgb_effects.py` schließen harte Schleifengrenzen bei Doppelpuls und Fusion.
+Die RGB-Galerie ordnet vier Vorlagen unter gleichen stabilen Indizes in
+Räumlich/Energie/Bewegung ein; die redundante Kategorie OHC Originale entfällt
+nur dort. OpenRGB-Originale, LCD-Medien, Favoriten und Transport bleiben gleich.
+Je ein neuer Caption-Eintrag in allen vier Sprachdateien deckt den bisherigen
+Galerie-Accessible-Name ab; 2.259 gemeinsame IDs. Hardwarefreie Vollkatalog-
+Regressionen prüfen Galerie-, physische, Worker- und GPU-Pfade. Voller Wächter:
+1.514 Tests und fünf Untertests einschließlich vier Sprachen bestanden. .170 ist nach
+Rechnerneustart flüssig bestätigt; .171 bleibt ohne Installation/Veröffentlichung.
+
+Entwicklung 11.11.26: Navigationseinstellungen 1.0 behalten alle 17 Statuskarten,
+zeigen für Einstellungen aber keinen Ausschalter. Der Hauptorchestrator filtert
+alte Ausblendungen und schützt beide Editierwege. UI-Leistung 1.1 trennt
+`page_transition.py` für echte Inhaltsseitenübergänge (vier Stile,
+220/380/550 ms) vom Controller; Navigation bleibt ruhig. RGB Studio 1.15 bietet
+zwölf Vorschläge und trennt `native_stream.py` für bevorzugte native Übertragung,
+begrenzte Wiederholungen und bestätigte STOP-Barriere vor SDK-Fallback.
+`native_plugin.py` schließt fehlgeschlagene Verbindungsversuche und validiert
+Antwortobjekte. `content_ui_messages.py` aktualisiert alle vier Kataloge unter
+gleichen IDs; fünf neue Quellen ergeben 2.258 Einträge. Hostdiagnose bestätigt
+Autostart auf installierter .168/OpenRGB 1.0 statt des vorbereiteten nativen
+.169/.170-Stands. Lokale Installation ist inzwischen ausdrücklich freigegeben; GitHub bleibt bis
+zur Sicht-/Neustartbestätigung zurückgestellt.
+Anwendungsaktivierung 1.0 ergänzt `autostart.py`; `packaging/install.sh`
+aktualisiert vorhandene erkannte OHC-Autostarts auf den gerade erneuerten
+Benutzerstarter. Fehlende/deaktivierte Einträge, eigene Wrapper, Symlinks
+und Zusatzargumente bleiben erhalten. Separate Ubuntu-/Fedora-Fixtures prüfen
+den echten begrenzten Helfer ohne Hostinstallation.
+
+Installationsnachweis 11.11.26: Sechs Artefakte gebaut, .169/.170-Backups mit
+je acht Prüfsummen bestätigt. APT und Benutzerinstaller installieren .170;
+beide Kopien entsprechen 388 Python-Quellen. Bestehender Autostart zeigt auf
+den aktualisierten Benutzerstarter. Tatsächliches OpenRGB 1.1 mit fünf nativen
+Arbeitern, null gemeldeten Fehlern und bestätigtem Sapphire External Control.
+Optische Prüfung und Eigentümer-Neustart stehen aus; kein GitHub-Upload.
 
 Nach Tag-Veröffentlichung 10.11.26: Reiner Testfix im Hauptzweig ergänzt
 `Callable` im isolierten AST-Namensraum von `test_rgb_stream_reclaim_342990.py`.
@@ -762,19 +883,19 @@ Datum: 13.09.26.
 | Temperaturverlauf | 1.2 | `src/modules/temperature_history/v1_2/` | Begrenzter RAM-Puffer, datierte Qt-Zeitachse/Hoveranzeige, skalierbare Splitter, read-only Linux-hwmon-Erkennung und CSV-/JSON-Berichte; `gauge.py` zeigt dieselbe kompakte Celsius-Skala in Übersicht, Kühlung und Aufzeichnung | Höchstens 24 Stunden/28.800 Punkte im RAM; keine automatische Persistenz, kein Hardwarebesitz und Berichtsschreiben nur nach Benutzerauswahl |
 | Kühlungssicherheit | 1.0 | `src/modules/cooling_safety/v1_0/` | Modellabhängige fail-closed Untergrenzen und letzte Begrenzung vor dem Hardware-Schreibpfad | Levita: eigenes vorsichtiges OHC-Minimum 50 % Pumpe/25 % Radiator, da der Hersteller nur Maximal-RPM veröffentlicht; NZXT-Bereich unverändert |
 | Kühlungszustand | 1.0 | `src/modules/cooling_state/v1_0/` | `controller.py` trennt gespeicherte Startabsicht von tatsächlicher Hauptregelung; `cpu_defaults.py` trennt erkannte Standardkurven von nutzereigenen Änderungen; `startup_policy.py` trennt bekannte NZXT-Pendingpresets nur bei bestätigtem Ubuntu/Levita ohne bereites NZXT vom expliziten PC-Startprofil | Keine PWM-Befehle; Pendingwert und ausdrückliche Profilkühlung bleiben unverändert; Kalibrierung/Besitzsperren maßgeblich; Tests in `test_cooling_state_342990.py`, `test_cpu_defaults_and_case_pwm_3429152.py`, `test_profile_startup_policy_3429155.py` |
-| Navigationseinstellungen | 1.0 | `src/modules/navigation_settings/v1_0/` | Zweispaltige Status-/Schalterkarten für alle 17 optionalen Seiten einschließlich Automationszentrale, Programme und Wiederherstellung aller Module | Reine Sichtbarkeit; Übersicht, Navigationsanker und Hilfe bleiben erreichbar; keine Hardwareaktivierung/-beendigung |
-| Anwendungsaktivierung | 1.0 | `src/modules/application_activation/v1_0/` | Private lokale `show`-Nachricht aktiviert das vorhandene Hauptfenster; ausschließlich `--autostart` entfernt Desktop-Starttokens | Versioniertes Koordinationsmodul unterhalb der bestehenden Prozess-/Hardware-Sperre |
+| Navigationseinstellungen | 1.0 | `src/modules/navigation_settings/v1_0/` | 17 zweispaltige Statuskarten, davon 16 mit Sichtbarkeitsschalter; Einstellungen bleiben ohne Ausschalter erreichbar; Wiederherstellung aller optionalen Module | Reine Sichtbarkeit; Übersicht, Einstellungen, Navigationsanker und Hilfe bleiben erreichbar; keine Hardwareaktivierung/-beendigung |
+| Anwendungsaktivierung | 1.0 | `src/modules/application_activation/v1_0/` | Private lokale `show`-Nachricht aktiviert das vorhandene Hauptfenster; ausschließlich `--autostart` entfernt Desktop-Starttokens; `autostart.py` korrigiert beim expliziten Benutzerupdate alte Startziele unter Erhalt der Aktivierungswahl | Versioniertes Koordinationsmodul unterhalb der bestehenden Prozess-/Hardware-Sperre |
 | Anwendungsabschluss | 1.1 | `src/modules/application_shutdown/v1_1/` | `process_cleanup.py` beendet den eigenen Pipe-Helfer zuerst über EOF; `sequence.py` isoliert Abschaltphasen; `diagnostics.py` interpretiert das begrenzte Journal; `watcher.py` erkennt Elternprozessende und räumt ausschließlich dokumentierte OHC-Kinder auf; `restart.py` wartet PID-startzeitgeprüft auf das Ende der alten Einzelinstanz vor dem Relaunch. Der RGB-Abschlusslichtschritt liegt nach Effektstopp und vor Sperren-/Enginefreigabe | Firmware-Guard behält seinen eigenen Pfad; Wiederanlauf von CoolerControl ist bei fehlender Polkit-Freigabe best-effort und wird protokolliert; Neustart überspringt Abschlusslicht |
 | Fensterleiste | 1.2 | `src/modules/window_chrome/v1_2/` | Eigene Hauptfensterleiste, compositor-delegierte Größenänderung, explizit verfolgte Randcursor-Freigabe und 48×42-Pixel-Schließfläche bis in die obere rechte Ecke | Fensteraktionen umgehen den Größenänderungsrand; OHC bewegt/fängt die Maus nicht und ändert kein KDE-Zeigerthema außerhalb des ausdrücklichen Desktop-Designwegs |
 | UI-Leistung und SSD-Cache | 1.1 | `src/modules/ui_performance/v1_1/` | `gallery_preparation.py` reserviert endgültige Reihenhöhe; `dynamic_text.py` verfolgt späte Reitertitel; `memory.py` sammelt nach Navigation/Minimieren verzögert Zyklen; `controller.py` verschiebt Cachepflege bis vier bis fünf Sekunden nach der letzten Eingabe und startet sie mit niedriger Nice-/Idle-I/O-Priorität; `maintenance.py` arbeitet in kooperativen Portionen und liefert begrenzte Laufzeittelemetrie | Keine periodische Speicheraufgabe oder private SSD-Auslagerung; Cache enthält nur regenerierbare OHC-Dateien, Originale und aktive Hardwaredateien bleiben unverändert |
 | UI-Themes | 1.0 | `src/modules/ui_themes/v1_0/` | `light.py`, `dark.py` und `studio.py` liefern Paletten-/Semantikwerte; `controller.py` wendet die getrennten reinen `style_base.py`-/`style_controls.py`-Qt-Selektoren einschließlich Kühlungs-Sicherheitsfläche und adaptiver Diagnose-/Gehäuse-/Temperaturtabellen an | Reines Darstellungsmodul; Systemmodus übernimmt die native Palette und passende Semantikwerte, keine Hardwarelogik |
 | PC-Gehäuseprofile | 1.5 | `src/modules/pc_case_profiles/v1_5/` | `editor_sections.py` ordnet lebende Felder in Spalten/Reitern; `inline_editor.py` hält Entwürfe bis Speichern/Abbrechen/Escape/Schließen offen; `profiles.py` validiert den vollständigen einstellungsbasierten RGB-/Lüfter-Topologiesnapshot; `controller.py` synchronisiert CPU_FAN-/PUMP_FAN-/Gehäusezuordnungen in das ausgewählte Profil und bestätigt Konflikte; `case_renderer.py` zeichnet 30 originale Modellansichten; `workspace.py`/`case_page.py` besitzen Gehäuse-Seite und fähigkeitsabhängige Topologie; `spatial_layout.py` verwaltet Richtung, Tempo, echten LED-Reihenfolgeeditor und selbst gemessene Beziehungen | Raumdaten und Zuordnungen sind Einstellungen, keine elektrische Erkennung; Profilübernahme schreibt keine Hardware; keine Kalibrierung/Aktivierung oder Hardwarewrites durch Zuordnung/Abstand; keine Herstellerbilder oder erfundene Maße/LED-Topologie |
 | Programme | 1.0 | `src/modules/programs/v1_0/` | `model.py` liest begrenzt Desktop-Einträge und validiert Profile/Grundordner; `github_release.py` prüft offizielle GitHub-Releasepläne, schreibt Assets, beide Source-Archive, Manifest und SHA256SUMS atomar und liefert nur tatsächlich vorhandene größenpassende AppImages zur Profilwahl; `install_plan.py` baut validierte Flatpak-/Snap-/AppImage-Pläne; `page.py` besitzt Inventar, Suche, Profilverwaltung und getrennte Hintergrundarbeiter | Keine Ausführung entdeckter Desktop-`Exec`; GitHub nur nach Klick, erlaubte HTTPS-Hosts, höchstens 100 Assets/1 GiB je Datei/4 GiB gesamt, keine Überschreibung; AppImage-Zuordnung nur aus dem geprüften heruntergeladenen Plan; Installationsplan sichtbar und nochmals bestätigt, kein Shellaufruf, Systempakete fail-closed |
-| Lokalisierung | 1.0 | `src/modules/localization/v1_0/` | Je ein vollständiges Laufzeitmodul für Deutsch, Englisch, Spanisch und Französisch; 2.248 gleiche Nachrichten-Einträge; reine vierfache Zusatzblöcke liegen budgetgerecht in `snapshot_messages.py`, `next_version_messages.py`, `program_messages.py`, `lifecycle_messages.py`, `shutdown_lighting_messages.py`, `rgb_speed_messages.py`, `retained_lcd_messages.py`, `retained_feature_messages.py`, `retained_ui_messages.py`; Programme sowie Reifegrad-, Snapshot-, GPU-, RGB-, Gehäuse-, CPU- und Hardwaretexte werden werttreu übersetzt | Versionierter Modulordner; alle vier Sprachmodule bei jeder sichtbaren Änderung atomar pflegen |
+| Lokalisierung | 1.0 | `src/modules/localization/v1_0/` | Je ein vollständiges Laufzeitmodul für Deutsch, Englisch, Spanisch und Französisch; 2.259 gleiche Nachrichten-Einträge; reine vierfache Zusatzblöcke liegen budgetgerecht in `snapshot_messages.py`, `next_version_messages.py`, `program_messages.py`, `lifecycle_messages.py`, `shutdown_lighting_messages.py`, `rgb_speed_messages.py`, `retained_lcd_messages.py`, `retained_feature_messages.py`, `retained_ui_messages.py`, `content_ui_messages.py`; Programme sowie Reifegrad-, Snapshot-, GPU-, RGB-, Gehäuse-, CPU- und Hardwaretexte werden werttreu übersetzt | Versionierter Modulordner; alle vier Sprachmodule bei jeder sichtbaren Änderung atomar pflegen |
 | NZXT Kraken | 1.0 legacy | `src/nzxt_backend.py`, `src/kraken_sensors.py`, `src/kraken_cam_streamer.py`, `src/kraken_lcd_designs.py`, `src/nzxt_rgb.py` | Erkennung, Sensoren, LCD-Transport und RGB | Ordner-Migration ausstehend |
 | Mainboard-Kühlung | 1.0 legacy | `src/mainboard_fan_control.py`, `src/ohc_fan_helper.py`, `src/cooling_ownership.py` | hwmon/NCT6687, Polkit-Helfer und Besitzschutz; freundlicher Kernelname getrennt von `PWM N`; bestätigter Gesamtzuordnungsreset bei Kurvenerhalt; konstantes 100-%-Leistungsprofil und optionale `pwmN_mode`-Umschaltung; Kurvenschreibvorgänge werden bei Zustandsänderung, Notfall oder spätestens nach 60 Sekunden einmal gebündelt protokolliert | Ordner-Migration ausstehend; Rücksetzen stoppt laufende OHC-Regelung und gibt zuerst an Firmware/BIOS zurück |
 | Mainboard-Treiber-/MOK-Assistent | 1.1 | `src/modules/mainboard_driver_setup/v1_1/` | Asynchron geprüfter read-only Distributions-/DMI-/Secure-Boot-/MOK-/Modulstatus; getrennte feste Ubuntu-/Fedora-/Arch-Abhängigkeitsbefehle; Ubuntu-Update und Installation separat; vorhandener fester Checkout nur per `pull --ff-only`; gemeinsame DKMS-Schritte; MSI-X870-Optionen nur bei passender DMI-Erkennung; optionale per-user Polkit-Dauerfreigabe als fünfter Schritt | Fremdquellen werden nie automatisch verändert; Konfliktordner/Distributionen fallen geschlossen aus; Dauerfreigabe gilt nur für den festen Lüfterhelfer; kein Passwortzugriff, automatischer Neustart oder Secure-Boot-Umbau |
-| OpenRGB Studio | 1.15 | `src/modules/rgb_studio/v1_15/`, `src/openrgb_integration.py`, `src/openrgb_sdk.py`, `src/rgb_devices.py`, `src/rgb_effects.py`, Legacy-UI in `src/kraken_control.py` | Kompakte Designkarten skalieren bis sechs Spalten; 13 eigene Algorithmen und 30 Vorlagen enthalten sechs räumliche Designs. Kategorie-/Galeriewechsel synchronisieren die Hauptnavigation. `led_topology.py`/`led_topology_store.py`/`led_topology_editor.py` besitzen umkehrbare physische Lüfterketten, globale räumliche Richtung und pro Anschluss echte LED-Reihenfolge; GPU-Lichtverlauf, Sichtassistent, Geräteframe-Schreibweg und Besitzmodule behalten ihre Grenzen. Die gemeinsame monotone Effektzeit bleibt auch bei langsamen Mehrgeräte-Batches zeitgetreu. `shutdown_lighting.py` persistiert Weiß/Einzelfarbe/nativen Rainbow und schreibt synchron vor Besitzfreigabe. Unter Ubuntu verwenden reine CLI-Clients `--nodetect`; Fedora behält den bestehenden Befehl | Native GPU-Effekte bleiben Standard; External Control nur bei ausdrücklich zugeordneter ausgewählter Direct-Quelle; keine elektrische LED-Erkennung, keine zusätzliche Transportverbindung, keine garantierte optische FPS; Abschlusslicht nur beim echten Beenden unter bestehender Auswahl/Freigabe; Host besitzt Loopback-Transport und Besitzprüfung |
+| OpenRGB Studio | 1.15 | `src/modules/rgb_studio/v1_15/`, `src/openrgb_integration.py`, `src/openrgb_sdk.py`, `src/rgb_devices.py`, `src/rgb_effects.py`, Legacy-UI in `src/kraken_control.py` | Kompakte Designkarten skalieren bis sechs Spalten; 13 eigene Algorithmen und 34 Vorlagen enthalten acht räumliche Designs; Doppelpuls/Fusion wiederholen sich nahtlos. Kategorie-/Galeriewechsel synchronisieren die Hauptnavigation. `led_topology.py`/`led_topology_store.py`/`led_topology_editor.py` besitzen umkehrbare physische Lüfterketten, globale räumliche Richtung und pro Anschluss echte LED-Reihenfolge; GPU-Lichtverlauf, Sichtassistent, Geräteframe-Schreibweg und Besitzmodule behalten ihre Grenzen. Die gemeinsame monotone Effektzeit bleibt auch bei langsamen Mehrgeräte-Batches zeitgetreu. `shutdown_lighting.py` persistiert Weiß/Einzelfarbe/nativen Rainbow und schreibt synchron vor Besitzfreigabe. Unter Ubuntu verwenden reine CLI-Clients `--nodetect`; Fedora behält den bestehenden Befehl | Native GPU-Effekte bleiben Standard; External Control nur bei ausdrücklich zugeordneter ausgewählter Direct-Quelle; keine elektrische LED-Erkennung, keine zusätzliche Transportverbindung, keine garantierte optische FPS; Abschlusslicht nur beim echten Beenden unter bestehender Auswahl/Freigabe; Host besitzt Loopback-Transport und Besitzprüfung |
 | Profile Bundle | 1.0 | `src/modules/profile_bundle/v1_0/` | `values.py` verlustfreie Typen/Pfadumsetzung; `archive.py` begrenztes lokales ZIP/Prüfsummen; `controller.py`/`worker.py` UI/eigener Datei-Arbeiter; `restore.py` bestätigte Start-Wiederherstellung/Rückfallkopie; `legacy_profiles.py` bestehender JSON-Austausch | Keine Hardwarewrites; importierte Automatik/Regelung/Kalibrierung bis zur lokalen Bestätigung deaktiviert; bestehender JSON-Austausch bleibt |
 | Corsair/OpenLinkHub | 1.0 legacy | `src/openlinkhub_integration.py`, `src/openlinkhub_mouse_visuals.py` | Validierte lokale API und Mausdarstellung | Geräteintegration bleibt ohne direkten USB-Pfad |
 | OpenLinkHub-Update | 1.0 | `src/modules/openlinkhub_update/v1_0/` | `policy.py` prüft festen offiziellen Release-Endpunkt, Paket-/User-Service-Pfade, Archivgröße und GitHub-SHA-256; `controller.py` baut Seite/Bestätigungsablauf; `apply_user_space.py` setzt mit Datenübernahme, Backup und Rollback ein | Nur nach UI-Bestätigung; Web-UI ist Bestandteil desselben Pakets; kein Remote-Skript-Piping |

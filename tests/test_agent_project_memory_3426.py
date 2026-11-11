@@ -17,7 +17,7 @@ before = hooks['hooks']['beforeShellExecution']
 assert any('guard-destructive-shell.py' in item['command'] for item in before)
 
 agent = (ROOT / 'docs/ai/AGENTS.md').read_text(encoding='utf-8')
-assert 'Overview, Navigation customization and Help are permanent navigation safety anchors' in agent
+assert 'Overview, Settings, Navigation customization and Help are permanent navigation safety anchors' in agent
 assert 'explicit project-owner request' in agent
 assert 'A normal push of committed, tested work to a non-release development branch is explicitly permitted' in agent
 assert '`BUILD_CHANNEL=INTERN` does not block such a branch push' in agent

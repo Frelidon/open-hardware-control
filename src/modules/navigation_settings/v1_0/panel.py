@@ -22,7 +22,7 @@ from modules.feature_lifecycle.v1_0 import feature_lifecycle
 MODULE_ROWS = (
     ("gpu", "◈", "Grafikkarte"),
     ("case", "▥", "Gehäuse"),
-    ("hardware_checker", "▣✓", "Hardware-Checker"),
+    ("hardware_checker", "▣✓", "Hardware-Prüfung"),
     ("snapshot_manager", "◫", "Snapshot-Manager"),
     ("automations", "⌁", "Automationszentrale"),
     ("programs", "▦", "Programme"),
@@ -57,7 +57,7 @@ def build_module_visibility_settings(host) -> QGroupBox:
     box = QGroupBox(host.tr_static("Module im Seitenmenü"))
     layout = QVBoxLayout(box)
     note = QLabel(host.tr_static(
-        "Module hier ein- oder ausblenden. Die Übersicht, Navigationseinstellung und Hilfe bleiben immer erreichbar. "
+        "Module hier ein- oder ausblenden. Übersicht, Einstellungen, Navigationseinstellung und Hilfe bleiben immer erreichbar. "
         "Das Ausblenden allein beendet keine laufende Hardwaresteuerung."
     ))
     note.setWordWrap(True)
@@ -69,7 +69,7 @@ def build_module_visibility_settings(host) -> QGroupBox:
     host.navigation_module_checkboxes = {}
     host.navigation_module_status_dots = {}
     for index, (key, icon, title) in enumerate(MODULE_ROWS):
-        enabled = key not in host.navigation_user_hidden
+        enabled = key == "settings" or key not in host.navigation_user_hidden
         card = QFrame()
         card.setObjectName("moduleVisibilityCard")
         card.setMinimumHeight(54)
@@ -97,21 +97,22 @@ def build_module_visibility_settings(host) -> QGroupBox:
         dot.setAlignment(Qt.AlignmentFlag.AlignCenter)
         dot.setFixedWidth(20)
         _set_status_dot(dot, enabled)
-        checkbox = QCheckBox()
-        checkbox.setObjectName("moduleVisibilitySwitch")
-        checkbox.setAccessibleName(host.tr_static(title))
-        checkbox.setChecked(enabled)
-        checkbox.toggled.connect(
-            lambda checked, module_key=key, status_dot=dot: (
-                _set_status_dot(status_dot, checked),
-                host.set_navigation_module_enabled(module_key, checked),
-            )
-        )
         row.addWidget(icon_label)
         row.addLayout(title_box, 1)
         row.addWidget(dot)
-        row.addWidget(checkbox)
-        host.navigation_module_checkboxes[key] = checkbox
+        if key != "settings":
+            checkbox = QCheckBox()
+            checkbox.setObjectName("moduleVisibilitySwitch")
+            checkbox.setAccessibleName(host.tr_static(title))
+            checkbox.setChecked(enabled)
+            checkbox.toggled.connect(
+                lambda checked, module_key=key, status_dot=dot: (
+                    _set_status_dot(status_dot, checked),
+                    host.set_navigation_module_enabled(module_key, checked),
+                )
+            )
+            row.addWidget(checkbox)
+            host.navigation_module_checkboxes[key] = checkbox
         host.navigation_module_status_dots[key] = dot
         grid.addWidget(card, index // 2, index % 2)
     layout.addLayout(grid)

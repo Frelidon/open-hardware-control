@@ -31,7 +31,7 @@ If a request conflicts with these files or the current code, stop and explain th
 - Prefer additive, backward-compatible changes.
 - Never remove an existing supported feature merely to simplify an implementation.
 - Preserve user settings and migrations unless a migration is explicitly designed and tested.
-- Overview, Navigation customization and Help are permanent navigation safety anchors and must never be hideable or removable.
+- Overview, Settings, Navigation customization and Help are permanent navigation safety anchors and must never be hideable or removable.
 - Hardware ownership boundaries must remain intact: NZXT, OpenLinkHub, OpenRGB and mainboard fan paths must not race each other for the same device.
 
 ## Fedora and Ubuntu compatibility (mandatory owner decision 06.10.26)

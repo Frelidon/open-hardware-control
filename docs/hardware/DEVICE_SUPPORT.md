@@ -1,5 +1,13 @@
 # Open Hardware Control — Agent Device-Support Summary
 
+11.11.26 (.175): The read-only UI catalog lists 41 model/backend entries in
+eight categories. Thirty existing GPU profile models are explicitly marked as
+backend-dependent profiles, not newly hardware-tested devices. The confirmed
+SAPPHIRE NITRO+ RX 9070 XT remains separate. SABRE RGB PRO and HS80 MAX are
+individual locally detected OpenLinkHub entries; only reported capabilities
+apply. Manufacturer/product links do not establish compatibility. See
+[reviewed catalog links](SUPPORTED_DEVICE_LINKS.md). Hardware owners unchanged.
+
 10 November 2026 live Ubuntu RGB diagnosis: six OpenRGB devices detected and
 Sapphire RX 9070 XT confirmed in External Control. Independent native-plugin
 workers raise measured Airgoo full-frame USB writes from 3.83 to 58.52 Hz.
@@ -245,3 +253,9 @@ The current backend targets Linux hwmon fan control with a focus on NCT6687/NCT6
 - Open Radeon Control Center integration into this repository.
 
 When adding support, record: device identity, read-only detection evidence, write path, safety/ownership model, real hardware test status, and regression tests.
+
+
+3.4.29.172: Described support cards expose the existing model/backend boundaries
+without adding drivers. The local OpenLinkHub user backend is updated to .9.4
+with .9.2 rollback data. Mouse detail metadata is verified read-only; physical
+startup-DPI/profile changes remain an explicit user action.

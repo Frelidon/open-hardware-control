@@ -1,6 +1,44 @@
-# Komponenten- und Versionsübersicht – Version 3.4.29.169
+# Komponenten- und Versionsübersicht – Version 3.4.29.175 INTERN
+
+Entwicklung .175: Hardwareprüfung 1.0 mit 41 kategorisierten Modellkarten;
+Navigationseinstellungen 1.0 mit abgeschlossener Zeigerauswahl vor Seitenwechsel;
+Lokalisierung 1.0 mit 2.381 Sprach-IDs. Hardware-/Backend-Versionen und
+Einstellungen unverändert. Vollständiger Wächter: 1.556 Tests und fünf Untertests
+bestanden. 406 Python-Quellen in ZIP/DEB/RPM geprüft; Benutzerinstallation .175
+läuft mit fünf nativen Arbeitern ohne gemeldete Fehler. Systemkopie wartet noch
+auf die Linux-/Polkit-Abfrage (.174). Profile und Plugin bytegleich erhalten.
 
 ## OHC-Modulstand und aktuelle Ubuntu-Konfiguration
+
+Lokaler Stand .174: Benutzerkopie gestartet; Benutzer- und Systemkopie mit allen
+403 Python-Dateien identisch. DPKG bestätigt 3.4.29.174~intern2. Native Engine mit
+fünf Arbeitern, null gemeldeten Fehlern; Sapphire External Control und gespeichertes
+Levita-Design bestätigt. Keine unabhängige Standard-DPI ohne Nutzerauswahl gesetzt.
+
+
+Abschluss .174: 403 Python-Laufzeitquellen, 2.324 gemeinsame Sprach-IDs und
+1.544 Tests plus fünf Untertests. Standard-DPI wird privat je Mausprofil von
+der aktiven Backend-Stufe getrennt und nur nach ausdrücklichem Speichern über
+einen optionalen Benutzer-Vorstarthelfer wiederhergestellt. Kein USB-Zugriff
+oder Administratorrecht im Helfer. Lokaler Versionswechsel abgeschlossen;
+Veröffentlichung und optische Prüfung nach Rechnerneustart bleiben offen.
+
+
+Entwicklung 11.11.26 (.172): Gehäuse-/Corsair-Ansichten, gemeinsame dynamische
+Listenhöhen, eigene Kategoriesymbole und Gerätebeschreibungen ergänzt.
+Lokalisierung: 2.324 gemeinsame Nachrichtenquellen. OpenLinkHub 0.9.4 ist nach
+vollständiger privater .9.2-Sicherung im Benutzerdienst aktiv; echte lokale API
+meldet sechs SABRE-DPI-Stufen und sechs Tasten. Die Auswahl einer neuen Start-
+DPI wurde nicht auf der Maus ausgeführt. OHC-Paketbau und Installation folgen
+nach der vollständigen Prüfung; GitHub bleibt ausstehend.
+
+
+Stand 11.11.26: .170 ist in beiden Installationen vorhanden und nach
+Rechnerneustart flüssig bestätigt. OpenRGB 1.1/Native Engine ist tatsächlich
+aktiv; die frühere .168/OpenRGB-1.0-Autostartursache ist behoben. .171 ergänzt
+nahtlose Doppelpuls-/Fusionsschleifen und ordnet vier RGB-Vorlagen in die
+bestehenden Kategorien ein. Dieser neue Stand ist vorbereitet, nicht installiert
+oder veröffentlicht. Persistenz und nativer Schreibweg bleiben unverändert.
 
 Aktueller RGB-Nachweis 10.11.26 für `.169`: OpenRGB 1.1 aus Commit
 `8e16de27858cf2be6af54a33ce003df74cb9fd3e`, MSI-Dirty-Zone-Patch und OHC Native
@@ -30,7 +68,7 @@ behaupteter erfolgreicher Live-Test auf Fedora.
 
 | Komponente | Version / Stand |
 |---|---|
-| Open Hardware Control by Frelidon | 3.4.29.169 STABLE · öffentlicher OHC-eigener Designkatalog, sichtbare unabhängige Feature-Reifegrade/-Versionen, portable echte Scroll-Sichtbarkeitsprüfung, vollständiger Levita-UI-Pause-/Fortsetzungsvertrag und zuverlässiges Ausblenden eigener LCD-Medien ohne TRCC-Systemkatalog; später Snapshot-Prozesscallback abgesichert; Fedora-Liveprüfung und optische Kontrolle bleiben offen |
+| Open Hardware Control by Frelidon | 3.4.29.171 INTERN (vorbereitet; .170 installiert) · öffentlicher OHC-eigener Designkatalog, sichtbare unabhängige Feature-Reifegrade/-Versionen, portable echte Scroll-Sichtbarkeitsprüfung, vollständiger Levita-UI-Pause-/Fortsetzungsvertrag und zuverlässiges Ausblenden eigener LCD-Medien ohne TRCC-Systemkatalog; später Snapshot-Prozesscallback abgesichert; Fedora-Liveprüfung und optische Kontrolle bleiben offen |
 | OHC Feature Lifecycle | Modul 1.0 · reine zentrale Darstellungsmetadaten; aktiviert/deaktiviert keine Funktion und verändert weder Einstellungen noch Hardwarebesitz |
 | OHC Snapshot-Manager | Modul 1.0 · read-only Distribution-/Dateisystem-/Backend-/Snapper-/Btrfs-Erkennung · GameMode/Gamescope/Programmliste/KDE-Vollbild plus optionale Mehrkern-CPU-und-GPU-Hysterese · moderne gekoppelte Regler-/Zahlenkarten · manuelle Zeit-/Dauersperre · feste Snapper-Timer und begrenzte Btrfs-Discard-Werte ausschließlich über eigenen root-owned Polkit-Helfer · atomarer JSON-Metadatenexport · einzeln bestätigtes Löschen ab Snapshot 1 · kein Ein-Klick-Rollback und keine beliebigen Befehle/Pfade |
 | OHC GPU-Steuerung | Modul 1.0 · LACT 0.10.1+ als optionale lokale API · responsives Drei-Spalten-Cockpit mit vertikalem Scroll-Rückfall für kleine Fenster · vollständige umbrochene Lüftertexte · fünf direkt ziehbare und zahlengekoppelte Lüfterpunkte · lokaler GPU-Bildimport/-reset · reiner Lüftertest garantiert ohne Grafiklast · Leistungslimit standardmäßig höchstens LACT-Werkswert, darüber explizite Freischaltung · Kurztest mit automatischer LACT-Rückstellung · nur bestätigte Werte dauerhaft · CoolerControl-GPU-Lüfter muss freigegeben sein · OpenRGB-RGB getrennt |

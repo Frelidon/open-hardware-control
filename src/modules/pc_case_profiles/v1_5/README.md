@@ -132,3 +132,6 @@ physical ring path; ambiguous headers remain unresolved. Saved physical paths
 refine the view without changing routing/counts. Case rectangles are cached per
 controller during spec creation, not re-queried each frame. Visible active RGB
 uses a 40-ms timer; hidden views stop. This is not a rotor/RPM simulation.
+
+
+The .172 workspace reuses all stores and animated diagrams in three tabs. `component_summary.py` edits declared fan count/LED drafts only on Save. `inline_editor.py` sizes for its natural form/footer and reveals Overview before embedding forms. Original profile controls remain in a disclosure.

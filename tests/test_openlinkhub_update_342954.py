@@ -86,7 +86,9 @@ def test_user_space_apply_preserves_profiles_and_keeps_recoverable_backup(tmp_pa
     (stage / "database").mkdir()
     (stage / "OpenLinkHub").write_bytes(b"new")
     (stage / "database/new-default.json").write_text("{}", encoding="utf-8")
-    with patch.object(apply_user_space.Path, "home", return_value=tmp_path), patch.object(apply_user_space, "_run_systemctl") as systemctl:
+    from modules.openlinkhub_update.v1_0.stage_integrity import seal
+    seal(stage, "a" * 64)
+    with patch.object(apply_user_space.Path, "home", return_value=tmp_path), patch.object(apply_user_space, "_run_systemctl") as systemctl, patch.object(apply_user_space, "wait_ready"):
         result = apply_user_space.apply_update(stage, cache)
     assert result["installed"] == str(install)
     assert (install / "OpenLinkHub").read_bytes() == b"new"

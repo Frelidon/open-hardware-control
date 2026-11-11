@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
 )
 
 from .policy import update_plan
+from modules.ui_performance.v1_1.compact_panels import Disclosure
 from modules.openlinkhub_nexus.v1_0 import (
     discover_openlinkhub_root,
     install_nexus_design,
@@ -51,14 +52,8 @@ class OpenLinkHubUpdateMixin:
         content = QWidget()
         page.setWidget(content)
         layout = QVBoxLayout(content)
-        layout.setSpacing(14)
+        layout.setSpacing(10)
         layout.setContentsMargins(16, 14, 22, 22)
-        layout.addWidget(self.make_module_hero(
-            "⇄", "Corsair · OpenLinkHub",
-            "Lokale Corsair-Geräte, Dienststatus, Telemetrie und freigegebene Steuerfunktionen in einer gemeinsamen OHC-Oberfläche.",
-            "Lokale API",
-        ))
-
         status_box = QGroupBox("OpenLinkHub-Status")
         status_layout = QGridLayout(status_box)
         self.openlinkhub_version_label = QLabel("Installation: wird geprüft …")
@@ -93,7 +88,9 @@ class OpenLinkHubUpdateMixin:
         ):
             actions.addWidget(widget, row, column)
         actions.setColumnStretch(3, 1)
-        layout.addLayout(actions)
+        service_body = QWidget()
+        service_layout = QVBoxLayout(service_body)
+        service_layout.addLayout(actions)
 
         update_box = QGroupBox("OpenLinkHub und Web-UI aktualisieren")
         update_layout = QVBoxLayout(update_box)
@@ -119,7 +116,7 @@ class OpenLinkHubUpdateMixin:
         update_layout.addWidget(self.openlinkhub_latest_label)
         update_layout.addLayout(update_actions)
         update_layout.addWidget(update_note)
-        layout.addWidget(update_box)
+        service_layout.addWidget(update_box)
 
         write_box = QGroupBox("Direkte Gerätesteuerung")
         write_layout = QVBoxLayout(write_box)
@@ -140,7 +137,7 @@ class OpenLinkHubUpdateMixin:
         self.openlinkhub_devices_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.openlinkhub_devices_table.setAccessibleName("Von OpenLinkHub erkannte Corsair-Geräte")
         self.openlinkhub_devices_table.setMinimumHeight(230)
-        layout.addWidget(self.openlinkhub_devices_table)
+        devices_body = self.openlinkhub_devices_table
 
         nexus_box = QGroupBox("iCUE NEXUS · OHC-Designmanager")
         nexus_layout = QVBoxLayout(nexus_box)
@@ -173,7 +170,7 @@ class OpenLinkHubUpdateMixin:
         self.openlinkhub_nexus_status_label.setWordWrap(True)
         self.openlinkhub_nexus_status_label.setObjectName("infoText")
         nexus_layout.addWidget(self.openlinkhub_nexus_status_label)
-        layout.addWidget(nexus_box)
+        nexus_section = Disclosure(self.tr_static("iCUE NEXUS · OHC-Designmanager"), nexus_box)
         self.refresh_openlinkhub_nexus_widgets([])
         layout.addWidget(self.make_openlinkhub_control_tabs())
 
@@ -196,7 +193,10 @@ class OpenLinkHubUpdateMixin:
         links.addWidget(self.make_external_link("Offizielle Benutzerinstallation", OPENLINKHUB_USER_INSTALL_URL))
         links.addStretch()
         help_layout.addLayout(links)
-        layout.addWidget(help_box)
+        service_layout.addWidget(help_box)
+        layout.addWidget(Disclosure(self.tr_static("Erkannte Geräte"), devices_body))
+        layout.addWidget(nexus_section)
+        layout.addWidget(Disclosure(self.tr_static("Dienst und Aktualisierung"), service_body))
         layout.addStretch()
         return page
 

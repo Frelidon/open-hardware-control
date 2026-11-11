@@ -1,8 +1,11 @@
 # UI-Leistung und SSD-Cache 1.1
 
-Das Modul stellt leichte Navigationseffekte bereit, die ausschließlich links eine kleine
-transparente Zeichenebene animieren. Seiteninhalte werden weder aufgenommen
-noch doppelt gerendert; beim Verbergen stoppt die Animation sofort.
+Das Modul animiert seit .170 auf ausdrücklichen Eigentümerwunsch die tatsächliche
+Inhaltsseite, während das linke Menü ruhig bleibt. `page_transition.py` blendet
+eine Hintergrundebene aus und verschiebt optional die lebende Seite um wenige
+Pixel. Vier Stile und 220/380/550 ms (Standard 380 ms) sind auswählbar. Keine
+Seitenaufnahmen oder Graphics-Effect-Puffer; Abbruch, Resize, Verbergen und
+Shutdown stellen die Originalposition wieder her.
 
 `gallery_preparation.py` erstellt höchstens vier LCD-Karten pro Ereignisrunde
 mit einem weichen 8-ms-Zeitbudget. Versteckte Seiten bereiten nach drei Sekunden
@@ -54,3 +57,6 @@ Child additions scan for late tab widgets once per Qt cycle, only within the
 OHC window. New timers, processes and unrelated windows never queue a global
 tab scan. Deleted hosts and shutdown cancel the context-bound callback. This
 restores the bounded `.148` input-filter behavior.
+
+
+The .172 `adaptive_views.py` uses model and Qt events to size item views by visible content, bounds the resulting height and excludes navigation/combo popups. `compact_panels.py` provides disclosure and responsive columns without replacing themes or background layers. Late forms opt into the same sizing contract.

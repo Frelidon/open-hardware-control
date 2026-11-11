@@ -1,10 +1,228 @@
 # Open Hardware Control — Project Status
 
-**Current development version:** 3.4.29.169 STABLE
+Current .175 work: the owner requests a model-level category/vendor catalog,
+separate reviewed manufacturer/product links with no empty product button, and
+reliable menu selection from every submenu. Provided logs show RGB→LCD and
+Profile→About within one second without an exception. A real Qt reproduction
+confirms that collapsing sidebar rows during mouse press lets a subsequent
+held-pointer move select another row. NavigationTree defers page requests until
+release, preserving immediate keyboard/programmatic selection and customization.
+The catalog presents 41 entries in eight categories, including 30 existing GPU
+model profiles with explicit backend-dependent limits, the confirmed Sapphire
+variant, and separate Corsair mouse/headset entries. Unknown exact product links
+remain absent. No new hardware support or write path is inferred from a model
+name. Local upgrade/restart and subsequent GitHub upload are now authorized;
+prepare an internal development-branch upload without a public tag/release.
+Prior .174 installation evidence below remains historical.
 
-**Status date:** 10 November 2026
+Local .175 checkpoint: all six artifact checksums, both retained .174/.175
+backups (eight hashes each), ZIP/DEB/RPM source parity for 406 Python files and
+RPM payload/header digests are verified. The old app completed orderly SIGTERM
+shutdown; the new user installer and launcher succeed. All settings, profiles
+and native-plugin hashes match the final saved baseline before launch; profiles
+and plugin remain byte-identical after launch. Live native engine: five workers,
+zero reported errors; Sapphire External Control; saved Levita design active
+with daemon video/sensor cadence; no launch traceback. OpenLinkHub 0.9.4 user
+API is reachable (one optional capability-detail warning remains). The system
+APT process is waiting for the Linux/Polkit dialog; DPKG still reports .174.
+The owner is asked to authenticate only in that existing OS window. Upload
+of the validated internal user/source version is authorized independently;
+no public tag/release or broad administrator grant is created.
 
-**Release channel:** STABLE — the project owner explicitly requested GitHub publication and local installation after the complete release gate.
+
+The .175 test suite passes 1,556 tests and five subtests, including 220 real
+pointer sequences in the full DE/EN/ES/FR UI. The isolated light/dark catalog
+renders are reviewed; their synthetic missing-dependency status is not a live
+host diagnosis. All 406 Python sources parse, security/privacy scans pass and
+the complete release gate passes, including final packaging hygiene checks.
+Ubuntu user installation is verified; separate Fedora fixtures pass, real Fedora
+hardware remains untested. Native/RGB/LCD write paths are unchanged by .175.
+
+
+**Current development version:** 3.4.29.175 INTERN (user installation verified; system authentication pending)
+
+**Status date:** 11 November 2026
+
+Local installation checkpoint (.174): all six artifacts and ZIP/DEB/RPM parity
+for 403 Python sources are verified. Both retained .173/.174 backups pass all
+eight hashes. The .174 user installer completes and the user launcher starts
+the real application. Configuration, profiles.json and native plugin are
+byte-identical immediately before restart. No optional DPI rule/hook is created
+without explicit Save. Live .174 has no startup exception, five active native
+controller workers with zero reported errors, Sapphire External Control and
+the saved Levita design active with daemon video/sensor cadence. These are
+software/read-only observations, not optical/physical readback.
+
+The owner confirmed the existing Linux/Polkit dialog and the system APT update
+completed: DPKG reports 3.4.29.174~intern2. Both installed trees match all 403
+Python sources byte-for-byte. The existing user process remains running, with
+five native workers and zero reported errors; the OpenLinkHub user service is
+active. No optional DPI rule or service hook was created. The primary user
+launcher/autostart uses .174; no general root grant was added. Publication
+remains pending; native .174 optical/reboot and real Fedora checks are not claimed.
+
+Final startup-default contract (.174): upstream ModifyDpi persists its current
+stage, so merely setting Profile would not preserve an independent preference.
+`startup_defaults.py` stores the explicitly chosen default privately per mouse
+profile; `before_start.py` restores it only while the backend is inactive or
+in its exact start-pre phase, with no competing system owner. The optional
+user drop-in has no administrator grant, USB or network path, and a missing
+helper never blocks OpenLinkHub. Selecting the native preference removes the
+rule. Save rollback covers profile, rule and drop-in. Nothing is enabled until
+the owner explicitly saves a default. The actual systemd parser accepts the
+command. The full release gate passes 1,544 tests and five subtests, including
+physical-key/current-stage simulation, service-restart restoration, profiles,
+reset and ownership/path guards. .174 has 403 runtime Python sources and 2,324
+shared localization IDs. The OHC application is stopped for the final install;
+OpenLinkHub .9.4 remains active. No new DPI was physically applied.
+
+Final palette follow-up (.173): .172 is installed and live with five native RGB
+workers. A final review identifies that the original startup-DPI house icon
+also needs explicit regeneration after light/dark or accent changes. The
+shared theme controller now requests that refresh; an actual Qt regression
+checks the new icon generation. This final internal candidate retains all
+.172 functionality and configuration. No new hardware command is added. The complete .173 release gate passes
+1,529 tests and five subtests. Both .172 installed trees match all 401 Python
+files. The original profiles.json and native plugin remain byte-identical.
+Comparison of 186 saved keys finds only window geometry and two live cooling
+status strings changing with measured CPU temperature; all actual settings
+remain. Five native workers are active with zero reported errors.
+
+
+
+Implementation 11 November 2026 (.172): the owner approves the two UI concepts
+and explicitly requests installation/restart after validation. Case overview,
+component inspector, original generic fan artwork and content-sized lists reuse
+the existing settings and animated diagram/runtime. Hardware Fix and described
+supported-device cards become fixed children of consistently localized Hardware
+Check. Original sidebar artwork is rounded without distortion; category symbols
+follow navigation and palette. OpenLinkHub .9.4 detail requests expose actual
+mouse stages and profiles, including the sixth SABRE stage; the drawing/table
+remain separate. Startup-stage selection and named-profile actions are explicit.
+The backend updater now checks prepared content, corrects daemon-reload arguments
+and checks the service executable/loopback API before accepting a replacement.
+
+The real OpenLinkHub .9.2→.9.4 user-service update is complete with a verified
+private full archive and recoverable previous directory. The adapted read-only
+API sees SABRE RGB PRO, HS80 MAX and receiver, including six mouse stages and
+six assignments. No startup-stage/profile selection was physically applied.
+The complete release gate passes 1,529 tests and five subtests, including real
+four-language Qt construction, preserved case-editor geometry, native RGB
+regressions, startup-stage rollback and prepared-payload damage checks. Dark
+and light offscreen renders show retained background layers and separated
+mouse geometry. Package and OHC installation evidence are pending. No GitHub upload.
+
+**Release channel:** INTERN — .170's fluid output and reboot/autostart are confirmed. .171's RGB loop/category corrections are prepared; the owner now requests UI review images before the next implementation. Subsequent local installation/restart is authorized; GitHub publication remains separate. No new installation or upload yet.
+
+Design review 11 November 2026: two generated concepts now show a consolidated
+case/component inspector with an original generic fan catalog, and a
+device-focused OpenLinkHub page. These are proposals only. The local SignalRGB
+reference contains 106 fan definitions with 21 distinct declared LED counts;
+existing OHC fan profiles and original diagrams remain the implementation base.
+Initial static review identifies excess list/table minimum heights in case,
+RGB, OpenLinkHub, Hardware Check, Profiles and Snapshot Manager. The owner also
+requests consistent localized Hardware Check naming and Hardware Fix as an
+expandable navigation child. The latest readable local OpenLinkHub startup log
+reports .9.2; direct upstream release verification finds .9.4. No backend update
+or product code change occurred in this design pass. The complete planned scope,
+review images, evidence limits and later installation authorization are in
+[UI redesign plan](UI_REDESIGN_PLAN.md), linked from the roadmap.
+
+Development 11 November 2026 (.171): the owner's post-reboot logs confirm .170
+starting with the native engine, five active controller workers and zero
+reported errors. The owner confirms fluid output but notices rough repeated
+design boundaries. A deterministic audit of all 34 OHC presets identifies hard
+cycle resets in two pulse presets and three convergence presets: maximum
+8-bit channel jumps at a 20-microsecond boundary sample are 69/90 and
+236/246/236 respectively. Pulse now includes the neighbouring cycle's Gaussian
+tail; convergence overlaps its centre burst with the next initial edge pair
+using a zero-slope smoothstep. The same five measurements are now 0/1/0/0/0.
+Circuit Chase and all spinner/comet GPU strip wraps were already continuous;
+they remain covered without altering their trajectory or native transport.
+
+RGB Studio removes its redundant OHC Originals category and reclassifies the
+same stable indices: Prism Drift and Twin Wyrm Orbit to Spatial, Neon Particle
+Garden to Energy, Circuit Chase to Motion. All 34 designs, saved indices,
+favourites, twelve suggestions and the separate OpenRGB Originals list remain.
+The LCD design library's distinct media categories are unchanged. One existing
+accessible gallery caption is now covered by the four language files (2,259
+shared IDs), rather than relying on the previous untranslated fallback.
+New regressions sample all preset boundaries in gallery, physical projection,
+worker and GPU render paths, both directions and four LED counts, plus the
+whole overlap at slow/default/fast speeds. Deliberate lightning flashes retain
+their non-periodic character. No hardware configuration or live output changed.
+
+Validation .171: the full release gate passes 1,514 tests and five subtests,
+including all 34 presets across four renderers, dense whole-overlap sampling,
+category partition/indices and real four-language Qt construction. Security,
+privacy, module/size/layout checks pass. Supplied post-reboot .170 logs contain
+no actual native recovery/fallback events; physical-readback-unavailable metric
+annotations are not fallback events. No .171 build/install/publication occurred.
+
+Development 11 November 2026 (.170): the current host/autostart and supplied
+session logs identify installed .168 and OpenRGB 1.0. The installed tree lacks
+the native client entirely, whereas the prepared .169/.170 source prefers the
+trusted Ubuntu OpenRGB 1.1 native backend. This session did not fall back from
+the native writer: it started on the older installation. The new source retains
+the corrected External Control GPU handoff and exact OHC Direct stream.
+`native_stream.py` now separates native rendering/recovery from the main window:
+transient START/frame failures retry with bounded spacing; SDK takes over only
+after repeated failures and a confirmed native STOP. Failed STOP blocks SDK to
+preserve sole writer ownership. No live installation or hardware writes were
+performed during this diagnosis; optical validation waits for the final install.
+
+The user installer now retargets existing recognized OHC autostart entries to
+the just-updated user launcher. Previously it updated the user application and
+desktop launcher but left autostart on the old system copy. Missing autostart
+stays absent; disabled flags, comments and arguments remain; custom wrappers
+and symlinks remain untouched. The helper runs only during explicit installation.
+
+Settings remain visible even with old hidden preferences and expose no switch
+in either visibility editor. RGB Studio shows twelve suggestions. Main content
+pages receive fade/side/up/glow transitions with 220/380/550-ms duration; the
+left navigation remains still. Real page geometry is restored on interruption,
+resize, hiding and shutdown without page snapshots or graphics-effect buffers.
+The focused render/recovery extractions remove orchestration detail from the
+main window. A source-wide AST audit found no duplicate function/class names
+within the same module/class scope; this is not proof that all legacy code is
+unused. Historical migrations and hardware paths remain preserved.
+
+Validation .170: 1,373 tests and five subtests pass, including real four-language
+Qt construction, page interruption/geometry, permanent Settings, native C++
+workers/colour packing, socket transport and native recovery/STOP exclusivity.
+Ubuntu native-backend preference and the unchanged non-Ubuntu/Fedora branch
+pass isolated fixtures. Security/privacy, module/size/layout checks pass.
+Real Fedora hardware and optical validation after installation remain pending;
+the initial development validation did not include a package build, installation or GitHub publication.
+
+Local installation preparation 11 November 2026: the owner now explicitly
+authorizes orderly shutdown and installation of .170, with GitHub upload held
+until visual confirmation and a self-directed reboot. The old .168 session
+closed cleanly through its signal handler (Qt exit code 0); both installed
+trees, private configuration and launchers were archived before changes. The
+local package build and retained-backup verification precede installation.
+
+Local installation completed 11 November 2026: all six artifacts (runtime ZIP,
+developer ZIP, source archive, Git bundle, actual DEB and RPM) were built and
+checked. Both retained .169/.170 rolling backup sets verify all eight SHA256
+entries; normal authorized rotation removed only the older .168 release set.
+The separate private pre-install snapshot preserves both previous installed
+trees, settings, profiles and launchers. Ubuntu APT upgraded only OHC to
+`3.4.29.170~intern2`; the runtime user installer updated the second copy and
+retargeted its existing autostart without changing the enabled choice. Both
+installed trees match all 388 source Python files. Profiles and the native
+plugin were byte-identical immediately after installation.
+
+The updated user launcher is running .170; its autostart points to that same
+launcher. OpenRGB 1.1/Qt-native is the actual running engine. Read-only SDK 6
+inspection confirms Sapphire External Control. Five native controller workers
+are active with zero reported errors; Airgoo/other fast controller API cadence
+is about 59.7 Hz, RAM about 43 Hz, MSI about 11 Hz. These are API submission
+statistics, not optical/USB readback. Saved RGB design confirms in 214 ms and
+Levita startup reports its saved design active with daemon-owned video/sensors.
+Owner optical check and self-directed reboot remain pending. No GitHub push,
+tag or upload has been performed. The packaged snapshots retain the pre-install
+preparation report; this post-install evidence is recorded in the worktree.
 
 Post-tag test-only follow-up 10 November 2026: GitHub's Python 3.14 lane passes,
 but Python 3.13 exposed a missing `Callable` name in the isolated AST reclaim

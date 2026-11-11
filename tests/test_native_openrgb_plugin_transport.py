@@ -5,10 +5,30 @@ import shutil
 import subprocess
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
 
 from modules.rgb_studio.v1_15.native_plugin import NativeOpenRGBPluginClient, NativePluginResult, record_native_status
+
+
+@pytest.mark.parametrize("reply", [b"[]\n", b"null\n", b"42\n", b'"bad"\n'])
+def test_non_object_native_reply_is_a_transport_failure_not_an_exception(reply):
+    client = NativeOpenRGBPluginClient("/unused")
+    client._socket = Mock(recv=Mock(return_value=reply))
+    assert not client.frame(1, []).ok
+    client.close()
+
+
+def test_failed_socket_connect_closes_the_unassigned_descriptor(monkeypatch, tmp_path):
+    path = tmp_path / "native.sock"
+    path.touch()
+    sock = Mock(connect=Mock(side_effect=OSError("not ready")))
+    monkeypatch.setattr("modules.rgb_studio.v1_15.native_plugin.socket.socket", lambda *_: sock)
+    client = NativeOpenRGBPluginClient(str(path))
+    assert not client.connect()
+    assert client._socket is None
+    sock.close.assert_called_once()
 
 
 def test_openrgb_plugin_exposes_a_real_container_widget() -> None:

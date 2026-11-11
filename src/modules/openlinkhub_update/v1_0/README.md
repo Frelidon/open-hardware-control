@@ -23,3 +23,18 @@ GitHub publishes its SHA-256 digest. OHC extracts it without links or path
 traversal, stops the user service, keeps the previous installation as a
 recoverable sibling backup, preserves configuration/database content and
 rolls back automatically if the new service does not start.
+
+
+The .172 UI extracts `device_ui.py`, uses responsive mouse columns with a separate drawing/table, and adds `mouse_ui.py` and `mouse_profiles.py` for reported stages and official user-profile actions. OpenLinkHub .9.4 has no HTTP startup-stage endpoint: a confirmed user-service action changes only Profile in its verified existing JSON with backup/stop/restart/rollback. `health.py` verifies PID/executable and loopback API; `stage_integrity.py` detects stale or damaged stages before stopping anything. daemon-reload takes no service argument. Ubuntu/Fedora package plans remain separate.
+
+
+The .174 `startup_defaults.py` keeps an independent private per-profile startup
+stage, since upstream ModifyDpi also persists the currently active stage.
+`before_start.py` runs through an optional, marked user ExecStartPre only after
+an explicit Save. It checks the inactive/start-pre window and competing system
+ownership, validates existing profile identity/path and changes only Profile.
+The explicit state path works independently of the service environment. The
+native preference removes the rule. Rollback includes profile, rule and drop-in;
+a missing OHC helper never blocks the backend. Future module-folder migrations
+must retarget already marked drop-ins while preserving rules, just like the
+existing recognized autostart migration; never create a hook without opt-in.

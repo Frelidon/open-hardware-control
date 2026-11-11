@@ -400,9 +400,8 @@ from modules.control_authority.v1_0 import authority_choices, normalize_authorit
 from modules.control_authority.v1_0.model import ohc_may_write
 from modules.platform_support.v1_0 import IS_WINDOWS, platform_display_name, run_frozen_helper
 
-# Sidebar customization. Overview, the customization entry itself and Help are
-# intentionally fixed safety anchors; only the functional module rows between
-# them can be reordered or hidden.
+# Sidebar customization. Overview, Settings, customization and Help always stay
+# visible. Settings can still be reordered with the functional module rows.
 NAVIGATION_DEFAULT_ORDER = (
     "gpu", "case", "hardware_checker", "snapshot_manager", "automations", "programs", "cooling", "rgb_studio", "lcd", "display_effects", "wallpaper_engine", "openlinkhub",
     "profiles", "settings", "about", "log", "desktop_designs",
@@ -2893,6 +2892,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         from modules.ui_performance.v1_1.dynamic_text import refresh
         refresh(self)
         if hasattr(self, 'display_effects_page'): self.display_effects_page.refresh_language()
+        from modules.openlinkhub_update.v1_0.mouse_ui import refresh_mouse_language
+        refresh_mouse_language(self)
         if hasattr(self, "hardware_checker_page"): self.hardware_checker_page.refresh_language()
         if hasattr(self, "snapshot_manager_page"): self.snapshot_manager_page.refresh_language()
         if hasattr(self, "programs_page"): self.programs_page.refresh_language()
@@ -3152,8 +3153,9 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         navigation_layout.setContentsMargins(10, 12, 10, 10)
         navigation_layout.setSpacing(10)
         brand_logo, brand = create_sidebar_branding(Path(__file__).resolve().parent)
+        self.sidebar_artwork = brand_logo
         if brand_logo is not None:
-            navigation_layout.addWidget(brand_logo)
+            navigation_layout.addWidget(brand_logo, 0, Qt.AlignmentFlag.AlignHCenter)
         navigation_layout.addWidget(brand)
         self.navigation = self.make_navigation_sidebar()
         navigation_layout.addWidget(self.navigation, 1)
@@ -3238,7 +3240,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.display_effects_page_index = self.tabs.addTab(self.make_display_effects_tab(), "Display-Effekte")
         self.help_page_index = self.tabs.addTab(self.make_help_tab(), "Hilfe")
         self.case_page_index = self.tabs.addTab(build_case_page(self), "Gehäuse")
-        self.hardware_checker_page = build_hardware_checker_page(self); self.hardware_checker_page_index = self.tabs.addTab(self.hardware_checker_page, "Hardware-Checker")
+        self.hardware_checker_page = build_hardware_checker_page(self); self.hardware_checker_page_index = self.tabs.addTab(self.hardware_checker_page, "Hardware-Prüfung")
         self.gpu_control_page = GpuControlPage(self); self.gpu_control_page_index = self.tabs.addTab(self.gpu_control_page, "Grafikkarte")
         self.snapshot_manager_page = build_snapshot_manager_page(self); self.snapshot_manager_page_index = self.tabs.addTab(self.snapshot_manager_page, "Snapshot-Manager")
         self.design_automation_page = build_design_automation_page(self)
@@ -3272,6 +3274,10 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         # compact three-dot menu instead.
         self.menuBar().setVisible(False)
         self.update_navigation_visibility()
+        from modules.hardware_checker.v1_0.navigation import install as install_hardware_navigation
+        install_hardware_navigation(self)
+        from modules.ui_performance.v1_1.adaptive_views import install_content_heights
+        install_content_heights(self)
         self.update_page_header(0)
 
     def update_page_header(self, page: int) -> None:
@@ -3281,7 +3287,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             getattr(self, "design_automation_page_index", -1): ("Automationszentrale", "Profile nach Zeit, Anwendung oder Spiel automatisch wechseln."),
             getattr(self, "programs_page_index", -1): ("Programme", "Installierte Programme und wiederverwendbare Installationsprofile verwalten."),
             13: ("Gehäuse", "PC-Ansicht · Gehäuse, Profile und Komponentenpositionen"),
-            14: ("Hardware-Checker", "CPU, SMT, PCIe, NVMe und RAM automatisch prüfen."),
+            14: ("Hardware-Prüfung", "CPU, SMT, PCIe, NVMe und RAM automatisch prüfen."),
             0: ("Übersicht", "Systemstatus und erkannte Hardware auf einen Blick."),
             1: ("Kühlungszentrale", "Überwache und steuere Pumpe, Radiator- und Gehäuselüfter."),
             2: ("RGB-Studio", "Beleuchtung, Geräte und räumliche RGB-Zuordnung."),
@@ -3299,6 +3305,11 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             title, subtitle = "Hilfe", "Anleitungen und Erklärungen direkt in Open Hardware Control."
         else:
             title, subtitle = titles.get(page, (self.tabs.tabText(page) if 0 <= page < self.tabs.count() else "Open Hardware Control", ""))
+        from modules.navigation_settings.v1_0.artwork import refresh_navigation_art
+        refresh_navigation_art(self, page)
+        if page == getattr(self, "hardware_checker_page_index", -1):
+            section = self.hardware_checker_page.section_tabs.currentIndex()
+            title = ("Hardware-Prüfung", "Hardware Fix", "Von OHC unterstützte Geräte")[section]
         if hasattr(self, "page_title_label"):
             self.page_title_label.setText(self.tr_static(title))
             self.page_subtitle_label.setText(self.tr_static(subtitle))
@@ -3493,10 +3504,11 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             saved = json.loads(raw) if raw else []
         except (TypeError, ValueError, json.JSONDecodeError):
             saved = []
-        return {str(key) for key in saved if str(key) in NAVIGATION_DEFAULT_ORDER}
+        return {str(key) for key in saved if str(key) in NAVIGATION_DEFAULT_ORDER and str(key) != "settings"}
 
     def make_navigation_sidebar(self) -> QTreeWidget:
-        navigation = QTreeWidget()
+        from modules.navigation_settings.v1_0.sidebar import NavigationTree
+        navigation = NavigationTree()
         navigation.setObjectName("hardwareNavigation")
         navigation.setColumnCount(2)
         navigation.setHeaderHidden(True)
@@ -3512,6 +3524,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.navigation_items: dict[str, QTreeWidgetItem] = {}
 
         def page_item(key: str, text: str, page: int, *, fixed: bool = False) -> QTreeWidgetItem:
+            text = text.split("   ", 1)[-1]
             item = QTreeWidgetItem([text, ""])
             item.setData(0, Qt.ItemDataRole.UserRole, page)
             item.setData(0, Qt.ItemDataRole.UserRole.value + 1, key)
@@ -3530,7 +3543,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         configurable = {
             "gpu": ("Grafikkarte", 15),
             "case": ("▥   Gehäuse", 13),
-            "hardware_checker": ("▣✓   Hardware-Checker", 14),
+            "hardware_checker": ("Hardware-Prüfung", 14),
             "snapshot_manager": ("◫   Snapshot-Manager", 16),
             "automations": ("⌁   Automationszentrale", -1),
             "programs": ("▦   Programme", -1),
@@ -3569,7 +3582,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.nav_about = self.navigation_items["about"]
 
         navigation.setCurrentItem(self.nav_overview)
-        navigation.currentItemChanged.connect(self.on_navigation_changed)
+        navigation.pageRequested.connect(self.on_navigation_changed)
         navigation.itemChanged.connect(self.on_navigation_item_changed)
         try:
             navigation.model().rowsMoved.connect(self.on_navigation_rows_moved)
@@ -3595,6 +3608,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             if key not in order:
                 order.append(key)
         self.navigation_user_order = order
+        self.navigation_user_hidden.discard("settings")
         self.settings.setValue("navigation/order", json.dumps(order, ensure_ascii=False))
         self.settings.setValue("navigation/hidden", json.dumps(sorted(self.navigation_user_hidden), ensure_ascii=False))
         self.settings.sync()
@@ -3605,18 +3619,18 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             enabled = key not in self.navigation_user_hidden
             checkbox.setChecked(enabled)
             checkbox.blockSignals(blocked)
-            dot = getattr(self, "navigation_module_status_dots", {}).get(key)
-            if dot is not None:
-                dot.setText("●" if enabled else "○")
-                dot.setObjectName("moduleVisibilityDotOn" if enabled else "moduleVisibilityDotOff")
-                dot.style().unpolish(dot)
-                dot.style().polish(dot)
+        for key, dot in getattr(self, "navigation_module_status_dots", {}).items():
+            enabled = key == "settings" or key not in self.navigation_user_hidden
+            dot.setText("●" if enabled else "○")
+            dot.setObjectName("moduleVisibilityDotOn" if enabled else "moduleVisibilityDotOff")
+            dot.style().unpolish(dot)
+            dot.style().polish(dot)
 
     def set_navigation_module_enabled(self, key: str, enabled: bool) -> None:
         key = str(key)
         if key not in NAVIGATION_DEFAULT_ORDER:
             return
-        if enabled:
+        if enabled or key == "settings":
             self.navigation_user_hidden.discard(key)
         else:
             self.navigation_user_hidden.add(key)
@@ -3650,7 +3664,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         if not self.navigation_edit_mode or column != 1:
             return
         key = self.navigation_item_key(item)
-        if key not in NAVIGATION_DEFAULT_ORDER:
+        if key not in NAVIGATION_DEFAULT_ORDER or key == "settings":
             return
         if item.checkState(1) == Qt.CheckState.Checked:
             self.navigation_user_hidden.discard(key)
@@ -3675,7 +3689,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                     item.setText(0, translated_base)
                     item.setFlags((item.flags() | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled) & ~Qt.ItemFlag.ItemIsDragEnabled & ~Qt.ItemFlag.ItemIsDropEnabled)
                     continue
-                if key in {"cooling_controls", "temperature_recording", "lcd_studio", "display_effects"}:
+                if key in {"cooling_controls", "temperature_recording", "lcd_studio", "display_effects", "hardware_fix", "supported_devices"}:
                     item.setText(0, translated_base)
                     item.setFlags(
                         (item.flags() | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
@@ -3694,6 +3708,9 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                     flags &= ~Qt.ItemFlag.ItemIsDropEnabled
                     flags &= ~Qt.ItemFlag.ItemIsUserCheckable
                     item.setText(0, translated_base)
+                if key == "settings":
+                    flags &= ~Qt.ItemFlag.ItemIsUserCheckable
+                    item.setData(1, Qt.ItemDataRole.CheckStateRole, None)
                 item.setFlags(flags)
         finally:
             self.navigation.blockSignals(False)
@@ -3720,11 +3737,14 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                 item = movable.get(key) or self.navigation_items.get(key)
                 if item is not None:
                     root.addChild(item)
-                    item.setCheckState(1, Qt.CheckState.Checked)
+                    if key != "settings":
+                        item.setCheckState(1, Qt.CheckState.Checked)
             self.nav_lcd.addChild(self.nav_lcd_studio)
             self.nav_lcd.addChild(self.nav_display_effects)
             self.nav_lcd.setExpanded(False)
             self.restore_temperature_recording_navigation()
+            for key in ("hardware_fix", "supported_devices"):
+                self.navigation_items["hardware_checker"].addChild(self.navigation_items[key])
         finally:
             self.navigation.blockSignals(False)
         self.save_navigation_preferences()
@@ -3742,13 +3762,14 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         except Exception:
             has_case_fans = bool(getattr(self, "mainboard_channels", {}))
         icon = "▥◉" if has_aio and has_case_fans else "▥" if has_aio else "◉" if has_case_fans else "❄"
-        text = f"{icon}   Kühlung"
+        text = "Kühlung"
         self.nav_nzxt.setData(0, Qt.ItemDataRole.UserRole.value + 2, text)
         self.nav_nzxt.setText(0, ("≡  " if self.navigation_edit_mode else "") + self.tr_static(text))
 
     def update_navigation_visibility(self) -> None:
         if not hasattr(self, "nav_nzxt"):
             return
+        self.navigation_user_hidden.discard("settings")
         self.update_cooling_navigation_icon()
         show_all = bool(self.show_undetected_modules)
         hardware_visible = {
@@ -3863,312 +3884,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.log_message(f"EXPERIMENTELL: Desktop-Designs {state}")
 
     def make_openlinkhub_control_tabs(self) -> QWidget:
-        self.openlinkhub_write_buttons: list[QPushButton] = []
-        tabs = QTabWidget()
-        tabs.setObjectName("openLinkHubControlTabs")
-
-        cooling = QWidget()
-        cooling_form = QFormLayout(cooling)
-        self.openlinkhub_cooling_device_combo = QComboBox()
-        self.openlinkhub_cooling_channel_combo = QComboBox()
-        self.openlinkhub_temperature_profile_combo = QComboBox()
-        self.openlinkhub_manual_speed = QSpinBox()
-        self.openlinkhub_manual_speed.setRange(0, 100)
-        self.openlinkhub_manual_speed.setValue(50)
-        self.openlinkhub_manual_speed.setSuffix(" %")
-        self.openlinkhub_cooling_device_combo.currentIndexChanged.connect(
-            self.update_openlinkhub_cooling_channels
-        )
-        cooling_form.addRow("Corsair-Kühlgerät", self.openlinkhub_cooling_device_combo)
-        cooling_form.addRow("Lüfter-/Pumpenkanal", self.openlinkhub_cooling_channel_combo)
-        cooling_form.addRow("Vorhandenes Temperaturprofil", self.openlinkhub_temperature_profile_combo)
-        profile_button = QPushButton("Temperaturprofil auf Kanal anwenden")
-        profile_button.clicked.connect(self.apply_openlinkhub_speed_profile)
-        cooling_form.addRow(profile_button)
-        cooling_form.addRow("Manuelle Leistung", self.openlinkhub_manual_speed)
-        manual_button = QPushButton("Manuellen Wert auf Kanal anwenden")
-        manual_button.clicked.connect(self.apply_openlinkhub_manual_speed)
-        cooling_form.addRow(manual_button)
-        cooling_note = QLabel(
-            "Profile werden von OpenLinkHub gelesen. Werte unter 30 % erfordern eine zusätzliche Bestätigung. "
-            "Eine sichere, temperaturabhängige Kühlung bleibt empfohlen."
-        )
-        cooling_note.setWordWrap(True)
-        cooling_note.setObjectName("warningText")
-        cooling_form.addRow(cooling_note)
-        self.openlinkhub_write_buttons.extend((profile_button, manual_button))
-        tabs.addTab(cooling, "Kühlung")
-
-        device = QWidget()
-        device_form = QFormLayout(device)
-        self.openlinkhub_general_device_combo = QComboBox()
-        self.openlinkhub_general_channel_combo = QComboBox()
-        self.openlinkhub_rgb_profile_combo = QComboBox()
-        self.openlinkhub_channel_label = QLineEdit()
-        self.openlinkhub_channel_label.setMaxLength(48)
-        self.openlinkhub_channel_label.setPlaceholderText("z. B. Frontlüfter oben")
-        self.openlinkhub_brightness = QSpinBox()
-        self.openlinkhub_brightness.setRange(0, 100)
-        self.openlinkhub_brightness.setValue(100)
-        self.openlinkhub_brightness.setSuffix(" %")
-        self.openlinkhub_lcd_rotation = QComboBox()
-        for text, value in (("0°", 0), ("90°", 1), ("180°", 2), ("270°", 3)):
-            self.openlinkhub_lcd_rotation.addItem(text, value)
-        self.openlinkhub_general_device_combo.currentIndexChanged.connect(
-            self.update_openlinkhub_general_controls
-        )
-        device_form.addRow("Corsair-Gerät", self.openlinkhub_general_device_combo)
-        device_form.addRow("Kanal", self.openlinkhub_general_channel_combo)
-        device_form.addRow("Vorhandenes RGB-Profil", self.openlinkhub_rgb_profile_combo)
-        rgb_button = QPushButton("RGB-Profil auf Kanal anwenden")
-        rgb_button.clicked.connect(self.apply_openlinkhub_rgb_profile)
-        device_form.addRow(rgb_button)
-        device_form.addRow("Neue Kanalbezeichnung", self.openlinkhub_channel_label)
-        label_button = QPushButton("Kanalbezeichnung speichern")
-        label_button.clicked.connect(self.apply_openlinkhub_label)
-        device_form.addRow(label_button)
-        device_form.addRow("Gerätehelligkeit", self.openlinkhub_brightness)
-        brightness_button = QPushButton("Helligkeit anwenden")
-        brightness_button.clicked.connect(self.apply_openlinkhub_brightness)
-        device_form.addRow(brightness_button)
-        device_form.addRow("LCD-Ausrichtung", self.openlinkhub_lcd_rotation)
-        rotation_button = QPushButton("LCD-Ausrichtung anwenden")
-        rotation_button.clicked.connect(self.apply_openlinkhub_lcd_rotation)
-        device_form.addRow(rotation_button)
-        self.openlinkhub_write_buttons.extend((rgb_button, label_button, brightness_button, rotation_button))
-        tabs.addTab(device, "RGB und Gerät")
-
-        mouse = QWidget()
-        mouse_form = QFormLayout(mouse)
-        self.openlinkhub_mouse_device_combo = QComboBox()
-        self.openlinkhub_mouse_device_combo.currentIndexChanged.connect(
-            self.update_openlinkhub_mouse_visual
-        )
-        mouse_form.addRow("Corsair-Maus", self.openlinkhub_mouse_device_combo)
-
-        mouse_visual_group = QGroupBox("Grafische Tastenbelegung")
-        mouse_visual_layout = QVBoxLayout(mouse_visual_group)
-        mouse_visual_intro = QLabel(
-            "Die Darstellung verwendet eigene schematische SVG-Zeichnungen und keine Herstellerfotos. "
-            "Eine Taste in der Maus anklicken oder einen Listeneintrag doppelt anklicken, um die Funktion zu ändern."
-        )
-        mouse_visual_intro.setWordWrap(True)
-        mouse_visual_layout.addWidget(mouse_visual_intro)
-        mouse_visual_content = QHBoxLayout()
-        self.openlinkhub_mouse_diagram = MouseSchematicWidget()
-        self.openlinkhub_mouse_diagram.buttonSelected.connect(self.edit_openlinkhub_mouse_button_by_id)
-        self.openlinkhub_mouse_assignment_table = QTableWidget(0, 3)
-        self.openlinkhub_mouse_assignment_table.setHorizontalHeaderLabels(["Taste", "Position", "Funktion"])
-        self.openlinkhub_mouse_assignment_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.openlinkhub_mouse_assignment_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.openlinkhub_mouse_assignment_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        self.openlinkhub_mouse_assignment_table.setMinimumWidth(390)
-        self.openlinkhub_mouse_assignment_table.setAccessibleName("Aktuelle OpenLinkHub-Maustastenbelegung")
-        self.openlinkhub_mouse_assignment_table.itemSelectionChanged.connect(
-            self.sync_openlinkhub_mouse_table_selection
-        )
-        self.openlinkhub_mouse_assignment_table.itemDoubleClicked.connect(
-            lambda _item: self.edit_selected_openlinkhub_mouse_button()
-        )
-        mouse_visual_content.addWidget(self.openlinkhub_mouse_diagram, 6)
-        mouse_visual_content.addWidget(self.openlinkhub_mouse_assignment_table, 5)
-        mouse_visual_layout.addLayout(mouse_visual_content)
-        self.openlinkhub_mouse_assignment_status = QLabel(
-            "Maus auswählen und OpenLinkHub aktualisieren, um Belegungen einzulesen."
-        )
-        self.openlinkhub_mouse_assignment_status.setWordWrap(True)
-        self.openlinkhub_mouse_assignment_status.setObjectName("cardHint")
-        mouse_visual_layout.addWidget(self.openlinkhub_mouse_assignment_status)
-        mouse_assignment_buttons = QHBoxLayout()
-        self.openlinkhub_mouse_edit_button = QPushButton("Ausgewählte Taste belegen")
-        self.openlinkhub_mouse_edit_button.clicked.connect(self.edit_selected_openlinkhub_mouse_button)
-        self.openlinkhub_macro_record_button = QPushButton("Tastaturmakro aufnehmen")
-        self.openlinkhub_macro_record_button.clicked.connect(self.record_openlinkhub_keyboard_macro)
-        mouse_assignment_buttons.addWidget(self.openlinkhub_mouse_edit_button)
-        mouse_assignment_buttons.addWidget(self.openlinkhub_macro_record_button)
-        mouse_assignment_buttons.addStretch()
-        mouse_visual_layout.addLayout(mouse_assignment_buttons)
-        mouse_form.addRow(mouse_visual_group)
-
-        self.openlinkhub_mouse_dpi: list[QSpinBox] = []
-        dpi_row = QWidget()
-        dpi_layout = QHBoxLayout(dpi_row)
-        dpi_layout.setContentsMargins(0, 0, 0, 0)
-        for value in (800, 1200, 1600, 2400, 3200):
-            field = QSpinBox()
-            field.setRange(100, 30000)
-            field.setSingleStep(100)
-            field.setValue(value)
-            field.setSuffix(" DPI")
-            self.openlinkhub_mouse_dpi.append(field)
-            dpi_layout.addWidget(field)
-        self.openlinkhub_mouse_polling = QComboBox()
-        for text, value in (("125 Hz", 1), ("250 Hz", 2), ("500 Hz", 3), ("1000 Hz", 4)):
-            self.openlinkhub_mouse_polling.addItem(text, value)
-        self.openlinkhub_mouse_sleep = QComboBox()
-        for minutes in (1, 5, 10, 15, 30, 60):
-            label = "1 Stunde" if minutes == 60 else f"{minutes} Minute{'n' if minutes != 1 else ''}"
-            self.openlinkhub_mouse_sleep.addItem(label, minutes)
-        self.openlinkhub_mouse_angle = QCheckBox("Angle Snapping aktivieren")
-        self.openlinkhub_mouse_button_opt = QCheckBox("Tastenoptimierung aktivieren")
-        mouse_settings_group = QGroupBox("Mauseinstellungen")
-        mouse_settings_form = QFormLayout(mouse_settings_group)
-        mouse_settings_form.addRow("Fünf DPI-Stufen", dpi_row)
-        dpi_button = QPushButton("DPI-Stufen anwenden")
-        dpi_button.clicked.connect(self.apply_openlinkhub_mouse_dpi)
-        mouse_settings_form.addRow(dpi_button)
-        mouse_settings_form.addRow("USB-Abfragerate", self.openlinkhub_mouse_polling)
-        polling_button = QPushButton("Abfragerate anwenden")
-        polling_button.clicked.connect(self.apply_openlinkhub_mouse_polling)
-        mouse_settings_form.addRow(polling_button)
-        mouse_settings_form.addRow("Ruhemodus", self.openlinkhub_mouse_sleep)
-        sleep_button = QPushButton("Ruhemodus anwenden")
-        sleep_button.clicked.connect(self.apply_openlinkhub_mouse_sleep)
-        mouse_settings_form.addRow(sleep_button)
-        mouse_settings_form.addRow(self.openlinkhub_mouse_angle)
-        angle_button = QPushButton("Angle Snapping anwenden")
-        angle_button.clicked.connect(self.apply_openlinkhub_mouse_angle)
-        mouse_settings_form.addRow(angle_button)
-        mouse_settings_form.addRow(self.openlinkhub_mouse_button_opt)
-        button_opt = QPushButton("Tastenoptimierung anwenden")
-        button_opt.clicked.connect(self.apply_openlinkhub_mouse_button_optimization)
-        mouse_settings_form.addRow(button_opt)
-        mouse_form.addRow(mouse_settings_group)
-        self.openlinkhub_write_buttons.extend((
-            self.openlinkhub_mouse_edit_button,
-            self.openlinkhub_macro_record_button,
-            dpi_button,
-            polling_button,
-            sleep_button,
-            angle_button,
-            button_opt,
-        ))
-        tabs.addTab(mouse, "Maus")
-
-        keyboard = QWidget()
-        keyboard_form = QFormLayout(keyboard)
-        self.openlinkhub_keyboard_device_combo = QComboBox()
-        self.openlinkhub_keyboard_user_profile = QLineEdit()
-        self.openlinkhub_keyboard_user_profile.setMaxLength(48)
-        self.openlinkhub_keyboard_user_profile.setPlaceholderText("Vorhandener OpenLinkHub-Profilname")
-        self.openlinkhub_keyboard_profile = QLineEdit()
-        self.openlinkhub_keyboard_profile.setMaxLength(48)
-        self.openlinkhub_keyboard_profile.setPlaceholderText("Vorhandenes Tastaturprofil")
-        self.openlinkhub_keyboard_layout = QLineEdit("DE")
-        self.openlinkhub_keyboard_layout.setMaxLength(16)
-        self.openlinkhub_keyboard_dial = QSpinBox()
-        self.openlinkhub_keyboard_dial.setRange(0, 20)
-        self.openlinkhub_keyboard_sleep = QSpinBox()
-        self.openlinkhub_keyboard_sleep.setRange(0, 60)
-        self.openlinkhub_keyboard_sleep.setValue(3)
-        self.openlinkhub_keyboard_polling = QSpinBox()
-        self.openlinkhub_keyboard_polling.setRange(1, 8)
-        keyboard_form.addRow("Corsair-Tastatur", self.openlinkhub_keyboard_device_combo)
-        keyboard_form.addRow("OpenLinkHub-Benutzerprofil", self.openlinkhub_keyboard_user_profile)
-        user_profile_button = QPushButton("Benutzerprofil wechseln")
-        user_profile_button.clicked.connect(self.apply_openlinkhub_keyboard_user_profile)
-        keyboard_form.addRow(user_profile_button)
-        keyboard_form.addRow("Tastaturprofil", self.openlinkhub_keyboard_profile)
-        keyboard_profile_button = QPushButton("Tastaturprofil wechseln")
-        keyboard_profile_button.clicked.connect(self.apply_openlinkhub_keyboard_profile)
-        keyboard_form.addRow(keyboard_profile_button)
-        keyboard_form.addRow("Tastaturbelegung", self.openlinkhub_keyboard_layout)
-        layout_button = QPushButton("Tastaturbelegung anwenden")
-        layout_button.clicked.connect(self.apply_openlinkhub_keyboard_layout)
-        keyboard_form.addRow(layout_button)
-        keyboard_form.addRow("Drehregler-Option · Gerätewert", self.openlinkhub_keyboard_dial)
-        dial_button = QPushButton("Drehregler-Option anwenden")
-        dial_button.clicked.connect(self.apply_openlinkhub_keyboard_dial)
-        keyboard_form.addRow(dial_button)
-        keyboard_form.addRow("Ruhemodus · Gerätewert", self.openlinkhub_keyboard_sleep)
-        keyboard_sleep_button = QPushButton("Tastatur-Ruhemodus anwenden")
-        keyboard_sleep_button.clicked.connect(self.apply_openlinkhub_keyboard_sleep)
-        keyboard_form.addRow(keyboard_sleep_button)
-        keyboard_form.addRow("Abfragerate · Gerätewert", self.openlinkhub_keyboard_polling)
-        keyboard_polling_button = QPushButton("Tastatur-Abfragerate anwenden")
-        keyboard_polling_button.clicked.connect(self.apply_openlinkhub_keyboard_polling)
-        keyboard_form.addRow(keyboard_polling_button)
-        keyboard_note = QLabel(
-            "Layout-, Drehregler-, Ruhemodus- und Abfrageratenwerte unterscheiden sich je nach Tastatur. "
-            "Die Gerätewerte bitte mit der OpenLinkHub-Geräteseite abgleichen."
-        )
-        keyboard_note.setWordWrap(True)
-        keyboard_note.setObjectName("warningText")
-        keyboard_form.addRow(keyboard_note)
-        self.openlinkhub_write_buttons.extend(
-            (user_profile_button, keyboard_profile_button, layout_button, dial_button, keyboard_sleep_button, keyboard_polling_button)
-        )
-        tabs.addTab(keyboard, "Tastatur")
-
-        headset = QWidget()
-        headset_form = QFormLayout(headset)
-        self.openlinkhub_headset_device_combo = QComboBox()
-        self.openlinkhub_headset_sleep = QSpinBox()
-        self.openlinkhub_headset_sleep.setRange(0, 60)
-        self.openlinkhub_headset_sleep.setValue(3)
-        self.openlinkhub_headset_anc = QComboBox()
-        self.openlinkhub_headset_anc.addItem("Aus", 0)
-        self.openlinkhub_headset_anc.addItem("Aktive Geräuschunterdrückung", 1)
-        self.openlinkhub_headset_anc.addItem("Transparenzmodus", 2)
-        self.openlinkhub_headset_mute_indicator = QCheckBox("Mikrofon-Stummschaltanzeige aktivieren")
-        self.openlinkhub_headset_sidetone = QCheckBox("Sidetone aktivieren")
-        self.openlinkhub_headset_sidetone_value = QSpinBox()
-        self.openlinkhub_headset_sidetone_value.setRange(0, 100)
-        self.openlinkhub_headset_sidetone_value.setValue(50)
-        self.openlinkhub_headset_sidetone_value.setSuffix(" %")
-        headset_form.addRow("Corsair-Headset", self.openlinkhub_headset_device_combo)
-        headset_form.addRow("Ruhemodus · Gerätewert", self.openlinkhub_headset_sleep)
-        headset_sleep_button = QPushButton("Headset-Ruhemodus anwenden")
-        headset_sleep_button.clicked.connect(self.apply_openlinkhub_headset_sleep)
-        headset_form.addRow(headset_sleep_button)
-        headset_form.addRow("Geräuschmodus", self.openlinkhub_headset_anc)
-        anc_button = QPushButton("Geräuschmodus anwenden")
-        anc_button.clicked.connect(self.apply_openlinkhub_headset_anc)
-        headset_form.addRow(anc_button)
-        headset_form.addRow(self.openlinkhub_headset_mute_indicator)
-        mute_button = QPushButton("Stummschaltanzeige anwenden")
-        mute_button.clicked.connect(self.apply_openlinkhub_headset_mute_indicator)
-        headset_form.addRow(mute_button)
-        headset_form.addRow(self.openlinkhub_headset_sidetone)
-        sidetone_button = QPushButton("Sidetone-Modus anwenden")
-        sidetone_button.clicked.connect(self.apply_openlinkhub_headset_sidetone)
-        headset_form.addRow(sidetone_button)
-        headset_form.addRow("Sidetone-Lautstärke", self.openlinkhub_headset_sidetone_value)
-        sidetone_value_button = QPushButton("Sidetone-Lautstärke anwenden")
-        sidetone_value_button.clicked.connect(self.apply_openlinkhub_headset_sidetone_value)
-        headset_form.addRow(sidetone_value_button)
-        headset_note = QLabel(
-            "OpenLinkHub verlangt: ANC nur bei ausgeschaltetem Sidetone; Sidetone nur bei ausgeschaltetem ANC."
-        )
-        headset_note.setWordWrap(True)
-        headset_note.setObjectName("warningText")
-        headset_form.addRow(headset_note)
-        self.openlinkhub_write_buttons.extend(
-            (headset_sleep_button, anc_button, mute_button, sidetone_button, sidetone_value_button)
-        )
-        tabs.addTab(headset, "Headset")
-
-        psu = QWidget()
-        psu_form = QFormLayout(psu)
-        self.openlinkhub_psu_device_combo = QComboBox()
-        self.openlinkhub_psu_fan_mode = QSpinBox()
-        self.openlinkhub_psu_fan_mode.setRange(0, 10)
-        self.openlinkhub_psu_fan_mode.setValue(7)
-        psu_form.addRow("Corsair-Netzteil", self.openlinkhub_psu_device_combo)
-        psu_form.addRow("Lüftermodus · Gerätewert", self.openlinkhub_psu_fan_mode)
-        psu_button = QPushButton("Netzteil-Lüftermodus anwenden")
-        psu_button.clicked.connect(self.apply_openlinkhub_psu_speed)
-        psu_form.addRow(psu_button)
-        psu_note = QLabel(
-            "Die Bedeutung des Lüftermodus ist netzteilabhängig. Nur einen in OpenLinkHub für das Modell angebotenen Gerätewert verwenden."
-        )
-        psu_note.setWordWrap(True)
-        psu_note.setObjectName("warningText")
-        psu_form.addRow(psu_note)
-        self.openlinkhub_write_buttons.append(psu_button)
-        tabs.addTab(psu, "Netzteil")
-        self.update_openlinkhub_write_state()
-        return tabs
+        from modules.openlinkhub_update.v1_0.device_ui import build_device_controls
+        return build_device_controls(self, MouseSchematicWidget)
 
     def set_openlinkhub_writes_enabled(self, enabled: bool) -> None:
         if enabled:
@@ -4207,7 +3924,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         service_ok = context in {"user", "system"}
         allowed = reachable and service_ok and checked and not self.openlinkhub_write_busy
         for button in self.openlinkhub_write_buttons:
-            button.setEnabled(allowed)
+            button.setEnabled(allowed and button.property("capabilityAvailable") is not False
+                              and (not button.property("requiresUserService") or context == "user"))
         if self.openlinkhub_write_busy:
             text = "Befehl wird übertragen … weitere Schreibzugriffe sind kurz gesperrt."
         elif context == "conflict":
@@ -4339,6 +4057,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         table.blockSignals(True)
         table.setRowCount(0)
         if device is None:
+            from modules.openlinkhub_update.v1_0.mouse_ui import refresh_mouse_controls
+            refresh_mouse_controls(self, None)
             self.openlinkhub_mouse_assignment_status.setText(
                 "Keine von OpenLinkHub erkannte Corsair-Maus ausgewählt."
             )
@@ -4346,6 +4066,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             table.blockSignals(False)
             return
 
+        from modules.openlinkhub_update.v1_0.mouse_ui import refresh_mouse_controls
+        refresh_mouse_controls(self, device)
         product = str(device.get("product") or "Corsair-Maus")
         assignments = device.get("mouse_assignments")
         if not isinstance(assignments, list):
@@ -4607,7 +4329,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                 "--api-url", OPENLINKHUB_API_URL,
             ],
             callback=done,
-            timeout=12,
+            timeout=90 if action == "mouse-default-dpi" else 12,
             log_command=False,
             log_output=False,
         )
@@ -4707,8 +4429,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         if selected is None:
             return
         _, payload = selected
-        payload["stages"] = {str(index): field.value() for index, field in enumerate(self.openlinkhub_mouse_dpi)}
-        self.run_openlinkhub_write("mouse-dpi", payload, "fünf Maus-DPI-Stufen anwenden")
+        payload["stages"] = {getattr(field, "stage_id", str(index)): field.value() for index, field in enumerate(self.openlinkhub_mouse_dpi) if not field.isHidden()}
+        self.run_openlinkhub_write("mouse-dpi", payload, self.tr_static("DPI-Stufen anwenden"))
 
     def apply_openlinkhub_mouse_polling(self) -> None:
         selected = self._openlinkhub_device_payload(self.openlinkhub_mouse_device_combo)
@@ -8594,7 +8316,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         gallery_view_row = QHBoxLayout()
         self.rgb_design_view_buttons: dict[str, QPushButton] = {}
         for view_mode, caption in (
-            ("suggestions", "Vorschläge · 4"),
+            ("suggestions", "Vorschläge · 12"),
             ("favorites", f"Favoriten · {len(self.rgb_favorite_design_indices)}"),
             ("all", f"{self.tr_static('Alle Designs')} · {len(BUILTIN_DESIGNS)}"),
         ):
@@ -19925,12 +19647,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         if hasattr(self, "sdk_supervisor"):
             self.sdk_supervisor.reset()
         if self.openrgb_effect_assignments:
-            self.openrgb_native_plugin_active = bool(self.native_openrgb_plugin.available and self.native_openrgb_plugin.start(RGB_TARGET_FPS).ok)
-            self.log_message(
-                "RGB-STUDIO: OpenRGB Native-Plugin aktiv · 60 Hz latest-frame-wins"
-                if self.openrgb_native_plugin_active else
-                "RGB-STUDIO: OpenRGB Native-Plugin nicht verfügbar · SDK-Fallback"
-            )
+            from modules.rgb_studio.v1_15.native_stream import start_native_stream
+            self.openrgb_native_plugin_active = start_native_stream(self, RGB_TARGET_FPS)
             self.openrgb_effect_timer.start()
             self.send_openrgb_effect_frame()
         hardware_commands = [*nzxt_commands, *native_fallback_commands]
@@ -20015,33 +19733,9 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         if self.openrgb_native_plugin_active:
             elapsed = self.update_rgb_gpu_visual_elapsed(wall_elapsed)
             self.rgb_last_sent_elapsed = elapsed
-            devices: list[dict[str, object]] = []
-            try:
-                from modules.rgb_studio.v1_15.render_plan import render
-                for stable_id, config, device in assignments:
-                    led_count, zone_sizes = self.openrgb_device_write_shape(device)
-                    payload = self.rgb_worker_render_payload(stable_id, device, config, led_count, zone_sizes, elapsed)
-                    colors = render(payload["render_plan"], led_count, list(zone_sizes) if zone_sizes is not None else None)
-                    devices.append({
-                        "device": device.index,
-                        "name": device.name,
-                        "mode": "Direct",
-                        "colors": colors,
-                    })
-            except (OpenRGBError, ValueError, KeyError, TypeError) as exc:
-                self.openrgb_native_plugin_active = False
-                self.log_message(f"RGB-STUDIO: nativer Plugin-Frame fehlgeschlagen · SDK-Fallback · {exc}")
-            else:
-                result = self.native_openrgb_plugin.frame(self.openrgb_worker_frame_sequence + 1, devices)
-                if result.ok:
-                    self.openrgb_worker_frame_sequence += 1
-                    self.openrgb_worker_coalesced_frames = 0
-                    from modules.rgb_studio.v1_15.native_plugin import record_native_status
-                    record_native_status(self, result, assignments, now)
-                    self.update_openrgb_performance_status()
-                    return
-                self.openrgb_native_plugin_active = False
-                self.log_message(f"RGB-STUDIO: natives Plugin nicht erreichbar · SDK-Fallback · {result.detail}")
+            from modules.rgb_studio.v1_15.native_stream import send_native_frame
+            if send_native_frame(self, assignments, elapsed, now, RGB_TARGET_FPS):
+                return
 
         if self.openrgb_effect_process.state() == QProcess.ProcessState.NotRunning:
             self.start_openrgb_worker()

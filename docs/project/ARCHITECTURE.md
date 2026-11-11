@@ -1,5 +1,51 @@
 # Open Hardware Control — Architecture
 
+## 11.11.26 – Model-level catalog and stable sidebar clicks (.175)
+
+`hardware_checker/v1_0/device_catalog.py` is immutable metadata using existing
+GPU profile IDs, reviewed HTTPS destinations and explicit support boundaries.
+`supported_devices.py` owns category/vendor/search filtering and responsive
+original cards. Links have no runtime network probes; only explicit clicks
+open the browser. Missing/invalid product destinations produce no widget.
+`localization/v1_0/device_catalog_messages.py` adds atomic four-language labels.
+
+`navigation_settings/v1_0/sidebar.py:NavigationTree` buffers current-item page
+requests during normal pointer selection until native mouseReleaseEvent has
+finished. This prevents collapsing section rows during mouse press and Qt then
+selecting a shifted row on mouse move. Keyboard/programmatic selection emits
+immediately; customization retains the existing Qt drag/drop mode. Main-window
+navigation routes and hardware owners are unchanged.
+
+## 11.11.26 – Shared RGB loop boundaries (.171)
+
+`rgb_effects.py` remains the common pure renderer for galleries, native plans,
+SDK worker frames and physical/GPU zone rendering. Pulse samples wrapped
+Gaussian distance; convergence overlaps its final burst with its exact initial
+edge state, using zero-slope smoothstep weights. There is no frame-history
+buffer, global time reset or hardware transport change. Stable preset indices
+remain separate from reclassified category metadata. Full-catalog regressions
+exercise each shared rendering path and whole overlap intervals.
+
+## 11.11.26 – Content transitions and native recovery (.170)
+
+`ui_performance/v1_1/page_transition.py` reveals the real current content page
+through a fading palette-background veil and optional bounded position offset.
+The controller owns one active animation, cancels stale/hidden/deleted targets,
+and restores geometry on interruption, resize and shutdown. The menu is not a
+transition target. There are no page snapshots or graphics-effect frame buffers.
+
+`rgb_studio/v1_15/native_stream.py` owns preferred native START/frame recovery
+and the confirmed STOP barrier before the SDK backup. Three consecutive failures
+and spaced retries prevent a temporary socket delay from replacing the fast
+writer. A failed STOP retains native ownership and blocks SDK. Rendering errors
+fail design confirmation without interpreting invalid input as transport failure.
+The main window delegates this state and keeps existing authority/selection gates.
+
+`application_activation/v1_0/autostart.py` is an installer-only helper that
+atomically retargets existing recognized desktop autostart entries after the
+user launcher has been updated. It keeps enabled/disabled flags and arguments,
+ignores missing entries, custom wrappers and symlinks, and never launches OHC.
+
 ## 10.11.26 – RGB native transport and preserved LCD boundary (.169)
 
 `rgb_studio/v1_15/native_plugin.py` owns the bounded Unix-socket client and
@@ -590,3 +636,29 @@ User configuration is persisted by the application; project design decisions are
 8. Integrate UI only after the backend contract is clear.
 
 Do not place model-specific protocol guesses directly into UI code.
+
+
+## Content-focused UI contracts (.172)
+
+The original background and diagram animation owners remain unchanged. Case
+composition reuses existing state/commit callbacks in three views, with a
+settings-only component draft inspector. ContentHeight observes bounded Qt model
+events and visible tree expansion; it never probes hardware. Sidebar art uses
+original vector drawing and palette-keyed icon caching. Hardware child
+navigation synchronizes existing section owners without new top-level pages.
+OpenLinkHub device controls are injected with the existing mouse renderer;
+metadata comes from bounded .9.4 detail requests outside the Qt thread. Startup
+DPI lacks an upstream selection endpoint, so an explicit user-service-only
+helper updates exactly the existing Profile field with backup, ownership and
+health checks, while named profiles use official HTTP actions. No direct Corsair
+USB transport is added. Backend staging integrity and service rollback stay in
+separate pure/worker helpers.
+
+
+The .174 startup-DPI preference is separate from the backend’s mutable active
+stage. A private per-profile rule and optional marked user-service pre-start
+hook restore it before the sole USB owner starts. Only an explicit Save installs
+the hook; reset returns to native behavior. The helper refuses active ownership
+and validates files inside the current installation. Missing optional code is
+non-blocking. Future module path migrations must retarget marked hooks without
+creating unsolicited opt-ins or dropping rules.

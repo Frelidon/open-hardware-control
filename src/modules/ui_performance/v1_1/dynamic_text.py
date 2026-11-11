@@ -25,6 +25,8 @@ def remember(host, widget, **fields):
 
 
 def capture_form(host, root):
+    from .adaptive_views import install_content_heights
+    install_content_heights(root)
     for widget in [root, *root.findChildren(QLabel), *root.findChildren(QAbstractButton),
                    *root.findChildren(QComboBox), *root.findChildren(QGroupBox), *root.findChildren(QLineEdit),
                    *root.findChildren(QTabWidget)]:

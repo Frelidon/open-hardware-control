@@ -139,12 +139,13 @@ def exercise():
         assert studio._media_cards_materialized and not studio.isVisible()
         assert not studio.layer2_motion_timer.isActive() and not studio.hover_preview_timer.isActive()
         assert not studio.thumbnail_active
-        # Animated overlays have only the left tree viewport as their parent.
+        # The live content page owns transitions; the navigation stays still.
         controller = window.ui_performance
         for _ in range(25): controller.play(window.tabs.currentWidget())
         QCoreApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
-        assert set(controller.overlays) == {window.navigation.viewport()}
-        assert all(overlay.parentWidget() is window.navigation.viewport() for overlay in controller.overlays.values())
+        assert window.navigation.viewport() not in controller.overlays
+        assert window.tabs.currentWidget() in controller.overlays
+        assert all(overlay.parentWidget() is page for page, overlay in controller.overlays.items())
         assert len(controller.findChildren(QVariantAnimation)) <= 1
         controller.cache_worker.start(sys.executable, ["-c", "import sys; sys.stdin.read()"])
         assert controller.cache_worker.waitForStarted(1000)

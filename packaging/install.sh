@@ -163,6 +163,9 @@ sed -e "s|@EXEC@|$BIN_DIR/open-hardware-control|g" \
     -e "s|@ICON@|$APP_DIR/assets/branding/open-hardware-control-icon.png|g" \
     "$PKG_DIR/kraken-control.desktop.in" > "$DESKTOP_DIR/open-hardware-control.desktop"
 chmod 0644 "$DESKTOP_DIR/open-hardware-control.desktop"
+python3 "$APP_DIR/modules/application_activation/v1_0/autostart.py" \
+    "$OHC_INSTALL_HOME" "$BIN_DIR/open-hardware-control" \
+    "$APP_DIR/assets/branding/open-hardware-control-icon.png"
 rm -f "$DESKTOP_DIR/kraken-control.desktop"
 
 command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$DESKTOP_DIR" || true

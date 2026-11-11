@@ -1,5 +1,17 @@
 # Unterstützte Geräte – Open Hardware Control 3.4.29.129
 
+11.11.26 (.175): The read-only UI catalog lists 41 model/backend entries in
+eight categories. Thirty existing GPU profile models are explicitly marked as
+backend-dependent profiles, not newly hardware-tested devices. The confirmed
+SAPPHIRE NITRO+ RX 9070 XT remains separate. SABRE RGB PRO and HS80 MAX are
+individual locally detected OpenLinkHub entries; only reported capabilities
+apply. Manufacturer/product links do not establish compatibility. See
+[reviewed catalog links](SUPPORTED_DEVICE_LINKS.md). Hardware owners unchanged.
+
+3.4.29.172 adds a read-only described support catalog. Existing hardware boundaries
+remain; OpenLinkHub .9.4 is locally installed and its detailed mouse API is read
+back. No new Corsair startup-DPI setting was physically applied during development.
+
 Live-Diagnose 10.11.26 unter Ubuntu: sechs OpenRGB-Geräte erkannt, Sapphire
 RX 9070 XT tatsächlich auf External Control. Unabhängige Plugin-Arbeiter erhöhen
 die gemessenen vollständigen Airgoo-USB-Frames von 3,83 auf 58,52 Hz. Einzelne

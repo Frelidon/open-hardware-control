@@ -1,5 +1,102 @@
 # Open Hardware Control — Durable Decisions
 
+## 11.11.26 – Model catalog and completed-pointer navigation (.175)
+
+The owner requests a new tested/installed version followed by GitHub upload.
+This supersedes the prior upload hold for the requested development-branch
+update. Keep INTERN; no separate public tag/release is inferred from upload.
+Catalog navigation is category→vendor→individual model. Manufacturer and exact
+product pages are separate actions; omit a product action without a reviewed
+model match. Existing generic backend entries remain under their own category.
+GPU profile names are not proof of universal control/RGB compatibility.
+
+A sidebar page request must not collapse/expand rows while the native pointer
+selection gesture is still active. Finish the gesture first; keyboard and
+programmatic selection remain immediate. Preserve custom ordering, feature
+visibility, hardware ownership and stored device settings.
+
+## 11.11.26 – Approved UI implementation and local restart (.172)
+
+The owner approves the case/OpenLinkHub concepts and requests startup DPI with
+a house symbol, named mouse profiles, separate drawing/table geometry, described
+supported-device cards beneath Hardware Fix and rounded original/contextual
+sidebar artwork. Preserve all backgrounds, animated fans, themes and saved user
+settings. Existing page/store/ownership paths remain authoritative. The sidebar
+category image changes by navigation; Overview retains the original image.
+
+Update OpenLinkHub first with a full private previous-version backup, adapt to
+the actual latest detail API, then validate/build/install OHC locally and restart
+without repeated routine permission questions. Keep OS authorization scoped to
+the actual system installation; the user-space backend requires no root grant.
+No broad sudo/Polkit bypass is part of this work. GitHub publication stays
+separate. Tests and rendering use isolated configurations and no physical DPI
+or profile changes; user-triggered controls retain ownership guards.
+
+## 11.11.26 – UI concepts first, generic fans and compact lists
+
+The owner requests review images before the next case/OpenLinkHub UI redesign.
+Use original generic fan artwork and technical LED-count/layout choices rather
+than requiring a manufacturer-first catalog. Existing models, IDs, custom
+profiles, diagrams and device ownership remain. The private SignalRGB catalog
+is read-only reference material, not a distributable asset/code source.
+
+Lists and tables throughout the app should size to content, show compact empty
+states and scroll only after a useful bounded height. Preserve usable diagrams,
+charts, editors and previews. German Hardware Check naming becomes consistently
+Hardware-Prüfung, with appropriate consistent EN/ES/FR labels; Hardware Fix is
+an expandable left-navigation child using the existing LCD pattern.
+
+After review and implementation, orderly application shutdown, local upgrade
+and restart are explicitly authorized without another routine permission
+question. This supersedes the earlier installation hold for that subsequent
+work; it does not authorize GitHub publication. At the concept stage no live
+software or backend has been replaced. See [UI redesign plan](UI_REDESIGN_PLAN.md).
+
+## 11.11.26 – Seamless RGB cycles and consolidated preset categories (.171)
+
+OHC RGB presets must join their repeated cycles continuously on every rendering
+path. Preserve deliberate random lightning flashes; those have no finite loop.
+Pulse includes the adjacent periodic tail rather than truncating it at zero;
+convergence blends its final centre state into the next resting edge pair.
+Keep the native timing/ownership, physical LED order, counts and user colours.
+
+The owner removes the redundant RGB Studio OHC Originals category because all
+bundled OHC presets are project-owned. Reclassify the four existing entries by
+style without renumbering or deleting presets: Prism Drift/Twin Wyrm Orbit are
+Spatial, Neon Particle Garden is Energy, Circuit Chase is Motion. Spatial and
+the OpenRGB Originals hardware-mode list remain. This decision applies to RGB
+Studio, not the separate LCD media catalog. .170's fluid post-reboot output is
+confirmed; prepare .171, keeping publication and further installation pending.
+
+## 11.11.26 – Permanent Settings, content transitions and native priority (.170)
+
+The owner extends the permanent navigation safety anchors to Settings. Its card
+remains visible without an off switch; old hidden preferences and both editors
+must not hide it. Custom ordering remains allowed.
+
+The owner explicitly replaces the earlier left-menu-only transition decision:
+animate the actual main content page while leaving the left menu still. Provide
+fade, side glide, upward glide and soft light-accent variants with a calm default
+duration and bounded alternatives. Do not capture pages, allocate screenshot or
+graphics-effect buffers, start hidden decoders or change hardware ownership.
+Interruption restores the live page's original position immediately.
+
+Native OpenRGB transport remains preferred. An isolated socket failure retries
+instead of immediately switching writers; the SDK backup requires repeated
+failure and a confirmed native STOP. An unconfirmed STOP blocks SDK writes.
+Report missing/unreachable native transport explicitly. Never confuse starting
+the older installed application with a runtime fallback from the newer engine.
+
+An explicit user installation must retarget already existing recognized OHC
+startup entries to its updated user launcher. Do not silently enable missing or
+disabled startup entries, replace custom wrappers, follow file symlinks, or run
+that migration from ordinary startup. Preserve custom arguments and comments.
+
+The owner requests a new internal development version and GitHub update after
+all points are finished. The subsequent instruction on 11.11.26 authorizes
+orderly shutdown and local .170 installation. Keep GitHub publication on hold
+until the owner confirms fluid hardware output and performs the reboot test.
+
 ## 10.11.26 – Exact OHC designs own Direct controllers
 
 While an OHC design is active, every selected OpenRGB controller that reports

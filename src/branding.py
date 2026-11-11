@@ -38,19 +38,10 @@ def system_tray_icon(app_dir: Path) -> QIcon:
 
 
 def create_sidebar_branding(app_dir: Path) -> tuple[QLabel | None, QLabel]:
-    logo = QLabel()
+    from modules.navigation_settings.v1_0.artwork import SidebarArtwork
+    logo = SidebarArtwork(app_dir / "assets" / "branding" / "open-hardware-control-logo.png")
     logo.setObjectName("brandLogo")
-    logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
     logo.setAccessibleName("Logo von Open Hardware Control")
-    pixmap = QPixmap(str(app_dir / "assets" / "branding" / "open-hardware-control-logo.png"))
-    if pixmap.isNull():
-        logo = None
-    else:
-        logo.setPixmap(pixmap.scaled(
-            190, 190, Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation,
-        ))
-        logo.setFixedHeight(190)
     title = QLabel("Open Hardware\nControl")
     title.setWordWrap(True)
     title.setAlignment(Qt.AlignmentFlag.AlignCenter)

@@ -1,5 +1,20 @@
 # RGB Studio 1.15
 
+Version .171 makes pulse tails periodic and crossfades a convergence burst into
+its next resting edge pair with zero endpoint slope. Every OHC preset is
+checked at its own phase boundaries across gallery, projected physical paths,
+worker plans and GPU strips. Deliberate random lightning flashes are retained.
+The four previously grouped OHC Originals keep indices 30–33 while joining
+Spatial, Spatial, Energy and Motion. Only that redundant RGB filter is removed;
+OpenRGB hardware originals and LCD media categories stay available.
+
+Version .170 shows twelve default suggestions in the existing responsive gallery.
+`native_stream.py` extracts native rendering/recovery from the main window. One
+failed native frame retries without switching to SDK. Repeated failures require
+a confirmed native STOP before SDK ownership; an unconfirmed STOP blocks SDK.
+Transient START failures receive the same bounded recovery. Logs distinguish
+missing native transport, retry, recovery and confirmed fallback.
+
 `ram_bank.py:RgbRamBankMixin` contains the unchanged shared RAM-bank inspection
 and dialog methods extracted from the main window for its size budget. Device
 identity, serialized backend inspection, per-DIMM settings and ENE reclaim
@@ -316,3 +331,6 @@ spatial directions in global-local mode. Spatial wave travel keeps its original
 forward phase; rainbow alone needs phase inversion. Local effect reversal is
 independent of physical numbering. Without a declared path legacy frames remain
 local, and no hardware, route, count or detector setting is inferred.
+
+
+The .172 `generic_fans.py` draws original generic fan icons for 21 distinct declared LED counts in the private local reference. Selecting a card updates only the component draft; it does not import third-party artwork, infer LED wiring or write hardware.

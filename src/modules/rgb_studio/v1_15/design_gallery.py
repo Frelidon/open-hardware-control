@@ -25,7 +25,7 @@ def build_category_selector(translator, callback):
     layout = QGridLayout(host)
     layout.setContentsMargins(0, 0, 0, 0)
     buttons = {}
-    categories = ("Alle", "Ruhig", "Spektrum", "Bewegung", "Energie", "Impuls", "Räumlich", "OHC Originale", "OpenRGB Originale")
+    categories = ("Alle", "Ruhig", "Spektrum", "Bewegung", "Energie", "Impuls", "Räumlich", "OpenRGB Originale")
     for index, category in enumerate(categories):
         button = QPushButton(translator(category))
         button.setCheckable(True)
@@ -50,7 +50,7 @@ class RGBDesignGallery(QWidget):
         self.category = "Alle"
         self.view_mode = "suggestions"
         self.favorite_indices: set[int] = set()
-        self.suggestion_indices = tuple(range(max(0, len(BUILTIN_DESIGNS) - 4), len(BUILTIN_DESIGNS)))
+        self.suggestion_indices = tuple(range(max(0, len(BUILTIN_DESIGNS) - 12), len(BUILTIN_DESIGNS)))
         self.selected_index = -1
         self.active_index = -1
         self.elapsed = 0.0

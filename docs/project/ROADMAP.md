@@ -1,10 +1,34 @@
 # Roadmap
 
+## Current .175 follow-up · 11.11.26
+
+Reviewed model-level links and category/vendor filters are implemented. The
+reproducible shifted-row pointer selection is fixed. Full gate: 1,556 tests and
+five subtests pass. Packages and both rolling backups are verified; the user
+installation is running with preserved settings and healthy native workers.
+The system copy awaits OS authentication. Upload the committed internal source
+version as requested; no public tag/release is part of this upload.
+
 Open Hardware Control is developed incrementally. Features are tested before they
 are treated as stable. This file contains only active work; completed planning
 records remain in release notes, the changelog and `NEXT_VERSION_NOTES.md`.
 
 ## Current work — 3.4.29 INTERN
+
+### Owner-requested UI redesign — implementation checkpoint 11.11.26
+
+The .174 implementation passes 1,544 tests and five subtests. The primary user
+installation is running and the system package update has completed. Both
+installed trees match all 403 Python sources. Profile/plugin preservation, native workers, GPU mode and saved LCD
+restore are verified read-only. No DPI override is enabled without explicit Save.
+
+
+Two review concepts and the implementation scope are recorded in
+[UI redesign plan](UI_REDESIGN_PLAN.md): case/fan catalog, content-sized lists
+across menus, OpenLinkHub update and device UI, and localized Hardware Check
+navigation with Hardware Fix as a child. Pictures are presented before code
+changes; later local installation/restart is authorized, publication remains
+separate. This is planned work, not an implemented or installed version.
 
 ### Closure audit for 3.4.29.151–3.4.29.157
 

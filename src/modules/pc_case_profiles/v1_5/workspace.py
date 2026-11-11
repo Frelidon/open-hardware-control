@@ -6,20 +6,22 @@ from PySide6.QtWidgets import QFrame, QGridLayout, QGroupBox, QHBoxLayout, QLabe
 from thermalright_cooling import LEVITA_DISPLAY_NAME
 from modules.rgb_studio.v1_15.argb_controls import build_slot_led_button, build_slot_route_button, build_case_gpu_setup_button
 from .diagram import PCLayoutDiagram
+from modules.ui_performance.v1_1.compact_panels import Disclosure, ResponsiveColumns
+from .component_summary import ComponentSummary
 
 
 def build_case_workspace(self):
     pc_layout_box = QGroupBox("PC-Ansicht · Gehäuse, Profile und Komponentenpositionen")
     pc_layout = QVBoxLayout(pc_layout_box)
     pc_layout.setSpacing(12)
-    pc_workspace = QWidget()
-    pc_workspace_layout = QHBoxLayout(pc_workspace)
+    pc_workspace = ResponsiveColumns(700)
+    pc_workspace_layout = pc_workspace.columns
     pc_workspace_layout.setContentsMargins(0, 0, 0, 0)
     pc_workspace_layout.setSpacing(14)
     pc_profile_panel = QFrame()
     pc_profile_panel.setObjectName("compactPanel")
-    pc_profile_panel.setMinimumWidth(360)
-    pc_profile_panel.setMaximumWidth(520)
+    pc_profile_panel.setMinimumWidth(0)
+    pc_profile_panel.setMaximumWidth(16777215)
     pc_profile_layout = QVBoxLayout(pc_profile_panel)
     pc_profile_layout.setContentsMargins(14, 14, 14, 14)
     pc_profile_layout.setSpacing(12)
@@ -55,8 +57,9 @@ def build_case_workspace(self):
     pc_profile_hint.setObjectName("muted")
     pc_profile_layout.addWidget(pc_profile_hint)
     pc_profile_layout.addStretch()
-    pc_workspace_layout.addWidget(pc_profile_panel, 2)
+    pc_layout.addWidget(Disclosure(self.tr_static("Gehäuse und Profile"), pc_profile_panel))
     self.rgb_layout_diagram = PCLayoutDiagram()
+    self.rgb_layout_diagram.setMinimumSize(580, 440)
     self.rgb_layout_diagram.slot_moved.connect(self.move_rgb_layout_slot)
     self.rgb_layout_diagram.slot_resized.connect(self.resize_rgb_layout_slot)
     self.rgb_layout_diagram.fan_order_changed.connect(self.reorder_rgb_layout_slot_devices)
@@ -65,7 +68,9 @@ def build_case_workspace(self):
     self.rgb_layout_diagram.slot_focused.connect(self.focus_rgb_layout_slot)
     pc_workspace_layout.addWidget(self.rgb_layout_diagram, 3)
     from .inline_editor import CaseInspector
-    self.case_inspector = CaseInspector(self, pc_profile_panel, self.rgb_layout_diagram)
+    self.case_component_summary = ComponentSummary(self)
+    pc_workspace_layout.addWidget(self.case_component_summary, 2)
+    self.case_inspector = CaseInspector(self, self.case_component_summary, self.rgb_layout_diagram)
     pc_workspace_layout.addWidget(self.case_inspector, 2)
     pc_layout.addWidget(pc_workspace)
     layout_note = QLabel(
@@ -84,7 +89,7 @@ def build_case_workspace(self):
     )
     layout_note.setWordWrap(True)
     layout_note.setObjectName("muted")
-    pc_layout.addWidget(layout_note)
+    pc_layout.addWidget(Disclosure(self.tr_static("Hinweise"), layout_note))
     self.rgb_case_template_note = QLabel(
         "Thermaltake Retro 360 TG: exakte Herstellerdaten (493 × 235 × 467 mm, ATX/Micro-ATX/Mini-ITX, "
         "bis 360-mm-Radiator und 400-mm-GPU). Die übrigen Gehäuse sind eigene, frei anpassbare "
@@ -92,7 +97,7 @@ def build_case_workspace(self):
     )
     self.rgb_case_template_note.setWordWrap(True)
     self.rgb_case_template_note.setObjectName("infoText")
-    pc_layout.addWidget(self.rgb_case_template_note)
+    pc_layout.addWidget(Disclosure(self.tr_static("Gehäusedaten"), self.rgb_case_template_note))
     self.rgb_layout_status_label = QLabel("PC-Ansicht bereit · Positionen lassen sich direkt verschieben")
     self.rgb_layout_status_label.setWordWrap(True)
     self.rgb_layout_status_label.setObjectName("warningText")

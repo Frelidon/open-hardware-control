@@ -49,7 +49,9 @@ def test_module_visibility_cards_with_real_qt() -> None:
 
     cards = panel.findChildren(QFrame, "moduleVisibilityCard")
     assert len(cards) == len(MODULE_ROWS) == 17
-    assert len(host.navigation_module_checkboxes) == 17
+    assert len(host.navigation_module_checkboxes) == 16
+    assert "settings" not in host.navigation_module_checkboxes
+    assert host.navigation_module_status_dots["settings"].objectName() == "moduleVisibilityDotOn"
     assert len(host.navigation_module_status_dots) == 17
     lifecycle_badges = panel.findChildren(QLabel, "featureLifecycleBadge")
     assert len(lifecycle_badges) == 17
@@ -67,6 +69,18 @@ def test_module_visibility_cards_with_real_qt() -> None:
     assert host.changes[-1] == ("automations", False)
     assert host.navigation_module_status_dots["automations"].objectName() == "moduleVisibilityDotOff"
     assert "automations" in host.navigation_user_hidden
+
+
+def test_saved_hidden_settings_still_has_a_status_card_without_a_switch() -> None:
+    app = QApplication.instance() or QApplication([])
+    host = Host()
+    host.navigation_user_hidden.add("settings")
+    panel = build_module_visibility_settings(host)
+    panel.show()
+    app.processEvents()
+    assert "settings" not in host.navigation_module_checkboxes
+    assert host.navigation_module_status_dots["settings"].text() == "●"
+    assert not host.changes
 
 
 if __name__ == "__main__":

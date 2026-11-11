@@ -46,7 +46,7 @@ def exercise():
             assert widget.isVisible(), widget.objectName()
             assert origin.x() >= 0 and origin.y() >= 0, (widget.objectName(), origin)
             assert origin.x() + widget.width() <= container.width() + 1
-            assert origin.y() + widget.height() <= container.height() + 1
+            assert origin.y() + widget.height() <= container.height() + 1, (widget.objectName(), origin, widget.size(), container.size())
 
         def check_form():
             settle()

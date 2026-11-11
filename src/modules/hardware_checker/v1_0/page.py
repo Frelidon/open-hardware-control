@@ -104,7 +104,7 @@ class HardwareCheckerPage(HardwareOverviewMixin, QScrollArea):
 
         hero = QFrame(objectName="moduleHeroCard")
         hero_layout = QVBoxLayout(hero)
-        title = QLabel("Hardware-Checker")
+        title = QLabel("Hardware-Prüfung")
         title.setObjectName("heroTitle")
         intro = QLabel(
             "Prüft CPU/SMT, PCIe-Anbindung von Grafikkarten, NVMe-SSDs und RAM. "
@@ -193,6 +193,9 @@ class HardwareCheckerPage(HardwareOverviewMixin, QScrollArea):
         self.hardware_fix_panel = HardwareFixPanel(self.host, self.translate)
         self.section_tabs.addTab(checker, "Hardware-Prüfung")
         self.section_tabs.addTab(self.hardware_fix_panel, "Hardware Fix")
+        from .supported_devices import SupportedDevicesPage
+        self.supported_devices_page = SupportedDevicesPage(self.host, self.translate)
+        self.section_tabs.addTab(self.supported_devices_page, "Von OHC unterstützte Geräte")
         outer_layout.addWidget(self.section_tabs)
         self.setWidget(body)
         self._populate_cards()
@@ -476,6 +479,7 @@ class HardwareCheckerPage(HardwareOverviewMixin, QScrollArea):
         if self.report:
             self._populate(under_load=self.last_scan_under_load)
         self.hardware_fix_panel.refresh_language()
+        self.supported_devices_page.refresh_language()
 
     def _translate_detail(self, detail: str) -> str:
         dynamic = (

@@ -232,6 +232,9 @@ def prepare_user_space_update(cache_root: Path, timeout: float = 30.0) -> dict[s
     asset = release.get("archive")
     if not isinstance(asset, dict) or not asset:
         raise RuntimeError("latest OpenLinkHub release has no digest-protected amd64 archive")
+    from .stage_integrity import seal, verify
+    if cache_root.expanduser().is_symlink():
+        raise RuntimeError("OpenLinkHub cache must not be a symlink")
     root = cache_root.expanduser().resolve()
     root.mkdir(parents=True, exist_ok=True)
     if root.is_symlink() or not root.is_dir():
@@ -239,6 +242,7 @@ def prepare_user_space_update(cache_root: Path, timeout: float = 30.0) -> dict[s
     digest = str(asset["digest"]).split(":", 1)[1]
     final_stage = root / f"stage-{release['version']}-{digest[:12]}"
     if (final_stage / "OpenLinkHub").is_file() and (final_stage / "web").is_dir():
+        verify(final_stage, digest)
         return {"stage": str(final_stage), "version": str(release["version"]), "digest": digest}
     archive = root / str(asset["name"])
     temporary_archive = archive.with_suffix(".download")
@@ -264,4 +268,5 @@ def prepare_user_space_update(cache_root: Path, timeout: float = 30.0) -> dict[s
         if final_stage.exists():
             raise RuntimeError("stale OpenLinkHub staging directory blocks the update")
         extracted.rename(final_stage)
+        seal(final_stage, digest)
     return {"stage": str(final_stage), "version": str(release["version"]), "digest": digest}

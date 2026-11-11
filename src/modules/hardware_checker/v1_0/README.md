@@ -24,3 +24,12 @@ Fristen und Signalantworten bleiben an den jeweiligen Hilfs-/Lastprozess
 gebunden. Ein früh beendeter Test kann daher keinen später gestarteten Test
 scannen oder stoppen; das Beenden leert die Prozessidentitäten vor der
 begrenzten Bereinigung, sodass verspätete Antworten wirkungslos bleiben.
+
+
+The .172 `navigation.py` synchronizes Hardware Check/Fix/Supported Devices without duplicating page owners. `supported_devices.py` presents nine described support boundaries with original symbols, localized text, search and verified manufacturer/backend links. Locally confirmed models are distinguished from backend-dependent support.
+
+.175: `device_catalog.py` owns 41 individual model/backend records and reviewed
+manufacturer/product destinations; `supported_devices.py` filters category,
+vendor and search with stable IDs and per-category vendor memory. Unknown
+product URLs produce no button. Existing GPU profile names remain explicitly
+backend-dependent, not hardware approval. See `docs/hardware/SUPPORTED_DEVICE_LINKS.md`.

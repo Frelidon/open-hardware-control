@@ -11,11 +11,12 @@ import time
 from typing import Any
 from shiboken6 import isValid
 
-from PySide6.QtCore import QChildEvent, QEvent, QObject, QPointF, QProcess, Qt, QTimer, QVariantAnimation
-from PySide6.QtGui import QColor, QLinearGradient, QPainter, QPen
+from PySide6.QtCore import QChildEvent, QEasingCurve, QEvent, QObject, QProcess, QTimer, QVariantAnimation
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QApplication, QCheckBox, QComboBox, QFormLayout, QGroupBox, QLabel, QTabWidget, QVBoxLayout, QWidget
 
 from .cache import CACHE_BUDGETS_MB, DEFAULT_CACHE_MB, cache_budget_mb, cache_root
+from .page_transition import TransitionOverlay, transition_duration
 from modules.platform_support.v1_0 import helper_command
 
 
@@ -24,45 +25,6 @@ _USER_ACTIVITY_EVENTS = frozenset({
     QEvent.Type.TouchBegin, QEvent.Type.TabletPress,
 })
 _OVERLAY_EVENTS = frozenset({QEvent.Type.Resize, QEvent.Type.Hide, QEvent.Type.Close})
-
-
-class TransitionOverlay(QWidget):
-    """Paint only a small overlay; never capture or rerender the switched page."""
-
-    def __init__(self, parent: QWidget, style: str, accent: QColor) -> None:
-        super().__init__(parent)
-        self.style_name = style
-        self.accent = accent
-        self.progress = 0.0
-        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
-        self.setGeometry(parent.rect())
-
-    def set_progress(self, value: object) -> None:
-        self.progress = max(0.0, min(1.0, float(value)))
-        self.update()
-
-    def paintEvent(self, _event: QEvent) -> None:  # noqa: N802
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
-        fade = 1.0 - self.progress
-        if self.style_name == "fade":
-            color = QColor(self.accent)
-            color.setAlpha(round(30 * fade))
-            painter.fillRect(self.rect(), color)
-        elif self.style_name == "slide":
-            width = max(48, self.width() // 7)
-            x = round((self.width() + width) * self.progress) - width
-            gradient = QLinearGradient(QPointF(x, 0), QPointF(x + width, 0))
-            transparent = QColor(self.accent); transparent.setAlpha(0)
-            bright = QColor(self.accent); bright.setAlpha(round(100 * fade))
-            gradient.setColorAt(0.0, transparent); gradient.setColorAt(0.5, bright); gradient.setColorAt(1.0, transparent)
-            painter.fillRect(x, 0, width, 3, gradient)
-        else:
-            color = QColor(self.accent)
-            color.setAlpha(round(115 * fade))
-            painter.setPen(QPen(color, 2))
-            painter.drawRect(self.rect().adjusted(1, 1, -2, -2))
 
 
 class UiPerformanceController(QObject):
@@ -113,32 +75,30 @@ class UiPerformanceController(QObject):
 
     def play(self, page: QWidget) -> None:
         if self.closing or getattr(self.host, "explicit_quit_requested", False): return
-        navigation = getattr(self.host, "navigation", None)
-        if navigation is None:
+        if (not isValid(page) or not page.isVisible() or self.host.isMinimized()
+                or page is not self.host.tabs.currentWidget()
+                or not self.settings.value("performance/transitions_enabled", True, type=bool)):
             return
-        page = navigation.viewport()
-        if not page.isVisible() or self.host.isMinimized():
-            return
+        self.stop_transitions()
         style = str(self.settings.value("performance/transition_style", "fade") or "fade")
-        if style not in {"fade", "slide", "glow"}:
+        if style not in {"fade", "slide", "rise", "glow"}:
             style = "fade"
-        old = self.animations.pop(page, None)
-        if old is not None:
-            old.stop()
-            old.deleteLater()
         overlay = self.overlays.get(page)
         if overlay is None:
             overlay = TransitionOverlay(page, style, QColor(getattr(self.host, "accent_hex", "#00aaff")))
             self.overlays[page] = overlay
             page.installEventFilter(self)
+            page.destroyed.connect(lambda _obj=None, target=page: self._forget_page(target))
         overlay.style_name = style
         overlay.accent = QColor(getattr(self.host, "accent_hex", "#00aaff"))
-        overlay.setGeometry(page.rect()); overlay.raise_(); overlay.show()
+        overlay.prepare(style)
+        overlay.raise_(); overlay.show()
         animation = QVariantAnimation(self)
-        animation.setDuration(110 if style == "fade" else 145)
+        animation.setDuration(transition_duration(self.settings))
+        animation.setEasingCurve(QEasingCurve.Type.OutCubic)
         animation.setStartValue(0.0); animation.setEndValue(1.0)
         animation.valueChanged.connect(overlay.set_progress)
-        animation.finished.connect(overlay.hide)
+        animation.finished.connect(overlay.finish)
         animation.finished.connect(lambda target=page: self.animations.pop(target, None))
         animation.finished.connect(animation.deleteLater)
         self.animations[page] = animation
@@ -157,17 +117,32 @@ class UiPerformanceController(QObject):
             child = event.child()
             if isinstance(child, QWidget) and self._belongs_to_host(watched):
                 self._queue_tab_scan()
+        elif watched is self.host and event_type in {QEvent.Type.Hide, QEvent.Type.WindowStateChange}:
+            if not self.host.isVisible() or self.host.isMinimized():
+                self.stop_transitions()
         elif event_type in _OVERLAY_EVENTS and isinstance(watched, QWidget) and watched in self.overlays:
-            overlay = self.overlays[watched]
-            if event_type == QEvent.Type.Resize:
-                overlay.setGeometry(watched.rect())
-            else:
-                animation = self.animations.pop(watched, None)
-                if animation is not None:
-                    animation.stop()
-                    animation.deleteLater()
-                overlay.hide()
+            self._stop_transition(watched)
         return False
+
+    def _stop_transition(self, page: QWidget) -> None:
+        animation = self.animations.pop(page, None)
+        if animation is not None:
+            animation.stop()
+            animation.deleteLater()
+        overlay = self.overlays.get(page)
+        if overlay is not None and isValid(overlay):
+            overlay.finish()
+
+    def stop_transitions(self) -> None:
+        for page in tuple(self.animations):
+            self._stop_transition(page)
+
+    def _forget_page(self, page: QWidget) -> None:
+        self.overlays.pop(page, None)
+        animation = self.animations.pop(page, None)
+        if animation is not None and isValid(animation):
+            animation.stop()
+            animation.deleteLater()
 
     def schedule_memory_reclaim(self) -> None:
         """Debounce reclamation until hidden preview decoders have stopped."""
@@ -244,10 +219,7 @@ class UiPerformanceController(QObject):
         self.closing = True
         self.maintenance_timer.stop()
         self.memory_reclaim_timer.stop()
-        for animation in self.animations.values():
-            animation.stop(); animation.deleteLater()
-        self.animations.clear()
-        for overlay in self.overlays.values(): overlay.hide()
+        self.stop_transitions()
         if self.cache_worker.state() != QProcess.ProcessState.NotRunning:
             self.cache_worker.terminate()
             if not self.cache_worker.waitForFinished(300):
@@ -262,19 +234,29 @@ def _save_performance_setting(host: Any, key: str, value: object) -> None:
     host.settings.setValue(key, value)
     host.settings.sync()
     controller = getattr(host, "ui_performance", None)
-    if key.endswith("ssd_cache_mb") and controller is not None:
-        controller.schedule_cache_maintenance()
+    if controller is not None:
+        if key.endswith("ssd_cache_mb"):
+            controller.schedule_cache_maintenance()
+        elif key.startswith("performance/transition"):
+            controller.stop_transitions()
 
 
 def build_performance_settings(host: Any, layout: QVBoxLayout) -> None:
     box = QGroupBox("Leistung und SSD-Cache")
     form = QFormLayout(box)
-    host.page_transitions_checkbox = QCheckBox("Menüwechsel animieren")
+    host.page_transitions_checkbox = QCheckBox("Seitenwechsel animieren")
     host.page_transitions_checkbox.setChecked(host.settings.value("performance/transitions_enabled", True, type=bool))
     host.page_transition_style_combo = QComboBox()
-    for label, key in (("Sanft einblenden", "fade"), ("Seitlich gleiten", "slide"), ("Lichtakzent", "glow")):
+    for label, key in (("Sanft einblenden", "fade"), ("Seitlich gleiten", "slide"), ("Von unten gleiten", "rise"), ("Lichtakzent", "glow")):
         host.page_transition_style_combo.addItem(label, key)
     host.page_transition_style_combo.setCurrentIndex(max(0, host.page_transition_style_combo.findData(host.settings.value("performance/transition_style", "fade"))))
+    host.page_transition_duration_combo = QComboBox()
+    for label, duration in (("Zügig · 220 ms", 220), ("Ruhig · 380 ms", 380), ("Langsam · 550 ms", 550)):
+        host.page_transition_duration_combo.addItem(label, duration)
+    host.page_transition_duration_combo.setCurrentIndex(
+        host.page_transition_duration_combo.findData(transition_duration(host.settings)))
+    host.page_transition_duration_combo.currentIndexChanged.connect(lambda: _save_performance_setting(
+        host, "performance/transition_duration_ms", host.page_transition_duration_combo.currentData()))
     host.ssd_cache_combo = QComboBox()
     for label, value in (("0 GB", 0), ("0,5 GB", 512), ("1 GB", 1024), ("2 GB", 2048), ("4 GB", 4096)):
         host.ssd_cache_combo.addItem(label, value)
@@ -286,6 +268,7 @@ def build_performance_settings(host: Any, layout: QVBoxLayout) -> None:
     host.ssd_cache_combo.currentIndexChanged.connect(lambda: _save_performance_setting(host, "performance/ssd_cache_mb", host.ssd_cache_combo.currentData()))
     form.addRow(host.page_transitions_checkbox)
     form.addRow("Übergang", host.page_transition_style_combo)
+    form.addRow("Übergangsdauer", host.page_transition_duration_combo)
     form.addRow("SSD-Cache", host.ssd_cache_combo)
     form.addRow(note)
     layout.addWidget(box)

@@ -125,7 +125,7 @@ BUILTIN_DESIGN_CATEGORIES: tuple[str, ...] = (
     "Impuls", "Impuls", "Energie", "Energie", "Spektrum", "Bewegung",
     "Impuls", "Ruhig", "Energie", "Bewegung",
     "Räumlich", "Räumlich", "Räumlich", "Räumlich", "Räumlich", "Räumlich",
-    "OHC Originale", "OHC Originale", "OHC Originale", "OHC Originale",
+    "Räumlich", "Räumlich", "Energie", "Bewegung",
 )
 
 
@@ -203,7 +203,11 @@ def render_effect(config: RGBEffectConfig, led_count: int, elapsed_seconds: floa
                  .5 + .5 * math.sin((p * 2 - phase * .30) * math.tau))) for index in range(count)]
     elif cfg.effect_id == "pulse":
         local = (abs(phase) * 0.44) % 1.0
-        strength = max(0.05, math.exp(-55 * (local - 0.12) ** 2), math.exp(-55 * (local - 0.34) ** 2))
+        # Include the neighbouring cycle's pulse before wrapping. Truncating
+        # the Gaussian tails made each restart jump from 5% to about 45%.
+        first = min(abs(local - 0.12), 1.0 - abs(local - 0.12))
+        second = min(abs(local - 0.34), 1.0 - abs(local - 0.34))
+        strength = max(0.05, math.exp(-55 * first ** 2), math.exp(-55 * second ** 2))
         left, right = (primary, secondary) if int(abs(phase) * .44) % 2 == 0 else (secondary, primary)
         transition = smooth_fraction(max(0.0, min(1.0, (local - .70) / .30)))
         base, flash_color = _mix(left, right, transition), _mix(right, left, transition)
@@ -233,7 +237,13 @@ def render_effect(config: RGBEffectConfig, led_count: int, elapsed_seconds: floa
             distance = min(abs(position - left_head), abs(position - right_head))
             head = math.exp(-0.5 * (distance / width) ** 2)
             centre = math.exp(-0.5 * ((position - 0.5) / max(width, 0.09)) ** 2) * burst
-            frame.append(_mix(_scale(primary, 0.10 + 0.16 * centre), secondary, max(head, centre)))
+            color = _mix(_scale(primary, 0.10 + 0.16 * centre), secondary, max(head, centre))
+            # Overlap the centre burst with the next pair at the outer edges.
+            # Smoothstep has zero endpoint slopes, matching the next travel's
+            # resting initial state in either playback direction.
+            incoming = math.exp(-0.5 * (min(position, 1.0 - position) / width) ** 2)
+            initial = _mix(_scale(primary, 0.10), secondary, incoming)
+            frame.append(_mix(color, initial, burst))
     elif cfg.effect_id == "crossflow":
         left_head = (phase * 0.16) % 1.0
         right_head = (-phase * 0.13) % 1.0

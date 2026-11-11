@@ -1,5 +1,61 @@
 # Changelog
 
+## 3.4.29.175 INTERN · 11.11.26
+
+- Organize 41 model/backend entries by device category and vendor, with separate manufacturer and reviewed product links. Omit missing product buttons. Existing GPU model profiles remain explicitly backend-dependent, not new hardware approvals.
+- Fix reproducible sidebar jumps when collapsing submenu rows under a still-held pointer. Complete native pointer selection before requesting a page; preserve immediate keyboard/programmatic selection and customization drag/drop.
+- Add four-language catalog labels and real pointer regressions from LCD/cooling/hardware submenus. Preserve hardware ownership, native RGB rendering, LCD state and saved settings.
+
+## 3.4.29.174 INTERN · 11.11.26
+
+- Keep the chosen startup DPI independently from the backend’s active stage. Explicit opt-in records a private per-profile rule and a fixed optional user-service pre-start helper; physical DPI changes no longer overwrite that preference. Preserve native behavior on reset, guard profile identity/path, and roll back the profile/rule/drop-in together. No admin grant, direct USB write or automatic opt-in.
+
+## 3.4.29.173 INTERN · 11.11.26
+
+- Regenerate the original startup-DPI house artwork when the application palette or accent changes, keeping it legible in both themes. Retain every .172 feature and saved setting. Real Qt coverage checks icon regeneration.
+
+## 3.4.29.172 INTERN · 11.11.26 (validated local build)
+
+- Consolidate the case workspace into Overview, Components and Distances/Depth, preserving original diagrams, animation, saved topology and guarded editors. Add a direct component draft inspector and original generic fan illustrations for 21 reference LED counts.
+- Size lists, tables and trees from their content, coalescing model/font/style events without polling. Keep mouse illustrations separate from assignments and adapt columns to width.
+- Fetch OpenLinkHub .9.4 device details, retain reported DPI stages, and expose home-marked startup DPI plus named user profiles. The startup-stage action backs up the existing JSON, stops only the user service, preserves other fields and rolls back on failure. It is not a new USB protocol or firmware operation.
+- Verify prepared backend payloads, correct daemon-reload arguments and check the new service executable and loopback API before accepting an update. The local .9.2→.9.4 backend update is confirmed with a private backup.
+- Add Hardware Fix and described supported-device cards below consistently localized Hardware Checker navigation. Retain the original overview logo with rounded clipping and palette-aware original category artwork.
+- The complete release gate passes 1,529 tests and five subtests, including four-language Qt construction, geometry and guarded-update regressions. Isolated light/dark renders are reviewed. Package and local install evidence are recorded separately. No GitHub publication.
+
+## 3.4.29.171 INTERN · 11.11.26 (prepared)
+
+- Remove repeated-cycle jumps from Doppelimpuls/Nebula Pulse and all three
+  convergence presets by retaining periodic pulse tails and overlapping the
+  final centre burst with the next edge pair. Audit every OHC preset through
+  gallery, worker, physical projection and GPU strip rendering.
+- Remove the redundant RGB Studio OHC Originals category. Reclassify Prism
+  Drift/Twin Wyrm Orbit as Spatial, Neon Particle Garden as Energy and Circuit
+  Chase as Motion, preserving stable indices, favourites and all 34 presets.
+  Keep Spatial, OpenRGB Originals and the separate LCD media library intact.
+- Translate the existing accessible RGB gallery name in DE/EN/ES/FR.
+- Record owner-confirmed fluid .170 output after reboot; .171 is prepared
+  without changing the running installation or publishing to GitHub.
+
+## 3.4.29.170 INTERN · 11.11.26 (in progress)
+
+- Keep Settings permanently visible, remove its visibility switch from both
+  editors and ignore old stored hide preferences while preserving custom order.
+- Animate the actual main content page with fade, side/up glide or light accent,
+  selectable 220/380/550-ms duration and immediate cleanup on interruption.
+  Keep the left navigation still and avoid page snapshots/graphics-effect buffers.
+- Show twelve default RGB design suggestions in the responsive gallery.
+- Prefer native RGB transport through transient failures. Retry before switching
+  to SDK and require a confirmed native STOP before the backup takes ownership.
+  Extract rendering/recovery into a focused module and validate malformed plugin
+  responses/failed connection cleanup. Preserve the .169 External Control fix.
+- Repair existing OHC autostart targets during an explicit user installation,
+  preventing a new user copy from leaving the old system copy on autostart.
+  Preserve disabled/missing startup, custom arguments, wrappers and symlinks.
+- Diagnose the host's .168/OpenRGB 1.0 autostart as the actual old active path;
+  the newer native backend is prepared but absent from the installed application.
+  Installation, optical validation and GitHub publication await owner completion.
+
 ## 3.4.29.169 STABLE · 10.11.26
 
 - Extract the unchanged shared RAM-bank inspection/dialog into its focused

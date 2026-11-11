@@ -1,8 +1,17 @@
-# Open Hardware Control 3.4.29.169 STABLE – GitHub-Veröffentlichung
+# Open Hardware Control 3.4.29.175 STABLE – GitHub-Veröffentlichung (geplant)
+
+## Abschluss und Installationsprüfung
+
+Der Eigentümer beauftragt am 11.11.26 für `.175` nach vollständiger Prüfung und
+lokaler Installation den GitHub-Upload. Der interne Entwicklungszweig
+`codex/3.4.29-intern` wird als sauberer Commit normal hochgeladen. Diese Freigabe
+hebt den bisherigen Upload-Halt auf; sie erzeugt keinen öffentlichen STABLE-Tag
+oder GitHub-Release. Die folgenden STABLE-Befehle bleiben ein gesonderter,
+vorbereiteter Veröffentlichungsweg.
 
 Repository: <https://github.com/Frelidon/open-hardware-control>
 
-Dieser Stand ist mit `BUILD_CHANNEL=STABLE` für eine öffentliche Veröffentlichung vorbereitet. Ein Push, Tag oder GitHub-Release erfolgt ausschließlich nach einem ausdrücklichen Auftrag des Projektinhabers, erfolgreicher vollständiger Prüfung, sauberem Commit und realem KDE-/Hardwaretest.
+Die Anwendung bleibt während der Entwicklung auf `BUILD_CHANNEL=INTERN`. Die folgenden STABLE-Beispiele gelten erst nach abschließender Prüfung und Freigabe des Eigentümers. Ein Push, Tag oder GitHub-Release erfolgt ausschließlich nach einem ausdrücklichen Auftrag des Projektinhabers, erfolgreicher vollständiger Prüfung, sauberem Commit und realem KDE-/Hardwaretest.
 
 ## Repository und Anmeldung prüfen
 
@@ -28,19 +37,19 @@ Das erwartete Remote ist `https://github.com/Frelidon/open-hardware-control.git`
 
 ```bash
 ./scripts/check_release.sh
-./scripts/build_release.sh 3.4.29.169
+./scripts/build_release.sh 3.4.29.175
 cd dist
 sha256sum -c SHA256SUMS
 ```
 
 Erwartete Dateien:
 
-- `open_hardware_control_v3_4_29_169.zip`
-- `open-hardware-control_3.4.29.169_all.deb`
-- `open-hardware-control-3.4.29.169-1.noarch.rpm`
-- `open-hardware-control-3.4.29.169-source.tar.gz`
-- `Entwicklerpaket 3.4.29.169.zip`
-- `Open_Hardware_Control_3.4.29.169_LOCAL_AI.gitbundle`
+- `open_hardware_control_v3_4_29_175.zip`
+- `open-hardware-control_3.4.29.175_all.deb`
+- `open-hardware-control-3.4.29.175-1.noarch.rpm`
+- `open-hardware-control-3.4.29.175-source.tar.gz`
+- `Entwicklerpaket 3.4.29.175.zip`
+- `Open_Hardware_Control_3.4.29.175_LOCAL_AI.gitbundle`
 - `SHA256SUMS`
 
 Der Build muss außerdem die externe Zwei-Versionen-Sicherung aus `RELEASE_BACKUP_POLICY.md` vollständig aktualisieren; beide aufbewahrten Versionen werden in ihren jeweiligen Ordnern erneut mit `sha256sum -c SHA256SUMS` geprüft.
@@ -51,16 +60,16 @@ Nach sauberem Commit wird der geprüfte Stand zuerst ohne Force-Push auf `main` 
 
 ```bash
 git push origin main
-git tag -a v3.4.29.169 -m "Open Hardware Control v3.4.29.169"
-git push origin v3.4.29.169
+git tag -a v3.4.29.175 -m "Open Hardware Control v3.4.29.175"
+git push origin v3.4.29.175
 ```
 
-Der Workflow `.github/workflows/release.yml` wiederholt die Tests, baut sämtliche Artefakte aus genau diesem Tag und erstellt den öffentlichen Release mit `docs/releases/RELEASE_NOTES_v3.4.29.169.md`.
+Der Workflow `.github/workflows/release.yml` wiederholt die Tests, baut sämtliche Artefakte aus genau diesem Tag und erstellt den öffentlichen Release mit `docs/releases/RELEASE_NOTES_v3.4.29.175.md`.
 
 Kontrolle:
 
 ```bash
-gh release view v3.4.29.169 --web
+gh release view v3.4.29.175 --web
 ```
 
 ## Repository-Beschreibung und Topics

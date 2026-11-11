@@ -1,5 +1,9 @@
 # Installation unter Linux
 
+Entwicklungshinweis 11.11.26: `.171 INTERN` wird vorbereitet; `.170` ist installiert. Erst nach
+Abschluss aller Eigentümerpunkte installieren und auf GitHub aktualisieren.
+Die folgenden veröffentlichten `.169`-Beispiele bleiben als Referenz erhalten.
+
 Diese Anleitung gilt für **Open Hardware Control by Frelidon 3.4.29.169 STABLE**.
 Lade die Pakete aus dem [GitHub-Release](https://github.com/Frelidon/open-hardware-control/releases/tag/v3.4.29.169)
 und prüfe sie mit der dortigen `SHA256SUMS` (`sha256sum -c SHA256SUMS`).

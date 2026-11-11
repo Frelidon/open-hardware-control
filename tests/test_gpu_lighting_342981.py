@@ -25,7 +25,10 @@ def test_sapphire_designs_use_reported_animated_modes_not_external_or_single_sta
 
 
 def test_selected_direct_source_keeps_external_capable_gpu_in_external_control():
-    assert gpu_mode_for_effect(GPU, "wave", IDS, {}, [SOURCE]) == "External Control"
+    # The owner's .168 log shows these designs resetting the GPU before a manual
+    # External Control click. Every new start/design must retain that handoff.
+    for effect in ("wave", "depthwave", "sparkle", "spinner", "lightning"):
+        assert gpu_mode_for_effect(GPU, effect, IDS, {}, [SOURCE]) == "External Control"
     assert normalize_gpu_routes(None) == {}
 
 

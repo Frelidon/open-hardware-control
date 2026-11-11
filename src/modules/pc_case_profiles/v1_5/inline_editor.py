@@ -45,6 +45,8 @@ class CaseInspector(QFrame):
         remember(self.host, self.title, text=canonical(self.host, title))
         if hasattr(self.host, "case_page_index"):
             self.host.tabs.setCurrentIndex(self.host.case_page_index)
+        if hasattr(self.host, "case_sections"):
+            self.host.case_sections.setCurrentIndex(0)
         self.profile_panel.hide()
         self.diagram.setMinimumWidth(360)
         self.show()
@@ -120,7 +122,13 @@ class CaseInspector(QFrame):
     def _fit_page(self):
         page = self.host.tabs.currentWidget()
         if self.active_dialog is not None and self.is_current(self.generation) and isinstance(page, QScrollArea):
-            page.ensureWidgetVisible(self, 0, 0)
+            layout = self.active_dialog.layout()
+            if layout is not None:
+                natural = layout.minimumSize().height() + self.title.height() + 48
+                self.setMinimumHeight(max(480, natural))
+            from PySide6.QtWidgets import QDialogButtonBox
+            footer = self.active_dialog.findChild(QDialogButtonBox)
+            page.ensureWidgetVisible(footer if footer is not None else self, 0, 12)
 
     def eventFilter(self, watched, event):  # noqa: N802
         if self.isHidden(): return False

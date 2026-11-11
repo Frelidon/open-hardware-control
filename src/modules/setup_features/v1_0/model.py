@@ -39,7 +39,7 @@ def feature_choices(platform: str | None = None) -> tuple[FeatureChoice, ...]:
         item("lcd", "LCD & Displayeffekte", "Verwaltet Bilder, Videos, Live-Werte und zeitgesteuerte Designs für unterstützte Hardware-Displays.", "▣", linux or windows, ("lcd", "display_effects")),
         item("gpu", "Grafikkarte", "Zeigt GPU-Messwerte; sichere Lüfter- und Leistungsfunktionen erscheinen nur mit geprüftem Backend.", "◆", linux or windows, ("gpu",)),
         item("case", "Gehäuseansicht", "Ordnet Lüfter, LED-Ringe, Streifen und Komponenten räumlich an und zeigt den Effektverlauf.", "▥", linux or windows, ("case",)),
-        item("hardware_checker", "Hardware-Checker", "Stellt CPU, Mainboard, Sockel, GPU, NVMe und RAM in einer lesbaren Übersicht zusammen.", "✓", linux or windows, ("hardware_checker",)),
+        item("hardware_checker", "Hardware-Prüfung", "Stellt CPU, Mainboard, Sockel, GPU, NVMe und RAM in einer lesbaren Übersicht zusammen.", "✓", linux or windows, ("hardware_checker",)),
         item("snapshots", "Snapshot-Manager", "Verwaltet unter Linux Snapper/Btrfs-Snapshots mit enger Polkit-Freigabe und Spielschutz.", "◫", linux, ("snapshot_manager",), note="Linux · Snapper/Btrfs"),
         item("automation", "Automationen & Profile", "Wechselt Gesamtprofile nach Zeit oder beim Start eines Spiels beziehungsweise Programms.", "⌁", linux or windows, ("automations", "profiles")),
         item("wallpaper", "Wallpaper Engine", "Steuert vorhandene Wallpaper-Engine-Inhalte über den passenden KDE- oder Windows-Adapter.", "▧", linux or windows, ("wallpaper_engine",)),

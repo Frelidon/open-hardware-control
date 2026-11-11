@@ -153,6 +153,12 @@ class UiThemeMixin:
             nav_palette.setColor(QPalette.ColorRole.WindowText, QColor(nav_item_color))
             nav_palette.setColor(QPalette.ColorRole.HighlightedText, QColor(nav_selected_color))
             self.navigation.setPalette(nav_palette)
+        from modules.navigation_settings.v1_0.artwork import refresh_navigation_art
+        refresh_navigation_art(self)
+        from modules.openlinkhub_update.v1_0.mouse_ui import refresh_mouse_icons
+        refresh_mouse_icons(self)
+        if hasattr(self, "hardware_checker_page"):
+            self.hardware_checker_page.supported_devices_page.refresh_language()
         if hasattr(self, "pump_curve_table"):
             self.pump_curve_table[2].set_accent_color(accent)
         if hasattr(self, "fan_curve_table"):

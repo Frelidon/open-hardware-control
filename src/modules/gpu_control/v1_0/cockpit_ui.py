@@ -254,7 +254,7 @@ class GpuCockpitUiMixin:
         layout = QVBoxLayout(page)
         self.hardware = self._table()
         layout.addWidget(self.hardware)
-        check = QPushButton("PCIe und PC-System im Hardware-Checker prüfen")
+        check = QPushButton("PCIe und PC-System in der Hardware-Prüfung prüfen")
         check.clicked.connect(lambda: self.host.tabs.setCurrentIndex(self.host.hardware_checker_page_index))
         layout.addWidget(check)
         self.sections.addTab(page, "Hardware")

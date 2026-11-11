@@ -10,6 +10,8 @@ arbitrary JSON are never accepted from the GUI.
 
 from __future__ import annotations
 
+from modules.openlinkhub_update.v1_0.mouse_profiles import mouse_metadata
+
 import argparse
 import hashlib
 import ipaddress
@@ -60,6 +62,9 @@ WRITE_ENDPOINTS = {
     "lcd-rotation": ("POST", "/api/lcd/rotation"),
     "lcd-profile": ("POST", "/api/lcd/profile"),
     "mouse-dpi": ("POST", "/api/mouse/dpi"),
+    "mouse-default-dpi": ("OFFLINE", "/api/mouse/dpi"),
+    "mouse-profile-save": ("PUT", "/api/userProfile"),
+    "mouse-profile-change": ("POST", "/api/userProfile/change"),
     "mouse-polling": ("POST", "/api/mouse/pollingRate"),
     "mouse-sleep": ("POST", "/api/mouse/sleep"),
     "mouse-angle-snapping": ("POST", "/api/mouse/angleSnapping"),
@@ -274,10 +279,17 @@ def validate_write_payload(action: str, payload: Any) -> dict[str, Any]:
             "channelId": _safe_int(payload, "channel_id", 0, 255),
             "rotation": _safe_choice(payload, "rotation", {0, 1, 2, 3}),
         }
+    if action == "mouse-default-dpi":
+        return {"_controlId": control_id, "stage": _safe_int(payload, "stage", -1, 7)}
+    if action in {"mouse-profile-save", "mouse-profile-change"}:
+        name = _safe_text(payload, "profile", maximum=48)
+        if not re.fullmatch(r"[A-Za-z0-9_-]{1,48}", name):
+            raise ValueError("Profilname: A-Z, 0-9, _ und -")
+        return {"_controlId": control_id, "userProfileName": name}
     if action == "mouse-dpi":
         stages = payload.get("stages")
-        if not isinstance(stages, dict) or set(stages) != {"0", "1", "2", "3", "4"}:
-            raise ValueError("Es werden genau fünf DPI-Stufen benötigt")
+        if not isinstance(stages, dict) or not 1 <= len(stages) <= 8 or any(not re.fullmatch(r"[0-7]", str(key)) for key in stages):
+            raise ValueError("Ungültige DPI-Stufen")
         clean_stages = {
             key: _safe_int({"dpi": value}, "dpi", 100, 30000)
             for key, value in stages.items()
@@ -384,6 +396,9 @@ def run_write_action(action: str, payload: Any, api_url: str = DEFAULT_API_URL) 
     device_id = _resolve_device_id(api_url, control_id)
     if action == "macro-create-recording":
         return _create_recorded_macro(api_url, clean_payload, device_id)
+    if action == "mouse-default-dpi":
+        from modules.openlinkhub_update.v1_0.mouse_profiles import set_startup_stage
+        return set_startup_stage(device_id, clean_payload["stage"], _api_get, api_url)
     clean_payload["deviceId"] = device_id
     method, endpoint = WRITE_ENDPOINTS[action]
     _api_request(api_url, endpoint, method=method, payload=clean_payload, timeout=5.0)
@@ -755,6 +770,7 @@ def summarize_devices(payload: Any) -> list[dict[str, Any]]:
             "has_speed": any(bool(channel.get("has_speed")) for channel in channels),
             "has_lcd": any(bool(channel.get("lcd_serial_present")) for channel in channels) or "lcd" in product.casefold(),
             "mouse_assignments": _mouse_assignments(item) if kind == "mouse" else [],
+            "mouse_profile": mouse_metadata(detail) if kind == "mouse" else {},
         })
     return devices
 
@@ -834,7 +850,22 @@ def collect_status(api_url: str = DEFAULT_API_URL) -> OpenLinkHubStatus:
     reachable = False
     error = ""
     try:
-        devices = summarize_devices(_api_get(normalized, "/api/devices/"))
+        inventory = _api_get(normalized, "/api/devices/")
+        raw = inventory.get("devices", {}) if isinstance(inventory, dict) else {}
+        # .9.4 inventory omits GetDevice. Fetch bounded details off the GUI thread.
+        if isinstance(raw, dict):
+            for key, item in list(raw.items())[:16]:
+                if not isinstance(item, dict) or isinstance(item.get("GetDevice"), dict) or item.get("Product") == "Cluster":
+                    continue
+                if not re.fullmatch(r"[A-Za-z0-9_-]{1,128}", str(key)):
+                    continue
+                try:
+                    detail = _api_get(normalized, "/api/devices/" + str(key), timeout=.4)
+                    if isinstance(detail, dict) and isinstance(detail.get("device"), dict):
+                        item["GetDevice"] = detail["device"]
+                except (OSError, ValueError, RuntimeError):
+                    capability_errors.append("Gerätedetails nicht erreichbar")
+        devices = summarize_devices(inventory)
         reachable = True
     except (HTTPError, URLError, TimeoutError, OSError, ValueError, RuntimeError, json.JSONDecodeError) as exc:
         error = str(exc)

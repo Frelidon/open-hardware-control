@@ -54,7 +54,7 @@ def test_four_original_display_loops_and_matching_rgb_profiles_are_bundled():
     assert [title for title, _config in BUILTIN_DESIGNS[-4:]] == [
         "Prism Drift", "Twin Wyrm Orbit", "Neon Particle Garden", "Circuit Chase",
     ]
-    assert BUILTIN_DESIGN_CATEGORIES[-4:] == ("OHC Originale",) * 4
+    assert BUILTIN_DESIGN_CATEGORIES[-4:] == ("Räumlich", "Räumlich", "Energie", "Bewegung")
 
 
 def test_automation_probe_and_mangohud_path_are_not_shell_executed():

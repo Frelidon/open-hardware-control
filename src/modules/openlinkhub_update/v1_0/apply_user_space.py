@@ -13,13 +13,25 @@ import shutil
 import subprocess
 import time
 
+try:
+    from .health import wait_ready
+    from .stage_integrity import verify
+except ImportError:  # Standalone helper process, never the GUI thread.
+    from health import wait_ready
+    from stage_integrity import verify
+
 
 SERVICE_NAME = "OpenLinkHub.service"
 
 
 def _run_systemctl(action: str) -> None:
+    if action not in {"stop", "start", "daemon-reload"}:
+        raise ValueError("unsupported OpenLinkHub service action")
+    command = ["systemctl", "--user", action]
+    if action != "daemon-reload":
+        command.append(SERVICE_NAME)
     result = subprocess.run(
-        ["systemctl", "--user", action, SERVICE_NAME],
+        command,
         capture_output=True, text=True, timeout=20, check=False,
     )
     if result.returncode != 0:
@@ -59,6 +71,8 @@ def _preserve_user_data(backup: Path, installed: Path) -> None:
 
 def apply_update(stage: Path, cache_root: Path) -> dict[str, object]:
     root = cache_root.expanduser().resolve()
+    if stage.expanduser().is_symlink():
+        raise RuntimeError("prepared OpenLinkHub stage must not be a symlink")
     candidate = stage.expanduser().resolve()
     try:
         candidate.relative_to(root)
@@ -67,22 +81,25 @@ def apply_update(stage: Path, cache_root: Path) -> dict[str, object]:
     if candidate.is_symlink() or not (candidate / "OpenLinkHub").is_file() or not (candidate / "web").is_dir():
         raise RuntimeError("prepared OpenLinkHub update is incomplete")
     installed = _installation_directory()
+    verify(candidate)
     if installed.parent.stat().st_dev != candidate.stat().st_dev:
         raise RuntimeError("OpenLinkHub update staging and installation must be on the same filesystem")
     suffix = f"{time.strftime('%Y%m%d-%H%M%S')}-{os.getpid()}"
     backup = installed.with_name(f".{installed.name}-ohc-backup-{suffix}")
     failed = installed.with_name(f".{installed.name}-ohc-failed-{suffix}")
     _run_systemctl("stop")
-    installed.rename(backup)
     try:
+        installed.rename(backup)
         candidate.rename(installed)
         (installed / "OpenLinkHub").chmod(0o755)
         _preserve_user_data(backup, installed)
         _run_systemctl("daemon-reload")
         _run_systemctl("start")
+        wait_ready(installed)
     except Exception:
         try:
-            if installed.exists():
+            _run_systemctl("stop")
+            if backup.exists() and installed.exists():
                 installed.rename(failed)
             if backup.exists():
                 backup.rename(installed)

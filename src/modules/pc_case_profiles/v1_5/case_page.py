@@ -5,7 +5,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QGroupBox, QHeaderView, QHBoxLayout, QLabel, QPushButton, QScrollArea,
-    QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, QDialog, QDialogButtonBox,
+    QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, QDialog, QDialogButtonBox, QTabWidget,
 )
 from modules.rgb_studio.v1_15.argb_controls import build_slot_led_button, slot_header_targets, edit_slot_header
 from .catalog import case_template
@@ -106,16 +106,18 @@ def build_case_page(host):
         set_synchronized(host, enabled)
         host.refresh_rgb_layout_editor()
     host.case_sync_checkbox.toggled.connect(synchronize)
-    layout.addWidget(host.case_sync_checkbox)
+    # Shared toolbar keeps the diagram close to the page header.
     note = QLabel("Getrennt: Position und Ansichtsgröße; PWM/LED bleiben gemeinsam. Keine Regelungsaktivierung.")
     note.setWordWrap(True)
-    layout.addWidget(note)
+    host.case_sync_checkbox.setToolTip(note.text())
+    note.hide()
     analysis_row = QHBoxLayout()
     analyze = QPushButton(host.tr_static("Gehäuse analysieren"))
     host.case_analysis_label = QLabel()
     host.case_analysis_label.setWordWrap(True)
     host.case_analysis_label.setObjectName("muted")
     analyze.clicked.connect(lambda _checked=False: host.case_analysis_label.setText(analyze_case_topology(host)))
+    analysis_row.addWidget(host.case_sync_checkbox)
     analysis_row.addWidget(analyze)
     analysis_row.addWidget(host.case_analysis_label, 1)
     layout.addLayout(analysis_row)
@@ -127,10 +129,17 @@ def build_case_page(host):
     assign = QPushButton(host.tr_static("Zuordnen"))
     assign.clicked.connect(lambda _checked=False: assign_pwm(host))
     controls_layout.addWidget(assign)
-    layout.addWidget(controls)
-    layout.addWidget(host.case_workspace)
+    host.case_sections = QTabWidget()
+    host.case_sections.setObjectName("caseSections")
+    overview = QWidget(); overview_layout = QVBoxLayout(overview)
+    components = QWidget(); components_layout = QVBoxLayout(components)
+    overview_layout.addWidget(host.case_workspace)
+    components_layout.addWidget(controls)
     host.case_spatial_panel = CaseSpatialPanel(host)
-    layout.addWidget(host.case_spatial_panel)
+    host.case_sections.addTab(overview, host.tr_static("Übersicht"))
+    host.case_sections.addTab(components, host.tr_static("Komponenten"))
+    host.case_sections.addTab(host.case_spatial_panel, host.tr_static("Abstände und Tiefe"))
+    layout.addWidget(host.case_sections)
     topology_box = QGroupBox(host.tr_static("Geräte im Gehäuse"))
     topology_layout = QVBoxLayout(topology_box)
     host.case_topology_table = QTableWidget(0, 4)
@@ -158,7 +167,8 @@ def build_case_page(host):
         lambda row, column: activate_case_table_cell(host, row, column)
     )
     topology_layout.addWidget(host.case_topology_table)
-    layout.addWidget(topology_box)
+    components_layout.addWidget(topology_box)
+    components_layout.addStretch()
     host.case_cooling_box = QGroupBox("Getrennte Positionen für RGB und Kühlung")
     separate = QVBoxLayout(host.case_cooling_box)
     host.case_cooling_diagram = PCLayoutDiagram()
@@ -167,7 +177,10 @@ def build_case_page(host):
     host.case_cooling_diagram.slot_focused.connect(host.focus_rgb_layout_slot)
     host.case_cooling_diagram.slot_selected.connect(lambda _slot_id: host.edit_selected_rgb_layout_slot())
     separate.addWidget(host.case_cooling_diagram)
-    layout.addWidget(host.case_cooling_box)
+    overview_layout.addWidget(host.case_cooling_box)
+    from modules.rgb_studio.v1_15.generic_fans import FanCatalog
+    host.case_fan_catalog = FanCatalog(host)
+    overview_layout.addWidget(host.case_fan_catalog)
     page.setWidget(content)
     refresh_case_views(host)
     return page
@@ -178,6 +191,8 @@ def open_spatial_editor(host) -> None:
     if not hasattr(host, "case_page_index"):
         return
     host.tabs.setCurrentIndex(host.case_page_index)
+    if hasattr(host, "case_sections"):
+        host.case_sections.setCurrentIndex(2)
     panel = getattr(host, "case_spatial_panel", None)
     if panel is not None:
         panel.refresh()
@@ -295,6 +310,8 @@ def refresh_case_views(host):
         diagram.set_led_animations(led_animations, host)
         if key in {"rgb_layout_diagram", "rgb_case_preview_diagram", "case_cooling_diagram"}:
             diagram.set_selected_slot(host.rgb_layout_selected_slot_id)
+    if hasattr(host, "case_component_summary"):
+        host.case_component_summary.refresh()
     if not hasattr(host, "case_topology_table"):
         return
     if hasattr(host, "case_spatial_panel"):

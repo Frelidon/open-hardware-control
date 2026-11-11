@@ -136,10 +136,25 @@ settings.setValue("thermalright/brightness", 0)
 # The UI contract below is specifically the Levita cooling lane. Keep it
 # deterministic on hardware-free CI instead of inheriting the host's USB set.
 settings.setValue("cooling/hardware_kind", application.LEVITA_COOLER_KEY)
+settings.setValue("navigation/hidden", json.dumps(["settings", "about"]))
 settings.sync()
 
 window = application.KrakenControl()
 atexit.register(lambda: dispose_window(window) if isValid(window) else None)
+# Old preferences and both editing entrances must retain the Settings anchor.
+assert window.navigation_user_hidden == {"about"}
+assert "settings" not in window.navigation_module_checkboxes
+window.set_navigation_module_enabled("settings", False)
+assert not window.nav_settings.isHidden()
+assert "settings" not in json.loads(window.settings.value("navigation/hidden"))
+window.toggle_navigation_customization()
+assert not window.nav_settings.flags() & Qt.ItemFlag.ItemIsUserCheckable
+assert window.nav_settings.data(1, Qt.ItemDataRole.CheckStateRole) is None
+window.toggle_navigation_customization()
+window.navigation_user_hidden.add("settings")
+window.update_navigation_visibility()
+assert "settings" not in window.navigation_user_hidden and not window.nav_settings.isHidden()
+window.show_all_navigation_modules()
 from modules.profile_bundle.v1_0.controller import snapshot as bundle_snapshot
 from modules.profile_bundle.v1_0.archive import json_bytes as bundle_json_bytes
 complete_snapshot = bundle_snapshot(window)
@@ -285,7 +300,7 @@ assert window.navigation_items["programs"].data(0, Qt.ItemDataRole.UserRole) == 
 assert window.tabs.tabText(13) == "Gehäuse"
 assert window.tabs.tabText(window.gpu_control_page_index) == "Grafikkarte"
 assert window.navigation_items["case"].data(0, Qt.ItemDataRole.UserRole) == 13
-assert window.tabs.tabText(14) == "Hardware-Checker"
+assert window.tabs.tabText(14) == "Hardware-Prüfung"
 assert window.navigation_items["hardware_checker"].data(0, Qt.ItemDataRole.UserRole) == 14
 assert window.tabs.tabText(window.snapshot_manager_page_index) == "Snapshot-Manager"
 assert window.navigation_items["snapshot_manager"].data(0, Qt.ItemDataRole.UserRole) == window.snapshot_manager_page_index
@@ -329,6 +344,8 @@ assert window.window_screen_combo.count() >= 1
 assert window.windowed_size_spin.value() == application.DEFAULT_WINDOWED_SIZE_PERCENT
 assert window.page_transitions_checkbox.isChecked()
 assert window.page_transition_style_combo.currentData() == "fade"
+assert window.page_transition_duration_combo.currentData() == 380
+assert len(window.rgb_design_gallery.visible_indices()) == 12
 assert window.ssd_cache_combo.currentData() == 2048
 assert window.ui_performance is not None
 assert window.window_chrome.close_button.size() == QSize(48, 42)
@@ -391,7 +408,7 @@ for _refresh in range(2):
     )
 assert application._GIF_SAFETY_TEXT in labels
 assert application._ABOUT_SUMMARY_TEXT in labels
-assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.169 STABLE")
+assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.175 INTERN")
 assert window.temp_card.isHidden()
 assert not window.cpu_temp_card.isHidden()
 assert window.mainboard_sensor_source.findData("liquid") == -1
@@ -552,7 +569,9 @@ assert studio.command_process.state() == application.QProcess.ProcessState.NotRu
 assert window.hardware_io_disabled
 assert window.openrgb_server_process.state() == application.QProcess.ProcessState.NotRunning
 window.theme_mode = "light"
+previous_home_icon = window.openlinkhub_mouse_home_button.icon().cacheKey()
 window.apply_theme()
+assert window.openlinkhub_mouse_home_button.icon().cacheKey() != previous_home_icon
 assert "rgba(255, 255, 255, 252)" in window.styleSheet()
 assert "QLabel#brandLabel" in window.styleSheet()
 assert "QScrollBar:vertical" in window.styleSheet()
@@ -609,6 +628,57 @@ if render_dir:
     qt_app.processEvents()
     assert window.profile_bundle_controller.buttons[0].isVisible()
     assert window.grab().save(str(output / "profiles-complete-package.png"))
+# .172 hardware subnavigation and language refresh retain all existing views.
+window.settings.setValue("setup/completed", True)
+window.settings.setValue("dependencies/desktop_design_offer_330", True)
+for language in ("de", "en", "es", "fr"):
+    window.apply_ui_language(language, persist=False, log_change=False)
+    parent = window.navigation_items["hardware_checker"]
+    assert parent.childCount() == 2
+    for key, section, caption in (("hardware_checker", 0, "Hardware-Prüfung"),
+                                   ("hardware_fix", 1, "Hardware Fix"),
+                                   ("supported_devices", 2, "Von OHC unterstützte Geräte")):
+        window.navigation.setCurrentItem(window.navigation_items[key])
+        qt_app.processEvents()
+        assert window.tabs.currentIndex() == window.hardware_checker_page_index
+        assert window.hardware_checker_page.section_tabs.currentIndex() == section
+        assert window.page_title_label.text() == window.tr_static(caption)
+        assert window.sidebar_artwork.category == key
+    assert len(window.hardware_checker_page.supported_devices_page.cards) == 41
+# Complete real press/move/release gestures from every expandable section.
+# Regresses rows moving under a held pointer and opening a second page.
+from PySide6.QtTest import QTest
+from PySide6.QtCore import QPoint
+window.resize(1600, 1000)
+window.show_all_navigation_modules()
+window.show()
+for language in ("de", "en", "es", "fr"):
+    window.apply_ui_language(language, persist=False, log_change=False)
+    for origin in ("lcd_studio", "display_effects", "temperature_recording", "hardware_fix", "supported_devices"):
+        for destination in ("rgb_studio", "settings", "profiles", "about", "lcd_studio", "display_effects",
+                            "cooling_controls", "temperature_recording", "hardware_checker", "hardware_fix", "supported_devices"):
+            window.navigation.setCurrentItem(window.navigation_items[origin])
+            item = window.navigation_items[destination]
+            window.navigation.scrollToItem(item)
+            qt_app.processEvents()
+            position = window.navigation.visualItemRect(item).center()
+            assert window.navigation.viewport().rect().contains(position), (origin, destination, position, window.navigation.viewport().rect(), item.isHidden())
+            QTest.mousePress(window.navigation.viewport(), Qt.MouseButton.LeftButton, pos=position)
+            QTest.mouseMove(window.navigation.viewport(), position + QPoint(0, 1))
+            QTest.mouseRelease(window.navigation.viewport(), Qt.MouseButton.LeftButton, pos=position + QPoint(0, 1))
+            qt_app.processEvents()
+            assert window.tabs.currentIndex() == item.data(0, Qt.ItemDataRole.UserRole), (language, origin, destination)
+            if destination in ("hardware_fix", "supported_devices"):
+                assert window.navigation.currentItem() is item
+            elif destination != "cooling_controls":
+                assert window.navigation.currentItem() is item, (language, origin, destination)
+
+window.reset_navigation_customization()
+assert all(window.navigation_items[key].parent() is window.navigation_items["hardware_checker"]
+           for key in ("hardware_fix", "supported_devices"))
+window.tabs.setCurrentIndex(0)
+assert window.sidebar_artwork.category == "overview"
+
 dispose_window(window)
 
 # A KDE/Wayland tray autostart must suppress the native window surface before
