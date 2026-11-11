@@ -19,8 +19,11 @@ Isolierte helle/dunkle Katalogdarstellung geprüft. Alle sechs Artefakte und
 beide .174/.175-Sicherungen geprüft; ZIP/DEB/RPM mit 406 Quellen identisch.
 Benutzerinstallation gestartet, vor Start alle Einstellungs-/Profil-/Plugin-
 Hashes erhalten. Native Engine: fünf Arbeiter, null gemeldete Fehler;
-Sapphire External Control und gespeichertes Levita-Design aktiv. Systemkopie
-wartet noch auf Linux-Authentifizierung (.174). Interner GitHub-Upload
+Sapphire External Control und gespeichertes Levita-Design aktiv. Nach bestätigter
+Linux-Abfrage ist auch die Systemkopie .175 (DPKG 3.4.29.175~intern2); beide
+installierten Bäume entsprechen allen 406 Python-Quellen bytegenau. Laufende
+Benutzerinstanz und fünf native Arbeiter ohne gemeldete Fehler bestätigt.
+Interner GitHub-Upload
 auf `codex/3.4.29-intern` bestätigt (Quellcommit `5fd7989`); kein öffentlicher
 Release-Tag und keine Änderung des Standardzweigs.
 

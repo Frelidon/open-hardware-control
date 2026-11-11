@@ -23,11 +23,12 @@ and native-plugin hashes match the final saved baseline before launch; profiles
 and plugin remain byte-identical after launch. Live native engine: five workers,
 zero reported errors; Sapphire External Control; saved Levita design active
 with daemon video/sensor cadence; no launch traceback. OpenLinkHub 0.9.4 user
-API is reachable (one optional capability-detail warning remains). The system
-APT process is waiting for the Linux/Polkit dialog; DPKG still reports .174.
-The owner is asked to authenticate only in that existing OS window. Upload
-of the validated internal user/source version is authorized independently;
-no public tag/release or broad administrator grant is created.
+API is reachable (one optional capability-detail warning remains). After the
+owner confirmed the existing Linux/Polkit dialog, system APT completed and DPKG
+reports 3.4.29.175~intern2. Both installed trees match all 406 Python sources
+byte-for-byte. The user app remains running with five active native workers and
+zero reported errors. No further application restart is needed. No public
+tag/release or broad administrator grant is created.
 
 GitHub upload is verified: source commit
 `5fd798960845d215280f4101b07b03b64e725f92` is on
@@ -43,11 +44,11 @@ pointer sequences in the full DE/EN/ES/FR UI. The isolated light/dark catalog
 renders are reviewed; their synthetic missing-dependency status is not a live
 host diagnosis. All 406 Python sources parse, security/privacy scans pass and
 the complete release gate passes, including final packaging hygiene checks.
-Ubuntu user installation is verified; separate Fedora fixtures pass, real Fedora
+Ubuntu user and system installations are verified; separate Fedora fixtures pass, real Fedora
 hardware remains untested. Native/RGB/LCD write paths are unchanged by .175.
 
 
-**Current development version:** 3.4.29.175 INTERN (user installation verified; system authentication pending)
+**Current development version:** 3.4.29.175 INTERN (user and system installations verified)
 
 **Status date:** 11 November 2026
 

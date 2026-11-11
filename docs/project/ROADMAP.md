@@ -6,7 +6,9 @@ Reviewed model-level links and category/vendor filters are implemented. The
 reproducible shifted-row pointer selection is fixed. Full gate: 1,556 tests and
 five subtests pass. Packages and both rolling backups are verified; the user
 installation is running with preserved settings and healthy native workers.
-The system copy awaits OS authentication. The internal source upload to
+The system package update is complete (3.4.29.175~intern2); both installed
+trees match all 406 Python sources, and the user app remains active with five
+native workers and zero reported errors. The internal source upload to
 `codex/3.4.29-intern` is verified (`5fd7989`); no public tag/release or default
 branch change is part of this upload.
 

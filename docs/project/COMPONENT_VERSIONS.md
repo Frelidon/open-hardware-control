@@ -5,8 +5,9 @@ Navigationseinstellungen 1.0 mit abgeschlossener Zeigerauswahl vor Seitenwechsel
 Lokalisierung 1.0 mit 2.381 Sprach-IDs. Hardware-/Backend-Versionen und
 Einstellungen unverändert. Vollständiger Wächter: 1.556 Tests und fünf Untertests
 bestanden. 406 Python-Quellen in ZIP/DEB/RPM geprüft; Benutzerinstallation .175
-läuft mit fünf nativen Arbeitern ohne gemeldete Fehler. Systemkopie wartet noch
-auf die Linux-/Polkit-Abfrage (.174). Profile und Plugin bytegleich erhalten.
+läuft mit fünf nativen Arbeitern ohne gemeldete Fehler. Systemkopie nach
+Linux-Bestätigung ebenfalls .175 (DPKG 3.4.29.175~intern2); alle 406 Quellen
+in beiden Installationen bytegleich geprüft. Profile und Plugin erhalten.
 
 ## OHC-Modulstand und aktuelle Ubuntu-Konfiguration
 
