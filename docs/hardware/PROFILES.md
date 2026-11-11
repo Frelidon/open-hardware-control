@@ -1,4 +1,26 @@
-# Profile – Version 3.4.29.87 INTERN
+# Profile – Version 3.4.29.180 INTERN
+
+## Profilbibliothek und gespeicherte Bereiche
+
+Die Bibliothek lässt sich durchsuchen und nach allen, eigenen oder Standardprofilen
+filtern. Die Profilkarte daneben zeigt nur tatsächlich gespeicherte Bereiche und
+Werte, mit passenden Symbolen, Farbproben, Kurven oder bekannten LCD-Vorschaubildern.
+Auswählen, Filtern und Aufklappen verändert keine Geräte. Erst „Profil anwenden“
+lädt das Profil über die bestehenden geschützten Wege.
+
+„Bearbeiten“ öffnet den Editor innerhalb der Profilkarte. Technische Details und
+„Import, Export & Sicherung“ besitzen eigene große Bereichsköpfe. Auch wenn alle
+Bereiche offen sind, bleiben Werte lesbar; die Seite lässt sich entsprechend
+scrollen. Einzelne JSON-Profile und die vollständige Sicherung stehen getrennt.
+Weitere Aktionen wie Duplizieren, Umbenennen und Löschen befinden sich im Menü.
+Standardprofile bleiben schreibgeschützt; Duplizieren erzeugt eine eigene Kopie.
+Ein neuer Entwurf und seine leere Auswahl bleiben beim Sprachwechsel erhalten.
+
+Auf dieser Seite kann das ausdrücklich angewendete Profil sein LCD-Basismedium
+oder den gespeicherten RGB-Effekt als Hintergrund zeigen. Das bloße Auswählen
+oder Bearbeiten aktiviert diesen Hintergrund nicht; andere Seiten verwenden
+wieder die globale Hintergrundwahl. Globale Animations- und Sichtbarkeitsregeln
+gelten weiterhin.
 
 ## Vollständiges Komplettpaket
 

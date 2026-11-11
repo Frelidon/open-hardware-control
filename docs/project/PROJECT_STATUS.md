@@ -1,5 +1,41 @@
 # Open Hardware Control — Project Status
 
+## Lokale Entwicklung .180 · 11.11.26
+
+Der Eigentümer zeigt die installierte .179-Profilseite mit allen Bereichen
+geöffnet: Tabellen-/Editor-/Sicherungshöhen verdrängen die Übersicht, deren
+Kacheln praktisch leere Streifen werden. Profil-Arbeitsbereich 1.1 ersetzt den
+unscrollbaren Aufbau durch eine durchsuchbare Bibliothek und eine zusammenhängende
+Profilkarte in einem äußeren Scrollbereich. Große lokale Bereichsköpfe öffnen
+Bearbeitung, technische Werte sowie übersichtlich getrennte Einzelprofile und
+Komplettsicherung. Gespeicherte Bereichskacheln besitzen geschützte Inhaltshöhen,
+adaptive Spalten und eigene Kurven-/Farb-/LCD-Vorschauen; Anwenden bleibt die
+Hauptaktion, weitere Aktionen stehen im Menü. Die generische Aufklappkomponente
+anderer Menüs bleibt unverändert.
+
+Profil-IDs, JSON-Schema, Startprofile, schreibgeschützte Standardprofile und alle
+bisherigen Hardware-/Besitzprüfungen bleiben erhalten. Auswahl und Darstellung
+speichern oder übertragen nichts. Ungespeicherte Eingaben, Such-/Filterzustand
+und eine ausdrücklich leere Auswahl für einen neuen Entwurf überstehen den
+Sprachwechsel. Erfolgreich gespeicherte neue Entwürfe werden anschließend ausdrücklich ausgewählt.
+Bei gleichzeitig gespeicherten Legacy-LCD-Standardwerten zeigt die LCD-Kachel
+das aktivierte Levita-Medium mit passendem Titel und gebündeltem Poster.
+Der separat angewendete Profilhintergrund und globale Hintergründe
+werden nicht durch eine Kartenauswahl oder das Aufklappen verändert. Helle/dunkle
+Paletten einschließlich der Symbole bleiben berücksichtigt; DE/EN/ES/FR besitzen
+2.515 gemeinsame Nachrichten-IDs.
+
+Gezielte echte Qt-Geometrieprüfung bestanden: 2551×1337, 1440×1000 und 1000×900
+Pixel; zusätzlich Sprachwechsel in vier Sprachen und beide Themen, alle Bereiche
+gleichzeitig offen.
+Geprüft sind lesbare Werte/Symbole, überlappungsfreie Kacheln, vollständige
+Bereichsinhalte, erreichbare Sicherungsaktionen und Entwurfs-/Auswahlerhalt.
+Vollständiger Release-Wächter bestanden: 1.644 Tests und fünf Untertests,
+443 Python-Laufzeitquellen und 2.515 gemeinsame Sprach-IDs. Sicherheit, Datenschutz,
+Modulbudgets und bestehende Ubuntu-/Fedora-Verträge bestanden. Alle sechs Pakete,
+beide rollierenden Sicherungen und Benutzer-/Systeminstallation stehen noch aus.
+Kein GitHub-Auftrag; kein realer Fedora-Hardwarelauf wird behauptet.
+
 ## Lokale Entwicklung .179 · 11.11.26
 
 Nach dem .178-Start meldet der Eigentümer eine CPU-Sensorwarnung beim Profilstart.

@@ -59,8 +59,8 @@ def test_levita_has_a_conservative_fail_closed_pwm_floor() -> None:
 def test_profile_table_width_and_detailed_editor_regression() -> None:
     source = (SRC / "kraken_control.py").read_text(encoding="utf-8")
     assert "resizeColumnsToContents()" not in source[source.index("def refresh_profiles_table"):source.index("def apply_profile_by_id")]
-    assert "QHeaderView.ResizeMode.Stretch" in (ROOT / "src/modules/profiles_workspace/v1_0/page.py").read_text()
-    assert 'QGroupBox("Gespeicherter Profilinhalt")' in (ROOT / "src/modules/profiles_workspace/v1_0/page.py").read_text()
+    assert "QHeaderView.ResizeMode.Stretch" in (ROOT / "src/modules/profiles_workspace/v1_1/composition.py").read_text()
+    assert "heading('Gespeicherter Profilinhalt', layout)" in (ROOT / "src/modules/profiles_workspace/v1_1/composition.py").read_text()
     assert "profile_section_checks" in source
     assert 'addTab(self.make_temperature_recording_page(), "Temperaturaufzeichnung")' in source
 

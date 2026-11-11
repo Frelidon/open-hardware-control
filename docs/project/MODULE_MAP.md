@@ -1,5 +1,14 @@
 # Open Hardware Control — Modulkarte für Coding-KIs
 
+## .180 Lesbare Profilkarte und geöffnete Unterbereiche
+
+Aktueller einziger Pfad `profiles_workspace/v1_1/`: `page.py` hält Auswahl und
+neue Entwürfe; `composition.py` baut den äußeren Scrollbereich, Bibliothek und
+Profilkarte, `layout.py` verteilt Spalten/Inhaltshöhen, `surfaces.py` zeichnet
+lokale Bereichsköpfe und `summary.py` gespeicherte Werte/Originalgrafiken.
+`model.py`/`cards.py` und die versteckte ID-Tabelle erhalten sichere Auswahl/CRUD;
+kein Panelwechsel wendet Hardware oder globale Hintergrundeinstellungen an.
+
 ## .179 Profilstart und Laufzeitfehler
 
 `profile_cooling/v1_0/restore.py`: frischen Sensor abwarten, Auftrag abbrechen,
@@ -9,7 +18,7 @@ Python-/Qt-/Modulfehler begrenzt erfassen; `error_bridge.py`: allgemeines GUI-Lo
 
 ## .178 Profile und Programm-Hintergründe
 
-`profiles_workspace/v1_0/`: Bibliothek/Karten, reine Filter/Zusammenfassung und
+Ursprünglicher Aufbau in .178 (heute `profiles_workspace/v1_1/`): Bibliothek/Karten, reine Filter/Zusammenfassung und
 aufklappbare Editor-/Detail-/Transferpanels. Legacy-CRUD bleibt ID-basiert.
 `app_backgrounds/v1_0/`: feste Medien, ein Decoder und separater angewendeter
 Profilzustand. Keine Vorschau schreibt Hardware oder globale Einstellungen.

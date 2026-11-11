@@ -1,6 +1,6 @@
-# Open Hardware Control 3.4.29.179 STABLE – GitHub-Veröffentlichung (noch nicht beauftragt)
+# Open Hardware Control 3.4.29.180 STABLE – GitHub-Veröffentlichung (noch nicht beauftragt)
 
-Aktuelle Entwicklung: 3.4.29.179 INTERN. Kein Tag oder Upload ist beauftragt.
+Aktuelle Entwicklung: 3.4.29.180 INTERN. Kein Tag oder Upload ist beauftragt.
 Der folgende Veröffentlichungsnachweis betrifft weiterhin die öffentliche .176.
 
 ## Abschluss und Installationsprüfung

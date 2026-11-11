@@ -1,5 +1,21 @@
 # Open Hardware Control — Durable Decisions
 
+## 11.11.26 · Profilinhalte bleiben auch aufgeklappt lesbar (.180)
+
+Die installierte Oberfläche muss mit allen Profilbereichen geöffnet dieselbe
+lesbare Inhaltsgeometrie behalten wie die Standardansicht. Zusätzliche Höhe
+führt zu Scrollen, nicht zum Zusammendrücken gespeicherter Werte. Bibliothek
+und zusammenhängende Profilkarte folgen dem vorhandenen Entwurf; technische
+Details und Übertragung bleiben zugänglich, mit großen gestalteten Bereichsköpfen
+und getrennten Einzelprofil-/Komplettsicherungsaktionen. Diese Gestaltung gilt
+lokal für Profile und verändert keine gemeinsame Aufklappkomponente.
+
+Auswahl und neue Entwürfe bleiben von Anwenden getrennt. Ein ungespeicherter
+neuer Entwurf darf durch Sprachwechsel kein bestehendes Profil als Updateziel
+erhalten. Die Prüfung umfasst vollständig geöffnete Bereiche bei der gemeldeten
+Auflösung und kleineren Fenstern, vier Sprachen und beiden Themen; die installierte
+Kopie wird nach der Paketierung erneut geprüft. GitHub bleibt ein eigener Auftrag.
+
 ## 11.11.26 · Sensorbereitschaft ist kein Grund für veraltete Werte
 
 Ein kurz fehlender CPU-Snapshot beim Profilstart wird bis zu zehn Sekunden

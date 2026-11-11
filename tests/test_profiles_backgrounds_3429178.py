@@ -12,8 +12,8 @@ from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QImage
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QWidget, QStackedWidget
-from modules.profiles_workspace.v1_0.model import matches, summaries
-from modules.profiles_workspace.v1_0.cards import ProfileCard
+from modules.profiles_workspace.v1_1.model import matches, summaries
+from modules.profiles_workspace.v1_1.cards import ProfileCard
 from modules.app_backgrounds.v1_0.catalog import VIDEO_THEMES, profile_source
 from modules.app_backgrounds.v1_0.media import MediaBackground
 from modules.app_backgrounds.v1_0.profile import mark_applied, sync

@@ -13,14 +13,24 @@ def matches(profile, query, kind):
                                                ("name", "description", "category")).casefold()
 
 
+def lcd_summary_data(payload):
+    """Prefer the saved, enabled Levita choice over inactive legacy LCD defaults."""
+    levita = payload.get("levita_display")
+    if (isinstance(levita, dict) and bool(levita.get("enabled", True))
+            and isinstance(levita.get("media"), str) and levita["media"].strip()):
+        return levita
+    legacy = payload.get("lcd")
+    if isinstance(legacy, dict):
+        return legacy
+    return levita if isinstance(levita, dict) else None
+
+
 def summaries(payload, tr):
     if not isinstance(payload, dict):
         return []
     result = []
     for key, title, icon in SECTIONS:
-        data = payload.get(key)
-        if key == "lcd" and not isinstance(data, dict):
-            data = payload.get("levita_display")
+        data = lcd_summary_data(payload) if key == "lcd" else payload.get(key)
         if not isinstance(data, dict):
             continue
         lines = []

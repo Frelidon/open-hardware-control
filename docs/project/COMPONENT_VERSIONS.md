@@ -1,4 +1,19 @@
-# Komponenten- und Versionsübersicht – Version 3.4.29.179 INTERN
+# Komponenten- und Versionsübersicht – Version 3.4.29.180 INTERN
+
+## Entwicklung .180 · 11.11.26
+
+Profil-Arbeitsbereich 1.1 ist unter `profiles_workspace/v1_1/` aktuell. Neue
+Kompositions-, Layout-, Flächen- und Zusammenfassungsmodule halten Bibliothek,
+Profilkarte und geöffnete Unterbereiche lesbar; der äußere Scrollbereich übernimmt
+Mehrhöhe. Reine Modelle, vorhandene ID-/CRUD-/Startverträge und Hardware-Unterbauten
+bleiben erhalten. Lokalisierung 1.0 besitzt 2.515 gemeinsame IDs. Vier Sprachen,
+beide Themen und drei Fenstergrößen bestehen die gezielte echte Qt-Geometrieprüfung.
+Vollständige Release-Prüfung, Paketbau/Sicherungen und lokale Installation folgen;
+kein GitHub-Auftrag und kein realer Fedora-Hardwarelauf.
+
+Vollständiger .180-Wächter: 1.644 Tests und fünf Untertests bestanden;
+443 Python-Laufzeitquellen und 2.515 gemeinsame Sprach-IDs. Pakete und beide
+Installationen werden anschließend geprüft. Kein GitHub-Upload.
 
 ## Entwicklung .179 · 11.11.26
 

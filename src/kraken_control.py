@@ -11173,7 +11173,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         return page
 
     def make_profiles_tab(self) -> QWidget:
-        from modules.profiles_workspace.v1_0.page import build_page
+        from modules.profiles_workspace.v1_1.page import build_page
         return build_page(self)
 
     @staticmethod
@@ -12037,6 +12037,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.current_profile_id = profile_id
         self.save_profiles()
         self.refresh_profiles_table()
+        if hasattr(self, "profile_workspace"):
+            self.profile_workspace.select(profile_id)
         self.footer_status.setText(f"Profil „{name}“ gespeichert")
 
     def update_selected_profile(self) -> None:

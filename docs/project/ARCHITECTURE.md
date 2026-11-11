@@ -1,5 +1,23 @@
 # Open Hardware Control — Architecture
 
+## .180 · Scrollbarer Profil-Arbeitsbereich 1.1
+
+Der einzige aktuelle Pfad ist `profiles_workspace/v1_1/`. `page.py` behält
+ID-Auswahl, Sprachwechsel und Entwurfszustand; `composition.py` baut Bibliothek,
+Profilkarte und bestehende Aktionsverbindungen. `layout.py` verteilt responsive
+Spalten und berechnet Kachelhöhen anhand der verfügbaren Breite. `surfaces.py`
+zeichnet lokale Themenflächen und Bereichsköpfe, `summary.py` zeigt gespeicherte
+Werte mit eigenen Kurven/Farbproben und ausschließlich bekannten gebündelten
+LCD-Postern. Ein äußerer Scrollbereich übernimmt Mehrhöhe bei geöffneten Panels.
+Die generische Disclosure-Komponente anderer Seiten bleibt unverändert.
+
+Verborgene elterngebundene Tabelle und vorhandene Host-Controller erhalten
+Profil-IDs, CRUD, Bundle-Austausch und Startprofile. Ein expliziter neuer Entwurf
+ist von fehlender bisheriger Auswahl getrennt: ein Sprachwechsel darf ihn nicht
+mit einem vorhandenen Profil als Aktualisierungsziel verbinden. Kein Panel-,
+Filter- oder Auswahlereignis speichert Einstellungen oder schreibt Hardware.
+Die unabhängige angewendete Hintergrundkopie aus .178 bleibt maßgeblich.
+
 ## .179 · Profil-Bereitschaft und zentrale Fehlerbrücke
 
 `profile_cooling/v1_0/restore.py` verwaltet genau einen ausstehenden Auftrag und

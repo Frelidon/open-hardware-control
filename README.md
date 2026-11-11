@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.179 INTERN
+# Open Hardware Control by Frelidon 3.4.29.180 INTERN
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -55,12 +55,12 @@ Projekt-Repository: <https://github.com/Frelidon/open-hardware-control>
 
 Der sichere Testmodus ist standardmäßig aktiv; echte USB-Übertragung erfolgt nur über das separat installierte GPL-Backend **TRCC Linux** (9.10.4 empfohlen). Pumpe und Radiatorlüfter der Levita laufen über getrennt bestätigte Mainboard-PWM-Header (`PUMP_FAN`, `CPU_FAN`) mit sicherem 70-%-/10-s-Test; CoolerControl blockiert parallele Schreibzugriffe.
 
-## Neu in 3.4.29.179 INTERN
+## Neu in 3.4.29.180 INTERN
 
-- Kühlprofil wartet beim Start sicher auf eine frische CPU-Temperatur statt vorschnell zu scheitern.
-- Ausstehende Anwendungen werden bei neuen Aufträgen, Bedienung oder Fristablauf verworfen.
-- Python-, Qt- und Modulfehler dauerhaft und zusätzlich im sichtbaren allgemeinen Log.
-- Profilkarten, Videohintergründe und größere Matrix-LCD-Zeichen aus .178 bleiben erhalten.
+- Profilbibliothek und zusammenhängende Profilkarte mit klarer Anwenden-Aktion und Menü für weitere Aktionen.
+- Lesbare Bereichskacheln auch bei vollständig geöffneter Bearbeitung, technischen Details und Sicherung.
+- Große gestaltete Bereichsköpfe; Einzelprofile und Komplettsicherung übersichtlich getrennt.
+- Profile, ungespeicherte Entwürfe, vier Sprachen, Themen und animierte Hintergründe bleiben erhalten.
 
 ## Installation
 
@@ -68,30 +68,30 @@ Die folgenden Dateinamen gelten für den kommenden lokalen Bau; Pakete sind noch
 
 ### Fedora und Nobara – RPM
 
-Lade `open-hardware-control-3.4.29.179-0.intern2.noarch.rpm` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control-3.4.29.180-0.intern2.noarch.rpm` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.179-0.intern2.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.180-0.intern2.noarch.rpm
 ```
 
 ### Debian, Ubuntu und Linux Mint – DEB
 
-Lade `open-hardware-control_3.4.29.179~intern2_all.deb` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control_3.4.29.180~intern2_all.deb` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.179~intern2_all.deb'
+sudo apt install './open-hardware-control_3.4.29.180~intern2_all.deb'
 ```
 
 ### Universelles Installationspaket – ZIP
 
-Für Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_179_INTERN.zip` herunter und führe aus:
+Für Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_180_INTERN.zip` herunter und führe aus:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_179_INTERN.zip
-cd open-hardware-control-3.4.29.179-INTERN
+unzip open_hardware_control_v3_4_29_180_INTERN.zip
+cd open-hardware-control-3.4.29.180-INTERN
 chmod +x install.sh
 ./install.sh
 ```
@@ -160,14 +160,12 @@ Liest nur lokale Steam-Workshop-Metadaten, wählt Wallpaper über Plasmas offizi
 
 ## Versionsverlauf
 
+**3.4.29.180** – Lesbare Profilkarten, gestaltete Unterbereiche und sichere Entwurfsdarstellung.
+
 **3.4.29.179** – Frische CPU-Werte beim Profilstart und zentrale Fehlerprotokollierung.
 
 **3.4.29.178** – Profilkarten, Videohintergründe und größere Matrix-LCD-Zeichen.
 
 **3.4.29.177** – Matrix-Designpaar und gemeinsamer Bereich Designs & Spiele.
-
-**3.4.29.176** – Lüfter-Assistent mit unbenutzten Anschlüssen und neue Temperaturansicht.
-
-
 
 Alle früheren Versionen bis 2.9.x: [docs/CHANGELOG.md](docs/CHANGELOG.md) und [docs/releases/](docs/releases/).

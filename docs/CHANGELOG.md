@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.4.29.180 INTERN · 11.11.26
+
+- Keep profile summaries readable when editing, technical details and transfer panels are all open. A page-level scroll area and content-aware tile heights prevent compressed empty-looking cards.
+- Present a searchable profile library beside one detailed profile card, with a primary apply action, an additional-actions menu and large styled section headers. Separate individual JSON profiles from complete-package backup actions.
+- Preserve saved IDs/schema, startup and guarded apply paths, built-in protection, four-language drafts and the independently applied-profile background. A new draft keeps no update target across a live language change.
+- Add real Qt geometry regressions at three sizes in four languages and both themes. Full release validation, package verification and local installation remain pending; no GitHub publication requested.
+
 ## 3.4.29.179 INTERN · 11.11.26
 
 - Wait up to ten seconds for a fresh CPU sample when a curve profile meets temporary sensor unavailability; keep the existing 2.5-second freshness and hardware guards.
