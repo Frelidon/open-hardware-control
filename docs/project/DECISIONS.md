@@ -1,5 +1,12 @@
 # Open Hardware Control — Durable Decisions
 
+11.11.26 · .176-Veröffentlichung: Der Eigentümer fordert ausdrücklich die
+Veröffentlichung der neuen Version auf GitHub. Der bestehende Release-Ablauf
+mit STABLE-Kanal, vollständiger Prüfung/Paketierung, normalem main-Push und
+öffentlichem Versionstag/Release ist damit beauftragt. Lokale Einstellungen,
+Hardware und laufende INTERN-Installation bleiben unverändert; keine
+Force-Pushes oder Löschungen sind autorisiert.
+
 ## 11.11.26 – Fan identification and temperature recorder (.176)
 
 The owner explicitly requests "not connected" as a reversible per-header

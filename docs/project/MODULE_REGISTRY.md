@@ -1,5 +1,13 @@
 # Open Hardware Control — verbindliches Modulregister
 
+Veröffentlichung 11.11.26 (.176): Auf ausdrücklichen Eigentümerauftrag wird
+nur der Build-Kanal von INTERN auf STABLE angehoben. Keine Modulschnittstelle,
+Hardwarefunktion oder Einstellung wird geändert; Versions-/Fenstertiteltests
+prüfen den STABLE-Kanal. Die laufende lokale INTERN-Installation bleibt erhalten.
+Vollständige STABLE-Prüfung: 1.587 Tests und fünf Untertests bestanden.
+Alle sechs Pakete, 414 Quellen in ZIP/DEB/RPM und beide aufbewahrten
+.176-INTERN/STABLE-Sicherungen geprüft. GitHub-Abschlussverifikation folgt.
+
 Entwicklung 11.11.26 (.176): Neues Modul Lüfterzuordnung 1.0 unter
 `src/modules/fan_mapping/v1_0/` enthält `wizard.py`, `runtime.py` und
 `lighting.py`. Der vorhandene Assistent wird aus dem Hauptfenster ausgelagert;
@@ -56,7 +64,7 @@ auf `codex/3.4.29-intern` bestätigt (Quellcommit `5fd7989`); kein öffentlicher
 Release-Tag und keine Änderung des Standardzweigs.
 
 **Stand:** 11.11.26
-**Anwendung:** 3.4.29.176 INTERN (geprüft und lokal installiert)
+**Anwendung:** 3.4.29.176 STABLE (Veröffentlichung beauftragt)
 
 Lokaler Stand 11.11.26: .174-Benutzerinstallation mit allen 403 Python-Quellen
 verifiziert und gestartet. Fünf native RGB-Arbeiter ohne gemeldete Fehler,

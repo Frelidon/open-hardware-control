@@ -66,7 +66,7 @@ mod=importlib.util.module_from_spec(spec)
 sys.modules[spec.name]=mod
 spec.loader.exec_module(mod)
 assert mod.APP_VERSION=='3.4.29.176'
-assert mod.BUILD_CHANNEL=='INTERN'
+assert mod.BUILD_CHANNEL=='STABLE'
 assert mod.APP_NAME=='Open Hardware Control'
 assert len(mod.AM5_CPU_PROFILES)>=20
 assert len(mod.AnimatedBackgroundWidget.THEMES) >= 10

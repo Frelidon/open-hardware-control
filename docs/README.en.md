@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.176 INTERN
+# Open Hardware Control by Frelidon 3.4.29.176 STABLE
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](../LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -55,7 +55,7 @@ Project repository: <https://github.com/Frelidon/open-hardware-control>
 
 The safe preview-only test mode is active by default; real USB transfer happens only through the separately installed GPL backend **TRCC Linux** (9.10.4 recommended). Levita pump and radiator fans run through separately confirmed motherboard PWM headers (`PUMP_FAN`, `CPU_FAN`) with a safe 70 %/10 s test; CoolerControl blocks concurrent writes.
 
-## New in 3.4.29.176 INTERN
+## New in 3.4.29.176 STABLE
 
 - Explicitly skip disconnected fan headers and map them again later.
 - Stop tests up to two minutes with a short driver crash lease and restoration on Next/Cancel.
@@ -68,30 +68,30 @@ The following filenames describe the upcoming local build; packages are not yet 
 
 ### Fedora and Nobara – RPM
 
-Download `open-hardware-control-3.4.29.176-0.intern2.noarch.rpm` to your Downloads folder and run:
+Download `open-hardware-control-3.4.29.176-1.noarch.rpm` to your Downloads folder and run:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.176-0.intern2.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.176-1.noarch.rpm
 ```
 
 ### Debian, Ubuntu and Linux Mint – DEB
 
-Download `open-hardware-control_3.4.29.176~intern2_all.deb` to your Downloads folder and run:
+Download `open-hardware-control_3.4.29.176_all.deb` to your Downloads folder and run:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.176~intern2_all.deb'
+sudo apt install './open-hardware-control_3.4.29.176_all.deb'
 ```
 
 ### Universal installer – ZIP
 
-For Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS and openSUSE. Download `open_hardware_control_v3_4_29_176_INTERN.zip` and run:
+For Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS and openSUSE. Download `open_hardware_control_v3_4_29_176.zip` and run:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_176_INTERN.zip
-cd open-hardware-control-3.4.29.176-INTERN
+unzip open_hardware_control_v3_4_29_176.zip
+cd open-hardware-control-3.4.29.176
 chmod +x install.sh
 ./install.sh
 ```
@@ -125,7 +125,7 @@ German version: [README.md](../README.md)
 
 ## Status
 
-Internal development build, provided without warranty. Channel **INTERN**, license **GPL-3.0-or-later**. Contributing: [.github/CONTRIBUTING.md](../.github/CONTRIBUTING.md) · Help: [.github/SUPPORT.md](../.github/SUPPORT.md) · Security reports: [SECURITY.md](../.github/SECURITY.md)
+Public release, provided without warranty. Channel **STABLE**, license **GPL-3.0-or-later**. Contributing: [.github/CONTRIBUTING.md](../.github/CONTRIBUTING.md) · Help: [.github/SUPPORT.md](../.github/SUPPORT.md) · Security reports: [SECURITY.md](../.github/SECURITY.md)
 
 ## Modules
 

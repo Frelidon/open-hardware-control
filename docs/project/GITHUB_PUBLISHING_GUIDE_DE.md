@@ -1,17 +1,26 @@
-# Open Hardware Control 3.4.29.176 STABLE – GitHub-Veröffentlichung (geplant)
+# Open Hardware Control 3.4.29.176 STABLE – GitHub-Veröffentlichung
 
 ## Abschluss und Installationsprüfung
 
-Der Eigentümer beauftragt am 11.11.26 für `.175` nach vollständiger Prüfung und
-lokaler Installation den GitHub-Upload. Der interne Entwicklungszweig
-`codex/3.4.29-intern` wird als sauberer Commit normal hochgeladen. Diese Freigabe
-hebt den bisherigen Upload-Halt auf; sie erzeugt keinen öffentlichen STABLE-Tag
-oder GitHub-Release. Die folgenden STABLE-Befehle bleiben ein gesonderter,
-vorbereiteter Veröffentlichungsweg.
+Der Eigentümer beauftragt am 11.11.26 ausdrücklich die Veröffentlichung von
+`.176`. Die vorherige interne Freigabe für `.175` ist damit um STABLE-Pakete,
+normalen Quell-Push, Versionstag und öffentlichen GitHub-Release erweitert.
+Die laufende lokale `.176 INTERN`-Installation wird dabei nicht ersetzt.
 
 Repository: <https://github.com/Frelidon/open-hardware-control>
 
-Die Anwendung bleibt während der Entwicklung auf `BUILD_CHANNEL=INTERN`. Die folgenden STABLE-Beispiele gelten erst nach abschließender Prüfung und Freigabe des Eigentümers. Ein Push, Tag oder GitHub-Release erfolgt ausschließlich nach einem ausdrücklichen Auftrag des Projektinhabers, erfolgreicher vollständiger Prüfung, sauberem Commit und realem KDE-/Hardwaretest.
+Nach vollständiger lokaler Prüfung und Paket-/Sicherungsverifikation wird der
+saubere Commit ohne Force-Push auf `main` und `publish/v3.4.29.176` übertragen.
+Der vorhandene Workflow prüft und baut diesen Commit erneut, setzt erst danach
+den annotierten Tag und veröffentlicht alle Artefakte samt SHA256SUMS. Eine
+GitHub-CLI-Anmeldung auf dem lokalen Rechner ist dafür nicht nötig.
+
+Veröffentlichungen erfolgen nach erfolgreicher vollständiger Prüfung, sauberem Commit und realem KDE-/Hardwaretest.
+Der Eigentümer hat die flüssige RGB-/GPU-Darstellung und den Neustartbetrieb
+zuvor bestätigt; .176 wurde lokal gestartet und beide Installationen geprüft.
+Der neue lange Stopptest und ein erzwungener Prozessabsturz wurden nicht am
+realen PC ausgeführt. Diese Grenzen bleiben in den Release Notes ausdrücklich
+sichtbar, ebenso die noch offene reale Fedora-Prüfung.
 
 ## Repository und Anmeldung prüfen
 
@@ -44,7 +53,7 @@ sha256sum -c SHA256SUMS
 
 Erwartete Dateien:
 
-- `open_hardware_control_v3_4_29_175.zip`
+- `open_hardware_control_v3_4_29_176.zip`
 - `open-hardware-control_3.4.29.176_all.deb`
 - `open-hardware-control-3.4.29.176-1.noarch.rpm`
 - `open-hardware-control-3.4.29.176-source.tar.gz`
@@ -56,13 +65,14 @@ Der Build muss außerdem die externe Zwei-Versionen-Sicherung aus `RELEASE_BACKU
 
 ## GitHub veröffentlichen
 
-Nach sauberem Commit wird der geprüfte Stand zuerst ohne Force-Push auf `main` übertragen. Anschließend erzeugt der ausdrücklich freigegebene Tag den öffentlichen GitHub-Release-Workflow:
+Nach sauberem Commit wird der geprüfte Stand ohne Force-Push übertragen:
 
 ```bash
-git push origin main
-git tag -a v3.4.29.176 -m "Open Hardware Control v3.4.29.176"
-git push origin v3.4.29.176
+git push --atomic origin HEAD:refs/heads/main HEAD:refs/heads/publish/v3.4.29.176
 ```
+
+Der Veröffentlichungszweig löst den vorhandenen Workflow aus. Dieser erstellt
+den Tag `v3.4.29.176` erst nach erfolgreicher Prüfung und Paketierung.
 
 Der Workflow `.github/workflows/release.yml` wiederholt die Tests, baut sämtliche Artefakte aus genau diesem Tag und erstellt den öffentlichen Release mit `docs/releases/RELEASE_NOTES_v3.4.29.176.md`.
 

@@ -1,5 +1,15 @@
 # Roadmap
 
+## Owner-requested .176 public release · 11.11.26
+
+Promote the tested implementation to STABLE, repeat the complete release gate,
+build and verify packages/backups, then publish through the existing GitHub
+workflow. Source push, version tag and public release are explicitly requested.
+Keep the currently running local INTERN installation unchanged. Workflow and
+public-download verification remain pending. The STABLE gate passes all 1,587
+tests and five subtests. Six artifact hashes, ZIP/DEB/RPM parity for 414 sources,
+RPM digests and both retained .176 INTERN/STABLE backups are verified.
+
 ## Current .176 work · 11.11.26
 
 Fan mapping now supports explicit disconnected ports, compact remapping access,

@@ -1,5 +1,19 @@
 # Open Hardware Control — Project Status
 
+Publication request · 11.11.26: the owner explicitly asks to publish the new
+version on GitHub. Promote .176 to STABLE, rebuild and validate its complete
+artifact set and rolling backups, then fast-forward main and trigger the
+existing publication-branch workflow. This authorizes the normal source push,
+version tag and public release. No force-push, deletion or live reinstall is
+part of this request. The currently running .176 INTERN app stays unchanged.
+The STABLE release gate passes 1,587 tests and five subtests, with security,
+privacy, module budgets and four-language full UI construction passing.
+All six STABLE artifacts pass SHA256, ZIP CRC and source parity for 414 Python
+files in ZIP/DEB/RPM; RPM payload/header digests are verified. Both retained
+.176 INTERN/STABLE backup sets pass all eight hashes each. Live application
+and private data are unchanged. Release-workflow completion and public download
+verification remain pending.
+
 Current .176 request: explicit disconnected fan headers, compact reusable unused
 ports, 120-second chassis stop identification with immediate Next/Cancel
 restoration and short refreshed driver crash lease, automatic owned fan RGB
@@ -23,8 +37,8 @@ runs .176 with five native workers and zero reported native errors, Sapphire
 External Control and the saved Levita design active. After the owner confirmed
 Linux/Polkit, APT completed: DPKG reports 3.4.29.176~intern2. Both installed
 trees match all 414 Python sources byte-for-byte. No further restart is needed.
-No physical stop or forced crash test was performed on the live PC. The remote
-development branch remains the .175 checkpoint; .176 has no public tag/release.
+No physical stop or forced crash test was performed on the live PC. This is
+the installed INTERN checkpoint; stable publication is tracked separately above.
 
 The installed nct6687d watchdog implementation was inspected read-only: its
 independent delayed worker restores tracked manual channels on lease expiry.
@@ -80,7 +94,7 @@ Ubuntu user and system installations are verified; separate Fedora fixtures pass
 hardware remains untested. Native/RGB/LCD write paths are unchanged by .175.
 
 
-**Current development version:** 3.4.29.176 INTERN (validated; user and system installation complete)
+**Current release version:** 3.4.29.176 STABLE (owner-requested publication in preparation)
 
 **Status date:** 11 November 2026
 

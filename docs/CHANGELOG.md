@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.4.29.176 INTERN · 11.11.26
+## 3.4.29.176 STABLE · 11.11.26
 
 - Add an explicit reversible disconnected-header choice to fan mapping. Skip such ports while retaining curve settings, disable their automation and show a compact unused-header section with remapping access. Never infer absence from zero RPM.
 - Extend chassis-only 0% identification to a maximum 120 seconds, requiring a refreshed 10-second independent driver watchdog. Restore target and contrast snapshots on Next, Cancel, channel change, timeout and clean shutdown. Preserve the watchdog on restoration failure; no new CPU/pump stop path. Keep ordinary speed calibration at ten seconds.

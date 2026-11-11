@@ -38,7 +38,7 @@ helper = (ROOT / "packaging/install-udev-rule.sh").read_text(encoding="utf-8")
 diagnostics = (ROOT / "packaging/collect-diagnostics.sh").read_text(encoding="utf-8")
 
 assert 'APP_VERSION = "3.4.29.176"' in code
-assert 'BUILD_CHANNEL = "INTERN"' in code
+assert 'BUILD_CHANNEL = "STABLE"' in code
 assert 'APP_NAME = "Open Hardware Control"' in code
 assert "shell=True" not in wallpaper_installer_code
 assert 'GITHUB_API_URL = "https://api.github.com/repos/CaptSilver/wallpaper-engine-kde-plugin/releases/latest"' in wallpaper_installer_code

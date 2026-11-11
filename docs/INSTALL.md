@@ -1,11 +1,7 @@
 # Installation unter Linux
 
-Entwicklungshinweis 11.11.26: `.171 INTERN` wird vorbereitet; `.170` ist installiert. Erst nach
-Abschluss aller Eigentümerpunkte installieren und auf GitHub aktualisieren.
-Die folgenden veröffentlichten `.169`-Beispiele bleiben als Referenz erhalten.
-
-Diese Anleitung gilt für **Open Hardware Control by Frelidon 3.4.29.169 STABLE**.
-Lade die Pakete aus dem [GitHub-Release](https://github.com/Frelidon/open-hardware-control/releases/tag/v3.4.29.169)
+Diese Anleitung gilt für **Open Hardware Control by Frelidon 3.4.29.176 STABLE**.
+Lade die Pakete aus dem [GitHub-Release](https://github.com/Frelidon/open-hardware-control/releases/tag/v3.4.29.176)
 und prüfe sie mit der dortigen `SHA256SUMS` (`sha256sum -c SHA256SUMS`).
 Vor einem Update OHC über **Beenden** im Tray ordentlich schließen; ein
 Fenster-X kann die Anwendung nur ausblenden. Bestehende Profile, LED-Topologien,
@@ -17,7 +13,7 @@ Empfohlenes RPM-Paket:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.169-1.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.176-1.noarch.rpm
 ```
 
 Alternativ das universelle ZIP verwenden. Die benötigten Pakete lauten:
@@ -32,7 +28,7 @@ Empfohlenes DEB-Paket:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.169_all.deb'
+sudo apt install './open-hardware-control_3.4.29.176_all.deb'
 ```
 
 Alternativ das universelle ZIP verwenden. Die benötigten Pakete lauten:
@@ -47,8 +43,8 @@ sudo apt install liquidctl python3-pyside6.qtwidgets python3-pyside6.qtsvg pytho
 ```bash
 sudo pacman -S --needed liquidctl pyside6 python-pillow qt6-svg polkit unzip
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_169.zip
-cd open-hardware-control-3.4.29.169
+unzip open_hardware_control_v3_4_29_176.zip
+cd open-hardware-control-3.4.29.176
 chmod +x install.sh
 ./install.sh
 ```
@@ -58,8 +54,8 @@ chmod +x install.sh
 ```bash
 sudo zypper install liquidctl python3-pyside6 python3-Pillow libQt6Svg6 polkit unzip
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_169.zip
-cd open-hardware-control-3.4.29.169
+unzip open_hardware_control_v3_4_29_176.zip
+cd open-hardware-control-3.4.29.176
 chmod +x install.sh
 ./install.sh
 ```
@@ -72,8 +68,8 @@ Für alle oben genannten Distributionen:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_169.zip
-cd open-hardware-control-3.4.29.169
+unzip open_hardware_control_v3_4_29_176.zip
+cd open-hardware-control-3.4.29.176
 chmod +x install.sh
 ./install.sh
 ```
@@ -82,7 +78,7 @@ Die vorhandene Version wird aktualisiert. Danach findest du **Open Hardware Cont
 
 ## Optionales Thermalright-Levita-Backend
 
-Für das Levita-Display wird TRCC Linux 9.10.4 empfohlen. Es bleibt separat installiert und ist keine harte Abhängigkeit des OHC-Pakets, damit Systeme ohne Thermalright-Display keine fremde Paketquelle benötigen. Version 9.10.4 räumt abgeschlossene Daemon-IPC-Worker fortlaufend auf und besitzt den Video-/Sensor-Takt selbst; OHC 3.4.29.169 erkennt diese erfolgreiche Übergabe. Aktualisiere TRCC über dessen offizielle Paketquelle beziehungsweise Release-Anleitung, bevor du die Levita-Hardware in OHC testest.
+Für das Levita-Display wird TRCC Linux 9.10.4 empfohlen. Es bleibt separat installiert und ist keine harte Abhängigkeit des OHC-Pakets, damit Systeme ohne Thermalright-Display keine fremde Paketquelle benötigen. Version 9.10.4 räumt abgeschlossene Daemon-IPC-Worker fortlaufend auf und besitzt den Video-/Sensor-Takt selbst; OHC 3.4.29.176 erkennt diese erfolgreiche Übergabe. Aktualisiere TRCC über dessen offizielle Paketquelle beziehungsweise Release-Anleitung, bevor du die Levita-Hardware in OHC testest.
 
 Der vollständige Modell-/Geometrie-Handshake und Farbzyklus wurde mit TRCC Linux 9.9.11 bestätigt; die dauerhafte 1600×720-Designausgabe und stabile Daemon-Ressourcennutzung zusätzlich mit 9.10.4. OHC startet niemals einen zweiten Levita-USB-Besitzer neben dem TRCC-Daemon.
 

@@ -1,4 +1,9 @@
-# Komponenten- und Versionsübersicht – Version 3.4.29.176 INTERN
+# Komponenten- und Versionsübersicht – Version 3.4.29.176 STABLE
+
+Öffentliche .176-Veröffentlichung am 11.11.26 beauftragt. STABLE-Wächter:
+1.587 Tests und fünf Untertests bestanden; alle sechs Artefakte, beide
+.176-INTERN/STABLE-Sicherungen und 414 Quellen in ZIP/DEB/RPM geprüft.
+GitHub-Abschluss folgt. Installiert bleibt vorerst .176 INTERN.
 
 Entwicklung .176: Lüfterzuordnung 1.0 mit ausdrücklich unbenutzten Anschlüssen,
 120-s-Stopptest über die bestehenden Mainboard-Schreibwege und kurzer

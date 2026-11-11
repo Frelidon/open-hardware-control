@@ -1,4 +1,4 @@
-# Open Hardware Control 3.4.29.176 INTERN
+# Open Hardware Control 3.4.29.176 STABLE
 
 Der Kühlungsassistent kann einen Anschluss jetzt ausdrücklich als „Nicht
 angeschlossen“ überspringen. OHC blendet seine vollständige Kachel aus und
@@ -33,4 +33,27 @@ Datenschutz- und Modulprüfungen bestanden. 414 Python-Laufzeitquellen.
 Alle vier Sprachen und helle/dunkle Darstellungen sind berücksichtigt.
 Tests erfolgen mit isoliertem hwmon; kein physischer Stopptest oder erzwungener
 Absturz am laufenden PC. Reale Fedora-Hardwareprüfung bleibt offen.
-Abschlussnachweise stehen im [Projektstatus](../project/PROJECT_STATUS.md).
+Abschlussnachweise stehen im [Projektstatus](https://github.com/Frelidon/open-hardware-control/blob/main/docs/project/PROJECT_STATUS.md).
+
+Seit dem letzten öffentlichen Stand .169 enthält diese Version außerdem:
+
+- Dauerhaft sichtbare Einstellungen, ruhigere Navigation und wählbare Übergänge
+  des Hauptinhalts; zwölf RGB-Vorschläge und sanfte Wiederholung der korrigierten
+  Designs. Die Vorlagen aus OHC Originals sind in die bestehenden Kategorien
+  einsortiert; OpenRGB Originals bleibt erhalten.
+- Überarbeitete Gehäuse-/Komponentenansicht mit eigenen Lüfterbildern,
+  dynamischen Listenhöhen und erhaltenem räumlichem Layout.
+- OpenLinkHub-Oberfläche für Profile, Tasten und eine ausdrücklich gewählte
+  Standard-DPI je Mausprofil; Unterstützung der API von OpenLinkHub 0.9.4.
+  Das externe Backend bleibt eine separat zu installierende Komponente.
+- Einheitliche Hardwareprüfung mit Hardware Fix als Unterpunkt und einem
+  Katalog mit 41 beschriebenen Modell-/Backend-Einträgen, Kategorie-/Hersteller-
+  Filtern und getrennten Hersteller-/Produktlinks. Fehlende Produktlinks
+  erzeugen keinen leeren Knopf; der Katalog ist keine neue Hardwarefreigabe.
+- Korrigierte Seitenwechsel aus Untermenüs: Ein vollständiger Mausklick wird
+  ausgewertet, bevor sich die Zeilen durch Auf-/Zuklappen verschieben.
+
+Laufzeit-ZIP, DEB und RPM enthalten OHC. Der optionale native OpenRGB-Pfad,
+OpenLinkHub und Treiber bleiben eigenständige Backends. Quellarchiv,
+Entwicklerpaket und Local-AI-Gitbundle enthalten den bearbeitbaren Projektstand;
+private Profile, Logs und lokale Backend-Binärdateien werden nicht veröffentlicht.

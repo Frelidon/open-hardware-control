@@ -194,4 +194,3 @@ def build(host, channels):
     wizard.show()
     QTimer.singleShot(0, lambda: begin(host) if wizard.isVisible() else None)
     host.log_message("MAINBOARD-FAN-ASSISTENT: 3.4.25-Assistent gestartet · Erkennen → Testen → Zuordnen → Speichern")
-
