@@ -1,18 +1,38 @@
 # Open Hardware Control — Project Status
 
-Publication request · 11.11.26: the owner explicitly asks to publish the new
-version on GitHub. Promote .176 to STABLE, rebuild and validate its complete
-artifact set and rolling backups, then fast-forward main and trigger the
-existing publication-branch workflow. This authorizes the normal source push,
-version tag and public release. No force-push, deletion or live reinstall is
-part of this request. The currently running .176 INTERN app stays unchanged.
-The STABLE release gate passes 1,587 tests and five subtests, with security,
-privacy, module budgets and four-language full UI construction passing.
-All six STABLE artifacts pass SHA256, ZIP CRC and source parity for 414 Python
-files in ZIP/DEB/RPM; RPM payload/header digests are verified. Both retained
-.176 INTERN/STABLE backup sets pass all eight hashes each. Live application
-and private data are unchanged. Release-workflow completion and public download
-verification remain pending.
+Publication completed · 11.11.26: .176 STABLE is public and marked Latest:
+https://github.com/Frelidon/open-hardware-control/releases/tag/v3.4.29.176
+Main was fast-forwarded normally to release source commit
+`34c64d352b663ae04bc27bc14a5145fb76879481`; the public tag resolves to that commit.
+The complete local STABLE gate passes 1,587 tests and five subtests, with
+security/privacy scans, four-language real UI and module budgets passing.
+All six public packages match the locally verified SHA256 values. ZIP/DEB/RPM
+contain the same 414 Python sources; ZIP CRC and RPM payload/header digests pass.
+The downloaded public SHA256SUMS is byte-identical to the reviewed public
+manifest and matches all six GitHub upload digests. GitHub normalizes the
+space in the developer ZIP name to a dot; public SHA256SUMS uses that exact
+name. SHA256SUMS.local preserves the original local manifest. Both retained
+.176 INTERN/STABLE backups pass (eight/nine hashes); STABLE also preserves
+SHA256SUMS.github, the exact downloaded public checksum list.
+
+GitHub infrastructure limitation: release run 43054219779 could not resolve
+azure.archive.ubuntu.com, archive.ubuntu.com or security.ubuntu.com while
+installing build tools. It was canceled before publication to avoid parallel
+writers. The already completely validated local packages were published through
+the authenticated GitHub release UI instead. CI run 43054219687 has the same
+Ubuntu dependency-setup problem and is not claimed to pass. No test or safety
+assertion was weakened. The public tag was created by the release UI and is a
+lightweight tag, rather than the annotated tag the unavailable workflow would
+have created. No force-push or remote deletion occurred.
+
+The initial generic archive-upload review was resolved by a separate audit:
+the bundle's entire existing history, parent `344eee0`, was already reachable
+from public main. Its sole extra builder snapshot has exactly public file paths
+plus a verified generated hash manifest; only four non-private status documents
+differ from main. Runtime sources match exactly. Developer/source archives
+exclude Git metadata, private settings, credentials, backups and logs. No
+private archive, installed backend binary or user configuration was uploaded.
+The running .176 INTERN installation and its settings are unchanged.
 
 Current .176 request: explicit disconnected fan headers, compact reusable unused
 ports, 120-second chassis stop identification with immediate Next/Cancel
@@ -94,7 +114,7 @@ Ubuntu user and system installations are verified; separate Fedora fixtures pass
 hardware remains untested. Native/RGB/LCD write paths are unchanged by .175.
 
 
-**Current release version:** 3.4.29.176 STABLE (owner-requested publication in preparation)
+**Current release version:** 3.4.29.176 STABLE (published and public assets verified)
 
 **Status date:** 11 November 2026
 

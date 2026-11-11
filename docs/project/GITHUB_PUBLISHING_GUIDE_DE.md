@@ -9,11 +9,25 @@ Die laufende lokale `.176 INTERN`-Installation wird dabei nicht ersetzt.
 
 Repository: <https://github.com/Frelidon/open-hardware-control>
 
-Nach vollständiger lokaler Prüfung und Paket-/Sicherungsverifikation wird der
-saubere Commit ohne Force-Push auf `main` und `publish/v3.4.29.176` übertragen.
-Der vorhandene Workflow prüft und baut diesen Commit erneut, setzt erst danach
-den annotierten Tag und veröffentlicht alle Artefakte samt SHA256SUMS. Eine
-GitHub-CLI-Anmeldung auf dem lokalen Rechner ist dafür nicht nötig.
+Nach vollständiger lokaler Prüfung und Paket-/Sicherungsverifikation wurde
+`34c64d3` ohne Force-Push auf `main` und `publish/v3.4.29.176` übertragen.
+Der reguläre Workflow würde erneut prüfen/bauen und anschließend einen
+annotierten Tag setzen. Dieser Lauf konnte jedoch die Ubuntu-Paketserver
+nicht per DNS auflösen und wurde vor der Veröffentlichung abgebrochen.
+
+Die lokal vollständig geprüften sechs Pakete wurden stattdessen über die
+angemeldete GitHub-Release-Oberfläche veröffentlicht. Der dort erzeugte
+Versionstag zeigt direkt auf `34c64d3` (Lightweight-Tag). Die Veröffentlichung
+ist Latest, kein Entwurf und kein Pre-release. Alle öffentlichen Paket-Digests
+sowie die direkt heruntergeladene SHA256SUMS sind abgeglichen. Ein entfernter
+CI-Erfolg wird wegen des DNS-Problems ausdrücklich nicht behauptet.
+
+GitHub ersetzt das Leerzeichen im Entwickler-ZIP durch einen Punkt. Die
+öffentliche SHA256SUMS verwendet exakt diesen Namen; SHA256SUMS.local erhält
+die unveränderte lokale Liste. Die heruntergeladene öffentliche Liste liegt
+zusätzlich als SHA256SUMS.github in der geprüften STABLE-Sicherung.
+Vor dem Archivupload wurde gesondert geprüft, dass die Bundle-Historie bereits
+öffentlich ist und Entwickler-/Quellarchive keine privaten Dateien enthalten.
 
 Veröffentlichungen erfolgen nach erfolgreicher vollständiger Prüfung, sauberem Commit und realem KDE-/Hardwaretest.
 Der Eigentümer hat die flüssige RGB-/GPU-Darstellung und den Neustartbetrieb
@@ -57,7 +71,7 @@ Erwartete Dateien:
 - `open-hardware-control_3.4.29.176_all.deb`
 - `open-hardware-control-3.4.29.176-1.noarch.rpm`
 - `open-hardware-control-3.4.29.176-source.tar.gz`
-- `Entwicklerpaket 3.4.29.176.zip`
+- `Entwicklerpaket.3.4.29.176.zip` (öffentlicher GitHub-Dateiname)
 - `Open_Hardware_Control_3.4.29.176_LOCAL_AI.gitbundle`
 - `SHA256SUMS`
 

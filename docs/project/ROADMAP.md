@@ -1,14 +1,14 @@
 # Roadmap
 
-## Owner-requested .176 public release · 11.11.26
+## Completed .176 public release · 11.11.26
 
-Promote the tested implementation to STABLE, repeat the complete release gate,
-build and verify packages/backups, then publish through the existing GitHub
-workflow. Source push, version tag and public release are explicitly requested.
-Keep the currently running local INTERN installation unchanged. Workflow and
-public-download verification remain pending. The STABLE gate passes all 1,587
-tests and five subtests. Six artifact hashes, ZIP/DEB/RPM parity for 414 sources,
-RPM digests and both retained .176 INTERN/STABLE backups are verified.
+.176 STABLE is published as Latest, tag/source commit `34c64d3`. Main is updated
+without a force-push. All six public package digests match the verified local
+build; downloaded SHA256SUMS matches the exact GitHub filenames. Both retained
+INTERN/STABLE backups pass eight/nine hashes. The local STABLE gate passes
+1,587 tests and five subtests. GitHub's Ubuntu dependency setup has a DNS
+failure, so the validated local packages were uploaded through the release UI;
+no remote CI success is claimed. The running local INTERN app is unchanged.
 
 ## Current .176 work · 11.11.26
 

@@ -6,7 +6,13 @@ Hardwarefunktion oder Einstellung wird geändert; Versions-/Fenstertiteltests
 prüfen den STABLE-Kanal. Die laufende lokale INTERN-Installation bleibt erhalten.
 Vollständige STABLE-Prüfung: 1.587 Tests und fünf Untertests bestanden.
 Alle sechs Pakete, 414 Quellen in ZIP/DEB/RPM und beide aufbewahrten
-.176-INTERN/STABLE-Sicherungen geprüft. GitHub-Abschlussverifikation folgt.
+.176-INTERN/STABLE-Sicherungen geprüft. Öffentlich als Latest veröffentlicht:
+`v3.4.29.176` zeigt auf `34c64d3`; alle sechs Paket-Hashes und heruntergeladene
+öffentliche SHA256SUMS stimmen. Wegen DNS-Ausfall der Ubuntu-Paketserver im
+GitHub-Runner erfolgte der Upload der lokal geprüften Pakete über die Release-
+Oberfläche; kein bestandener entfernter CI-Lauf wird behauptet. Die originale
+lokale Liste bleibt SHA256SUMS.local; öffentliche Dateinamen stehen in
+SHA256SUMS. Beide Sicherungen erneut geprüft (INTERN acht, STABLE neun Hashes).
 
 Entwicklung 11.11.26 (.176): Neues Modul Lüfterzuordnung 1.0 unter
 `src/modules/fan_mapping/v1_0/` enthält `wizard.py`, `runtime.py` und
@@ -64,7 +70,7 @@ auf `codex/3.4.29-intern` bestätigt (Quellcommit `5fd7989`); kein öffentlicher
 Release-Tag und keine Änderung des Standardzweigs.
 
 **Stand:** 11.11.26
-**Anwendung:** 3.4.29.176 STABLE (Veröffentlichung beauftragt)
+**Anwendung:** 3.4.29.176 STABLE (öffentlich veröffentlicht und geprüft)
 
 Lokaler Stand 11.11.26: .174-Benutzerinstallation mit allen 403 Python-Quellen
 verifiziert und gestartet. Fünf native RGB-Arbeiter ohne gemeldete Fehler,

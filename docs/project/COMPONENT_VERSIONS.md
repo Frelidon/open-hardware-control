@@ -3,7 +3,10 @@
 Öffentliche .176-Veröffentlichung am 11.11.26 beauftragt. STABLE-Wächter:
 1.587 Tests und fünf Untertests bestanden; alle sechs Artefakte, beide
 .176-INTERN/STABLE-Sicherungen und 414 Quellen in ZIP/DEB/RPM geprüft.
-GitHub-Abschluss folgt. Installiert bleibt vorerst .176 INTERN.
+GitHub-Abschluss: .176 ist Latest, Quellcommit/Tag `34c64d3`; alle sechs
+öffentlichen Paket-Hashes und die heruntergeladene Prüfsummenliste stimmen.
+Upload der lokal geprüften Pakete wegen DNS-Ausfall im GitHub-Runner; kein
+entfernter CI-Erfolg behauptet. Installiert bleibt .176 INTERN.
 
 Entwicklung .176: Lüfterzuordnung 1.0 mit ausdrücklich unbenutzten Anschlüssen,
 120-s-Stopptest über die bestehenden Mainboard-Schreibwege und kurzer
