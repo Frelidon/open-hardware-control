@@ -25,3 +25,8 @@ Vollständige Prüfung: 1.609 Tests und fünf Untertests bestanden, einschließl
 vier Sprachen und 448 echter Navigationsgesten. Alte Medien-Prüfsummen bleiben
 erhalten; neuer Matrix-Loop vollständig dekodiert und nahtlos geprüft.
 Reale Fedora- und optische Matrix-Hardwareprüfung bleiben offen.
+
+Lokale Benutzer- und Systeminstallation abgeschlossen; alle 424 Python-Quellen
+und Matrix-Medien stimmen mit ZIP/DEB/RPM überein. Beide aufbewahrten
+Versionssicherungen sind geprüft. Bestehender RGB-/Levita-Start bestätigt;
+Matrix bleibt ausdrücklich durch den Benutzer anzuwenden.

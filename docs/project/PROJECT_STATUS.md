@@ -6,6 +6,25 @@ Owner-approved implementation in progress: original Matrix RGB/LCD pair, five ma
 
 Validation .177: the full release gate passes 1,609 tests and five subtests, including four-language real Qt construction and 448 complete sidebar pointer gestures. All 35 RGB presets pass the common renderer loop audit; old media hashes remain unchanged. Matrix video is 1600×720, 360 frames, 30 source FPS and 12 seconds, fully decoded; exact renderer periodicity passes and seam change 0.06652 is below maximum ordinary adjacent change 0.07044. Original dark/light hub and game-page renders reviewed. Matrix RGB calculation measures about 1.7 ms for 114 LEDs and 4.4 ms for 1,024 LEDs on this host (render timing, not optical delivery). 424 runtime Python files and 2,468 shared language IDs. Security/privacy, module budgets and repository checks pass. Fedora/Ubuntu existing fixture lanes pass; no real Fedora hardware or optical Matrix test is claimed. Packaging/install checks follow.
 
+
+Local .177 completion: all six artifacts and both retained .176/.177 INTERN
+release sets pass their SHA256 manifests. ZIP CRC, ZIP/DEB/RPM source parity
+for 424 Python files, Matrix media inclusion, DEB directory modes and RPM root
+ownership are verified. The private previous-install archive and final saved
+settings/profile/native-plugin baseline are verified before installation and
+launch. User installer completes; APT confirms dependencies but hits its local
+package Pathname-is-not-absolute error even from a no-space path. Installing
+the identical verified local DEB through Polkit/dpkg succeeds; DPKG reports
+3.4.29.177~intern2. Both installed trees and Matrix assets match source exactly.
+The user launcher starts .177, five native workers report zero errors,
+Sapphire External Control remains active and the previously saved Levita
+composition resumes under the existing daemon cadence. No Python traceback.
+The current design was not replaced with Matrix; its explicit apply actions
+remain available to the owner. Post-launch user interaction/live cooling
+updates change normal settings and a stored fan value; the saved baseline is
+preserved privately and no newer live choices are overwritten. No optical
+Matrix or real Fedora test is claimed. No GitHub push/tag/release performed.
+
 Private design research · 11.11.26: the owner requests a read-only inspection
 of the installed SignalRGB designs, an overview of independently implementable
 ideas and an original Matrix-like LCD design. Local installation exposes five

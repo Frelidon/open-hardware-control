@@ -14,7 +14,7 @@ eigene Reihenfolgen und bisherige Sichtbarkeitsschlüssel bleiben erhalten.
 Lokalisierung 1.0 ergänzt `design_hub_messages.py` in allen vier Sprachdateien;
 Feature-Reifegrade 1.0 kennzeichnet den neuen Bereich als Alpha. Artwork ergänzt
 eigene Designs-/Spielesymbole. Keine Bildschirmaufnahme, Telemetrie oder neue
-Hardwarebesitz-/Schreibschnittstelle. Vollständiger Wächter: 1.609 Tests und fünf Untertests bestanden, vier Sprachen und 448 echte Zeigergesten; 424 Laufzeitquellen und 2.468 Sprach-IDs. Matrix-MP4 vollständig dekodiert und periodisch geprüft; helle/dunkle Oberfläche geprüft. Lokale Paketierung folgt.
+Hardwarebesitz-/Schreibschnittstelle. Vollständiger Wächter: 1.609 Tests und fünf Untertests bestanden, vier Sprachen und 448 echte Zeigergesten; 424 Laufzeitquellen und 2.468 Sprach-IDs. Matrix-MP4 vollständig dekodiert und periodisch geprüft; helle/dunkle Oberfläche geprüft. Alle sechs Pakete, beide .176/.177-INTERN-Sicherungen und 424 identische Quellen in ZIP/DEB/RPM geprüft. Benutzer- und Systeminstallation .177 abgeschlossen (DPKG 3.4.29.177~intern2); beide installierten Quellbäume und Matrix-Assets bytegleich. Native RGB-Arbeiter ohne gemeldete Fehler und gespeicherte Levita-Komposition nach Start bestätigt. Keine optische Matrix-/Fedora-Liveprüfung oder GitHub-Veröffentlichung.
 
 
 Veröffentlichung 11.11.26 (.176): Auf ausdrücklichen Eigentümerauftrag wird
