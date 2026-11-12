@@ -42,7 +42,7 @@ class RGBEffectTests(unittest.TestCase):
         self.assertTrue(all(config.effect_id in known for _title, config in BUILTIN_DESIGNS))
         self.assertEqual(BUILTIN_DESIGNS[0][0], "Feste Farbe")
         self.assertEqual(BUILTIN_DESIGNS[0][1].effect_id, "static")
-        self.assertEqual(BUILTIN_DESIGN_CATEGORIES.count("Räumlich"), 8)
+        self.assertEqual(BUILTIN_DESIGN_CATEGORIES.count("Räumlich"), 10)
         self.assertNotIn("OHC Originale", BUILTIN_DESIGN_CATEGORIES)
         self.assertTrue({"converge", "crossflow", "depthwave"} <= known)
 

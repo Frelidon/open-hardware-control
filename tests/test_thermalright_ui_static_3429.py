@@ -107,7 +107,9 @@ def test_video_card_thumbnails_use_a_bounded_persistent_background_queue() -> No
     assert "self.thumbnail_workers: list[QProcess] = []" in UI
     assert "for _worker_number in range(2):" in UI
     assert "self.thumbnail_progress = QProgressBar()" in UI
-    assert "Cache bleibt für nächste Programmstarts erhalten" in UI
+    assert 'QLabel("Galerievorschauen vorbereiten")' in UI
+    assert 'self.thumbnail_progress.setFormat("%p% · %v/%m")' in UI
+    assert "Das LCD-Design und die Übertragung laufen unabhängig weiter." in UI
     assert "def _queue_video_thumbnail" in UI
     assert "def _start_thumbnail_workers" in UI
     assert "return self._queue_video_thumbnail(media)" in UI

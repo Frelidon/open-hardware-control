@@ -58,11 +58,15 @@ class GpuDashboardUiMixin:
         service = QVBoxLayout()
         service.setSpacing(5)
         service.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        badge = QLabel("●  LACT")
-        badge.setObjectName("gpuServiceBadge")
+        badge = self.gpu_service_badge = QLabel()
+        badge.setObjectName("muted")
+        badge.setMinimumHeight(34)
         badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
         service.addWidget(badge)
-        service.addWidget(QLabel(self.tr("Sicher"), objectName="muted"))
+        self.gpu_service_note = QLabel(self.tr("Lesestatus"), objectName="muted")
+        service.addWidget(self.gpu_service_note)
+        from .read_status import set_state
+        set_state(self, "unknown")
         hero_layout.addLayout(service)
         outer.addWidget(hero)
         self.gpu_hero_card = hero

@@ -1,5 +1,29 @@
 # Open Hardware Control — Modulkarte für Coding-KIs
 
+## .181 · Bereiche, Paargrößen, LCD-Manager, Hilfe und Erkennung
+
+- `ui_sections/v1_0/cards.py`, `reveal.py`: gemeinsame Themenflächen/Köpfe und
+  abbrechbare Scrollführung; Profile und `compact_panels.Disclosure` delegieren.
+- `pc_case_profiles/v1_5/workspace.py`, `case_page.py`, `component_summary.py`:
+  Gehäuse-/Profilleiste, PC-Zeichnung und direkte Entwürfe; unveränderte Controller.
+- `design_hub/v1_1/catalog.py`, `size_controls.py`: 15 Paar-IDs/feste Originaldateien,
+  je Paar Zoom und echte Matrix-Varianten; `scaling.py` rein, `preparation.py`
+  begrenzter asynchroner Encoder mit Absichts-/Verbergeabbruch; `mp4_metadata.py`
+  begrenzte strukturelle H.264-/Geometrie-/Dauerprüfung, `controller.py` bestehende Anwendenbesitzer.
+- `lcd_media_manager/v1_1/panel.py`: eingebetteter Entwurf mit Save/Cancel und
+  vorhandener Inventur; `dialog.py` nur Wrapper; Quelle-/Schema-/Decodergrenzen erhalten.
+- `help_center/v1_0/page.py`, `topics.py`, `controller.py`: Hilfeaufbau, originale
+  Themenzeichnung und bestehende viersprachige Inhalte/Navigation.
+- `dashboard_status/v1_0/model.py`, `cards.py`, `device_rows.py`: reine erkennbare
+  Inventur und explizite Karten-/Zeilenstatus ohne Erkennung oder Schreibzugriff.
+- `gpu_control/v1_0/read_status.py`: LACT-Lesestatus und begrenzte Fehler; übrige
+  GPU-Controller und Sicherheitsprüfungen bleiben maßgeblich.
+
+Gezielte Dateien: `test_section_reveal_3429181.py`, `test_design_hub_size_3429181.py`,
+`test_design_hub_mp4_3429181.py`, `test_case_workspace_ownership_3429181.py`,
+`test_lcd_inline_manager_3429181.py`, `test_help_inventory_3429181.py`,
+`test_gpu_read_status_3429181.py`; vollständiger UI-/Release-Wächter bleibt Pflicht.
+
 ## .180 Lesbare Profilkarte und geöffnete Unterbereiche
 
 Aktueller einziger Pfad `profiles_workspace/v1_1/`: `page.py` hält Auswahl und
@@ -28,7 +52,7 @@ Videos, Matrix-Zeichengrößen; bestehende Dateien unverändert.
 ## .95 Display preview paths
 
 `lcd_levita/v1_7/media_preview.py`: selected-video driver, pending/confirmed
-composition, firmware release. `lcd_media_manager/v1_0/preview_visibility.py`
+composition, firmware release. `lcd_media_manager/v1_1/preview_visibility.py`
 and `video_preview.py`: shared exposed-viewport/local decoding without hardware.
 `display_effects/v1_11/page.py` / `library.py`: transient exploration, clear/live
 fallback, stable data IDs and current translated details. `light_bands_renderer.py`
@@ -149,7 +173,7 @@ Schreibbesitz und SDK-Grenzen bleiben bei den bisherigen Transportwegen.
 | `src/modules/hardware_backends/v1_0/` | Reine, fail-closed Auswahl- und Auflösungsrichtlinie für vorhandene Hardware-Unterbauten | Nein |
 | `src/modules/temperature_history/v1_2/` | Begrenzter RAM-Sitzungspuffer, datierter interaktiver Qt-Canvas, skalierbare Splitter, rein lesende gruppierte Linux-hwmon-Sensorerkennung und ausdrücklicher CSV-/JSON-Berichtsexport | Nur die vom Nutzer gewählte Berichtsdatei |
 | `src/modules/responsive_gallery/v1_0/` | Breitenabhängige Spaltenzahl, Viewport-Resize-Bündelung und gleichmäßige Kachelverteilung | Nein |
-| `src/modules/lcd_media_manager/v1_0/` | Mehrere lokale Designordner/Einzelmedien einschließlich GIF, Anzeigenamen und nicht-destruktive Ausblendungen für Levita und Kraken | Nur QSettings; Quelldateien unverändert |
+| `src/modules/lcd_media_manager/v1_1/` | Mehrere lokale Designordner/Einzelmedien einschließlich GIF, Anzeigenamen und nicht-destruktive Ausblendungen für Levita und Kraken | Nur QSettings; Quelldateien unverändert |
 | `src/modules/cooling_safety/v1_0/` | Modellbezogene PWM-Untergrenzen und fail-closed Begrenzung vor Kühlungswrites | Nein |
 | `src/modules/pc_case_profiles/v1_5/` | Zentrale Gehäuse-Seite, 30 originale detaillierte Zeichnungen, gemeinsame RGB/LED/PWM-Zuordnung und optionale eigene Kühlungspositionen | Nein; PWM-Zuordnung delegiert nur vorhandenes chassis-only Mapping ohne Aktivierung/Kalibrierung |
 | `src/modules/rgb_studio/v1_15/` | Galerie, direkte Block-/ARGB-Auswahl und stabile physische Bindungen, native/zonengenaue GPU-Routen, Direct-Anschlusseditoren, manuelle Profilpins, Anschlussdiagnose und Qt-freie zählabhängige Effektabtastung | Nein; bestehender Hosttransport/SDK-Worker bleibt einziger Schreibpfad |

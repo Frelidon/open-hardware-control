@@ -151,7 +151,7 @@ def test_idle_memory_reclaim_collects_cycles_and_uses_optional_glibc_trim() -> N
 
 
 def test_hidden_video_preview_releases_decoder_source_and_frame_buffer() -> None:
-    source = (ROOT / "src/modules/lcd_media_manager/v1_0/video_preview.py").read_text(
+    source = (ROOT / "src/modules/lcd_media_manager/v1_1/video_preview.py").read_text(
         encoding="utf-8"
     )
     assert "def _release_player_source" in source

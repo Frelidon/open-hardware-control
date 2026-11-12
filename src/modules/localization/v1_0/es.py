@@ -19,4 +19,4 @@ UI_MESSAGES.update(SUPPLEMENTAL_MESSAGES[LANGUAGE_CODE])
 from .content_ui_messages import CONTENT_UI_MESSAGES
 UI_MESSAGES.update(CONTENT_UI_MESSAGES[LANGUAGE_CODE])
 UI_MESSAGES[2950] = 'Galería animada de diseños RGB'
-# Profile UI: shared data.
+# UI: shared data.

@@ -1,5 +1,57 @@
 # Open Hardware Control — Architecture
 
+## .181 · Gemeinsame Bereiche, Designgrößen und eingebettete Bibliotheken
+
+`ui_sections/v1_0/cards.py` besitzt gemeinsame Themenflächen/Bereichsköpfe;
+`reveal.py` führt ausschließlich die nächste bestehende Scrollleiste mit einem
+420-ms-Auftrag. Nutzergesten, Seitenverbergen und neue Aufträge verwerfen alte
+Bewegungen; eine bedingte Rückkehr beim Schließen hält den Inhalt bis zum Ende
+sichtbar. Keine Layout-Skalierung, Screenshots, neuen Decoder oder Hardwarewrites.
+`ui_performance/v1_1/compact_panels.py:Disclosure` und
+`profiles_workspace/v1_1/surfaces.py` bleiben Kompatibilitätsfassaden.
+
+`pc_case_profiles/v1_5/workspace.py`, `case_page.py` und `component_summary.py`
+ändern ausschließlich Aufbau/Details der vorhandenen Gehäuseseite. Modelle,
+Profil-IDs, LED-/PWM-/ARGB-Routen, Entwurfscommit und Kalibrierung bleiben bei
+bestehenden Controllern. Comboboxen erhalten vor dem Herausnehmen aus bisherigen
+elternlosen Layouts ausdrücklich einen Qt-Eigentümer; sonst kann ein ungültiger
+nativer Widget-Item-Cache erst beim vollständigen Hauptfensterrendern abstürzen.
+Begrenzte Mindestinhaltsbreiten erhalten schmale Viewports ohne horizontales
+Abschneiden. Daher keine öffentliche Modulvertragsänderung.
+
+Einziger aktueller Paarpfad: `design_hub/v1_1`. `catalog.py` enthält 15 feste
+Originalquellen und deren genaue Dateierlaubnis, `size_controls.py` bewahrt
+Zoom/Matrix-Varianten je stabiler Paar-ID. `scaling.py` baut reine, begrenzte
+Fit-/Zoom-/Pad-/Crop-Pläne; `preparation.py` besitzt einen asynchronen ffmpeg-
+Prozess und atomare Cache-Dateien. Auftrag, Quelle und Größe müssen vor späterem
+Anwenden unverändert passen. Eine gesonderte LCD-Absichtsgeneration verwirft
+verspätete Ergebnisse nach neuerer LCD-Bedienung; Verbergen der Seite beendet
+die Vorbereitung. `mp4_metadata.py` prüft MP4-Struktur mit 1-MiB-Lesebudget,
+höchstens 512 Atomen/Tiefe acht, genau einer H.264-Videospur, 1600×720 in Spur
+und Sample sowie positiver Dauer bis 35 Sekunden. Mediennutzdaten werden dabei
+übersprungen, nicht im GUI-Thread dekodiert. `controller.py` delegiert an bestehende Besitzer;
+`preview.py` zeichnet dieselbe unverzerrte Geometrie und hält einen sichtbaren
+Decoder. Zehn RGB-Konfigurationen werden nur angehängt; Algorithmen bleiben in
+der gemeinsamen bestehenden Effekt-Engine. Kein gekoppelter Geräte-Frame-Takt.
+
+Einziger aktueller Bibliothekspfad: `lcd_media_manager/v1_1`. `panel.py` hält den
+nicht-destruktiven Editorentwurf und explizite Speichern-/Abbrechen-Signale.
+`dialog.py` bleibt ein kleiner Wrapper für frühere Aufrufer. Hostseiten übergeben
+bereits indexierte Medien (höchstens 2.500 Pfade); Öffnen scannt keine Verzeichnisse.
+Modell/Schema, Quellgrenzen und gemeinsame sichtbarkeitsgebundene Decodierung
+bleiben erhalten. Der Vorschau-Cachefortschritt ist kein LCD-Transferfortschritt.
+
+`help_center/v1_0` trennt Themenzeichnung, Aufbau und vorhandene Hilfecontroller.
+`dashboard_status/v1_0` trennt reine Inventurklassifizierung von statischen Karten
+und Hardwarezeilen, ohne zusätzliche Erkennung. `gpu_control/v1_0/read_status.py`
+klassifiziert bestehende LACT-Leseereignisse und begrenzt identische redigierte
+Fehler, ohne Steuerfreigabe aus grüner Darstellung abzuleiten.
+
+Der Layoutabsturz ist korrigiert; vollständige echte Qt-Hauptfensteraufnahmen von
+Hub, Gehäuse und Hilfe sowie vier UI-/Lokalisierungstests bestehen. Der gesamte
+Release-Wächter, Paket-/Sicherungsprüfung und lokale .181-Installation stehen
+weiter aus; installierter Prüfstand bleibt .180.
+
 ## .180 · Scrollbarer Profil-Arbeitsbereich 1.1
 
 Der einzige aktuelle Pfad ist `profiles_workspace/v1_1/`. `page.py` behält
@@ -584,7 +636,7 @@ does not invent missing server lengths or continuously override manual edits.
 - `src/modules/rgb_studio/v1_15/` — RGB gallery, direct block/header selection with independently persisted stable bindings and explicit native/controller-zone GPU routing; generic bounded Direct-header pixel editor, protected manual counts, semantic ARGB diagnostics and full-width transfer status. Lazy exports keep count-aware pure sampling helpers Qt-free. Every configured zone renders independently without changing the existing sole-writer queue or 25-Hz target; SDK throughput is not physical readback.
 - `src/modules/display_effects/v1_11/` — bounded effect state, procedural smoke renderer, attributed/filterable offline media catalog, responsive Layer-1/Layer-2 cards, explicit firmware restore, visibility-bound local MP4 preview and profile-start staging through the existing Levita studio.
 - `src/modules/responsive_gallery/v1_0/` — reusable actual-viewport column calculation and coalesced Qt resize relay for card grids.
-- `src/modules/lcd_media_manager/v1_0/` — non-destructive multi-folder/individual-media references, exclusions, editable display aliases and safe fallback names; original files remain untouched.
+- `src/modules/lcd_media_manager/v1_1/` — embedded non-destructive multi-folder/individual-media references, exclusions, editable display aliases and safe fallback names; original files remain untouched.
 - `src/modules/section_tabs/v1_0/` — reusable synchronized in-page tabs for sidebar sections with child pages; navigation state only.
 - `src/modules/responsive_startup/v1_0/` — bounded/coalesced CoolerControl status process plus fail-closed host integration; no PWM writer.
 - `src/ui_layout.py` — persisted UI layout/navigation model.

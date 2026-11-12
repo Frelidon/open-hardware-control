@@ -30,6 +30,7 @@ from .reset_ui import GpuResetUiMixin
 from .read_ui import GpuReadUiMixin
 from .cockpit_ui import GpuCockpitUiMixin
 from .read_worker import read_device
+from .read_status import set_state
 from .snapshot import forget_snapshot, read_snapshot, write_snapshot
 from .stress import benchmark_command, benchmark_gpu_environment
 from .stress_ui import GpuStressUiMixin
@@ -153,6 +154,7 @@ class GpuControlPage(GpuCockpitUiMixin, GpuReadUiMixin, GpuDashboardUiMixin, Gpu
         if self.preview_active or getattr(self, "stress_process", None) is not None:
             return
         self.refresh_rgb_lighting_inventory()
+        set_state(self, "loading")
         if self._request_gpu_read("inventory"):
             self.baseline = None
             self.overdrive_enabled = None
@@ -161,10 +163,7 @@ class GpuControlPage(GpuCockpitUiMixin, GpuReadUiMixin, GpuDashboardUiMixin, Gpu
         try:
             rows = self.client.devices()
         except LactError as exc:
-            self.baseline = None
-            self.overdrive_enabled = None
-            self.status.setText(self.tr("LACT-Dienst nicht erreichbar: {reason}").format(reason=exc))
-            self._sync_buttons()
+            self._gpu_read_failed("inventory", str(exc))
             return
         self._populate_gpu_devices(rows)
 
@@ -194,16 +193,18 @@ class GpuControlPage(GpuCockpitUiMixin, GpuReadUiMixin, GpuDashboardUiMixin, Gpu
         self._sync_tuning_sliders()
         self.free_fan_button.setEnabled(False)
         if not gpu_id:
+            set_state(self, "empty")
             self.status.setText(self.tr("LACT meldet keine Grafikkarte."))
             self._sync_buttons()
             return
         if self._request_gpu_read("device", gpu_id):
             self._sync_buttons()
             return
+        set_state(self, "loading")
         try:
             self._apply_gpu_read(read_device(self.client, gpu_id, ownership_reader=coolercontrol_gpu_claim))
         except LactError as exc:
-            self.status.setText(self.tr("GPU-Daten konnten nicht gelesen werden: {reason}").format(reason=exc))
+            self._gpu_read_failed("device", str(exc))
             self._refresh_gpu_dashboard()
         self._sync_buttons()
 

@@ -137,8 +137,8 @@ from modules.lcd_levita.v1_7.theme_adapter import (
     stage_editable_theme,
 )
 from modules.display_effects.v1_11.handoff import validate_effect_handoff
-from modules.lcd_media_manager.v1_0 import (
-    DesignLibraryDialog,
+from modules.lcd_media_manager.v1_1 import (
+    DesignLibraryPanel,
     friendly_media_name,
     load_library_state,
     save_library_state,
@@ -648,7 +648,7 @@ class ThermalrightDisplayStudio(QGroupBox):
             "config1.dc übernimmt Positionen, Farben und Live-Sensorwerte direkt."
         )
         standard_button.clicked.connect(self.load_default_trcc_designs)
-        import_button = QPushButton("LCD-Manager")
+        import_button = self.library_manager_button = QPushButton("LCD-Manager")
         import_button.setToolTip(
             "Liest Bilder, Videos und vollständige Layoutordner ein. Über das Kartenmenü legst du Ebene 1 oder 2 fest."
         )
@@ -691,18 +691,33 @@ class ThermalrightDisplayStudio(QGroupBox):
         library_toolbar.addWidget(self.media_filter)
         outer.addLayout(library_toolbar)
 
+        translator = getattr(self.window(), "tr_static", None)
+        self.library_manager_panel = DesignLibraryPanel(
+            self.design_library_state, translator if callable(translator) else None,
+            self, known_media=(),
+        )
+        self.library_manager_panel.saved.connect(self._save_media_library)
+        self.library_manager_panel.canceled.connect(self.library_manager_panel.hide)
+        self.library_manager_panel.hide()
+        outer.addWidget(self.library_manager_panel)
+
         self.thumbnail_progress_panel = QFrame()
         thumbnail_progress_layout = QHBoxLayout(self.thumbnail_progress_panel)
         thumbnail_progress_layout.setContentsMargins(0, 0, 0, 0)
-        self.thumbnail_progress_label = QLabel(
-            "Videovorschauen werden bei Bedarf im Hintergrund vorbereitet"
-        )
+        self.thumbnail_progress_label = QLabel("Galerievorschauen vorbereiten")
+        self.thumbnail_progress_label.setWordWrap(True)
         self.thumbnail_progress_label.setObjectName("muted")
         self.thumbnail_progress = QProgressBar()
         self.thumbnail_progress.setRange(0, 1)
         self.thumbnail_progress.setValue(0)
         self.thumbnail_progress.setTextVisible(True)
-        self.thumbnail_progress.setMinimumWidth(280)
+        self.thumbnail_progress.setMinimumWidth(160)
+        self.thumbnail_progress.setMaximumWidth(280)
+        self.thumbnail_progress.setFormat("%p% · %v/%m")
+        self.thumbnail_progress.setAccessibleName("Fortschritt der Galerievorschauen")
+        self.thumbnail_progress.setToolTip(
+            "Dieser Fortschritt betrifft nur Vorschaubilder für die Galerie. Das LCD-Design und die Übertragung laufen unabhängig weiter."
+        )
         thumbnail_progress_layout.addWidget(self.thumbnail_progress_label, 1)
         thumbnail_progress_layout.addWidget(self.thumbnail_progress)
         self.thumbnail_progress_panel.hide()
@@ -1798,15 +1813,18 @@ class ThermalrightDisplayStudio(QGroupBox):
                           and self.startup_apply_active and not self.shutdown_started else None)
 
     def choose_media_directory(self) -> None:
-        translator = getattr(self.window(), "tr_static", None)
-        dialog = DesignLibraryDialog(
-            self.design_library_state,
-            translator if callable(translator) else None,
-            self,
-        )
-        if not dialog.exec():
+        panel = self.library_manager_panel
+        if panel.isVisible():
+            panel.hide()
             return
-        self.design_library_state = dialog.state()
+        panel.set_state(self.design_library_state, known_media=(entry.path for entry in self.media_entries))
+        panel.refresh_language()
+        panel.show()
+        panel.tree.setFocus()
+
+    def _save_media_library(self, state) -> None:
+        self.design_library_state = state
+        self.library_manager_panel.hide()
         self.settings.setValue(
             "thermalright/design_library_v1", save_library_state(self.design_library_state),
         )
@@ -2456,19 +2474,25 @@ class ThermalrightDisplayStudio(QGroupBox):
     def _update_thumbnail_progress(self) -> None:
         if not hasattr(self, "thumbnail_progress_panel"):
             return
+        translate = getattr(self.window(), "tr_static", lambda text: text)
+        self.thumbnail_progress.setAccessibleName(translate("Fortschritt der Galerievorschauen"))
+        self.thumbnail_progress.setToolTip(translate(
+            "Dieser Fortschritt betrifft nur Vorschaubilder für die Galerie. Das LCD-Design und die Übertragung laufen unabhängig weiter."
+        ))
         self.thumbnail_progress_panel.show()
         self.thumbnail_progress.setRange(0, max(1, self.thumbnail_total))
         self.thumbnail_progress.setValue(min(self.thumbnail_finished, self.thumbnail_total))
         pending = len(self.thumbnail_queue) + len(self.thumbnail_active)
         if pending:
             self.thumbnail_progress_label.setText(
-                f"Videovorschauen werden im Hintergrund geladen · {pending} ausstehend · Oberfläche bleibt bedienbar"
+                translate("Galerievorschauen vorbereiten") + f" · {pending} "
+                + translate("ausstehend")
             )
             return
         self.thumbnail_progress_label.setText(
-            f"Videovorschauen bereit · {self.thumbnail_generated} neu gespeichert"
-            + (f" · {self.thumbnail_failed} nicht lesbar" if self.thumbnail_failed else "")
-            + " · Cache bleibt für nächste Programmstarts erhalten"
+            translate("Galerievorschauen bereit") + f" · {self.thumbnail_generated} "
+            + translate("neu gespeichert")
+            + (f" · {self.thumbnail_failed} " + translate("nicht lesbar") if self.thumbnail_failed else "")
         )
         self._log(
             f"LCD-VORSCHAUCACHE: fertig · {self.thumbnail_generated} neu gespeichert · "
@@ -2767,6 +2791,12 @@ class ThermalrightDisplayStudio(QGroupBox):
         candidate = validate_effect_handoff(path, bundled_root)
         self._select_effect_media(candidate, title)
 
+    def select_owned_design_media(self, path: Path, title: str) -> None:
+        """Select only an exact original asset from the paired-design catalog."""
+        from modules.design_hub.v1_1.catalog import validate_pair_media
+        candidate = validate_pair_media(path)
+        self._select_effect_media(candidate, title)
+
     def _select_effect_media(self, candidate: Path, title: str) -> None:
         known = any(entry.path == candidate for entry in self.media_entries)
         if not known:
@@ -3022,7 +3052,7 @@ class ThermalrightDisplayStudio(QGroupBox):
         return QPixmap.fromImage(render_layer2_motion_frame(design.name, phase))
 
     def _advance_layer2_motion_preview(self) -> None:
-        from modules.lcd_media_manager.v1_0.preview_visibility import exposed
+        from modules.lcd_media_manager.v1_1.preview_visibility import exposed
         if exposed(self.canvas):
             self.canvas.set_motion_layer(self._current_motion_pixmap())
 

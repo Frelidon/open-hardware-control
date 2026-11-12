@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.4.29.181 INTERN · 12.11.26 (in development)
+
+- Share palette-aware section cards and cancellable 420-ms scroll reveal across profiles, case workspace and existing disclosures; preserve drafts, backgrounds and animation preferences.
+- Refine case/profile selection, PC drawing and direct component details without changing model IDs, routes, calibration or hardware writes.
+- Expand matching designs from five to 15 distinct original bundled LCD sources, append ten RGB presets without renumbering, and add per-pair 50–200% LCD zoom plus real Matrix glyph variants.
+- Prepare zoomed LCD copies only on explicit apply through one bounded cancellable encoder, atomic cache completion and exact source/size validation; discard stale LCD intent and cancel on page hide. Bound MP4 metadata checks to 1 MiB, 512 atoms and depth eight, requiring H.264 1600×720 and positive duration up to 35 seconds; preserve sensor Layer 2 and existing apply owners.
+- Embed the non-destructive LCD source/media manager in both display pages with explicit Save/Cancel; label gallery-preview preparation independently from LCD transfer.
+- Refresh help layout, static inventory recognition and GPU/LACT read-status reporting; retain existing translations, navigation and write guards.
+- Fix native Qt layout ownership before moving existing case/profile combos and bound their minimum content width for narrow windows. Full-window hub/case/help renders, 12 section/case tests, four UI/localization tests with 2,584 IDs, 30 current hub/metadata tests and 184 RGB loop checks pass. Full release validation, packaging/backups and local installation remain pending; .180 remains installed. No GitHub publication requested.
+
 ## 3.4.29.180 INTERN · 11.11.26
 
 - Keep profile summaries readable when editing, technical details and transfer panels are all open. A page-level scroll area and content-aware tile heights prevent compressed empty-looking cards.

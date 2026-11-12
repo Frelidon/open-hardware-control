@@ -68,7 +68,7 @@ def exercise():
         from PySide6.QtGui import QPixmap
         from PySide6.QtTest import QTest
         from PySide6.QtWidgets import QApplication, QScrollArea, QWidget
-        from modules.lcd_media_manager.v1_0.preview_visibility import exposed
+        from modules.lcd_media_manager.v1_1.preview_visibility import exposed
         import modules.display_effects.v1_11.page as display_effects_page_module
         import modules.lcd_levita.v1_7.media_preview as levita_media_preview_module
         import kraken_control as application

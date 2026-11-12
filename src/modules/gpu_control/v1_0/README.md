@@ -1,5 +1,12 @@
 # GPU Control 1.0
 
+`.181` adds `read_status.py`: the service badge starts unverified, becomes green
+only after a validated read, and reports failed/empty reads honestly. Both
+asynchronous Ubuntu and synchronous Fedora/injected-client errors enter the
+existing privacy-filtered general/error/GPU logs with a bounded ten-second
+deduplication cache. Old readings receive an explicit stale tooltip after a
+failure. These presentation states are never consulted by the write/test gates.
+
 `.153` uses `cockpit_ui.py` for composition, `read_worker.py` for Qt-free bounded read-only LACT requests,
 `read_probe.py` for a cancellable QProcess/deadline and `read_ui.py` for validated
 stale-result-safe presentation. Ubuntu uses this path; Fedora keeps the prior

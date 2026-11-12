@@ -27,10 +27,16 @@ class ProfileWorkspace(QWidget):
         self.initializing = False
 
     def open_editor(self, opened):
+        was_opened = self.editor.button.isChecked()
         self.editor.button.setChecked(opened)
         if opened:
             self.host.profile_name_input.setFocus()
-            QTimer.singleShot(0, lambda: self.scroll.ensureWidgetVisible(self.host.profile_name_input, 12, 18))
+            from modules.ui_sections.v1_0.reveal import scroller
+            controller = scroller(self.editor)
+            if controller is not None:
+                if was_opened: controller.opened(self.editor)
+            else:
+                QTimer.singleShot(0, lambda: self.scroll.ensureWidgetVisible(self.host.profile_name_input, 12, 18))
 
     def new_profile(self):
         host = self.host

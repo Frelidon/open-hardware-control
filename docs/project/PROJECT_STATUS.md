@@ -1,5 +1,71 @@
 # Open Hardware Control — Project Status
 
+## Lokale Entwicklung .181 · 12.11.26 — Quellprüfung abgeschlossen
+
+Der Eigentümer beauftragt den nächsten UI-Schritt: modernere Gehäuseübersicht,
+gemeinsame Unterbereiche mit sanfter Profilführung, zehn zusätzliche abgestimmte
+Designpaare samt Größenreglern, integrierter LCD-Manager, klare Fortschritts-
+und Hardwarestatusanzeigen sowie bessere Hilfe. Vorhandene Einstellungen,
+Profile, native RGB-/LCD-Animationen und Steuerzuständigkeiten bleiben maßgeblich.
+
+Neue gemeinsame UI-Bereiche 1.0 (`ui_sections/v1_0`) zeichnen Themenflächen und
+große Köpfe. Eine begrenzte 420-ms-Führung verschiebt nur die nächstgelegene
+vorhandene Scrollleiste und wird durch Nutzerbedienung, Seitenwechsel oder die
+Animationsabschaltung beendet. Profil-Arbeitsbereich 1.1 verwendet die gemeinsame
+Fassade; PC-Gehäuseprofile bleiben 1.5 mit reiner UI-Korrektur und unverändertem
+öffentlichen Modell-/Speichervertrag. Gehäuse-/Profilauswahl, PC-Zeichnung,
+Komponentenkarte und erweiterte Referenz-/Katalogbereiche werden klarer gegliedert.
+
+Designs & Spiele 1.1 besitzt 15 unterschiedliche Original-Medienpaare und zehn
+angehängte RGB-Vorlagen (insgesamt 45, alte Indizes unverändert). Jeder LCD-
+Hintergrund kann echt auf 50–200 Prozent skaliert werden; Matrix besitzt außerdem
+vier vorhandene Zeichenvarianten. Auswahl/Größenregler wenden nichts an.
+Nur ausdrückliches Anwenden startet nötigenfalls einen begrenzten asynchronen
+Encoder; veraltete Aufträge werden verworfen, nur das genau passende atomare
+Cache-Ergebnis geht an die bisherigen Anwendenbesitzer. Verlassen der Seite
+beendet die Vorbereitung; eine inzwischen neuere LCD-Absicht verwirft verspätete
+Ergebnisse. `mp4_metadata.py` prüft Cache-Strukturen mit höchstens 1 MiB Metadaten,
+512 Atomen und Tiefe acht auf H.264, 1600×720 und positive Dauer bis 35 Sekunden.
+Keine Videoframedekodierung oder zusätzlicher Prüfprozess im GUI-Thread.
+Ebene 2 bleibt erhalten.
+
+LCD-Medienmanager 1.1 ersetzt das Zusatzfenster durch einen eingebetteten Editor
+für Levita und Kraken mit Speichern/Abbrechen. Öffnen nutzt vorhandene Inventuren
+statt rekursiver Scans. Quellen, Aliasnamen und nicht-destruktive Ausblendungen
+bleiben im bestehenden Format. Der Galerie-Fortschritt wird von LCD-Übertragung
+und Wiedergabe ausdrücklich getrennt. Hilfe 1.0 bewahrt vier Sprachinhalte und
+Links in einer oben ausgerichteten Bibliothek/Artikelfläche. Übersichtserkennung
+1.0 trennt lokale Inventurdaten von Telemetrie und Steuerfreigabe. GPU-Steuerung
+1.0 ergänzt `read_status.py` für tatsächlichen LACT-Lesestatus und begrenzte
+Fehlerprotokollierung, ohne neue Schreib- oder Freigabelogik.
+
+Der reproduzierte Qt-Hauptfensterabsturz ist auf die Herausnahme vorhandener
+Comboboxen aus noch elternlosen Layouts eingegrenzt und behoben: Die Gehäuse- und
+Profilauswahl erhält vorher einen expliziten Qt-Eigentümer. Begrenzte
+Mindestinhaltsbreiten verhindern außerdem schmale, seitlich abgeschnittene
+Gehäuseinhalte; volle Profilnamen und stabile Daten-IDs bleiben erhalten.
+
+30 aktuelle Hub-/Größen-/Metadatenregressionen und 184 gemeinsame
+RGB-Schleifenprüfungen bestehen. Zwölf Abschnitts-/Gehäusetests bestätigen
+sanfte Bewegung, manuellen Abbruch, Lebensdauer und vollständige Hauptfenster-
+Renderzyklen bei 2551×1337, 1440×1000 und 1000×900 in beiden Themen. Hub, Gehäuse
+und Hilfe wurden als echte Qt-Hauptfenster mit isolierten Einstellungen und
+deaktivierten Hardwarezugriffen aufgenommen; auch aufgeklappte Gehäusebereiche
+sind geprüft. Vier vollständige UI-/Lokalisierungstests bestehen mit 2.584
+gemeinsamen Sprach-IDs. Helle/dunkle LCD-Manageransichten wurden ebenfalls geprüft.
+Quellfreigabe: 1.732 Tests und fünf Untertests sowie Kompilierung, Sicherheit,
+Datenschutz, Modulbudgets und alle weiteren Release-Prüfungen bestanden. Alte
+lokale Bytecode-Caches wurden vor dem Abschluss der restlichen Wächterprüfungen
+entfernt; keine Quelländerung danach. 464 Python-Laufzeitquellen. Paketbau,
+Zwei-Versionen-Sicherungen und Installation folgen; installiert bleibt .180.
+Kein GitHub-Auftrag und keine reale Fedora-Hardwareprüfung für .181.
+
+Weitere gewünschte GPU-/Lüfterkurven-Gestaltung und alte LCD-Bereichsbereinigung
+folgen getrennt nach Konzepten. Frühere offene Punkte werden nicht als erledigt
+ausgegeben: zusätzliche modulare Herstellerunterstützung, RGB-Farbauswahl,
+weitergehende Automations-/Kalender-/Nachtlichtabläufe, echte Spieltelemetrie und
+Windows-Hardwareunterstützung. Details: `UI_REDESIGN_PLAN.md` und `ROADMAP.md`.
+
 ## Lokale Entwicklung .180 · 11.11.26
 
 Der Eigentümer zeigt die installierte .179-Profilseite mit allen Bereichen

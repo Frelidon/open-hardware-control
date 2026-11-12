@@ -14,24 +14,25 @@ from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QLabel, QWidget
 from rgb_effects import BUILTIN_DESIGNS, render_effect
-from modules.design_hub.v1_0.catalog import PAIRS, normalize_order
-from modules.design_hub.v1_0.controller import apply_pair, resolve_pair
-from modules.design_hub.v1_0.page import DesignHubPage
-from modules.design_hub.v1_0.games import GAMES
+from modules.design_hub.v1_1.catalog import PAIRS, normalize_order, pair_poster
+from modules.design_hub.v1_1.controller import apply_pair, resolve_pair
+from modules.design_hub.v1_1.page import DesignHubPage
+from modules.design_hub.v1_1.games import GAMES
 from modules.design_automation.v1_0.model import AutomationRule, process_matches
 
 
 def test_pairs_keep_existing_rgb_indices_and_lcd_asset_contract():
-    assert [resolve_pair(pair)[0] for pair in PAIRS] == [34, 30, 31, 32, 33]
+    assert [resolve_pair(pair)[0] for pair in PAIRS[:5]] == [34, 30, 31, 32, 33]
     for pair in PAIRS:
         _index, video = resolve_pair(pair)
-        assert video.is_file() and video.with_suffix('.jpg').is_file()
-    assert BUILTIN_DESIGNS[-1][1].effect_id == "code_rain"
+        assert video.is_file()
+        assert pair_poster(pair).is_file()
+    assert next(config for title, config in BUILTIN_DESIGNS if title == "Matrix Code Rain").effect_id == "code_rain"
 
 
 @pytest.mark.parametrize("count", (1, 6, 8, 10, 30, 114, 512))
 def test_matrix_periodicity_direction_brightness_and_real_motion(count):
-    original = BUILTIN_DESIGNS[-1][1]
+    original = next(config for title, config in BUILTIN_DESIGNS if title == "Matrix Code Rain")
     for speed in (10, 100, 200):
         for direction in (-1, 1):
             config = replace(original, speed=speed, direction=direction)
@@ -56,7 +57,7 @@ class FakeStudio:
         self.calls = calls
         self.layer2 = {"blocks": [{"metric": "cpu_temp", "x": 180}], "user_text": "own"}
 
-    def select_bundled_effect_media(self, path, title): self.calls.append(("select-lcd", path, title))
+    def select_owned_design_media(self, path, title): self.calls.append(("select-lcd", path, title))
     def stage_profile_startup_design(self): self.calls.append(("stage-lcd",))
     def apply_design(self): self.calls.append(("apply-lcd",))
 

@@ -103,7 +103,8 @@ def test_project_owned_overlay_styles_are_distinct() -> None:
 
 def test_lcd_library_exposes_import_assignment_and_favorites() -> None:
     assert 'QPushButton("LCD-Manager")' in LEVITA_UI
-    assert "DesignLibraryDialog" in LEVITA_UI
+    assert "DesignLibraryPanel" in LEVITA_UI
+    assert "self.library_manager_panel.saved.connect" in LEVITA_UI
     assert "★ Nur Favoriten" in LEVITA_UI
     assert "Als Ebene 1 · Hintergrund verwenden" in LEVITA_UI
     assert "Als Ebene 2 · Datenoberfläche verwenden" in LEVITA_UI

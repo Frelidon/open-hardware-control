@@ -96,7 +96,7 @@ class TemperatureRecordingMixin:
             return
         if page == 8 and hasattr(self, "openlinkhub_check_update_button") and not self.openlinkhub_update_status:
             QTimer.singleShot(0, self.check_openlinkhub_updates)
-        from modules.design_hub.v1_0.navigation import sync as sync_design_navigation
+        from modules.design_hub.v1_1.navigation import sync as sync_design_navigation
         if sync_design_navigation(self, page):
             self.nav_lcd.setExpanded(False)
             self.nav_nzxt.setExpanded(False)

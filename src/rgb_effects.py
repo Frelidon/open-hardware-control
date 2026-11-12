@@ -15,7 +15,7 @@ import random
 import re
 from dataclasses import dataclass
 from modules.rgb_studio.v1_15.effect_sampling import averaged_pixel, motion_scale, moving_head_strength, smooth_fraction
-from modules.design_hub.v1_0.rain import rain_pixel
+from modules.design_hub.v1_1.rain import rain_pixel
 
 RGB = tuple[int, int, int]
 HEX_COLOR_RE = re.compile(r"^[0-9a-fA-F]{6}$")
@@ -118,6 +118,16 @@ BUILTIN_DESIGNS: tuple[tuple[str, RGBEffectConfig], ...] = (
     ("Neon Particle Garden", RGBEffectConfig("sparkle", "0c382f", "ff62ba", 90, 58, 1, 62011)),
     ("Circuit Chase", RGBEffectConfig("comet", "24ddff", "ff3da8", 100, 124, 1, 62017)),
     ("Matrix Code Rain", RGBEffectConfig("code_rain", "00e060", "c8ffd8", 90, 100, 1, 62023)),
+    ("Amber Light Bands", RGBEffectConfig("wave", "f09028", "ffd3a0", 90, 72, 1, 63001)),
+    ("Aurora Silk", RGBEffectConfig("wave", "18d9a4", "8567ff", 88, 55, 1, 63003)),
+    ("Nebula Depth", RGBEffectConfig("pulse", "35105c", "a368ff", 88, 58, 1, 63007)),
+    ("Liquid Prism", RGBEffectConfig("wave", "63839d", "e8e6ff", 88, 64, -1, 63011)),
+    ("Ocean Caustics", RGBEffectConfig("wave", "05437a", "4fcce0", 88, 68, 1, 63013)),
+    ("Solar Orbit", RGBEffectConfig("spinner", "ff5a10", "ffd18a", 94, 75, 1, 63017)),
+    ("Orbital Halo", RGBEffectConfig("spinner", "09b7d8", "7affd9", 92, 70, 1, 63019)),
+    ("Neon Apex", RGBEffectConfig("crossflow", "a52cfa", "2eeaff", 95, 85, 1, 63023)),
+    ("Quantum Core", RGBEffectConfig("converge", "291b87", "66eeff", 94, 78, -1, 63029)),
+    ("Quantum Voyage", RGBEffectConfig("comet", "232560", "9b7bff", 92, 80, 1, 63031)),
 )
 
 # Categories are presentation metadata only.  Keeping them separate preserves
@@ -129,6 +139,8 @@ BUILTIN_DESIGN_CATEGORIES: tuple[str, ...] = (
     "Impuls", "Ruhig", "Energie", "Bewegung",
     "Räumlich", "Räumlich", "Räumlich", "Räumlich", "Räumlich", "Räumlich",
     "Räumlich", "Räumlich", "Energie", "Bewegung", "Bewegung",
+    "Ruhig", "Spektrum", "Impuls", "Ruhig", "Spektrum", "Bewegung",
+    "Bewegung", "Räumlich", "Räumlich", "Bewegung",
 )
 
 

@@ -1,5 +1,49 @@
 # Roadmap
 
+## Current .181 UI step · 12.11.26 — source validation passed, installation pending
+
+The next bounded owner-requested step is in source: common large section cards
+and cancellable profile scrolling, case/component presentation, 15 matching
+RGB/LCD pairs with real per-pair sizes, embedded LCD media management, clear
+preview progress, help and honest inventory/LACT read status. Preserve settings,
+profiles, backgrounds, existing renderers and all hardware-owner/write guards.
+The last verified installed user/system version is .180.
+
+30 current hub/size/metadata tests, 184 RGB loop checks and 12 section/case
+tests pass. Four full UI/localization tests confirm 2,584 shared IDs. Complete
+Qt main-window renders of the hub, case and help pass in both themes; explicit
+combo ownership fixes the native layout crash and bounded content hints fix
+narrow-width clipping. Newer LCD intent and page hiding cancel stale encoder
+work; cached MP4 structure receives bounded H.264/geometry/duration checks.
+Source validation passes: 1,732 tests/five subtests, compilation, security,
+privacy, module budgets and remaining release checks after old local bytecode
+cleanup. Six packages, two rolling backups and local .181 installation follow. No GitHub upload/release is requested.
+Details and original concepts: [UI redesign plan](UI_REDESIGN_PLAN.md).
+
+### Next bounded steps after this checkpoint
+
+- Review the larger GPU layout and fan-curve concept, then implement/test it with
+  the existing short-test, rollback and ownership rules. A read-status badge
+  does not complete the full GPU redesign.
+- Review remaining legacy LCD menus and simplify them without deleting design,
+  import, sensor-layer or playback features. The integrated manager is one step.
+- Complete installed narrow/HiDPI, full light-theme and all-open-section checks,
+  including native animated backgrounds and original fan diagrams.
+
+### Earlier requests still open
+
+- Modular support for additional manufacturers based on actual diagnostics and
+  tested hardware; do not infer control from a brand or LED count.
+- Improved RGB color selection and more original fan effects; OpenRGB Originals
+  remains and the former redundant RGB OHC Originals group stays redistributed.
+- Automation Center program suggestions/file selection, time/calendar workflows
+  and night-light options beyond the existing automation rules.
+- Actual game telemetry and screen ambience. Existing game integration prepares
+  editable process/profile rules only.
+- Real Windows hardware-control support beyond the existing preview/build
+  infrastructure; separate platform/capability/safety work remains necessary.
+
+
 ## Completed .176 public release · 11.11.26
 
 .176 STABLE is published as Latest, tag/source commit `34c64d3`. Main is updated
@@ -10,7 +54,7 @@ INTERN/STABLE backups pass eight/nine hashes. The local STABLE gate passes
 failure, so the validated local packages were uploaded through the release UI;
 no remote CI success is claimed. The running local INTERN app is unchanged.
 
-## Current .176 work · 11.11.26
+## Completed local .176 checkpoint · 11.11.26
 
 Fan mapping now supports explicit disconnected ports, compact remapping access,
 120-second chassis identification with a short refreshed driver crash lease and
@@ -23,7 +67,7 @@ system installations are complete (3.4.29.176~intern2), with exact parity for
 are preserved. Real fan stop/crash and Fedora hardware checks are not claimed.
 The previous .175 GitHub upload remains unchanged during this follow-up.
 
-## Current .175 follow-up · 11.11.26
+## Completed .175 follow-up · 11.11.26
 
 Reviewed model-level links and category/vendor filters are implemented. The
 reproducible shifted-row pointer selection is fixed. Full gate: 1,556 tests and
@@ -41,20 +85,14 @@ records remain in release notes, the changelog and `NEXT_VERSION_NOTES.md`.
 
 ## Current work — 3.4.29 INTERN
 
-### Owner-requested UI redesign — implementation checkpoint 11.11.26
+### Historical UI implementation checkpoint .174 · 11.11.26
 
-The .174 implementation passes 1,544 tests and five subtests. The primary user
-installation is running and the system package update has completed. Both
-installed trees match all 403 Python sources. Profile/plugin preservation, native workers, GPU mode and saved LCD
-restore are verified read-only. No DPI override is enabled without explicit Save.
-
-
-Two review concepts and the implementation scope are recorded in
-[UI redesign plan](UI_REDESIGN_PLAN.md): case/fan catalog, content-sized lists
-across menus, OpenLinkHub update and device UI, and localized Hardware Check
-navigation with Hardware Fix as a child. Pictures are presented before code
-changes; later local installation/restart is authorized, publication remains
-separate. This is planned work, not an implemented or installed version.
+The .174 implementation and both local copies were verified against 403 Python
+sources, 1,544 tests and five subtests. Startup-DPI preference, case/fan catalog,
+OpenLinkHub .9.4 update and localized hardware navigation are established work.
+Later .175–.180 checkpoints are recorded in release notes and project status;
+the current source/validation boundary is the .181 section above. Publication
+remains a separate explicit owner action.
 
 ### Closure audit for 3.4.29.151–3.4.29.157
 

@@ -23,7 +23,7 @@ stable choice IDs.
 
 `lcd_levita/v1_7/media_preview.py` stores pending/confirmed canvas state and
 animates selected layout videos independently of card hover. Shared decoder and
-all-ancestor clipping are in `lcd_media_manager/v1_0/`; this package preserves
+all-ancestor clipping are in `lcd_media_manager/v1_1/`; this package preserves
 its BundledVideoPreview export. Decoding/composition unloads its decoder source
 and frame buffer outside the exposed canvas or while hidden/minimized, with a
 20-FPS composition cap. The native

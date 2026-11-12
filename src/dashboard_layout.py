@@ -328,3 +328,5 @@ class DashboardLayoutMixin:
             if row.key == "cooling":
                 self.health_label = title_label
                 self.health_badge = badge
+        from modules.dashboard_status.v1_0.device_rows import refresh as refresh_hardware_rows
+        refresh_hardware_rows(self, thermalright=thermalright, kraken_connected=kraken_connected)

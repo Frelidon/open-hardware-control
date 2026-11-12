@@ -4,8 +4,8 @@ import math
 from PySide6.QtCore import QObject, QRectF, Qt, QSize
 from PySide6.QtGui import QColor, QImage, QImageReader, QRadialGradient
 from PySide6.QtWidgets import QApplication
-from modules.lcd_media_manager.v1_0.video_preview import BundledVideoPreview
-from modules.lcd_media_manager.v1_0.preview_visibility import PreviewVisibility
+from modules.lcd_media_manager.v1_1.video_preview import BundledVideoPreview
+from modules.lcd_media_manager.v1_1.preview_visibility import PreviewVisibility
 from .catalog import VIDEO_THEMES, profile_source
 
 

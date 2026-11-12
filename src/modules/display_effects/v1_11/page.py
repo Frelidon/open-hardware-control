@@ -8,7 +8,7 @@ from PySide6.QtGui import QImage, QPixmap
 from PySide6.QtWidgets import QApplication, QAbstractButton, QAbstractSlider, QComboBox, QPushButton, QWidget
 from .base_page import DisplayEffectsPage as BasePage
 from .video_preview import BundledVideoPreview
-from modules.lcd_media_manager.v1_0.preview_visibility import PreviewVisibility, exposed
+from modules.lcd_media_manager.v1_1.preview_visibility import PreviewVisibility, exposed
 from modules.lcd_levita.v1_7.media_preview import video_source
 
 

@@ -147,8 +147,8 @@ from modules.display_effects.v1_11 import DisplayEffectsPage
 from modules.display_settings.v1_0 import build_display_settings
 from modules.section_tabs.v1_0 import SectionTabsController
 from modules.openlinkhub_update.v1_0.controller import OpenLinkHubUpdateMixin
-from modules.lcd_media_manager.v1_0 import (
-    DesignLibraryDialog,
+from modules.lcd_media_manager.v1_1 import (
+    DesignLibraryPanel,
     friendly_media_name,
     library_media_items,
     load_library_state,
@@ -2916,6 +2916,16 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         if hasattr(self, "refresh_runtime_health"): self.refresh_runtime_health()
         if hasattr(self, "feature_setting_cards"): refresh_feature_settings(self)
         if hasattr(self, "refresh_backend_update_language"): self.refresh_backend_update_language()
+        from modules.dashboard_status.v1_0.cards import refresh as refresh_inventory_status
+        refresh_inventory_status(self)
+        studio = getattr(self, "thermalright_display_studio", None)
+        if studio is not None and hasattr(studio, "library_manager_panel"):
+            studio.library_manager_panel.refresh_language()
+        if hasattr(self, "kraken_lcd_library_panel"):
+            self.kraken_lcd_library_panel.refresh_language()
+        if hasattr(self, "gpu_control_page"):
+            from modules.gpu_control.v1_0.read_status import refresh as refresh_gpu_read_status
+            refresh_gpu_read_status(self.gpu_control_page)
 
     def on_language_changed(self, _index: int = -1) -> None:
         if not hasattr(self, "language_combo"):
@@ -3269,13 +3279,13 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.navigation_items["programs"].setData(
             0, Qt.ItemDataRole.UserRole, self.programs_page_index
         )
-        from modules.design_hub.v1_0.page import DesignHubPage
-        from modules.design_hub.v1_0.games import GamesPage
+        from modules.design_hub.v1_1.page import DesignHubPage
+        from modules.design_hub.v1_1.games import GamesPage
         self.design_hub_page = DesignHubPage(self)
         self.design_hub_page_index = self.tabs.addTab(self.design_hub_page, "Abgestimmte Designs")
         self.games_page = GamesPage(self)
         self.games_page_index = self.tabs.addTab(self.games_page, "Spieleintegration")
-        from modules.design_hub.v1_0.navigation import install as install_design_navigation
+        from modules.design_hub.v1_1.navigation import install as install_design_navigation
         install_design_navigation(self)
         self.tabs.tabBar().hide()
         self.tabs.currentChanged.connect(self.update_page_header)
@@ -3387,95 +3397,19 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         menu.exec(self.more_button.mapToGlobal(self.more_button.rect().bottomRight()))
 
     def make_help_tab(self) -> QWidget:
-        page = QWidget()
-        root = QVBoxLayout(page)
-        root.setContentsMargins(16, 14, 22, 22)
-        root.setSpacing(14)
-        root.addWidget(self.make_module_hero(
-            "?", "Hilfe & Anleitungen",
-            "Schritt-für-Schritt-Anleitungen für die wichtigsten Bereiche. Über Links kannst du direkt zum passenden Bereich springen.",
-            "Integriert",
-        ))
-
-        self.help_search = QLineEdit()
-        self.help_search.setPlaceholderText("Hilfe durchsuchen …")
-        self.help_search.textChanged.connect(self.populate_help_topics)
-        root.addWidget(self.help_search)
-
-        body = QHBoxLayout()
-        self.help_topic_tree = QTreeWidget()
-        self.help_topic_tree.setHeaderHidden(True)
-        self.help_topic_tree.setMinimumWidth(230)
-        self.help_topic_tree.setMaximumWidth(330)
-        self.help_topic_tree.setAccessibleName("Anleitung auswählen")
-        self.help_topic_tree.currentItemChanged.connect(self.on_help_topic_selected)
-        body.addWidget(self.help_topic_tree)
-
-        self.help_browser = QTextBrowser()
-        self.help_browser.setOpenLinks(False)
-        self.help_browser.setOpenExternalLinks(False)
-        self.help_browser.anchorClicked.connect(self.on_help_link_clicked)
-        body.addWidget(self.help_browser, 1)
-        root.addLayout(body, 1)
-        self.populate_help_topics()
-        return page
+        from modules.help_center.v1_0.page import build_page
+        return build_page(self)
 
     def help_topics_for_language(self) -> dict[str, dict[str, object]]:
         return HELP_TOPICS.get(self.ui_language, HELP_TOPICS["de"])
 
     def populate_help_topics(self, _text: str = "") -> None:
-        if not hasattr(self, "help_topic_tree"):
-            return
-        query = self.help_search.text().strip().casefold() if hasattr(self, "help_search") else ""
-        selected_id = ""
-        current = self.help_topic_tree.currentItem()
-        if current is not None:
-            selected_id = str(current.data(0, Qt.ItemDataRole.UserRole) or "")
-        self.help_topic_tree.blockSignals(True)
-        self.help_topic_tree.clear()
-        first: QTreeWidgetItem | None = None
-        selected_item: QTreeWidgetItem | None = None
-        for topic_id, topic in self.help_topics_for_language().items():
-            title = str(topic.get("title", topic_id))
-            intro = str(topic.get("intro", ""))
-            steps = " ".join(str(step) for step in topic.get("steps", ()))
-            haystack = f"{title} {intro} {steps}".casefold()
-            if query and query not in haystack:
-                continue
-            item = QTreeWidgetItem([title])
-            item.setData(0, Qt.ItemDataRole.UserRole, topic_id)
-            self.help_topic_tree.addTopLevelItem(item)
-            if first is None:
-                first = item
-            if topic_id == selected_id:
-                selected_item = item
-        self.help_topic_tree.blockSignals(False)
-        target = selected_item or first
-        if target is not None:
-            self.help_topic_tree.setCurrentItem(target)
-            self.show_help_topic(str(target.data(0, Qt.ItemDataRole.UserRole) or "getting_started"))
-        else:
-            self.help_browser.setHtml("<p>Keine passende Anleitung gefunden.</p>")
+        from modules.help_center.v1_0.controller import populate
+        populate(self)
 
     def show_help_topic(self, topic_id: str) -> None:
-        if not hasattr(self, "help_browser"):
-            return
-        topic = self.help_topics_for_language().get(topic_id)
-        if topic is None:
-            topic = self.help_topics_for_language().get("getting_started", {})
-        title = str(topic.get("title", "Hilfe"))
-        intro = str(topic.get("intro", ""))
-        steps = tuple(str(step) for step in topic.get("steps", ()))
-        page = topic.get("page")
-        list_html = "".join(f"<li>{step}</li>" for step in steps)
-        open_label = {"de": "Passenden Bereich öffnen", "en": "Open matching section", "es": "Abrir el apartado", "fr": "Ouvrir la section"}.get(self.ui_language, "Passenden Bereich öffnen")
-        action = ""
-        if isinstance(page, int):
-            action = f'<p><a href="ohc://page/{page}"><b>→ {open_label}</b></a></p>'
-        self.help_browser.setHtml(
-            f"<h2>{title}</h2><p>{intro}</p><ol>{list_html}</ol>{action}"
-            "<hr><p><small>Open Hardware Control · integrierte Hilfe</small></p>"
-        )
+        from modules.help_center.v1_0.controller import show_topic
+        show_topic(self, topic_id)
 
     def on_help_topic_selected(self, current: QTreeWidgetItem | None, _previous: QTreeWidgetItem | None) -> None:
         if current is None:
@@ -3496,16 +3430,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             QDesktopServices.openUrl(url)
 
     def open_help_center(self, topic_id: str = "getting_started") -> None:
-        if hasattr(self, "help_page_index"):
-            self.tabs.setCurrentIndex(self.help_page_index)
-        if hasattr(self, "help_topic_tree"):
-            root = self.help_topic_tree.invisibleRootItem()
-            for index in range(root.childCount()):
-                item = root.child(index)
-                if str(item.data(0, Qt.ItemDataRole.UserRole) or "") == topic_id:
-                    self.help_topic_tree.setCurrentItem(item)
-                    break
-        self.show_help_topic(topic_id)
+        from modules.help_center.v1_0.controller import open_help
+        open_help(self, topic_id)
 
     def load_navigation_order(self) -> list[str]:
         raw = str(self.settings.value("navigation/order", "") or "")
@@ -3526,7 +3452,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         # beside RGB; preserve the relative order of every existing section.
         if "design_hub" not in saved:
             order.remove("design_hub")
-        from modules.design_hub.v1_0.catalog import normalize_order
+        from modules.design_hub.v1_1.catalog import normalize_order
         return normalize_order(order)
 
     def load_navigation_hidden(self) -> set[str]:
@@ -3777,7 +3703,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             self.restore_temperature_recording_navigation()
             for key in ("hardware_fix", "supported_devices"):
                 self.navigation_items["hardware_checker"].addChild(self.navigation_items[key])
-            from modules.design_hub.v1_0.navigation import install as install_design_navigation
+            from modules.design_hub.v1_1.navigation import install as install_design_navigation
             install_design_navigation(self)
         finally:
             self.navigation.blockSignals(False)
@@ -4941,6 +4867,9 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.cpu_topology_card = ValueCard("CPU-Aufbau", cpu_topology, "Linux /proc/cpuinfo")
         self.gpu_model_card = ValueCard("Grafikkarte", gpu_model, gpu_path or "Linux DRM")
         self.gpu_memory_card = ValueCard("Grafikspeicher", gpu_memory, "Linux DRM")
+        from modules.dashboard_status.v1_0.cards import initialize as initialize_inventory_status
+        initialize_inventory_status(self, cpu_model=cpu_model, cpu_topology=cpu_topology,
+                                    gpu_model=gpu_model, gpu_memory=gpu_memory, gpu_path=gpu_path)
         self.dashboard_card_entries: list[tuple[str, str, ValueCard]] = [
             ("water_temperature", "Kraken-Wassertemperatur", self.temp_card),
             ("cpu_temperature", "CPU-Temperatur", self.cpu_temp_card),
@@ -5032,23 +4961,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         hv = QVBoxLayout(hardware)
         hv.setContentsMargins(14, 12, 14, 12)
         hv.addWidget(QLabel("Erkannte Hardware", objectName="sectionTitle"))
-        for title, detail in (
-            ("NZXT Kraken", "Kühlmittel · Pumpe · Radiator · LCD"),
-            ("Mainboard / NCT6687", "Sensoren · Systemlüfter · PWM"),
-            ("OpenRGB Geräte", "RGB-Studio · ENE-DRAM · Controller"),
-            ("AMD GPU", "Temperatur · Auslastung · Hardwaredaten"),
-        ):
-            row = QFrame()
-            row.setObjectName("hardwareListRow")
-            rl = QHBoxLayout(row)
-            rl.setContentsMargins(10, 8, 10, 8)
-            text = QLabel(f"<b>{title}</b><br><span style='color:#8f9cad'>{detail}</span>")
-            text.setTextFormat(Qt.TextFormat.RichText)
-            rl.addWidget(text, 1)
-            ok = QLabel("● OK")
-            ok.setObjectName("healthGood")
-            rl.addWidget(ok)
-            hv.addWidget(row)
+        from modules.dashboard_status.v1_0.device_rows import build as build_hardware_rows
+        build_hardware_rows(self, hv)
         all_devices = QPushButton("Alle Geräte anzeigen  ›")
         all_devices.clicked.connect(lambda: self.tabs.setCurrentIndex(2))
         hv.addWidget(all_devices)
@@ -8995,6 +8909,11 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         library_actions.addWidget(self.kraken_lcd_library_button)
         library_layout.addWidget(library_note)
         library_layout.addLayout(library_actions)
+        self.kraken_lcd_library_panel = DesignLibraryPanel(self.kraken_lcd_library_state, self.tr_static, known_media=())
+        self.kraken_lcd_library_panel.saved.connect(self.save_kraken_lcd_library_manager)
+        self.kraken_lcd_library_panel.canceled.connect(self.kraken_lcd_library_panel.hide)
+        self.kraken_lcd_library_panel.hide()
+        library_layout.addWidget(self.kraken_lcd_library_panel)
         il.addWidget(library_box)
         self.refresh_kraken_lcd_library()
 
@@ -9685,6 +9604,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         box.setTitle(f"Komplexe LCD-Designs · NZXT-ESC-Import · {suffix}")
 
     def update_lcd_hardware_layout(self, has_kraken: bool, thermalright_present: bool) -> None:
+        self.dashboard_thermalright_present = bool(thermalright_present)
         area = getattr(self, "lcd_tile_area", None)
         if area is None:
             return
@@ -20275,16 +20195,23 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.kraken_lcd_library_load_button.setEnabled(bool(compatible))
 
     def open_kraken_lcd_library_manager(self) -> None:
-        dialog = DesignLibraryDialog(self.kraken_lcd_library_state, self.tr_static, self)
-        if not dialog.exec():
+        panel = self.kraken_lcd_library_panel
+        if panel.isVisible():
+            panel.hide()
             return
-        self.kraken_lcd_library_state = dialog.state()
-        self.settings.setValue(
-            "lcd/design_library_v1", save_library_state(self.kraken_lcd_library_state)
-        )
+        known = [Path(str(self.kraken_lcd_library_combo.itemData(index)))
+                 for index in range(self.kraken_lcd_library_combo.count())
+                 if self.kraken_lcd_library_combo.itemData(index)]
+        panel.set_state(self.kraken_lcd_library_state, known_media=known)
+        panel.show()
+
+    def save_kraken_lcd_library_manager(self, state) -> None:
+        self.kraken_lcd_library_state = state
+        self.settings.setValue('lcd/design_library_v1', save_library_state(state))
         self.settings.sync()
+        self.kraken_lcd_library_panel.hide()
         self.refresh_kraken_lcd_library()
-        self.log_message("LCD-MANAGER: eigene Ordner und Einzeldateien aktualisiert")
+        self.log_message('LCD-MANAGER: eigene Ordner und Einzeldateien aktualisiert')
 
     def load_selected_kraken_lcd_library_item(self) -> None:
         raw_path = str(self.kraken_lcd_library_combo.currentData() or "")

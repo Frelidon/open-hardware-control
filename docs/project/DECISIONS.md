@@ -1,5 +1,44 @@
 # Open Hardware Control — Durable Decisions
 
+## 12.11.26 · Gemeinsame UI-Sprache und echte Designgrößen (.181)
+
+Der Eigentümer möchte große einheitliche Bereichsköpfe, ruhige Öffnungs-/
+Schließbewegungen und eine übersichtliche Gehäuseseite. Gemeinsame Darstellung
+wird in `ui_sections/v1_0` zentralisiert; vorhandene Aufrufer behalten ihre
+Fassaden. Die Bewegung gehört der vorhandenen Scrollleiste und endet bei
+Nutzergesten oder Seitenwechsel. Bedienung und neue Entwürfe behalten Vorrang;
+kein Verlauf darf Benutzerpositionen oder Hardwarewerte nachträglich verändern.
+
+Zehn weitere Paare ergänzen die vorhandenen fünf anhand unterschiedlicher
+originaler gebündelter OHC-Medien. Eine Größenfunktion muss Vorschau und reale
+LCD-Ausgabe ändern. Generischer LCD-Zoom verwendet eine begrenzte lokale Kopie
+nach ausdrücklichem Anwenden; Matrix-Zeichengrößen bleiben echte vorhandene
+Varianten. Kein bloß optischer Regler und keine Größenänderung der Sensorebene.
+Alte IDs/Indizes und Hardwarebesitzer bleiben bestehen; RGB/LCD-Paare versprechen
+keine Frame-Synchronisation.
+
+Eine spätere Encoderantwort darf eine inzwischen neuere LCD-Absicht nicht
+überschreiben. Seitenverlassen beendet ausstehende Vorbereitung. Cacheprüfung
+bleibt eine begrenzte Metadatenprüfung ohne Videoframedekodierung im GUI-Thread;
+eine gültige MP4-Struktur ist keine behauptete physische Displaybestätigung.
+
+Der LCD-Manager gehört in die jeweilige Seite. Öffnen/Bearbeiten ändert nur einen
+Entwurf; erst Speichern übernimmt Referenzen und Aliasnamen. Originale werden
+nicht gelöscht. Galerie-Cachevorbereitung, LCD-Übertragung, Hardwareerkennung,
+aktuelle Telemetrie und Schreibfreigabe erhalten getrennte eindeutige Bedeutungen.
+Ein erkannter CPU-/GPU-Name oder erfolgreicher LACT-Lesevorgang ist keine Freigabe.
+
+Die Arbeit wird in überprüfbaren Schritten umgesetzt. Ein vollständiger GPU-/
+Lüfterkurven-Umbau und die weitere LCD-Legacybereinigung benötigen nachfolgende
+Entwürfe; sie werden nicht mit einer Statuskorrektur als erledigt ausgegeben.
+Weitere frühere Ideen bleiben sichtbar in der Roadmap. Vollständiger Wächter,
+Paketierung, Sicherungen und lokaler Neustart sind gesondert zu belegen. Der bei
+Vollfensteraufnahmen entdeckte Qt-Eigentümerfehler ist durch expliziten Besitz
+vor dem Umhängen vorhandener Comboboxen korrigiert. Die zugehörige Regression
+rendert das komplette Hauptfenster einschließlich verborgener Tab-Geometrie,
+statt nur die isolierte neue Seite zu prüfen. Eine Freigabe des gesamten .181-
+Standes benötigt weiterhin den noch ausstehenden Release-Wächter und Paketlauf.
+
 ## 11.11.26 · Profilinhalte bleiben auch aufgeklappt lesbar (.180)
 
 Die installierte Oberfläche muss mit allen Profilbereichen geöffnet dieselbe
