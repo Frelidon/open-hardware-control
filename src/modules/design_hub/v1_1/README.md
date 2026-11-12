@@ -52,4 +52,8 @@ Focused coverage includes `tests/test_design_hub_size_3429181.py` and
 hidden-page cleanup, bounded metadata, malformed files and real encoded geometry.
 Full-window Qt renders of the hub, case and help views now pass with the case
 toolbar ownership fix; source validation passes all 1,732 tests/five subtests and the security/privacy/
-module checks. Package and installation verification still follow. The last verified installed version is .180.
+module checks. All six packages and both .180/.181 backups pass verification; 464 runtime Python
+files and 169 original assets match across formats. User and system .181 copies
+are installed with byte-identical Python sources. The installed hub, inline
+manager, case, help and profile opening/closing pass isolated native Wayland
+checks in both themes. No real design apply/optical device check is inferred.

@@ -1,5 +1,49 @@
 # Open Hardware Control — Project Status
 
+## Verifizierter lokaler Abschluss .181 · 12.11.26
+
+Quellcommit `75d146d`, Anwendung 3.4.29.181 INTERN: 1.732 Tests und fünf Untertests,
+Kompilierung, Sicherheits-/Datenschutzscan, Modulbudgets und alle übrigen
+Release-Prüfungen bestanden. Nach dem vollständigen Testlauf wurden alte lokale
+Bytecode-Caches entfernt und die restlichen unveränderten Wächterprüfungen
+fortgesetzt; es wurde keine Prüfung ausgelassen. 464 Python-Laufzeitquellen,
+2.584 gemeinsame Nachrichten-IDs in vier Sprachen.
+
+Alle sechs Artefakte (Laufzeit-/Entwickler-ZIP, Quell-TAR, Git-Bundle, DEB, RPM)
+sind gebaut. Sechs Dist-SHA256, beide ZIP-CRCs/vollständigen Manifeste,
+Quell-TAR-Manifest, Bundle, Paketmetadaten/Root-Eigentümer/Rechte und RPM-Digests
+bestanden. Alle 464 Pythonquellen und 169 Original-Assetdateien stimmen in
+ZIP/Quellarchiv/DEB/RPM exakt überein. Genau die zwei vollständigen externen
+Sicherungen .180/.181 bleiben erhalten; jeweils acht SHA256-Einträge geprüft.
+
+Die bisherige .180-Benutzerkopie sowie Einstellungen, Profile und beide
+unterschiedlichen nativen RGB-Plugins wurden privat gesichert. Nur der durch
+UID, Kommando und Startzeit bestätigte OHC-Prozess wurde mit SIGTERM geordnet
+beendet. Benutzer- und Systemkopie sind jetzt .181 (DPKG 3.4.29.181~intern2);
+beide installierten 464-Quellbäume sind bytegleich. Einstellungen, Profile und
+Plugins waren unmittelbar vor dem normalen Neustart unverändert; Profile und
+beide Plugins auch danach erneut hashgleich. Laufende Benutzereingaben werden
+nicht durch Rückspielen der Sicherung überschrieben.
+
+Die tatsächlich installierte Benutzerkopie wurde in einem eigenen Wayland-
+Fenster mit temporären Einstellungen und deaktivierten Hardwarezugriffen
+geprüft: Gehäuse, Hilfe, alle 15 Designpaare, integrierter LCD-Manager inklusive
+Abbrechen und Profil-Aufklappen/-Schließen in beiden Themen. Die Bilder zeigen
+keine Live-Hardwareprüfung: Gehäusepositionen stammen aus einer isolierten Kopie
+der vorhandenen UI-Daten; Gerätewerte bleiben ohne Hardwarezugriff leer.
+Die separaten Offscreen-Tests prüfen zusätzlich drei Größen und vier Sprachen.
+
+Die normale Benutzerinstallation ist wieder gestartet. Der aktuelle Sitzungslog
+bestätigt das gespeicherte Startprofil, das nach frischem CPU-Wert fortgesetzte
+Kühlprofil, sechs RGB-Geräte, den gestarteten nativen RGB-Arbeiter und das aktive
+gespeicherte Levita-Startdesign. Die fünf Direct-Geräte melden im beobachteten
+Startfenster `errors=0`; die GPU verwendet ihren gemeldeten Hardwaremodus.
+Dies ist Protokollevidenz, keine optische Messung am Lüfter/LCD und kein neuer
+Fedora- oder Windows-Hardwarenachweis.
+
+Die gebauten Pakete und Sicherungen bleiben unveränderte Schnappschüsse vor
+diesem nachträglichen Installationsnachweis. Kein GitHub-Upload oder Release.
+
 ## Lokale Entwicklung .181 · 12.11.26 — Quellprüfung abgeschlossen
 
 Der Eigentümer beauftragt den nächsten UI-Schritt: modernere Gehäuseübersicht,

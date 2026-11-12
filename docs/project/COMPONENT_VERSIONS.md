@@ -1,5 +1,12 @@
 # Komponenten- und Versionsübersicht – Version 3.4.29.181 INTERN
 
+Lokaler Abschluss 12.11.26: .181 in Benutzer- und Systemkopie installiert;
+beide Bäume mit 464 Pythonquellen geprüft. 1.732 Tests/fünf Untertests,
+2.584 Sprach-IDs, sechs Pakete und beide .180/.181-Sicherungen verifiziert.
+Installierte Wayland-Ansichten in beiden Themen, Profile/Plugin-Erhalt und
+normaler RGB-/Levita-Start geprüft. Backendversionen bleiben unverändert.
+Nachfolgende Vorbauangaben dokumentieren den zeitlichen Entwicklungsstand.
+
 ## Entwicklung .181 · 12.11.26 — noch nicht installiert
 
 Gemeinsame UI-Bereiche 1.0, Hilfe 1.0 und Übersichtserkennung 1.0 sind neue

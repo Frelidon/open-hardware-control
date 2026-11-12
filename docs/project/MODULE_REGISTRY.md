@@ -1,5 +1,19 @@
 # Open Hardware Control — verbindliches Modulregister
 
+Abschluss 12.11.26 (.181): Quellcommit `75d146d`; 1.732 Tests und fünf Untertests
+sowie Sicherheits-/Datenschutz-/Budget- und restliche Release-Prüfungen bestanden.
+464 Laufzeitquellen und 169 Assets in allen Formaten bytegleich; alle sechs
+Pakete und genau beide .180/.181-Sicherungen mit je acht SHA256 geprüft.
+Benutzer- und Systemkopie .181 installiert, beide 464-Quellbäume identisch.
+Profile und beide unterschiedlichen RGB-Plugins vor/nach Start hashgleich;
+Einstellungen vor Start unverändert. Echte installierte Wayland-Ansichten von
+Gehäuse/Hilfe/Designpaaren/LCD-Manager/Profilführung in beiden Themen mit
+isolierten Einstellungen und ohne Hardwarezugriffe geprüft. Normales Startprofil,
+CPU-Frischefortsetzung, nativer RGB-Start ohne gemeldete Fehler und aktives Levita-
+Startdesign durch Sitzungslog bestätigt. Keine optische Geräteprüfung/Fedora-
+Liveprüfung oder GitHub-Veröffentlichung. Ältere Vorbauangaben unten bleiben
+historische Entwicklungsschritte; aktueller Nachweis in `PROJECT_STATUS.md`.
+
 Entwicklung 12.11.26 (.181): Neue gemeinsame UI-Bereiche 1.0 unter
 `src/modules/ui_sections/v1_0/` trennen `cards.py` (Themenflächen/Köpfe) und
 `reveal.py` (abbrechbare 420-ms-Führung der bestehenden Scrollleiste).
@@ -1189,7 +1203,7 @@ dreizeilige persönliche Callouts.
 
 | Datum | Modul | Version | Änderung |
 |---|---|---:|---|
-| 12.11.26 | UI-Bereiche / Designs & Spiele / LCD-Medienmanager / Hilfe / Übersichtserkennung / GPU / Gehäuse / Profile / Lokalisierung | 1.0 / 1.1 / 1.1 / 1.0 / 1.0 / 1.0 / 1.5 / 1.1 / 1.0 · Anwendung 3.4.29.181 | Gemeinsame Köpfe und abbrechbare Scrollführung; Gehäuse-/Komponentendarstellung; 15 Originalpaare und reale LCD-Größen mit begrenztem Encoder; eingebetteter nicht-destruktiver Manager; Hilfe/Inventur-/LACT-Lesestatus. Stabile IDs, Schema, Hardwarebesitz und Schreibwege erhalten. 2.584 durch vier UI-/Sprachtests bestätigte IDs; 30 Hub-/Metadatentests, 184 RGB-Schleifenprüfungen und zwölf Abschnitts-/Gehäusetests bestanden. Qt-Besitzfehler vor Layoutentnahme und schmale Combobox-Hints korrigiert; vollständige Hauptfenster-Grabs bestanden. Gesamtprüfung/Pakete/Installation noch offen. |
+| 12.11.26 | UI-Bereiche / Designs & Spiele / LCD-Medienmanager / Hilfe / Übersichtserkennung / GPU / Gehäuse / Profile / Lokalisierung | 1.0 / 1.1 / 1.1 / 1.0 / 1.0 / 1.0 / 1.5 / 1.1 / 1.0 · Anwendung 3.4.29.181 | Gemeinsame Köpfe und abbrechbare Scrollführung; Gehäuse-/Komponentendarstellung; 15 Originalpaare und reale LCD-Größen mit begrenztem Encoder; eingebetteter nicht-destruktiver Manager; Hilfe/Inventur-/LACT-Lesestatus. Stabile IDs, Schema, Hardwarebesitz und Schreibwege erhalten. 2.584 durch vier UI-/Sprachtests bestätigte IDs; 30 Hub-/Metadatentests, 184 RGB-Schleifenprüfungen und zwölf Abschnitts-/Gehäusetests bestanden. Qt-Besitzfehler vor Layoutentnahme und schmale Combobox-Hints korrigiert; vollständige Hauptfenster-Grabs bestanden. Gesamtprüfung: 1.732 Tests/fünf Untertests und alle Quellfreigaben bestanden; sechs Pakete, beide Sicherungen und beide .181-Installationen mit 464 Quellen verifiziert. |
 | 09.11.26 | OpenRGB Studio / PC-Gehäuseprofile / Anwendungsabschluss / Lokalisierung | 1.15 / 1.5 / 1.1 / 1.0 | Gemeinsame Hardware-/Gehäuse-Effektzeit übernimmt das vollständige monotone Zeitintervall. Der Nutzerlog belegt 350–370 ms für fünf seriell bestätigte Direct-Geräte (ca. 2,7 Gesamtframes/s); eine geordnete persistente Loopback-Verbindung je Controller überträgt verschiedene Controller nun parallel, bei weiter einem OHC-Arbeiter, vollständigen Frames, Latest-frame-wins und 25-Hz-Obergrenze. GPU-/Halterungsstreifen erhalten dieselbe Umlaufdauer wie die Galerie. Abschlussbeleuchtung setzt beim echten Beenden Weiß, Einzelfarbe oder gemeldeten nativen Rainbow; Tray und Neustart bleiben wirkungslos. Reine Regressionen ergänzt; optische Prüfung am Gerät bleibt offen. |
 | 05.11.26 | LCD-Vorschau / Snapshot-Prozesslaufzeit / Release-Test | Testfix / 1.0 / Testfix · Anwendung 3.4.29.168 | Echte verschachtelte Scroll-Sichtbarkeit wird in einer kontrollierten Qt-Hierarchie geprüft; vollständige Anwendung prüft getrennt Medienwahl, Pause/Fortsetzung, Bestätigung und vier Sprachen ohne virtuelle Desktopannahme. Spätes Activity-Probe-Signal nach Zerstörung seines Qt-Eigentümers wird ohne Neustart verworfen. Produktive UI-, Profil-, Vorschau- und Hardwarepfade unverändert. |
 | 05.11.26 | LCD-Vorschau / Release-Test | Testfix / Testfix · Anwendung 3.4.29.167 | Isolierter Vorschauvertrag setzt vor Fensterbau den Levita-Kühlertyp in seinem privaten QSettings-Bereich, sodass die LCD-Seite auf hardwarefreiem Runner und Besitzerrechner gleich vorhanden ist. Produktive USB-Erkennung und Hardwarepfade unverändert. |

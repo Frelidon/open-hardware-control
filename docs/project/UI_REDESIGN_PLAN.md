@@ -1,16 +1,16 @@
 # UI redesign — owner review, 12.11.26
 
-## Current implementation .181 — source validation passed
+## Current implementation .181 — installed and verified locally
 
 The owner approves continuing the UI redesign in bounded steps while preserving
 saved profiles, native RGB/LCD animation, animated application backgrounds,
 light/dark palettes and hardware ownership. Local orderly shutdown, update and
 restart are authorized; publication remains a separate explicit request.
 
-The previous verified local checkpoint is .180, installed in both user/system
-copies. The .181 source implements the scope below, and source validation now passes: 1,732 tests/five subtests plus compilation,
+The .181 user and system installations are now verified against 464 Python
+sources. The scope below passes 1,732 tests/five subtests plus compilation,
 security, privacy, module and remaining release checks after local bytecode
-cleanup. Packages, two-version backups and installation remain pending. The native
+cleanup. All six packages, both .180/.181 backups and installation are verified. The native
 Qt layout crash was fixed by assigning a widget owner before extracting existing
 case/profile combos from their old layouts. Bounded minimum content hints also
 keep the narrow case view inside its viewport. Complete Qt main-window renders
@@ -18,14 +18,14 @@ of the hub, case and help now pass, beyond the isolated module previews.
 
 | Request | .181 implementation | Still required |
 |---|---|---|
-| Case workspace closer to the approved concept | Dedicated case/profile toolbar, PC drawing surface, direct selected-component card, compact advanced/catalog/reference sections. Existing model IDs, drafts and routes remain. | Full-window geometry/lifetime and narrow-width checks passed; full release gate and installed render remain. |
-| Consistent submenu presentation | Shared palette-aware large section cards, used by case/profiles and the existing Disclosure facade. | Section/case and four full UI/localization checks passed; full release gate and installed verification remain. |
-| Smooth profile opening/closing | Bounded 420-ms reveal through the existing scrollbar; user gestures and page changes cancel automatic movement. Disabled animations remain honored. | Gradual/cancel/return/lifetime tests passed; installed behavior remains to verify. |
-| Ten more matching designs | Fifteen distinct original LCD sources, ten appended RGB presets; five existing pair IDs and first 35 preset indices preserved. | Final full gate and installed UI; optical device confirmation remains separate. |
-| Real size control for every design | Per-pair LCD zoom 50–200%, real Matrix glyph variants 100/130/150/200%, previews use matching geometry. Explicit apply prepares an asynchronous bounded cache copy; newer LCD intent and page hiding discard old work, and bounded H.264 metadata is checked. Sensor Layer 2 remains intact. | Current apply/cancel/stale-intent and metadata regressions passed; full release gate and installed checks remain. |
-| Integrated LCD manager | One embedded draft editor for Levita and Kraken with explicit Save/Cancel and indexed-media snapshot. Original files are never deleted. | Installed state/save/cancel checks; preserve source limits and existing schema. |
-| Clear progress meaning | Gallery preview preparation has completed/total counts and explicit wording; it is distinct from LCD transfer/playback. | Verify real labels in four languages after installation. |
-| Help and status | Top-aligned topic library/article view, explicit static inventory recognition and actual LACT read state, with bounded error logging. | Four combined UI/localization tests passed; installed checks remain. Recognition never implies live telemetry or write authorization. |
+| Case workspace closer to the approved concept | Dedicated case/profile toolbar, PC drawing surface, direct selected-component card, compact advanced/catalog/reference sections. Existing model IDs, drafts and routes remain. | Full-window geometry/lifetime and narrow-width checks passed; installed native dark/light render also passed. |
+| Consistent submenu presentation | Shared palette-aware large section cards, used by case/profiles and the existing Disclosure facade. | Section/case and four full UI/localization checks passed; installed native checks also passed. |
+| Smooth profile opening/closing | Bounded 420-ms reveal through the existing scrollbar; user gestures and page changes cancel automatic movement. Disabled animations remain honored. | Gradual/cancel/return/lifetime tests passed; installed native opening/closing also passed. |
+| Ten more matching designs | Fifteen distinct original LCD sources, ten appended RGB presets; five existing pair IDs and first 35 preset indices preserved. | Full source gate and installed UI passed; optical device confirmation remains separate. |
+| Real size control for every design | Per-pair LCD zoom 50–200%, real Matrix glyph variants 100/130/150/200%, previews use matching geometry. Explicit apply prepares an asynchronous bounded cache copy; newer LCD intent and page hiding discard old work, and bounded H.264 metadata is checked. Sensor Layer 2 remains intact. | Current apply/cancel/stale-intent and metadata regressions passed; installed UI passed; optical apply confirmation remains separate. |
+| Integrated LCD manager | One embedded draft editor for Levita and Kraken with explicit Save/Cancel and indexed-media snapshot. Original files are never deleted. | State/Save/Cancel regressions and installed embedded-open/Cancel passed; existing schema preserved. |
+| Clear progress meaning | Gallery preview preparation has completed/total counts and explicit wording; it is distinct from LCD transfer/playback. | Four-language full-UI coverage and installed dark/light label views passed. |
+| Help and status | Top-aligned topic library/article view, explicit static inventory recognition and actual LACT read state, with bounded error logging. | Four combined UI/localization tests and installed help views passed. Recognition never implies live telemetry or write authorization. |
 
 Targeted evidence already available: 30 current hub/size/metadata regressions,
 184 RGB loop checks and 12 section/case tests pass. Complete Qt main-window
@@ -34,9 +34,10 @@ sections, stable combo IDs and unchanged topology. Four full UI/localization
 tests confirm 2,584 shared language IDs. The MP4 structural validator is bounded
 to 1 MiB of metadata, 512 atoms and depth eight; it requires H.264 1600×720 and
 positive duration no greater than 35 seconds without decoding video frames.
-This is isolated source/UI evidence, not an installed .181 or Fedora hardware
-result. Full release validation and installation evidence belong in
-`PROJECT_STATUS.md` and `RELEASE_NOTES_v3.4.29.181.md` after verification.
+Installed .181 Wayland views also pass, with temporary settings and hardware IO
+disabled. This does not imply optical device confirmation or a Fedora hardware
+result. Package checks, preservation hashes and the normal startup evidence are
+recorded in `PROJECT_STATUS.md` and `RELEASE_NOTES_v3.4.29.181.md`.
 
 ## Approved original review images
 
@@ -62,6 +63,18 @@ curve with adjacent exact inputs draws on the interaction patterns documented by
 overclocking and fan controls in [LACT](https://github.com/ilya-zlobintsev/LACT).
 No third-party artwork or UI code was copied. LCD legacy cleanup remains a
 separate follow-up.
+
+## Actual installed UI evidence
+
+- [Case dark](../images/rendering-evidence/case-installed-3429181-dark.png) / [light](../images/rendering-evidence/case-installed-3429181-light.png)
+- [Matching pairs dark](../images/rendering-evidence/design-pairs-installed-3429181-dark.png) / [light](../images/rendering-evidence/design-pairs-installed-3429181-light.png)
+- [LCD manager dark](../images/rendering-evidence/lcd-manager-installed-3429181-dark.png) / [light](../images/rendering-evidence/lcd-manager-installed-3429181-light.png)
+- [Help dark](../images/rendering-evidence/help-installed-3429181-dark.png) / [light](../images/rendering-evidence/help-installed-3429181-light.png)
+
+These are captures of the installed user runtime in an actual Wayland window,
+using temporary settings and disabled hardware IO. The case view reads a copy of
+saved case UI data; blank device readings are intentional in this fixture.
+The normal app was restarted separately with its preserved real settings.
 
 ## Established work retained
 
@@ -92,8 +105,8 @@ separate follow-up.
 - Review remaining legacy LCD controls and nested settings, keep every import,
   design, sensor-layer and ownership capability, and simplify through small
   documented modules. Embedding the media editor does not complete this cleanup.
-- Finish the visual audit across narrow/HiDPI windows, light theme, long names,
-  empty lists and all simultaneous sections after the current layout bug is fixed.
+- Continue the cross-page/HiDPI audit beyond this checked batch. The case
+  ownership/narrow-width failures are fixed, not remaining blockers.
 
 ## Earlier open requests — keep visible
 
@@ -108,9 +121,9 @@ closed by the .181 UI pass or by a locally successful Ubuntu run.
 
 ## Completion evidence
 
-Run targeted state/lifetime/geometry checks, real four-language full-UI coverage
-and the complete release gate after the final source changes. Keep Fedora and
-Ubuntu fixture results separate from available live hardware evidence. Build
-all six artifacts, verify both rolling backups, preserve private settings and
-profiles, then install/restart and inspect the actual installed UI. Record the
+This batch completed targeted state/lifetime/geometry checks, four-language
+full-UI coverage and all release checks after the final source changes. Keep Fedora and
+Ubuntu fixture results separate from available live hardware evidence. All six artifacts and both rolling backups are verified; private settings and
+profiles are preserved, both copies installed, the normal app restarted and
+the actual installed UI inspected. Record the
 observed result rather than changing pending items to done in advance.

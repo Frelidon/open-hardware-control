@@ -1,13 +1,13 @@
 # Roadmap
 
-## Current .181 UI step · 12.11.26 — source validation passed, installation pending
+## Current .181 UI step · 12.11.26 — locally installed and verified
 
 The next bounded owner-requested step is in source: common large section cards
 and cancellable profile scrolling, case/component presentation, 15 matching
 RGB/LCD pairs with real per-pair sizes, embedded LCD media management, clear
 preview progress, help and honest inventory/LACT read status. Preserve settings,
 profiles, backgrounds, existing renderers and all hardware-owner/write guards.
-The last verified installed user/system version is .180.
+User and system .181 are installed and byte-verified against all 464 Python sources.
 
 30 current hub/size/metadata tests, 184 RGB loop checks and 12 section/case
 tests pass. Four full UI/localization tests confirm 2,584 shared IDs. Complete
@@ -17,7 +17,10 @@ narrow-width clipping. Newer LCD intent and page hiding cancel stale encoder
 work; cached MP4 structure receives bounded H.264/geometry/duration checks.
 Source validation passes: 1,732 tests/five subtests, compilation, security,
 privacy, module budgets and remaining release checks after old local bytecode
-cleanup. Six packages, two rolling backups and local .181 installation follow. No GitHub upload/release is requested.
+cleanup. Six packages, both .180/.181 backups and local .181 installation are verified.
+Native installed Wayland views pass in both themes with isolated settings and
+disabled hardware IO. Existing profiles/plugins survived; the normal saved RGB
+and Levita startup is confirmed by the session log. No GitHub upload/release is requested.
 Details and original concepts: [UI redesign plan](UI_REDESIGN_PLAN.md).
 
 ### Next bounded steps after this checkpoint
@@ -27,8 +30,9 @@ Details and original concepts: [UI redesign plan](UI_REDESIGN_PLAN.md).
   does not complete the full GPU redesign.
 - Review remaining legacy LCD menus and simplify them without deleting design,
   import, sensor-layer or playback features. The integrated manager is one step.
-- Complete installed narrow/HiDPI, full light-theme and all-open-section checks,
-  including native animated backgrounds and original fan diagrams.
+- Continue the remaining cross-page/HiDPI audit. Three source window sizes,
+  four languages, both themes and installed native views are checked for this
+  batch; physical RGB/LCD output and real Fedora hardware remain separate.
 
 ### Earlier requests still open
 

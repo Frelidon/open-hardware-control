@@ -1,6 +1,11 @@
 # Changelog
 
-## 3.4.29.181 INTERN · 12.11.26 (in development)
+## 3.4.29.181 INTERN · 12.11.26 (locally verified)
+
+Lokaler Abschluss: 1.732 Tests und fünf Untertests, sechs Pakete und beide
+.180/.181-Sicherungen geprüft; Benutzer-/Systemkopie mit 464 Quellen installiert.
+Native installierte Ansichten in beiden Themen und Profil-/Plugin-Erhalt geprüft.
+Kein GitHub-Upload.
 
 - Share palette-aware section cards and cancellable 420-ms scroll reveal across profiles, case workspace and existing disclosures; preserve drafts, backgrounds and animation preferences.
 - Refine case/profile selection, PC drawing and direct component details without changing model IDs, routes, calibration or hardware writes.
