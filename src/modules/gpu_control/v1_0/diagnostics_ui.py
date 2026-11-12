@@ -9,7 +9,7 @@ import shutil
 import tempfile
 
 from PySide6.QtCore import QProcess
-from PySide6.QtWidgets import QApplication, QFileDialog, QHBoxLayout, QLabel, QPlainTextEdit, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QApplication, QFileDialog, QGridLayout, QLabel, QPlainTextEdit, QPushButton, QVBoxLayout, QWidget
 
 from .client import LactError
 
@@ -21,7 +21,7 @@ class GpuDiagnosticsUiMixin:
         note = QLabel(self.tr("OHC-Aktionen und LACT-Dienstmeldungen. Das Protokoll kann Systemdetails enthalten; vor Weitergabe prüfen."))
         note.setWordWrap(True)
         layout.addWidget(note)
-        buttons = QHBoxLayout()
+        buttons = QGridLayout()
         sample = QPushButton(self.tr("GPU-Zustand erfassen"))
         sample.clicked.connect(self.capture_gpu_diagnostics)
         self.journal_button = QPushButton(self.tr("LACT-Dienstprotokoll laden"))
@@ -37,18 +37,19 @@ class GpuDiagnosticsUiMixin:
         copy_all.clicked.connect(lambda: self.copy_gpu_diagnostics("all"))
         export = QPushButton(self.tr("GPU-Diagnose speichern"))
         export.clicked.connect(self.export_gpu_diagnostics)
-        for button in (sample, self.journal_button, copy_ohc, copy_lact, copy_all, export):
-            buttons.addWidget(button)
-        buttons.addStretch()
+        for index, button in enumerate((sample, self.journal_button, copy_ohc, copy_lact, copy_all, export)):
+            buttons.addWidget(button, index // 2, index % 2)
         layout.addLayout(buttons)
         layout.addWidget(QLabel(self.tr("OHC-Aktionen und Messwerte")))
         self.gpu_events = QPlainTextEdit()
         self.gpu_events.setReadOnly(True)
+        self.gpu_events.setMinimumHeight(140); self.gpu_events.setMaximumHeight(240)
         self.gpu_events.document().setMaximumBlockCount(500)
         layout.addWidget(self.gpu_events, 1)
         layout.addWidget(QLabel(self.tr("LACT-Dienstmeldungen")))
         self.lact_journal = QPlainTextEdit()
         self.lact_journal.setReadOnly(True)
+        self.lact_journal.setMinimumHeight(140); self.lact_journal.setMaximumHeight(240)
         layout.addWidget(self.lact_journal, 1)
         self.sections.addTab(page, self.tr("LACT-Protokoll"))
         self.diagnostics_index = self.sections.count() - 1

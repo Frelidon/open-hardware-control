@@ -1,5 +1,41 @@
 # Open Hardware Control — verbindliches Modulregister
 
+Entwicklung 12.11.26 (.182): LCD-Arbeitsbereich 1.0 unter
+`src/modules/lcd_workspace/v1_0/` ordnet vorhandene Bibliotheks-, Kompositions-
+und Betriebswidgets; Levita 1.7 und LCD-Medienmanager 1.1 behalten Daten- und
+Transportverträge. GPU-Steuerung bleibt 1.0: ausschließlich interne Komposition
+mit erkennbarer GPU-Grafik, Livewerten, OC und vergrößerter Kurve auf einer Seite.
+LACT-Client, Sicherheits-/Besitzprüfungen, Test/Commit und gespeicherte Profile
+bleiben unverändert. Hauptorchestrator `make_settings_tab` sortiert 17 bereits
+besessene Gruppen nach Konstruktion; stabile `settingsSection`-Eigenschaften
+ermöglichen sprachunabhängige Prüfungen. Keine neuen Einstellungs-Schlüssel.
+Hintergrund zuerst, alltägliche Darstellung/Start vor technischen Diagnosen.
+
+Neue Dateien: `lcd_workspace/v1_0/{__init__,composition,navigation,devices}.py`
+und README; `gpu_control/v1_0/{workspace_ui,workspace_layout}.py`.
+LCD-Adapter erhalten acht Kachel-Schlüssel, Reihenfolge, Priorisierung und
+Sichtbarkeit sowie die explizite Gerätewahl bei verspäteter Erkennung.
+Drei Arbeitsbereiche messen ausschließlich den sichtbaren Inhalt. Galerie-
+und Vorschauarbeit bleibt an den passenden Bereich gebunden und läuft nach
+Rückkehr wieder an. GPU behält sieben logische Routen auf derselben Scrollseite;
+Livewerte beim Sprachwechsel stammen aus dem bestehenden Snapshot.
+Lokalisierung ergänzt `gpu_workspace_messages.py` (19 Quellen) und
+`lcd_workspace_messages.py` (15 Quellen), atomar in vier Sprachen: 2.618 IDs.
+Neue Regressionen: `test_lcd_workspace_3429182.py`,
+`test_gpu_workspace_3429182.py`, `test_settings_order_3429182.py`.
+43 gezielte LCD-Verträge, 30 bestehende GPU-Prüfungen plus neuer Qt-Durchlauf,
+zwei Settings-Prüfungen und vier vollständige UI-/Lokalisierungstests bestanden.
+Vollständige Release-Prüfung mit 1.736 Tests/fünf Untertests, Kompilierung,
+Sicherheits-/Datenschutzscan und Modulbudgets bestanden. Pakete/Installation folgen.
+Letzte verifizierte Benutzer-/Systeminstallation .181.
+Kein GitHub-Auftrag; keine zusätzliche Hardware- oder optische Freigabe.
+
+Zusätzliche UI-Anschlüsse: `display_effects/v1_11/base_page.py` öffnet den
+vorhandenen Ebene-2-Editor direkt in Levita-Komposition. Der Dashboard-Einstieg
+zur LCD-Auswahl öffnet die Bibliothek der aktuellen Gerätefamilie. Verborgene
+Kraken-QMovies und die schwebende Rundvorschau beachten auch die inneren
+Arbeitsbereiche; physische LCD-/Hardwaretimer bleiben unverändert.
+
 Abschluss 12.11.26 (.181): Quellcommit `75d146d`; 1.732 Tests und fünf Untertests
 sowie Sicherheits-/Datenschutz-/Budget- und restliche Release-Prüfungen bestanden.
 464 Laufzeitquellen und 169 Assets in allen Formaten bytegleich; alle sechs
@@ -213,7 +249,7 @@ auf `codex/3.4.29-intern` bestätigt (Quellcommit `5fd7989`); kein öffentlicher
 Release-Tag und keine Änderung des Standardzweigs.
 
 **Stand:** 12.11.26
-**Anwendung:** 3.4.29.181 INTERN
+**Anwendung:** 3.4.29.182 INTERN
 
 Lokaler Stand 11.11.26: .174-Benutzerinstallation mit allen 403 Python-Quellen
 verifiziert und gestartet. Fünf native RGB-Arbeiter ohne gemeldete Fehler,
@@ -1062,6 +1098,7 @@ Datum: 13.09.26.
 | Levita-Daemongesundheit | 1.1 | `src/modules/levita_daemon_health/v1_1/` | Exakte Eigenprozess-Erkennung über `/proc`, RSS-Messung, Klassifizierung verlorener/besetzter TRCC-Verbindungen und unmittelbar erneut validierte Signalübergabe; `model.py:is_usb_owner_conflict` trennt USB-Belegung, `backend_failure_detail` wählt den primären Fehler statt letzter Hintzeile | Keine Qt- oder USB-Operation; Ubuntu-Orchestrierung stoppt nur eigene Wiederholungen bei Fremdbesitz, Fedora-Recovery bleibt unverändert; signalisiert ausschließlich einen exakten Prozess desselben Benutzers |
 | Display-Effekte | 1.11 | `src/modules/display_effects/v1_11/` | `page.py` besitzt transiente Auswahl und bestätigte Vorschau-Rückkehr, `library.py` aktualisiert aktuelle Sprachdetails; `light_bands_renderer.py` rendert echte 4800×2160 Quellen; responsive Ebene-1-/Sensorlayout-Kacheln, sichtbarkeitsgebundene 20-FPS-Vorschau, unabhängiger Ebene-2-Animationsschalter, kanonisches Levita-Startdesign, sichere Übergabe und direkter Firmware-Rückgabeknopf | Auswahl und Breitenanpassung bleiben hardwarefrei; Startdesign schreibt nur geprüfte Persistenz, Anwenden beziehungsweise Rückgabe nutzt den bestehenden TRCC-Pfad |
 | Responsive Galerien | 1.0 | `src/modules/responsive_gallery/v1_0/` | Reine Breiten-/Spaltenberechnung, gebündelter Qt-Viewport-Resize-Relay und gleichmäßige Kachelverteilung für LCD- und Effektgalerien | Keine Persistenz und kein Hardwarezugriff |
+| LCD-Arbeitsbereich | 1.0 | `src/modules/lcd_workspace/v1_0/` | Komposition und Navigation vorhandener Bibliotheks-, Ebenen-/Vorschau- und Betriebswidgets; getrennte Kraken-Kompatibilität | Ausschließlich Qt-Darstellung; Quellen, Layoutmodell, Startdesign und vorhandene Anwenden-/Transportbesitzer bleiben maßgeblich |
 | LCD-Medienmanager | 1.1 | `src/modules/lcd_media_manager/v1_1/` | `panel.py` eingebetteter nicht-destruktiver Entwurf mit Save/Cancel und vorhandener Inventur; `dialog.py` Wrapper; `model.py` bestehende begrenzte Quellen/Aliase/Ausblendungen; gemeinsame Sichtbarkeit und lokale Decodierung in `preview_visibility.py`/`video_preview.py` | Öffnen scannt nicht rekursiv, Originaldateien unverändert; Galerie-Cachefortschritt ist kein LCD-Transfer; versteckte Decoderquelle wird freigegeben |
 | Anzeigeeinstellungen | 1.0 | `src/modules/display_settings/v1_0/` | Kleine Qt-Oberfläche für Bildschirm, Fensterstartzustand, Geometrie/Skalierung und experimentelle Levita-Bildrate | Nur Aufbau und Signalverbindungen; Persistenz, Platzierung und Hardware-Orchestrierung bleiben beim jeweiligen Besitzer |
 | Levita Leistung/Spielerkennung | 1.1 | `src/modules/levita_performance/v1_1/` | Reine Normalisierung der sicheren/experimentellen FPS, Rückstufungskette, konservative GameMode-/Gamescope-/Programmlisten-Signale und Zehn-Sekunden-Abfrageintervall | Keine Lastheuristik, kein Hardwarezugriff, keine allgemeine Wayland-Fensterbeobachtung |
@@ -1075,7 +1112,7 @@ Datum: 13.09.26.
 | Hardware-Checker | 1.0 | `src/modules/hardware_checker/v1_0/` | Begrenzte read-only Linux-/Windows-CIM-Erkennung, serialfreie DMI-Sockel-/RAM-Daten, responsive Übersicht in `cards.py`, separate Detailtabelle und erhaltener Hardware-Fix-/Lasttestpfad | Aktiv; keine Hardwarefreigabe aus Darstellung/Erkennung; bestehende bestätigte Schreib- und Besitzergrenzen bleiben |
 | Hardware Fix | 1.0 | `src/modules/hardware_fix/v1_0/` | Profilregistrierung und Hardware-Checker-Unterseite für MSI MAG 274QPF X30MV – VRR; anonymisierte EDID, Modell-/Ressourcenprüfung, gesperrte feste Terminaljobs, Anbieterübernahme, echte DRM-Messung und profilbezogene Rücknahme | Keine persönliche Seriennummer, keine beliebigen Root-Skripte/Pfade, kein automatischer Neustart; Ubuntu-AppIndicators-Automatik läuft nie auf Fedora |
 | Snapshot-Manager | 1.0 | `src/modules/snapshot_manager/v1_0/` | Reine Richtlinie/Hysterese, persistente bounded Aktivitätsprobe in `activity_runtime.py`, Qt-Ansicht in `page.py`/`views.py`, Lebensdauer in `process_runtime.py` und bestätigte Aktionen in `snapshot_actions.py`; Erstellung, Root-Einrichtung, Herkunftsfilter, ProgramManager, Zeit-/CPU-/I/O-Regler und getrennte Admin-/Automatikrechte | Aktiv; keine Hardwarefreigabe aus Darstellung/Erkennung; bestehende bestätigte Schreib- und Besitzergrenzen bleiben |
-| GPU-Steuerung | 1.0 | `src/modules/gpu_control/v1_0/`, `packaging/install-lact.sh` | LACT-Client, fail-closed Feature-/Besitzschutz und vorhandenes Cockpit/Kurven; `read_worker.py`/`read_probe.py`/`read_ui.py` begrenzte Ubuntu-Leseprozesse; `read_status.py` tatsächlicher LACT-Lesestatus, Stale-Hinweis und begrenzte redigierte Fehler | Erfolgreiches Lesen ist keine Schreibfreigabe; Kurztest, CoolerControl-/Besitzschutz und Bestätigungswege erhalten; größerer UI-/Kurvenumbau folgt getrennt |
+| GPU-Steuerung | 1.0 | `src/modules/gpu_control/v1_0/`, `packaging/install-lact.sh` | LACT-Client, fail-closed Feature-/Besitzschutz und gemeinsame GPU-Seite über `workspace_ui.py`/`workspace_layout.py`; `read_worker.py`/`read_probe.py`/`read_ui.py` begrenzte Ubuntu-Leseprozesse; `read_status.py` tatsächlicher LACT-Lesestatus, Stale-Hinweis und begrenzte redigierte Fehler | Erfolgreiches Lesen ist keine Schreibfreigabe; Kurztest, CoolerControl-/Besitzschutz und Bestätigungswege erhalten; gemeinsamer UI-/Kurvenarbeitsbereich ohne Vertragsänderung |
 | GPU-Profile | 1.0 | `src/modules/gpu_profiles/v1_0/` | Begrenzte exakte GPU-Profile mit SHA-256, nur darstellende RX-/RTX-Kataloge, normalisierte lokale Artwork-Kopien und wiederhergestellter `visual_catalog.py` mit originalen schematischen Grafiken unter `src/assets/gpu/` | Aktiv; keine Hardwarefreigabe aus Darstellung/Erkennung; bestehende bestätigte Schreib- und Besitzergrenzen bleiben |
 | Temperaturverlauf | 1.2 | `src/modules/temperature_history/v1_2/` | Begrenzter RAM-Puffer, datierte Qt-Zeitachse/Hoveranzeige, skalierbare Splitter, read-only Linux-hwmon-Erkennung und CSV-/JSON-Berichte; `gauge.py` zeigt dieselbe kompakte Celsius-Skala in Übersicht, Kühlung und Aufzeichnung | Höchstens 24 Stunden/28.800 Punkte im RAM; keine automatische Persistenz, kein Hardwarebesitz und Berichtsschreiben nur nach Benutzerauswahl |
 | Kühlungssicherheit | 1.0 | `src/modules/cooling_safety/v1_0/` | Modellabhängige fail-closed Untergrenzen und letzte Begrenzung vor dem Hardware-Schreibpfad | Levita: eigenes vorsichtiges OHC-Minimum 50 % Pumpe/25 % Radiator, da der Hersteller nur Maximal-RPM veröffentlicht; NZXT-Bereich unverändert |
@@ -1203,6 +1240,7 @@ dreizeilige persönliche Callouts.
 
 | Datum | Modul | Version | Änderung |
 |---|---|---:|---|
+| 12.11.26 | LCD-Arbeitsbereich / GPU-Steuerung / Hauptfenster / Lokalisierung | 1.0 / 1.0 / Legacy / 1.0 · Anwendung 3.4.29.182 | Vorhandene LCD-Funktionen und GPU-Tuning/Kurve übersichtlich komponieren; 17 Einstellungsgruppen nach Wichtigkeit sortieren. Backend-/Hardwarebesitz und gespeicherte Entwürfe bleiben erhalten. 472 Laufzeitquellen, 2.618 Sprach-IDs; gezielte Qt-/Entwurfs-/Sichtbarkeitsprüfung bestanden. 1.736 Tests/fünf Untertests und alle Release-Wächter bestanden; Pakete/Installation folgen. |
 | 12.11.26 | UI-Bereiche / Designs & Spiele / LCD-Medienmanager / Hilfe / Übersichtserkennung / GPU / Gehäuse / Profile / Lokalisierung | 1.0 / 1.1 / 1.1 / 1.0 / 1.0 / 1.0 / 1.5 / 1.1 / 1.0 · Anwendung 3.4.29.181 | Gemeinsame Köpfe und abbrechbare Scrollführung; Gehäuse-/Komponentendarstellung; 15 Originalpaare und reale LCD-Größen mit begrenztem Encoder; eingebetteter nicht-destruktiver Manager; Hilfe/Inventur-/LACT-Lesestatus. Stabile IDs, Schema, Hardwarebesitz und Schreibwege erhalten. 2.584 durch vier UI-/Sprachtests bestätigte IDs; 30 Hub-/Metadatentests, 184 RGB-Schleifenprüfungen und zwölf Abschnitts-/Gehäusetests bestanden. Qt-Besitzfehler vor Layoutentnahme und schmale Combobox-Hints korrigiert; vollständige Hauptfenster-Grabs bestanden. Gesamtprüfung: 1.732 Tests/fünf Untertests und alle Quellfreigaben bestanden; sechs Pakete, beide Sicherungen und beide .181-Installationen mit 464 Quellen verifiziert. |
 | 09.11.26 | OpenRGB Studio / PC-Gehäuseprofile / Anwendungsabschluss / Lokalisierung | 1.15 / 1.5 / 1.1 / 1.0 | Gemeinsame Hardware-/Gehäuse-Effektzeit übernimmt das vollständige monotone Zeitintervall. Der Nutzerlog belegt 350–370 ms für fünf seriell bestätigte Direct-Geräte (ca. 2,7 Gesamtframes/s); eine geordnete persistente Loopback-Verbindung je Controller überträgt verschiedene Controller nun parallel, bei weiter einem OHC-Arbeiter, vollständigen Frames, Latest-frame-wins und 25-Hz-Obergrenze. GPU-/Halterungsstreifen erhalten dieselbe Umlaufdauer wie die Galerie. Abschlussbeleuchtung setzt beim echten Beenden Weiß, Einzelfarbe oder gemeldeten nativen Rainbow; Tray und Neustart bleiben wirkungslos. Reine Regressionen ergänzt; optische Prüfung am Gerät bleibt offen. |
 | 05.11.26 | LCD-Vorschau / Snapshot-Prozesslaufzeit / Release-Test | Testfix / 1.0 / Testfix · Anwendung 3.4.29.168 | Echte verschachtelte Scroll-Sichtbarkeit wird in einer kontrollierten Qt-Hierarchie geprüft; vollständige Anwendung prüft getrennt Medienwahl, Pause/Fortsetzung, Bestätigung und vier Sprachen ohne virtuelle Desktopannahme. Spätes Activity-Probe-Signal nach Zerstörung seines Qt-Eigentümers wird ohne Neustart verworfen. Produktive UI-, Profil-, Vorschau- und Hardwarepfade unverändert. |

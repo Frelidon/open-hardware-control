@@ -72,7 +72,7 @@ class GpuFanUiMixin:
         grid.setContentsMargins(0, 0, 0, 0)
         grid.setHorizontalSpacing(8)
         grid.addWidget(QLabel(self.tr("Temperatur")), 0, 0)
-        grid.addWidget(QLabel(self.tr("Drehzahl")), 0, 1)
+        grid.addWidget(QLabel(self.tr("Drehzahl")), 1, 0)
         self.fan_points = []
         for index, (temp, speed) in enumerate(zip(DEFAULT_TEMPERATURES, DEFAULT_SPEEDS), start=1):
             temperature = QSpinBox()
@@ -88,9 +88,9 @@ class GpuFanUiMixin:
             temperature.valueChanged.connect(self._invalidate_test)
             percent.valueChanged.connect(self._invalidate_test)
             self.fan_points.append((temperature, percent))
-            grid.addWidget(temperature, index, 0)
-            grid.addWidget(percent, index, 1)
-        grid.setColumnStretch(2, 1)
+            grid.addWidget(temperature, 0, index)
+            grid.addWidget(percent, 1, index)
+            grid.setColumnStretch(index, 1)
         self.fan_curve_editor = curve
         note = QLabel(
             "Wenn CoolerControl läuft, muss der GPU-Lüfter dort auf „Unmanaged“ stehen. Gehäuselüfter können weiter bei CoolerControl bleiben. Jede LACT-Lüfterübernahme durchläuft denselben Kurztest wie das Tuning."
@@ -121,7 +121,7 @@ class GpuFanUiMixin:
         self.fan_edit_hint.setObjectName("warningText")
         self.fan_edit_hint.setWordWrap(True)
         preview_box.addWidget(self.fan_edit_hint)
-        preview_layout = QHBoxLayout()
+        preview_layout = QVBoxLayout()
         self.fan_visual = GpuFanCurvePreview(
             lambda: tuple((temperature.value(), speed.value())
                           for temperature, speed in self.fan_points),
@@ -132,9 +132,12 @@ class GpuFanUiMixin:
             temperature=self._fan_live_temperature,
             rpm=self._fan_live_rpm,
             locked_text=lambda: "",
+            translator=self.tr,
         )
-        preview_layout.addWidget(self.fan_visual, 3)
-        preview_layout.addWidget(curve, 2)
+        self.fan_visual.setMinimumHeight(310)
+        self.fan_visual.setMaximumHeight(350)
+        preview_layout.addWidget(self.fan_visual)
+        preview_layout.addWidget(curve)
         preview_box.addLayout(preview_layout)
 
         self.fan_test_button = QPushButton(self.tr("Test"))
@@ -172,8 +175,8 @@ class GpuFanUiMixin:
         self.fan_top_grid.setSpacing(8)
         self.fan_top_grid.addWidget(workflow, 0, 0)
         self.fan_top_grid.addWidget(control_group, 0, 1)
-        layout.addLayout(self.fan_top_grid)
         layout.addWidget(preview_group)
+        layout.addLayout(self.fan_top_grid)
         self.fan_page = page
         self.sections.addTab(page, "Lüfter")
         self._fan_toggle(False)
@@ -274,10 +277,10 @@ class GpuFanUiMixin:
         if not self.lact_fan.isEnabled():
             return self.tr("LACT meldet keine bearbeitbare GPU-Lüfterkurve.")
         if not self.lact_fan.isChecked():
-            return self.tr("Oben zuerst LACT aktivieren. Danach lassen sich die Punkte direkt ziehen.")
+            return self.tr("LACT aktivieren. Danach lassen sich die Punkte direkt ziehen.")
         if self.fan_mode.currentData() != "curve":
-            return self.tr("Oben Lüfterkurve wählen, um die Punkte zu bearbeiten.")
-        return self.tr("Kurvenpunkte direkt ziehen oder Temperatur und Drehzahl rechts exakt einstellen.")
+            return self.tr("Lüfterkurve wählen, um die Punkte zu bearbeiten.")
+        return self.tr("Kurvenpunkt ziehen oder die Werte darunter ändern.")
 
     def _populate_fan_controls(self) -> None:
         baseline = self.baseline or {}

@@ -1,5 +1,25 @@
 # Open Hardware Control — Durable Decisions
 
+## 12.11.26 · LCD ordnen, GPU gemeinsam darstellen, Einstellungen priorisieren (.182)
+
+Der Eigentümer bestätigt die kompaktere Gehäusedarstellung und beauftragt die
+weitere LCD-Bereinigung. Bibliothek, Komposition und Betrieb werden verständlich
+gegliedert, ohne Medien-/Import-/Layer-/Start- oder Hardwarefunktionen zu löschen.
+Bestehende spezialisierte Renderer, Modelle, Einstellungen und Controller bleiben
+autoritativ; bloße Navigation übernimmt oder sendet keine Geräteänderung.
+
+Die Grafikkartenseite behält Bild und erkennbare GPU-Darstellung. Übertaktung und
+Lüfterkurve stehen auf einer gemeinsamen Seite; Lasttest, Profile und Diagnose
+bleiben erreichbar. Ein Layoutumbau darf weder LACT-Grenzen noch Kurztest,
+Rückgabe oder CoolerControl-/Hardwarebesitz abschwächen. Neue Seitentexte werden
+atomar in vier Sprachen gepflegt; die gemeinsame Scrollführung bleibt abbrechbar.
+
+Der animierte Programmhintergrund steht in Einstellungen ganz oben. Die weiteren
+bestehenden Gruppen werden nach alltäglicher Wichtigkeit sortiert; Widgets,
+Signale, stabile Einstellungs-Schlüssel und alle Optionen bleiben erhalten.
+Lokale Version, Prüfung und sichere Aktualisierung sind Teil der bestehenden
+Freigabe; GitHub bleibt ein gesonderter Auftrag.
+
 ## 12.11.26 · Gemeinsame UI-Sprache und echte Designgrößen (.181)
 
 Der Eigentümer möchte große einheitliche Bereichsköpfe, ruhige Öffnungs-/

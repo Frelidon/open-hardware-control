@@ -1,5 +1,20 @@
 # Roadmap
 
+## Current .182 UI step · 12.11.26 — source verified
+
+The owner requests the next LCD cleanup, one GPU workspace retaining artwork
+and showing tuning beside a larger fan curve, plus animated-background settings
+first and other existing groups prioritized. Preserve all options, drafts,
+profiles, themes, native animations and owner/write safeguards. Source/UI checks,
+packages, backups and local update follow; .181 remains the verified installation.
+Source implementation is complete: LCD workspaces reuse the original controls,
+GPU tuning/curve share one page, and all 17 Settings groups remain reachable.
+Targeted checks and full-window source Qt views pass. The final release gate
+passes 1,736 tests/five subtests plus compilation, security, privacy and budgets.
+Package verification and installed native views remain separate pending evidence.
+No GitHub publication requested. Earlier .181 "next" items below are the request
+being implemented now; they are not yet declared complete.
+
 ## Current .181 UI step · 12.11.26 — locally installed and verified
 
 The next bounded owner-requested step is in source: common large section cards

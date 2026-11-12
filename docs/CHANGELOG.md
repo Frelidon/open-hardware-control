@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.4.29.182 INTERN · 12.11.26 (source verified)
+
+- Organize LCD library, composition and operation while preserving existing media, sensor layers and guarded apply paths.
+- Retain GPU artwork and live values alongside overclocking and a larger fan curve on one shared page; preserve tests, rollback and ownership.
+- Put animated background settings first and prioritize common appearance/start options without removing existing controls.
+- Complete release gate passes 1,736 tests/five subtests plus compilation, security, privacy and module budgets; 2,618 atomic language IDs, 472 runtime sources. Packages/local installation pending; .181 remains installed. No GitHub publication requested.
+
 ## 3.4.29.181 INTERN · 12.11.26 (locally verified)
 
 Lokaler Abschluss: 1.732 Tests und fünf Untertests, sechs Pakete und beide

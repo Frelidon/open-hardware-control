@@ -72,10 +72,10 @@ class GpuStressUiMixin:
         live = QGroupBox("Live-Daten")
         live.setObjectName("gpuPreviewCard")
         live_grid = QGridLayout(live)
-        self.stress_live_load = QLabel("Last\n— %")
+        self.stress_live_load = QLabel(self.tr("GPU-Auslastung") + "\n— %")
         self.stress_live_temperature = QLabel("Temperatur\n— °C")
-        self.stress_live_clock = QLabel("Takt\n— MHz")
-        self.stress_live_power = QLabel("Leistung\n— W")
+        self.stress_live_clock = QLabel(self.tr("GPU-Taktrate") + "\n— MHz")
+        self.stress_live_power = QLabel(self.tr("Leistungsaufnahme") + "\n— W")
         for column, value in enumerate((self.stress_live_load, self.stress_live_temperature,
                                         self.stress_live_clock, self.stress_live_power)):
             value.setObjectName("gpuStressMetric")
@@ -191,10 +191,10 @@ class GpuStressUiMixin:
             temp = edge.get("current", "-") if isinstance(edge, dict) else edge
             clocks = stats.get("clockspeed") if isinstance(stats.get("clockspeed"), dict) else {}
             power = stats.get("power") if isinstance(stats.get("power"), dict) else {}
-            self.stress_live_load.setText(f"Last\n{busy:.0f} %")
-            self.stress_live_temperature.setText(f"Temperatur\n{temp} °C")
-            self.stress_live_clock.setText(f"Takt\n{clocks.get('gpu_clockspeed', '—')} MHz")
-            self.stress_live_power.setText(f"Leistung\n{power.get('average', '—')} W")
+            self.stress_live_load.setText(self.tr("GPU-Auslastung") + f"\n{busy:.0f} %")
+            self.stress_live_temperature.setText(self.tr("Temperatur") + f"\n{temp} °C")
+            self.stress_live_clock.setText(self.tr("GPU-Taktrate") + f"\n{clocks.get('gpu_clockspeed', '—')} MHz")
+            self.stress_live_power.setText(self.tr("Leistungsaufnahme") + f"\n{power.get('average', '—')} W")
             if not self.power_unlock.isChecked() and sustained_power_excess(
                     power.get("average"), reported_power_bounds(stats)):
                 self.stress_high_power_samples += 1

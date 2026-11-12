@@ -37,7 +37,7 @@ installer = (ROOT / "packaging/install.sh").read_text(encoding="utf-8")
 helper = (ROOT / "packaging/install-udev-rule.sh").read_text(encoding="utf-8")
 diagnostics = (ROOT / "packaging/collect-diagnostics.sh").read_text(encoding="utf-8")
 
-assert 'APP_VERSION = "3.4.29.181"' in code
+assert 'APP_VERSION = "3.4.29.182"' in code
 assert 'BUILD_CHANNEL = "INTERN"' in code
 assert 'APP_NAME = "Open Hardware Control"' in code
 assert "shell=True" not in wallpaper_installer_code
@@ -360,7 +360,7 @@ assert "maybe_offer_desktop_design_dependencies" in code
 assert "Fehlende Pakete &installieren" in code
 
 readme = (ROOT / "README.md").read_text(encoding="utf-8")
-assert "# Open Hardware Control by Frelidon 3.4.29.181" in readme
+assert "# Open Hardware Control by Frelidon 3.4.29.182" in readme
 assert "Inoffizielles unabhängiges Community-Projekt" in readme
 assert "Corsair · OpenLinkHub" in readme
 assert "| NZXT 2023 RGB Controller | `1e71:2012`" in readme
@@ -686,7 +686,12 @@ assert 'def write_hardware_animation_spec' in code
 assert 'def write_lcd_layer_spec' in code
 assert 'source_missing = (not self.gif_generated_hardware_mode and not self.gif_imported_profile_mode)' in code
 assert code.count('source_path=None') >= 2
-assert 'self.lcd_tile_area = ReorderableTileArea(' in code
+# .182 groups the same compatibility cards, retaining their saved order and
+# original reorderable-area implementation through the owning adapter.
+assert 'self.lcd_tile_area = LegacyTileGroups(' in code
+assert 'self.lcd_tile_area = LegacyTileGroups(\n            ReorderableTileArea,' in code
+assert 'self.lcd_tile_area.orderChanged.connect(self.save_lcd_tile_order)' in code
+assert 'self.lcd_workspace = LcdDeviceShell(' in code
 assert '("preview", preview_box, 1)' in code
 assert '("display", display_box, 1)' in code
 assert '("clock", clock_box, 1)' in code

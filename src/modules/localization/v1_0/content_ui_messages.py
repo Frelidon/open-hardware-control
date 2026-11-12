@@ -98,3 +98,11 @@ for _language, _messages in HELP_DASHBOARD_MESSAGES.items():
 from .case_sections_messages import CASE_SECTIONS_MESSAGES
 for _language, _messages in CASE_SECTIONS_MESSAGES.items():
     CONTENT_UI_MESSAGES[_language].update(_messages)
+
+from .gpu_workspace_messages import GPU_WORKSPACE_MESSAGES
+for _language, _messages in GPU_WORKSPACE_MESSAGES.items():
+    CONTENT_UI_MESSAGES[_language].update(_messages)
+
+from .lcd_workspace_messages import LCD_WORKSPACE_MESSAGES
+for _language, _messages in LCD_WORKSPACE_MESSAGES.items():
+    CONTENT_UI_MESSAGES[_language].update(_messages)

@@ -484,7 +484,16 @@ class DisplayEffectsPage(QWidget):
         window = self.window()
         tabs = getattr(window, "tabs", None)
         if tabs is not None:
+            workspace = getattr(window, "lcd_workspace", None)
+            if workspace is not None:
+                workspace.select_device("thermalright")
+            worktabs = getattr(self.studio, "workspace_tabs", None)
+            if worktabs is not None:
+                worktabs.setCurrentIndex(1)
             tabs.setCurrentIndex(3)
+            scroll = getattr(window, "lcd_scroll_page", None)
+            if scroll is not None:
+                scroll.verticalScrollBar().setValue(0)
 
     def save_custom_settings(self) -> None:
         values = self.current_settings()

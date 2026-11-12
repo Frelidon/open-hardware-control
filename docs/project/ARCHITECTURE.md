@@ -1,5 +1,31 @@
 # Open Hardware Control — Architecture
 
+## .182 · LCD-/GPU-Arbeitsbereiche und Einstellungsreihenfolge
+
+Die .182-Komposition verwendet bestehende Qt-Widgets. Der
+Levita-Arbeitsbereich delegiert Modelle, Layer-2-Editor, Medienvorschau und
+Transport an ihre bisherigen Besitzer; LCD- und Kraken-Pfade bleiben getrennt.
+GPU-Komposition hält bestehende Bedienelemente und gespeicherte Entwürfe auf
+einer gemeinsamen Seite, ohne LACT-Client-, Kurztest- oder Ownership-Verträge
+zu ändern. Einstellungen werden erst nach vollständiger Konstruktion sortiert,
+damit ihre Initialisierungs-/Signalreihenfolge unverändert bleibt.
+`lcd_workspace/v1_0/composition.py` gibt bisherigen Layoutzeilen einen Qt-Besitzer,
+`navigation.py` misst nur den aktiven Bereich. `devices.py` erhält die alten
+Kachel-Schlüssel/Reihenfolgen und bevorzugt die erkannte Familie nur bis zur
+expliziten Nutzerwahl. Galerie/Hovertimer pausieren außerhalb der Bibliothek;
+der bestehende Vorschaudecoder bleibt an die sichtbare Komposition gebunden.
+`gpu_control/v1_0/workspace_ui.py` und `workspace_layout.py` behalten dieselben
+Widgets und sieben Routen auf einer Scrollseite. Kurvenmalen und Ziehen teilen
+dieselbe Geometrie. Sprachwechsel rekonstruiert Livewerte aus dem bestehenden
+Snapshot und erzeugt keine zusätzliche Abfrage. Quellen-/Sprach-/Geometrie-
+Regressionen prüfen beide Themen und schmale Fenster.
+
+Zusätzliche UI-Anschlüsse: `display_effects/v1_11/base_page.py` öffnet den
+vorhandenen Ebene-2-Editor direkt in Levita-Komposition. Der Dashboard-Einstieg
+zur LCD-Auswahl öffnet die Bibliothek der aktuellen Gerätefamilie. Verborgene
+Kraken-QMovies und die schwebende Rundvorschau beachten auch die inneren
+Arbeitsbereiche; physische LCD-/Hardwaretimer bleiben unverändert.
+
 ## .181 · Gemeinsame Bereiche, Designgrößen und eingebettete Bibliotheken
 
 `ui_sections/v1_0/cards.py` besitzt gemeinsame Themenflächen/Bereichsköpfe;

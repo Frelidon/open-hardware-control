@@ -7,17 +7,18 @@ import math
 from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from .power_policy import power_cap_allowed, reported_power_bounds
+from .visuals import WrappedCheckBox
 
 
 class GpuPowerUiMixin:
     def _build_power_guard(self, form) -> None:
         self.power_unlock_confirmed = False
-        self.power_unlock = QCheckBox(self.tr("Leistungslimit über LACT-Standard freischalten"))
+        self.power_unlock = WrappedCheckBox(self.tr("Leistungslimit über LACT-Standard freischalten"))
         self.power_unlock.toggled.connect(self._power_unlock_toggled)
         self.power_default_note = QLabel()
         self.power_default_note.setWordWrap(True)
         guard = QWidget()
-        row = QHBoxLayout(guard)
+        row = QVBoxLayout(guard)
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(8)
         row.addWidget(self.power_unlock)

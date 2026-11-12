@@ -1,5 +1,27 @@
 # Open Hardware Control — Project Status
 
+## Quellfreigabe .182 · 12.11.26 — Paketierung folgt
+
+Der Eigentümer beauftragt jetzt die weitere LCD-Bereinigung, eine gemeinsame
+GPU-Seite mit erkennbarem Grafikkartenbild, Übertaktung und großer Lüfterkurve
+sowie eine neue Reihenfolge bestehender Einstellungen. Der Hintergrund steht
+zuerst, häufige Darstellungs-/Startoptionen vor technischen Diagnosen. Bestehende
+Modelle, Profile, native Animationen, Themen und alle Besitzer-/Schreibpfade
+bleiben maßgeblich. Keine neuen Hardwarebefehle oder zusätzlichen Spielfunktionen.
+
+Die Umsetzung ist als kleine Kompositionsmodule vorhanden. 43 gezielte
+LCD-Verträge, 30 bestehende GPU-Prüfungen plus neuer Qt-Durchlauf und zwei
+Settings-Prüfungen bestanden. Vier vollständige UI-/Lokalisierungstests
+bestätigen 2.618 gemeinsame IDs in DE/EN/ES/FR. Vollständige Hauptfenster-
+aufnahmen prüfen LCD/GPU/Einstellungen in beiden Themen bei 2551×1337,
+1440×1000 und 1000×900, mit temporären Einstellungen und ohne Hardwarezugriffe.
+Der abschließende read-only Review hat keine offenen UI-Befunde.
+Vollständige Release-Prüfung bestanden: 1.736 Tests und fünf Untertests,
+Kompilierung, Sicherheit, Datenschutz, Modulbudgets und restliche Wächter.
+472 Python-Laufzeitquellen; Paketierung und Installation folgen.
+Letzte vollständig geprüfte und laufende Benutzer-/Systemversion bleibt .181.
+GitHub bleibt unverändert. Aktueller Auftrag und Entwürfe: `UI_REDESIGN_PLAN.md`.
+
 ## Verifizierter lokaler Abschluss .181 · 12.11.26
 
 Quellcommit `75d146d`, Anwendung 3.4.29.181 INTERN: 1.732 Tests und fünf Untertests,

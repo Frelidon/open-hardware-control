@@ -2921,11 +2921,14 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         studio = getattr(self, "thermalright_display_studio", None)
         if studio is not None and hasattr(studio, "library_manager_panel"):
             studio.library_manager_panel.refresh_language()
+        if studio is not None and hasattr(studio, "refresh_workspace_summary"):
+            studio.refresh_workspace_summary()
         if hasattr(self, "kraken_lcd_library_panel"):
             self.kraken_lcd_library_panel.refresh_language()
         if hasattr(self, "gpu_control_page"):
             from modules.gpu_control.v1_0.read_status import refresh as refresh_gpu_read_status
             refresh_gpu_read_status(self.gpu_control_page)
+            self.gpu_control_page.refresh_workspace_language()
 
     def on_language_changed(self, _index: int = -1) -> None:
         if not hasattr(self, "language_combo"):
@@ -4892,10 +4895,17 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         qv.setContentsMargins(14, 12, 14, 12)
         qv.addWidget(QLabel("Schnellaktionen", objectName="sectionTitle"))
         ql = QHBoxLayout()
+        def open_lcd_library():
+            worktabs = (self.thermalright_display_studio.workspace_tabs
+                        if self.lcd_workspace.device.currentData() == "thermalright"
+                        else self.lcd_tile_area.tabs)
+            worktabs.setCurrentIndex(0)
+            self.tabs.setCurrentIndex(3)
+            self.lcd_scroll_page.verticalScrollBar().setValue(0)
         actions = [
             ("❄  Kühlung öffnen", "Lüfter & Pumpe steuern", lambda: self.tabs.setCurrentIndex(1), True),
             ("◉  RGB-Studio öffnen", "Beleuchtung anpassen", lambda: self.tabs.setCurrentIndex(2), False),
-            ("▣  LCD ändern", "Bild oder GIF auswählen", lambda: self.tabs.setCurrentIndex(3), False),
+            ("▣  LCD ändern", "Bild oder GIF auswählen", open_lcd_library, False),
             ("☷  Profil anwenden", "Leise · Ausbalanciert · Leistung", lambda: self.tabs.setCurrentIndex(5), False),
         ]
         for title, hint, callback, primary in actions:
@@ -9422,10 +9432,10 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             saved_order = []
         if not isinstance(saved_order, list):
             saved_order = []
-        self.lcd_tile_area = ReorderableTileArea(
-            "lcd-tiles",
+        from modules.lcd_workspace.v1_0 import LegacyTileGroups, LcdDeviceShell
+        self.lcd_tile_area = LegacyTileGroups(
+            ReorderableTileArea,
             [
-                ("thermalright", self.thermalright_display_studio, 3),
                 ("preview", preview_box, 1),
                 ("display", display_box, 1),
                 ("clock", clock_box, 1),
@@ -9437,7 +9447,12 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             [str(item) for item in saved_order],
         )
         self.lcd_tile_area.orderChanged.connect(self.save_lcd_tile_order)
-        layout.addWidget(self.lcd_tile_area)
+        self.lcd_workspace = LcdDeviceShell(
+            self.thermalright_display_studio, self.lcd_tile_area, self.is_thermalright_cooling(),
+        )
+        self.lcd_workspace.device.currentIndexChanged.connect(self.sync_active_page_performance)
+        self.lcd_tile_area.tabs.currentChanged.connect(self.sync_active_page_performance)
+        layout.addWidget(self.lcd_workspace)
         layout.addStretch()
         self.lcd_section_area = None
         self.lcd_scroll_page = page
@@ -10785,6 +10800,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         ))
 
         build_feature_settings(self, layout)
+        feature_box = layout.itemAt(layout.count() - 2).widget()
+        authority_box = layout.itemAt(layout.count() - 1).widget()
 
         design_box = QGroupBox("Design")
         design_form = QFormLayout(design_box)
@@ -10852,7 +10869,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.language_combo.currentIndexChanged.connect(self.on_language_changed)
         layout.addWidget(language_box)
 
-        layout.addWidget(build_module_visibility_settings(self))
+        navigation_box = build_module_visibility_settings(self)
+        layout.addWidget(navigation_box)
 
         backend_box = QGroupBox("Hardware-Unterbauten")
         backend_form = QFormLayout(backend_box)
@@ -10905,9 +10923,13 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         layout.addWidget(temperature_box)
 
         build_display_settings(self, layout)
+        display_box = layout.itemAt(layout.count() - 2).widget()
+        levita_fps_box = layout.itemAt(layout.count() - 1).widget()
         build_performance_settings(self, layout)
+        performance_box = layout.itemAt(layout.count() - 1).widget()
         from modules.process_runtime.v1_1.health import build as build_runtime_health
         build_runtime_health(self, layout)
+        runtime_box = layout.itemAt(layout.count() - 1).widget()
 
         background_box = QGroupBox("Animierter Hintergrund")
         background_form = QFormLayout(background_box)
@@ -11086,6 +11108,25 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         about.setWordWrap(True)
         al.addWidget(about)
         layout.addWidget(about_box)
+        # Keep construction and signal wiring unchanged. Reorder only the
+        # already-owned groups: everyday appearance/start choices first,
+        # technical diagnostics and experimental controls further down.
+        sections = (
+            ("background", background_box), ("design", design_box),
+            ("language", language_box), ("display", display_box),
+            ("temperature", temperature_box), ("program", app_box),
+            ("performance", performance_box), ("navigation", navigation_box),
+            ("features", feature_box), ("authority", authority_box),
+            ("backends", backend_box), ("access", device_box),
+            ("dependencies", dependency_box), ("runtime", runtime_box),
+            ("levita_fps", levita_fps_box), ("experimental", experimental_box),
+            ("notice", about_box),
+        )
+        for key, section in sections:
+            section.setProperty("settingsSection", key)
+            layout.removeWidget(section)
+        for _key, section in sections:
+            layout.addWidget(section)
         layout.addStretch()
 
         scroll.setWidget(content)
@@ -18349,7 +18390,9 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         from modules.app_backgrounds.v1_0.profile import sync as sync_profile_background
         sync_profile_background(self)
         self.display_effects_page.set_window_active(window_active)
-        lcd_active = active_page_visible(self, tabs, getattr(self, "lcd_scroll_page", None))
+        preview_box = getattr(self, "lcd_preview_box", None)
+        lcd_active = (active_page_visible(self, tabs, getattr(self, "lcd_scroll_page", None))
+                      and preview_box is not None and preview_box.isVisible())
         for movie in (getattr(self, "lcd_preview_movie", None), getattr(self, "hardware_animation_movie", None)):
             if movie is not None:
                 state = movie.state()
@@ -18363,6 +18406,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             for button in getattr(self, "builtin_lcd_theme_buttons", {}).values():
                 if isinstance(button, AnimatedGifTileButton):
                     button.stop_preview()
+        self.update_lcd_sticky_preview_visibility()
 
     def current_rgb_design_snapshot(self) -> tuple[int, str, RGBEffectConfig]:
         data = self.rgb_studio_design_combo.currentData()
@@ -20587,7 +20631,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         movie.setCacheMode(QMovie.CacheMode.CacheNone)
         movie.frameChanged.connect(lambda _frame: self._set_lcd_preview_pixmap(movie.currentPixmap()))
         self.lcd_preview_movie = movie
-        if active_page_visible(self, self.tabs, self.lcd_scroll_page):
+        if active_page_visible(self, self.tabs, self.lcd_scroll_page) and self.lcd_preview_box.isVisible():
             movie.start()
 
     def update_lcd_sticky_preview_visibility(self) -> None:
@@ -20595,6 +20639,9 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         page = getattr(self, "lcd_scroll_page", None)
         box = getattr(self, "lcd_preview_box", None)
         if sticky is None or page is None or box is None:
+            return
+        if not box.isVisible() or not active_page_visible(self, self.tabs, page):
+            sticky.hide()
             return
         if not bool(getattr(self, "lcd_round_preview_available", True)):
             sticky.hide()
@@ -20956,7 +21003,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.hardware_animation_movie = movie
         self.preview.clear()
         self.preview.setMovie(movie)
-        if active_page_visible(self, self.tabs, self.lcd_scroll_page):
+        if active_page_visible(self, self.tabs, self.lcd_scroll_page) and self.lcd_preview_box.isVisible():
             movie.start()
         self.file_name_label.setText(
             f"{self.tr_static('Animierte Hardwaredaten')} · {self.hardware_animation_design_combo.currentText()}"
@@ -21107,7 +21154,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.hardware_animation_movie = movie
         self.preview.clear()
         self.preview.setMovie(movie)
-        if active_page_visible(self, self.tabs, self.lcd_scroll_page):
+        if active_page_visible(self, self.tabs, self.lcd_scroll_page) and self.lcd_preview_box.isVisible():
             movie.start()
         background_name = self.selected_lcd_file.name if self.selected_lcd_file else "—"
         self.file_name_label.setText(

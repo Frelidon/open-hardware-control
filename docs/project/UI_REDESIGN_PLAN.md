@@ -1,5 +1,25 @@
 # UI redesign — owner review, 12.11.26
 
+## Owner follow-up .182 — source verified, local update pending
+
+The owner requests the LCD cleanup now and revises the earlier GPU concept:
+retain recognizable graphics-card artwork and live values, put all tuning and
+the fan curve on one clear page, and use available space without tall blank
+columns. The implemented GPU layout is to replace the earlier .181 proposal.
+LCD groups existing library, composition and operation widgets without deleting
+features; explicit apply/start/restore paths remain at their original owners.
+Animated background comes first in Settings, followed by common appearance,
+language/window/start options; existing technical groups remain further down.
+The three source workspaces and Settings order are implemented. Targeted
+regressions, full UI/language coverage (2,618 IDs) and complete main-window
+renders pass in both palettes at three sizes. Live readings remain unknown
+without an actual read; separate GPU sample images explicitly label fixtures.
+LCD frames show editable composition, not proof of physical USB output.
+The complete release gate passes 1,736 tests/five subtests plus compilation,
+security, privacy and module budgets. Packages and installed native Qt views
+are pending.
+The earlier .181 evidence below is a verified previous checkpoint.
+
 ## Current implementation .181 — installed and verified locally
 
 The owner approves continuing the UI redesign in bounded steps while preserving

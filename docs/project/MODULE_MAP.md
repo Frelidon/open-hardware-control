@@ -1,5 +1,32 @@
 # Open Hardware Control — Modulkarte für Coding-KIs
 
+## .182 LCD-/GPU-Arbeitsbereiche und priorisierte Einstellungen
+
+`lcd_workspace/v1_0/`: reine Qt-Komposition/Navigation um vorhandene Levita-
+Bibliothek, Vorschau, Layer-Editor und Betriebswidgets. Die Daten-/Transport-
+verträge von Levita 1.7, LCD Runtime 1.1 und Medienmanager 1.1 bleiben erhalten.
+`gpu_control/v1_0/`: gemeinsame Darstellung vorhandener Tuning-/Fan-/Test-
+Bedienelemente mit unveränderten Controllern. `kraken_control.py:make_settings_tab`
+sortiert 17 vorhandene bereits besessene Gruppen ohne neue Einstellungswerte.
+`lcd_workspace/v1_0/composition.py` besitzt bestehende Zeilen vor dem Umsetzen;
+`navigation.py` misst nur den aktiven Arbeitsbereich; `devices.py` erhält
+Reihenfolge-/Sichtbarkeits-API und explizite Gerätewahl. Bibliothek und Vorschau
+pausieren ihre bestehenden lokalen Prozesse außerhalb ihres Arbeitsbereichs.
+`gpu_control/v1_0/workspace_ui.py` komponiert Grafik, Livewerte, OC/Kurve und
+Details; `workspace_layout.py` erhält die sieben alten Routen ohne Tab-Stapel.
+`refresh_workspace_language()` rekonstruiert Livekarten aus demselben Snapshot.
+`gpu_workspace_messages.py` und `lcd_workspace_messages.py` ergänzen atomar
+19 beziehungsweise 15 Quellen; zusammen 2.618 gemeinsame Nachrichten-IDs.
+Gezielte Regressionen: `test_lcd_workspace_3429182.py`,
+`test_gpu_workspace_3429182.py`, `test_settings_order_3429182.py`.
+Keine neue USB-/PWM-/LACT-Schreiblogik.
+
+Zusätzliche UI-Anschlüsse: `display_effects/v1_11/base_page.py` öffnet den
+vorhandenen Ebene-2-Editor direkt in Levita-Komposition. Der Dashboard-Einstieg
+zur LCD-Auswahl öffnet die Bibliothek der aktuellen Gerätefamilie. Verborgene
+Kraken-QMovies und die schwebende Rundvorschau beachten auch die inneren
+Arbeitsbereiche; physische LCD-/Hardwaretimer bleiben unverändert.
+
 ## .181 · Bereiche, Paargrößen, LCD-Manager, Hilfe und Erkennung
 
 - `ui_sections/v1_0/cards.py`, `reveal.py`: gemeinsame Themenflächen/Köpfe und

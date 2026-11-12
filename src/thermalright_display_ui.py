@@ -585,7 +585,8 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.load_initial_library()
 
     def _build_ui(self) -> None:
-        outer = QVBoxLayout(self)
+        from modules.lcd_workspace.v1_0 import CollectedUi, organize_studio
+        outer = CollectedUi(self)
         outer.setSpacing(12)
         intro = QLabel(
             "Zwei echte Ebenen kombinieren: Bild oder Video im Hintergrund, darüber wahlweise ein komplettes "
@@ -1304,6 +1305,14 @@ class ThermalrightDisplayStudio(QGroupBox):
 
         from modules.lcd_levita.v1_7.media_preview import MediaPreview
         self.media_preview = MediaPreview(self)
+        organize_studio(self, outer, dict(
+            intro=intro, display_recovery_row=display_recovery_row, status_row=status_row,
+            library_toolbar=library_toolbar, standard_button=standard_button,
+            category_frame=category_frame, galleries=galleries, layer_note=layer_note,
+            preview_stage=preview_stage, preview_stage_layout=preview_stage_layout, preview_title=preview_title,
+            performance_box=performance_box, options_row=options_row, split_notice=split_notice,
+            action_row=action_row, startup_row=startup_row, safety=safety,
+        ))
 
     def _load_overlays(self) -> list[OverlaySpec]:
         raw = str(self.settings.value("thermalright/overlays", "") or "")
@@ -2352,7 +2361,8 @@ class ThermalrightDisplayStudio(QGroupBox):
         return None
 
     def _start_thumbnail_workers(self) -> None:
-        if not self.thumbnail_ffmpeg or self.thumbnail_shutting_down or not self.isVisible():
+        if (not self.thumbnail_ffmpeg or self.thumbnail_shutting_down or not self.isVisible()
+                or hasattr(self, 'workspace_tabs') and self.workspace_tabs.currentIndex() != 0):
             return
         for worker in self.thumbnail_workers:
             if worker in self.thumbnail_active or not self.thumbnail_queue:
@@ -2592,7 +2602,8 @@ class ThermalrightDisplayStudio(QGroupBox):
         )
 
     def _card_hover_enter(self, button: QToolButton | None, entry: MediaEntry | None) -> None:
-        if button is None or entry is None or entry.kind != "video" or not self.levita_hover_preview.isChecked():
+        if (not self._library_workspace_active() or button is None or entry is None
+                or entry.kind != "video" or not self.levita_hover_preview.isChecked()):
             return
         self.hover_card_button = button
         self.hover_card_entry = entry
@@ -2614,6 +2625,7 @@ class ThermalrightDisplayStudio(QGroupBox):
         for column in range(MEDIA_GALLERY_COLUMNS[1]):
             self.media_cards_grid.setColumnStretch(column, 1 if column < columns else 0)
         self.gallery_preparation.request(self._visible_media_entries, reuse=reuse)
+        if not self._library_workspace_active(): self.gallery_preparation.timer.stop()
 
     def _rebuild_hardware_cards(self, themes: Iterable[MediaEntry], *, reuse: bool = False) -> None:
         self._visible_hardware_themes = list(themes)
@@ -2627,11 +2639,18 @@ class ThermalrightDisplayStudio(QGroupBox):
         for column in range(HARDWARE_GALLERY_COLUMNS[1]):
             self.hardware_cards_grid.setColumnStretch(column, 1 if column < columns else 0)
         self.gallery_preparation.request(entries, hardware=True, reuse=reuse)
+        if not self._library_workspace_active(): self.gallery_preparation.timer.stop()
+
+    def _library_workspace_active(self) -> bool:
+        tabs = getattr(self, 'workspace_tabs', None)
+        return (not self.shutdown_started and self.isVisible()
+                and (tabs is None or tabs.currentIndex() == 0))
 
     def _materialize_visible_galleries(self) -> None:
         self._gallery_materialize_pending = False
-        if self.shutdown_started or not self.isVisible():
+        if not self._library_workspace_active():
             return
+        self._relayout_design_galleries()
         if not self._media_cards_materialized:
             if "media" not in self.gallery_preparation.jobs:
                 self._rebuild_media_cards(getattr(self, "_visible_media_entries", ()), reuse=True)
@@ -2655,7 +2674,8 @@ class ThermalrightDisplayStudio(QGroupBox):
             return
         if hasattr(self, 'media_preview'):
             self.media_preview.observer.timer.start(40)
-        if len(self.hover_preview_frames) > 1 and not self.hover_preview_timer.isActive():
+        if (self._library_workspace_active() and len(self.hover_preview_frames) > 1
+                and not self.hover_preview_timer.isActive()):
             self.hover_preview_timer.start()
         if not self._gallery_materialize_pending:
             self._gallery_materialize_pending = True
@@ -2669,11 +2689,13 @@ class ThermalrightDisplayStudio(QGroupBox):
         self.hover_preview_debounce.stop()
         self._cancel_hover_extract()
         self._pause_thumbnail_workers()
+        self.gallery_preparation.timer.stop()
         if hasattr(self, 'media_preview'):
             self.media_preview.refresh()
         super().hideEvent(event)
 
     def _relayout_design_galleries(self) -> None:
+        if not self._library_workspace_active(): return
         media_columns = self._gallery_columns(self.media_cards_scroll, *MEDIA_GALLERY_COLUMNS)
         hardware_columns = self._gallery_columns(self.hardware_cards_scroll, *HARDWARE_GALLERY_COLUMNS)
         if media_columns != self._media_gallery_columns:
@@ -3306,6 +3328,7 @@ class ThermalrightDisplayStudio(QGroupBox):
         return next((entry for entry in self.media_entries if entry.path == resolved), None)
 
     def _queue_hover_preview(self, index: int) -> None:
+        if not self._library_workspace_active(): return
         self.pending_hover_index = int(index)
         self.hover_preview_debounce.start()
 
@@ -3335,6 +3358,7 @@ class ThermalrightDisplayStudio(QGroupBox):
         self._show_path_preview_tile(media, entry.kind if entry else None)
 
     def _show_path_preview_tile(self, media: Path, known_kind: str | None = None) -> None:
+        if not self._library_workspace_active(): return
         self.hover_preview_media = media.resolve()
         entry = self._entry_for_path(media)
         kind = known_kind or (entry.kind if entry else "video")
@@ -3421,7 +3445,8 @@ class ThermalrightDisplayStudio(QGroupBox):
         targets = list(self.hover_extract_targets)
         self.hover_extract_media = None
         self.hover_extract_targets = []
-        if exit_code != 0 or media is None or media != self.hover_preview_media:
+        if (exit_code != 0 or media is None or media != self.hover_preview_media
+                or not self._library_workspace_active()):
             return
         self.hover_preview_frames = self._fit_hover_preview_frames(
             QPixmap(str(target)) for target in targets if target.is_file()
@@ -3449,7 +3474,7 @@ class ThermalrightDisplayStudio(QGroupBox):
         # video's independent visibility-bound decoder.
 
     def _advance_hover_preview(self) -> None:
-        if len(self.hover_preview_frames) < 2:
+        if not self._library_workspace_active() or len(self.hover_preview_frames) < 2:
             self.hover_preview_timer.stop()
             return
         self.hover_preview_frame_index = (

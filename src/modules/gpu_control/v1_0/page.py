@@ -15,7 +15,7 @@ from PySide6.QtGui import QDesktopServices, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDoubleSpinBox, QFormLayout, QFrame, QGridLayout, QGroupBox, QHBoxLayout,
     QLabel, QMenu, QMessageBox, QPushButton, QScrollArea, QSlider, QSpinBox, QTabWidget,
-    QVBoxLayout, QWidget,
+    QVBoxLayout, QWidget, QLayout,
 )
 
 from .client import LactClient, LactError, clock_controls, config_equivalent, healthy_stats, proposed_config
@@ -35,6 +35,7 @@ from .snapshot import forget_snapshot, read_snapshot, write_snapshot
 from .stress import benchmark_command, benchmark_gpu_environment
 from .stress_ui import GpuStressUiMixin
 from .tables import GpuTableMixin
+from .workspace_layout import WorkspaceSections
 
 
 def fan_preview_change_requested(changes: dict[str, Any]) -> bool:
@@ -92,21 +93,26 @@ class GpuControlPage(GpuCockpitUiMixin, GpuReadUiMixin, GpuDashboardUiMixin, Gpu
         self.setFrameShape(self.Shape.NoFrame)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
         content = QWidget()
+        content.setMaximumWidth(1800)
         layout = QVBoxLayout(content)
         layout.setContentsMargins(12, 10, 14, 12)
         layout.setSpacing(8)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
         self._build_gpu_dashboard(layout)
         self.status = QLabel("LACT wird erst beim Öffnen dieser Seite abgefragt.")
         self.status.setObjectName("muted")
         self.status.setWordWrap(True)
         layout.addWidget(self.status)
-        toolbar = QWidget()
+        toolbar = self.gpu_toolbar = QWidget()
         toolbar.setObjectName("gpuToolbar")
         bar = QGridLayout(toolbar)
         bar.setContentsMargins(12, 10, 12, 10)
         bar.setHorizontalSpacing(10)
         bar.setVerticalSpacing(8)
+        self.gpu_toolbar_layout = bar
         self.devices = QComboBox()
         self.devices.currentIndexChanged.connect(self._select_device)
         self.refresh_button = QPushButton("GPU und LACT aktualisieren")
@@ -127,7 +133,7 @@ class GpuControlPage(GpuCockpitUiMixin, GpuReadUiMixin, GpuDashboardUiMixin, Gpu
         bar.setColumnStretch(1, 1)
         layout.addWidget(toolbar)
 
-        self.sections = QTabWidget()
+        self.sections = WorkspaceSections(self)
         self.sections.setObjectName("gpuSections")
         layout.addWidget(self.sections)
         self._build_tuning()

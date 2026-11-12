@@ -12,9 +12,11 @@ BUILD = (ROOT / "scripts" / "build_release.py").read_text(encoding="utf-8")
 DESKTOP = (ROOT / "packaging/kraken-control.desktop.in").read_text(encoding="utf-8")
 
 
-def test_thermalright_studio_is_a_full_width_lcd_tile() -> None:
+def test_thermalright_studio_has_a_dedicated_full_width_device_workspace() -> None:
     assert "from thermalright_display_ui import ThermalrightDisplayStudio" in MAIN
-    assert '("thermalright", self.thermalright_display_studio, 3)' in MAIN
+    assert 'self.lcd_workspace = LcdDeviceShell(' in MAIN
+    assert 'self.thermalright_display_studio, self.lcd_tile_area' in MAIN
+    assert 'layout.addWidget(self.lcd_workspace)' in MAIN
 
 
 def test_detected_levita_offers_verified_trcc_installer_and_all_local_catalogs() -> None:

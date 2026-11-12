@@ -121,7 +121,9 @@ def exercise():
         second = ROOT / 'src/assets/levita-designs/ohc-3d-neon-apex-10s.mp4'
         studio.hardware_design_combo.setCurrentIndex(0)
         studio._select_effect_media(first, 'Quantum')
-        window.tabs.setCurrentIndex(window.tabs.indexOf(window.lcd_scroll_page))
+        page._open_lcd_studio()
+        assert window.lcd_workspace.device.currentData() == 'thermalright'
+        assert studio.workspace_tabs.currentIndex() == 1
         visible_previews.add(studio.canvas)
         studio.media_preview.refresh()
         assert wait_until(
