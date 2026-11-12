@@ -1,5 +1,49 @@
 # Open Hardware Control — Project Status
 
+## Verifizierter lokaler Abschluss .182 · 12.11.26
+
+Quellcommit `61a5f0d`, Anwendung 3.4.29.182 INTERN: vollständiger Release-Lauf
+mit 1.736 Tests und fünf Untertests, Kompilierung, Sicherheit, Datenschutz,
+Modulbudgets und allen übrigen Wächtern bestanden. 472 Python-Laufzeitquellen,
+2.618 gemeinsame Nachrichten-IDs in vier Sprachen. Die alte Vorschauprüfung
+benutzt jetzt den wirklichen Effekt→Levita-Komposition-Einstieg; ihre sieben
+Positions-/Playback-/Mirror-Assertions bleiben erhalten. Die ergänzten echten
+QMovie-Prüfungen sichern innere Sichtbarkeit, Pause/Fortsetzung und Sticky-Hide.
+
+Alle sechs Pakete gebaut und geprüft: Dist-SHA256, ZIP-CRCs/Manifeste,
+Quell-TAR-Manifest, vollständiges Git-Bundle, DEB/RPM-Metadaten, Root-Eigentümer,
+Rechte und RPM-Payloaddigests. 472 Quellen und 169 Original-Assets stimmen in
+allen Formaten bytegenau überein. Genau die zwei externen Sicherungen .181/.182
+bleiben erhalten; in beiden jeweils acht SHA256-Einträge verifiziert.
+
+Vorherige .181-Benutzerkopie und geschützte Einstellungen/Profile/Plugins sind
+privat gesichert. Nur der durch UID, Kommando und Startzeit bestätigte OHC-
+Prozess wurde geordnet mit SIGTERM beendet. Benutzer- und Systemkopie sind nun
+.182 (DPKG 3.4.29.182~intern2); beide installierten 472-Quellbäume und 169 Assets
+wurden bytegenau mit dem geprüften Source verglichen. Einstellungen, Profile
+und beide unterschiedlichen nativen RGB-Plugins waren vor dem Neustart gleich;
+Profile und beide Plugins wurden auch danach erneut hashgleich bestätigt.
+
+Die installierte Benutzerkopie wurde als echtes Wayland-Fenster mit temporären
+Einstellungen und deaktivierten Hardwarezugriffen in beiden Themen geprüft:
+GPU, alle drei LCD-Arbeitsbereiche und Einstellungen. Zehn vollständige Grabs
+stehen unter `docs/images/rendering-evidence/`; Zuordnung/Größen/Digests in
+`ui-workspaces-3429182.json`. LCD-Werte sind Beispielinhalte, GPU-Werte bleiben
+ohne Abfrage unbekannt. Kein physischer Ausgabe- oder Übertaktungstest wird
+aus diesen Bildern abgeleitet. Offscreen-Regressionen ergänzen drei Größen
+und vier Sprachen einschließlich offener Bereiche und unveränderter Entwürfe.
+
+Die normale .182-Benutzerinstallation läuft wieder. Der aktuelle Sitzungslog
+bestätigt aktive CPU-Kurve, gespeichertes Startprofil, sechs RGB-Geräte,
+GPU-Hardwaremodus, gestarteten nativen RGB-Arbeiter und aktives Levita-
+Startdesign. Die fünf Direct-Geräte melden im beobachteten Startfenster
+`errors=0`; physischer Readback ist dort ausdrücklich nicht verfügbar.
+Eine Qt-Portal-Registrierungswarnung wurde erfasst; die bestätigten RGB-/LCD-
+Starts folgten danach. Keine neue Fedora-/Windows- oder optische Geräteprüfung.
+
+Pakete und externe Sicherungen bleiben unveränderte Schnappschüsse vor diesem
+nachträglichen Installationsnachweis. GitHub wurde nicht verändert.
+
 ## Quellfreigabe .182 · 12.11.26 — Paketierung folgt
 
 Der Eigentümer beauftragt jetzt die weitere LCD-Bereinigung, eine gemeinsame

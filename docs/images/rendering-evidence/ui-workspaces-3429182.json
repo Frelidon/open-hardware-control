@@ -1,0 +1,92 @@
+{
+  "date": "12.11.26",
+  "version": "3.4.29.182 INTERN",
+  "source_commit": "61a5f0d",
+  "renderer": "installed PySide6 QWidget.grab under Wayland",
+  "settings": "isolated temporary settings; normal user configuration untouched",
+  "hardware_io": false,
+  "physical_device_validation": false,
+  "note": "LCD preview values are sample layout content; GPU readings remain unknown without a read. Both application themes; source geometry additionally covers three sizes/four languages.",
+  "files": [
+    {
+      "file": "gpu-installed-3429182-dark.png",
+      "size": [
+        2560,
+        1341
+      ],
+      "sha256": "8694b94f55606beeefb7372a3f77c1c66568b4a09b95884221e3632e2d009079"
+    },
+    {
+      "file": "gpu-installed-3429182-light.png",
+      "size": [
+        2551,
+        1337
+      ],
+      "sha256": "00e07a357b0e2111aa4c7f4cd8bd61b8c2f2e8cf0e0908842fe05db2986aeb1f"
+    },
+    {
+      "file": "lcd-composition-installed-3429182-dark.png",
+      "size": [
+        2560,
+        1341
+      ],
+      "sha256": "8b5693645873540bae08b22225b3a1c0e4d451dc78ddf3af55054a26ecba0c34"
+    },
+    {
+      "file": "lcd-composition-installed-3429182-light.png",
+      "size": [
+        2551,
+        1337
+      ],
+      "sha256": "52d5270e71a3c3b8ffb72346dd16edbd2147e2c868e39c16d7306e5ca9987fc4"
+    },
+    {
+      "file": "lcd-library-installed-3429182-dark.png",
+      "size": [
+        2560,
+        1341
+      ],
+      "sha256": "f55627a55aa153bd4e813e20ede4a8c57840c3e15a7573318269010e0dcb6e6b"
+    },
+    {
+      "file": "lcd-library-installed-3429182-light.png",
+      "size": [
+        2551,
+        1337
+      ],
+      "sha256": "9931824ac93b121e0a1b1a689c3c412f6597f545249f3b76704ac937a09bd974"
+    },
+    {
+      "file": "lcd-operation-installed-3429182-dark.png",
+      "size": [
+        2560,
+        1341
+      ],
+      "sha256": "b597a12f1454e0df7486394a6897ddabfc66df4285ce36acddf99d291580ed9f"
+    },
+    {
+      "file": "lcd-operation-installed-3429182-light.png",
+      "size": [
+        2551,
+        1337
+      ],
+      "sha256": "1e69dbd2ae2b470b734b9a36fb7bb0e7d37e07574b822d7068f437f5926a1f26"
+    },
+    {
+      "file": "settings-installed-3429182-dark.png",
+      "size": [
+        2560,
+        1341
+      ],
+      "sha256": "f517a770dbf6681bada984b246de1b696ebfa62f572861083ffc48271ed445ed"
+    },
+    {
+      "file": "settings-installed-3429182-light.png",
+      "size": [
+        2551,
+        1337
+      ],
+      "sha256": "fef7ed7f0249cf930c95b8691e21e4c3267680f7c752d713511295fa9f19aeae"
+    }
+  ]
+}

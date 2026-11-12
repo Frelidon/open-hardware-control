@@ -1,5 +1,16 @@
 # Open Hardware Control — verbindliches Modulregister
 
+Abschluss 12.11.26 (.182): Quellcommit `61a5f0d`; 1.736 Tests und fünf Untertests
+sowie sämtliche Release-Wächter bestanden. Sechs Pakete, 472 Laufzeitquellen,
+169 Original-Assets und genau beide .181/.182-Sicherungen mit je acht SHA256
+verifiziert. Benutzer- und Systemkopie .182 bytegleich installiert; echte
+installierte Wayland-Ansichten von GPU, drei LCD-Arbeitsbereichen und Einstellungen
+in beiden Themen mit isolierten Werten geprüft. Geschützte Einstellungen vor
+Start, Profile und beide nativen Plugins zusätzlich nach normalem Start unverändert.
+Normaler CPU-/RGB-/Levita-Start protokolliert; keine neue optische/Fedora-/Windows-
+Prüfung und kein GitHub-Upload. Vorbauabschnitte unten sind historisch; aktueller
+Nachweis und Bildmetadaten stehen in `PROJECT_STATUS.md`.
+
 Entwicklung 12.11.26 (.182): LCD-Arbeitsbereich 1.0 unter
 `src/modules/lcd_workspace/v1_0/` ordnet vorhandene Bibliotheks-, Kompositions-
 und Betriebswidgets; Levita 1.7 und LCD-Medienmanager 1.1 behalten Daten- und

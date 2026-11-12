@@ -64,7 +64,7 @@ The safe preview-only test mode is active by default; real USB transfer happens 
 
 ## Installation
 
-The following filenames describe the upcoming local build; packages are not yet released.
+The following local INTERN packages are built and verified. User and system installations are updated; GitHub remains unchanged.
 
 ### Fedora and Nobara – RPM
 

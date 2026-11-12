@@ -1,8 +1,13 @@
 # Open Hardware Control 3.4.29.182 INTERN
 
-Entwicklung 12.11.26: Der Eigentümer beauftragt einen aufgeräumten LCD-Bereich,
-eine gemeinsame Grafikkartenseite und priorisierte Einstellungen. Die letzte
-verifizierte laufende Installation bleibt bis zur Prüfung .181.
+Lokaler Abschluss 12.11.26: Sechs Pakete und beide .181/.182-Sicherungen geprüft;
+Benutzer- und Systemkopie .182 mit je 472 Quellen und 169 Assets bytegleich
+installiert. Geschützte Einstellungen vor Start, Profile und beide Plugins auch
+nach normalem Neustart unverändert. Echte installierte Wayland-Ansichten von GPU,
+allen drei LCD-Arbeitsbereichen und Einstellungen in beiden Themen geprüft.
+Die normale Anwendung läuft; CPU-Kurve, RGB und Levita-Startdesign sind im Log
+aktiv bestätigt. Pakete/Sicherungen bleiben unveränderte Schnappschüsse vor
+diesem nachträglichen Nachweis. Vollständige Evidenz in `PROJECT_STATUS.md`.
 
 Der LCD-Arbeitsbereich bündelt die vorhandenen Bibliotheks-, Kompositions- und
 Betriebsfunktionen. Bestehende Medien, Quellreferenzen, Ebene-2-Entwürfe,
@@ -38,6 +43,6 @@ Qt-Hauptfensteraufnahmen prüfen beide Themen und drei Größen (2551×1337,
 verdeckte Prozesse bleiben erhalten. Der unabhängige UI-Review ist ohne Befund.
 Vollständige Release-Prüfung bestanden: 1.736 Tests und fünf Untertests,
 Kompilierung, Sicherheits-/Datenschutzscan, Modulbudgets und übrige Wächter.
-472 Laufzeitquellen; Pakete und Installation werden separat ergänzt.
+472 Laufzeitquellen; Pakete und Installation sind wie oben dokumentiert geprüft.
 Kein GitHub-Auftrag; keine reale Fedora-/Windows- oder optische Hardwareprüfung
 wird aus einer UI-Vorschau abgeleitet.

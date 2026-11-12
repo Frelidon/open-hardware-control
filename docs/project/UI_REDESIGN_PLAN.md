@@ -1,6 +1,6 @@
 # UI redesign — owner review, 12.11.26
 
-## Owner follow-up .182 — source verified, local update pending
+## Owner follow-up .182 — installed and verified locally
 
 The owner requests the LCD cleanup now and revises the earlier GPU concept:
 retain recognizable graphics-card artwork and live values, put all tuning and
@@ -16,8 +16,19 @@ renders pass in both palettes at three sizes. Live readings remain unknown
 without an actual read; separate GPU sample images explicitly label fixtures.
 LCD frames show editable composition, not proof of physical USB output.
 The complete release gate passes 1,736 tests/five subtests plus compilation,
-security, privacy and module budgets. Packages and installed native Qt views
-are pending.
+security, privacy and module budgets. Six packages and both .181/.182 backups
+are verified. User and system copies
+match all 472 sources and 169 assets. Installed Wayland views of GPU, all three
+LCD tasks and Settings pass in both themes; protected settings before startup
+and profiles/plugins after restart remain unchanged. Normal startup is verified
+separately in the session log. Packages/backups remain pre-evidence snapshots.
+Current installed views: [LCD library](../images/rendering-evidence/lcd-library-installed-3429182-dark.png),
+[composition, light](../images/rendering-evidence/lcd-composition-installed-3429182-light.png),
+[GPU](../images/rendering-evidence/gpu-installed-3429182-dark.png),
+[Settings](../images/rendering-evidence/settings-installed-3429182-light.png).
+These use isolated settings and disabled hardware IO; sample LCD content is not
+physical measurement. Ten frame sizes and digests are in
+`ui-workspaces-3429182.json`. No GitHub upload or physical OC test.
 The earlier .181 evidence below is a verified previous checkpoint.
 
 ## Current implementation .181 — installed and verified locally

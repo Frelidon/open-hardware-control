@@ -64,7 +64,7 @@ Der sichere Testmodus ist standardmäßig aktiv; echte USB-Übertragung erfolgt 
 
 ## Installation
 
-Die folgenden Dateinamen gelten für den kommenden lokalen Bau; Pakete sind noch nicht freigegeben.
+Die folgenden lokalen INTERN-Pakete sind gebaut und geprüft. Benutzer- und Systemkopie sind aktualisiert; GitHub bleibt unverändert.
 
 ### Fedora und Nobara – RPM
 
