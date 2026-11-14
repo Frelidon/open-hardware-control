@@ -1,5 +1,115 @@
 # Open Hardware Control — Durable Decisions
 
+## 13.11.26 · Hardware Fix lokal als Standard (.183)
+
+Der Eigentümer beauftragt weniger Schaltflächen und eine verständliche lokale
+Standardinstallation. OHC ist Installer und Diagnoseoberfläche; der bekannte
+lokale Dienst bleibt unabhängig vom geöffneten Programm. Die technisch gleiche
+Installation erhält keine zweite Anbieterwahl und keinen zweiten Wächter.
+Installieren koordiniert die vorhandenen geprüften Schritte, Deinstallieren
+entfernt den bekannten Fix einschließlich Ubuntu-Automatik. Einzelaktionen und
+DRM-Nachweis bleiben erreichbar. Fedora erhält niemals Ubuntu-AppIndicators-
+Automatik. Ein nötiger Systemneustart bleibt ausdrücklich manuell.
+
+## 12.11.26 · LCD ordnen, GPU gemeinsam darstellen, Einstellungen priorisieren (.182)
+
+Der Eigentümer bestätigt die kompaktere Gehäusedarstellung und beauftragt die
+weitere LCD-Bereinigung. Bibliothek, Komposition und Betrieb werden verständlich
+gegliedert, ohne Medien-/Import-/Layer-/Start- oder Hardwarefunktionen zu löschen.
+Bestehende spezialisierte Renderer, Modelle, Einstellungen und Controller bleiben
+autoritativ; bloße Navigation übernimmt oder sendet keine Geräteänderung.
+
+Die Grafikkartenseite behält Bild und erkennbare GPU-Darstellung. Übertaktung und
+Lüfterkurve stehen auf einer gemeinsamen Seite; Lasttest, Profile und Diagnose
+bleiben erreichbar. Ein Layoutumbau darf weder LACT-Grenzen noch Kurztest,
+Rückgabe oder CoolerControl-/Hardwarebesitz abschwächen. Neue Seitentexte werden
+atomar in vier Sprachen gepflegt; die gemeinsame Scrollführung bleibt abbrechbar.
+
+Der animierte Programmhintergrund steht in Einstellungen ganz oben. Die weiteren
+bestehenden Gruppen werden nach alltäglicher Wichtigkeit sortiert; Widgets,
+Signale, stabile Einstellungs-Schlüssel und alle Optionen bleiben erhalten.
+Lokale Version, Prüfung und sichere Aktualisierung sind Teil der bestehenden
+Freigabe; GitHub bleibt ein gesonderter Auftrag.
+
+## 12.11.26 · Gemeinsame UI-Sprache und echte Designgrößen (.181)
+
+Der Eigentümer möchte große einheitliche Bereichsköpfe, ruhige Öffnungs-/
+Schließbewegungen und eine übersichtliche Gehäuseseite. Gemeinsame Darstellung
+wird in `ui_sections/v1_0` zentralisiert; vorhandene Aufrufer behalten ihre
+Fassaden. Die Bewegung gehört der vorhandenen Scrollleiste und endet bei
+Nutzergesten oder Seitenwechsel. Bedienung und neue Entwürfe behalten Vorrang;
+kein Verlauf darf Benutzerpositionen oder Hardwarewerte nachträglich verändern.
+
+Zehn weitere Paare ergänzen die vorhandenen fünf anhand unterschiedlicher
+originaler gebündelter OHC-Medien. Eine Größenfunktion muss Vorschau und reale
+LCD-Ausgabe ändern. Generischer LCD-Zoom verwendet eine begrenzte lokale Kopie
+nach ausdrücklichem Anwenden; Matrix-Zeichengrößen bleiben echte vorhandene
+Varianten. Kein bloß optischer Regler und keine Größenänderung der Sensorebene.
+Alte IDs/Indizes und Hardwarebesitzer bleiben bestehen; RGB/LCD-Paare versprechen
+keine Frame-Synchronisation.
+
+Eine spätere Encoderantwort darf eine inzwischen neuere LCD-Absicht nicht
+überschreiben. Seitenverlassen beendet ausstehende Vorbereitung. Cacheprüfung
+bleibt eine begrenzte Metadatenprüfung ohne Videoframedekodierung im GUI-Thread;
+eine gültige MP4-Struktur ist keine behauptete physische Displaybestätigung.
+
+Der LCD-Manager gehört in die jeweilige Seite. Öffnen/Bearbeiten ändert nur einen
+Entwurf; erst Speichern übernimmt Referenzen und Aliasnamen. Originale werden
+nicht gelöscht. Galerie-Cachevorbereitung, LCD-Übertragung, Hardwareerkennung,
+aktuelle Telemetrie und Schreibfreigabe erhalten getrennte eindeutige Bedeutungen.
+Ein erkannter CPU-/GPU-Name oder erfolgreicher LACT-Lesevorgang ist keine Freigabe.
+
+Die Arbeit wird in überprüfbaren Schritten umgesetzt. Ein vollständiger GPU-/
+Lüfterkurven-Umbau und die weitere LCD-Legacybereinigung benötigen nachfolgende
+Entwürfe; sie werden nicht mit einer Statuskorrektur als erledigt ausgegeben.
+Weitere frühere Ideen bleiben sichtbar in der Roadmap. Vollständiger Wächter,
+Paketierung, Sicherungen und lokaler Neustart sind gesondert zu belegen. Der bei
+Vollfensteraufnahmen entdeckte Qt-Eigentümerfehler ist durch expliziten Besitz
+vor dem Umhängen vorhandener Comboboxen korrigiert. Die zugehörige Regression
+rendert das komplette Hauptfenster einschließlich verborgener Tab-Geometrie,
+statt nur die isolierte neue Seite zu prüfen. Eine Freigabe des gesamten .181-
+Standes benötigt weiterhin den noch ausstehenden Release-Wächter und Paketlauf.
+
+## 11.11.26 · Profilinhalte bleiben auch aufgeklappt lesbar (.180)
+
+Die installierte Oberfläche muss mit allen Profilbereichen geöffnet dieselbe
+lesbare Inhaltsgeometrie behalten wie die Standardansicht. Zusätzliche Höhe
+führt zu Scrollen, nicht zum Zusammendrücken gespeicherter Werte. Bibliothek
+und zusammenhängende Profilkarte folgen dem vorhandenen Entwurf; technische
+Details und Übertragung bleiben zugänglich, mit großen gestalteten Bereichsköpfen
+und getrennten Einzelprofil-/Komplettsicherungsaktionen. Diese Gestaltung gilt
+lokal für Profile und verändert keine gemeinsame Aufklappkomponente.
+
+Auswahl und neue Entwürfe bleiben von Anwenden getrennt. Ein ungespeicherter
+neuer Entwurf darf durch Sprachwechsel kein bestehendes Profil als Updateziel
+erhalten. Die Prüfung umfasst vollständig geöffnete Bereiche bei der gemeldeten
+Auflösung und kleineren Fenstern, vier Sprachen und beiden Themen; die installierte
+Kopie wird nach der Paketierung erneut geprüft. GitHub bleibt ein eigener Auftrag.
+
+## 11.11.26 · Sensorbereitschaft ist kein Grund für veraltete Werte
+
+Ein kurz fehlender CPU-Snapshot beim Profilstart wird bis zu zehn Sekunden
+asynchron abgewartet. Die bestehende Frischegrenze wird nicht erhöht. Ein echter
+Sensorausfall bleibt fail-closed und mit Zustand/Frist im Log sichtbar; keine
+Kurve wird mit geratenen Temperaturen übertragen. Neuere Nutzerabsicht verwirft
+jede wartende Anwendung. Python-/Qt-/Modulfehler erhalten zusätzlich zu privaten
+Dateien eine begrenzte GUI-Logübernahme ohne neue Rechte oder Netzübertragung.
+
+## 11.11.26 · Angewendete Profile und temporärer Hintergrund
+
+Die letzte bearbeitete Profil-ID gilt nicht als Nachweis eines angewendeten
+Profils. Eine separate sitzungsinterne Kopie des ausdrücklich angewendeten
+Payloads steuert nur den Hintergrund der Profilseite: LCD-Basismedium bevorzugt,
+sonst gespeicherter RGB-Effekt. Außerhalb der Seite gilt die globale Auswahl.
+Kein Hintergrund schreibt Hardware oder speichert seine temporäre Auswahl.
+Ein Video-Decoder wird nach Sichtbarkeit/Minimierung/Animationsfreigabe entladen;
+Bilder/Zeichnung behalten das Seitenverhältnis und begrenzte Renderflächen.
+Matrix-Größen sind zusätzliche Varianten, keine Überschreibung alter Medien.
+
+## 11.11.26 – Matching designs and game section (.177)
+
+The owner requests Matrix first for fans and LCD, plus one Designs & Games parent between RGB and LCD containing matching designs, games and the existing Automation Center. Preserve rules, personal navigation order, sensor layers and guarded single-writer apply paths. Visual pairing does not promise frame synchronization. Game setup currently prepares existing process/profile rules; telemetry and screen ambience are subsequent implementation work.
+
 11.11.26 · .176-Veröffentlichung: Der Eigentümer fordert ausdrücklich die
 Veröffentlichung der neuen Version auf GitHub. Der bestehende Release-Ablauf
 mit STABLE-Kanal, vollständiger Prüfung/Paketierung, normalem main-Push und

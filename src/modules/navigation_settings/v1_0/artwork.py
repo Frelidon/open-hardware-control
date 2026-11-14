@@ -79,6 +79,14 @@ def draw_symbol(painter, key, rect, foreground, accent):
             painter.drawRoundedRect(QRectF(15+i*8, 18+i*16, 60, 30), 5, 5)
     elif key == "automations":
         painter.drawEllipse(QRectF(17,17,66,66));painter.drawLine(50,50,50,29);painter.drawLine(50,50,67,58)
+    elif key == "games":
+        painter.drawRoundedRect(QRectF(12,30,76,45),16,16)
+        painter.drawLine(25,51,43,51);painter.drawLine(34,42,34,60)
+        painter.setPen(QPen(accent,5));painter.drawPoint(65,46);painter.drawPoint(74,57)
+    elif key in {"design_hub", "paired_designs"}:
+        fan(31,50,23)
+        painter.drawRoundedRect(QRectF(59,27,32,47),4,4)
+        painter.setPen(QPen(accent,3));painter.drawLine(64,41,86,41);painter.drawLine(64,53,80,53)
     else:
         for x,y in ((19,19),(55,19),(19,55),(55,55)):
             painter.drawRoundedRect(QRectF(x,y,26,26),5,5)
@@ -138,5 +146,9 @@ def refresh_navigation_art(host,page=None):
     if current==getattr(host,"hardware_checker_page_index",-2):
         index=host.hardware_checker_page.section_tabs.currentIndex()
         key=("hardware_checker","hardware_fix","supported_devices")[index]
+    for attribute, category in (("design_hub_page_index", "paired_designs"),
+                                 ("games_page_index", "games"),
+                                 ("design_automation_page_index", "automations")):
+        if current == getattr(host, attribute, -3): key = category
     art=getattr(host,"sidebar_artwork",None)
     if art is not None:art.set_category(key);art.update()

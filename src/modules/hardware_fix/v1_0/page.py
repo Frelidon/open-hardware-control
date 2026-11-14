@@ -1,286 +1,282 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Hardware Fix profile UI embedded below Hardware Checker."""
-
+"""Two primary actions for local, model-specific Hardware Fix setup."""
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
+import time
 from typing import Callable
+import uuid
 
-from PySide6.QtCore import QProcess, QTimer
+from PySide6.QtCore import QEvent, QProcess, QTimer, Qt
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
-    QComboBox, QFrame, QHBoxLayout, QLabel, QMessageBox, QPushButton,
-    QScrollArea, QVBoxLayout, QWidget,
+    QApplication, QFrame, QHBoxLayout, QLabel, QMenu, QMessageBox, QPushButton,
+    QScrollArea, QSizePolicy, QToolButton, QVBoxLayout, QWidget,
 )
-
-from .profile import MSI_VRR_PROFILE, STATE_ROOT, os_family, terminal_spec
+from modules.ui_performance.v1_1.compact_panels import Disclosure
+from modules.ui_themes.v1_0.registry import resolve_theme
+from privacy_logging import redact_private_text
+from .profile import STATE_ROOT, terminal_spec
 from .status import HardwareFixStatus, inspect_status
 
 
 class HardwareFixPanel(QScrollArea):
-    """Model-specific fixes; every mutating action is fixed and confirmed."""
-
     def __init__(self, host: QWidget, translate: Callable[[str], str]) -> None:
         super().__init__(host)
-        self.host = host
-        self.translate = translate
+        self.host, self.translate = host, translate
         self.last_status: HardwareFixStatus | None = None
+        self._texts = []
+        self._job_id = ""
+        self._started_at = 0.0
+        self._busy = False
         self.result_timer = QTimer(self)
         self.result_timer.setInterval(1200)
         self.result_timer.timeout.connect(self._poll_result)
-        self._last_job_id = ""
         self._build()
         QTimer.singleShot(0, self, self.refresh_status)
 
     def tr(self, text: str) -> str:
         return self.translate(text)
 
-    def _build(self) -> None:
+    def _text(self, widget, source):
+        self._texts.append((widget, source))
+        widget.setText(source)
+        return widget
+
+    def _label(self, text):
+        label = self._text(QLabel(), text)
+        label.setWordWrap(True)
+        label.setMinimumWidth(0)
+        label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        label.setTextFormat(Qt.TextFormat.PlainText)
+        return label
+
+    def _build(self):
         self.setWidgetResizable(True)
+        self.viewport().setAutoFillBackground(False)
         body = QWidget()
+        body.setAutoFillBackground(False)
         layout = QVBoxLayout(body)
         layout.setContentsMargins(18, 16, 18, 18)
-        layout.setSpacing(12)
-
+        layout.setSpacing(14)
         hero = QFrame(objectName="moduleHeroCard")
         hero_layout = QVBoxLayout(hero)
-        title = QLabel("Hardware Fix")
+        title = self._label("Hardware Fix")
         title.setObjectName("heroTitle")
-        intro = QLabel(
-            "Gezielte, rücknehmbare Korrekturen für exakt erkannte Hardware. "
-            "Keine Firmware wird in das Gerät geflasht."
-        )
-        intro.setWordWrap(True)
         hero_layout.addWidget(title)
-        hero_layout.addWidget(intro)
+        hero_layout.addWidget(self._label("Gezielte, rücknehmbare Korrekturen für exakt erkannte Hardware. Keine Firmware wird in das Gerät geflasht."))
         layout.addWidget(hero)
 
         card = QFrame(objectName="settingsCard")
-        card_layout = QVBoxLayout(card)
-        model = QLabel("Unterstützter Monitor: MSI MAG 274QPF X30MV")
+        content = QVBoxLayout(card)
+        content.setContentsMargins(20, 18, 20, 18)
+        content.setSpacing(14)
+        model = self._label("Unterstützter Monitor: MSI MAG 274QPF X30MV")
         model.setObjectName("sectionTitle")
-        scope = QLabel(
-            "Fix: korrigierte VRR-Kennung in einer anonymisierten EDID für DisplayPort. "
-            "Die persönliche Monitor-Seriennummer ist nicht enthalten. HDMI bleibt unverändert."
-        )
-        scope.setWordWrap(True)
-        warning = QLabel(
-            "Achtung: Das Profil weist die MSI-EDID allen DisplayPort-Anschlüssen zu. "
-            "Andere, gleichzeitig angeschlossene DP-Monitore vorher trennen oder die Aktion abbrechen."
-        )
-        warning.setObjectName("warningText")
-        warning.setWordWrap(True)
-        card_layout.addWidget(model)
-        card_layout.addWidget(scope)
-        card_layout.addWidget(warning)
-
-        provider_row = QHBoxLayout()
-        provider_row.addWidget(QLabel("Anbieter auswählen"))
-        self.provider_combo = QComboBox()
-        self.provider_combo.setProperty("i18nTranslateItems", False)
-        self.provider_combo.addItem("Lokal", "local")
-        self.provider_combo.addItem("Open Hardware Control", "open_hardware_control")
-        self.provider_apply = QPushButton("Auswahl anwenden")
-        self.provider_apply.clicked.connect(self.apply_provider)
-        provider_row.addWidget(self.provider_combo)
-        provider_row.addWidget(self.provider_apply)
-        provider_row.addStretch()
-        card_layout.addLayout(provider_row)
-
-        action_row = QHBoxLayout()
-        self.status_button = QPushButton("Status prüfen")
+        content.addWidget(model)
+        status_row = QHBoxLayout()
+        self.summary = self._label("")
+        self.summary.setText(self.tr("Status wird geprüft …"))
+        self.summary.setObjectName("infoText")
+        status_row.addWidget(self.summary, 1)
+        self.status_button = QToolButton()
+        self.status_button.setText("↻")
+        self.status_button.setAccessibleName(self.tr("Status prüfen"))
+        self.status_button.setToolTip(self.tr("Status prüfen"))
         self.status_button.clicked.connect(self.refresh_status)
-        self.activate_button = QPushButton("Für Ubuntu aktivieren")
+        status_row.addWidget(self.status_button)
+        content.addLayout(status_row)
+        content.addWidget(self._label("Lokale Installation · empfohlen"))
+        content.addWidget(self._label("Der Fix läuft unabhängig von Open Hardware Control. Installieren richtet die benötigten Schritte ein oder aktualisiert den vorhandenen lokalen Dienst."))
+        content.addWidget(self._label("Fix: korrigierte VRR-Kennung in einer anonymisierten EDID für DisplayPort. Die persönliche Monitor-Seriennummer ist nicht enthalten. HDMI bleibt unverändert."))
+        warning = self._label("Achtung: Das Profil weist die MSI-EDID allen DisplayPort-Anschlüssen zu. Andere, gleichzeitig angeschlossene DP-Monitore vorher trennen oder die Aktion abbrechen.")
+        warning.setObjectName("warningText")
+        self.warning = warning
+        content.addWidget(warning)
+        self.next_step = self._label("")
+        content.addWidget(self.next_step)
+        buttons = QHBoxLayout()
+        self.activate_button = self._text(QPushButton(), "Installieren")
         self.activate_button.setObjectName("primaryAction")
-        self.activate_button.clicked.connect(lambda: self._start_action("install"))
-        self.desktop_button = QPushButton("Desktop-VRR einrichten")
-        self.desktop_button.clicked.connect(lambda: self._start_action("desktop"))
-        self.game_button = QPushButton("VRR im Spiel testen")
-        self.game_button.clicked.connect(lambda: self._start_action("game-test"))
-        for button in (self.status_button, self.activate_button, self.desktop_button, self.game_button):
-            action_row.addWidget(button)
-        action_row.addStretch()
-        card_layout.addLayout(action_row)
-
-        service_row = QHBoxLayout()
-        self.automation_button = QPushButton("Ubuntu-Automatik installieren / übernehmen")
-        self.automation_button.clicked.connect(lambda: self._start_action("automation-install"))
-        self.disable_button = QPushButton("Automatik deaktivieren")
-        self.disable_button.clicked.connect(lambda: self._start_action("automation-remove"))
-        self.uninstall_button = QPushButton("Fix deinstallieren")
+        self.activate_button.setMinimumHeight(40)
+        self.activate_button.clicked.connect(lambda: self._start_action("install-local"))
+        self.uninstall_button = self._text(QPushButton(), "Deinstallieren")
+        self.uninstall_button.setMinimumHeight(40)
         self.uninstall_button.clicked.connect(lambda: self._start_action("uninstall"))
-        for button in (self.automation_button, self.disable_button, self.uninstall_button):
-            service_row.addWidget(button)
-        service_row.addStretch()
-        card_layout.addLayout(service_row)
+        buttons.addWidget(self.activate_button)
+        buttons.addWidget(self.uninstall_button)
+        buttons.addStretch()
+        content.addLayout(buttons)
         layout.addWidget(card)
 
-        self.summary = QLabel("Status wird geprüft …")
-        self.summary.setObjectName("infoText")
-        self.summary.setWordWrap(True)
-        layout.addWidget(self.summary)
-        self.details = QLabel("")
-        self.details.setWordWrap(True)
-        self.details.setTextInteractionFlags(self.details.textInteractionFlags())
-        layout.addWidget(self.details)
-        self.log_button = QPushButton("Details / Protokoll")
-        self.log_button.clicked.connect(self.show_log)
-        layout.addWidget(self.log_button)
+        self.options_button = self._text(QToolButton(), "Weitere Optionen")
+        self.options_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        menu = QMenu(self.options_button)
+        self.option_actions = {}
+        for action, label in (
+            ("game-test", "VRR im Spiel testen"),
+            ("status", "Ausführliche Diagnose"),
+            ("desktop", "Desktop-VRR einrichten"),
+            ("automation-install", "Ubuntu-Automatik reparieren"),
+            ("automation-remove", "Nur die Ubuntu-Automatik entfernen"),
+            ("install", "Boot-Fix erneut installieren"),
+        ):
+            item = menu.addAction(label)
+            self._texts.append((item, label))
+            item.triggered.connect(lambda checked=False, key=action: self._start_action(key))
+            self.option_actions[action] = item
+        menu.addSeparator()
+        item = menu.addAction("Protokoll anzeigen")
+        self._texts.append((item, "Protokoll anzeigen"))
+        item.triggered.connect(self.show_log)
+        self.options_button.setMenu(menu)
+        layout.addWidget(self.options_button, 0, Qt.AlignmentFlag.AlignLeft)
+        self.details = self._label("")
+        self.details.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.technical = Disclosure("Technischer Status", self.details)
+        self._texts.append((self.technical.button, "Technischer Status"))
+        layout.addWidget(self.technical)
         layout.addStretch()
         self.setWidget(body)
+        body.setAutoFillBackground(False)
+        self._refresh_warning()
 
-    def refresh_status(self) -> None:
+    def _refresh_warning(self):
+        palette = QApplication.palette()
+        theme = resolve_theme(getattr(self.host, "theme_mode", "system"),
+                              getattr(self.host, "system_palette", palette), QColor("#00aaff"))
+        warning_color = "#e9b748" if theme.dark else "#875900"
+        self.warning.setStyleSheet(f"QLabel#warningText {{ color: {warning_color}; }}")
+
+    def changeEvent(self, event):
+        super().changeEvent(event)
+        if event.type() in {QEvent.Type.PaletteChange, QEvent.Type.StyleChange} and hasattr(self, "host") and self.widget():
+            self._refresh_warning()
+
+    def refresh_status(self):
         try:
             status = inspect_status()
-        except Exception as error:
-            self.summary.setText(f"Statusprüfung fehlgeschlagen: {error}")
+        except Exception:
+            self.summary.setText(self.tr("Statusprüfung fehlgeschlagen. Diagnose und Protokoll öffnen."))
+            self.activate_button.setEnabled(False)
+            self.uninstall_button.setEnabled(False)
             return
         self.last_status = status
-        family = status.os_family
-        self.activate_button.setText(
-            "Für Fedora aktivieren" if family == "fedora" else "Für Ubuntu aktivieren"
-        )
-        supported = family in {"ubuntu", "fedora"} and status.resources_valid
-        self.activate_button.setEnabled(supported)
-        ubuntu = family == "ubuntu"
-        self.automation_button.setEnabled(ubuntu and status.resources_valid)
-        self.disable_button.setEnabled(ubuntu and status.automation_installed)
-        self.desktop_button.setEnabled(ubuntu and status.corrected_edid_loaded)
-        self.game_button.setEnabled(status.corrected_edid_loaded)
-        self.uninstall_button.setEnabled(
-            status.boot_configuration_present or status.firmware_present or status.automation_installed
-        )
-        index = self.provider_combo.findData(status.selected_provider)
-        if index >= 0:
-            self.provider_combo.setCurrentIndex(index)
-        monitor = ", ".join(status.monitor_connectors) if status.monitor_connectors else "nicht erkannt"
-        installation = (
-            "von Open Hardware Control verwaltet"
-            if status.actual_provider == "open_hardware_control"
-            else "lokal installiert" if status.boot_configuration_present or status.automation_installed
-            else "nicht installiert"
-        )
-        reboot = " · Neustart erforderlich" if status.reboot_required else ""
-        self.summary.setText(
-            f"MSI MAG 274QPF X30MV: {monitor} · {installation}{reboot}"
-        )
-        self.details.setText(
-            "\n".join((
-                f"System: {family}",
-                f"Korrigierte EDID geladen: {'ja' if status.corrected_edid_loaded else 'nein'}",
-                f"Anonymisierte Profil-EDID installiert: {'ja' if status.firmware_valid else 'nein'}",
-                f"Bootparameter aktiv / gespeichert: {'ja' if status.boot_parameter_running else 'nein'} / "
-                f"{'ja' if status.boot_configuration_present else 'nein'}",
-                f"Ubuntu-Automatik installiert / aktiv: {'ja' if status.automation_installed else 'nein'} / "
-                f"{'ja' if status.automation_active else 'nein'}",
-                f"Anbieter gewählt / tatsächlich: {status.selected_provider} / {status.actual_provider}",
-                status.detail,
-            ))
-        )
+        supported = status.os_family in {"ubuntu", "fedora"} and status.resources_valid
+        installed = status.boot_configuration_present or status.firmware_present or status.automation_installed
+        self.activate_button.setEnabled(not self._busy and supported and bool(status.monitor_connectors))
+        self.uninstall_button.setEnabled(not self._busy and supported and installed)
+        for action, item in self.option_actions.items():
+            allowed = supported
+            if action.startswith("automation") or action == "desktop":
+                allowed = allowed and status.os_family == "ubuntu"
+            if action in {"desktop", "game-test"}:
+                allowed = allowed and status.corrected_edid_loaded
+            if action == "automation-remove":
+                allowed = allowed and status.automation_installed
+            item.setEnabled(not self._busy and allowed)
+        if not self._busy:
+            self.summary.setText(self.tr("Lokal installiert") if installed else self.tr("Noch nicht installiert"))
+        if not status.resources_valid:
+            next_step = "Profilressourcen sind beschädigt. Open Hardware Control erneut installieren."
+        elif not status.monitor_connectors:
+            next_step = "MSI-Monitor über DisplayPort anschließen."
+        elif status.reboot_required:
+            next_step = "Neustart erforderlich. Danach mit Installieren die Einrichtung abschließen."
+        elif status.os_family not in {"ubuntu", "fedora"}:
+            next_step = "Dieser Fix unterstützt Ubuntu und Fedora."
+        elif installed:
+            next_step = "Installieren prüft und aktualisiert die Einrichtung. Deinstallieren entfernt den Fix einschließlich der Ubuntu-Automatik."
+        else:
+            next_step = "Mit Installieren beginnen. Eine nötige Administratorabfrage öffnet sich im Terminal."
+        self.next_step.setText(self.tr(next_step))
+        yes = lambda value: self.tr("ja") if value else self.tr("nein")
+        self.details.setText("\n".join((
+            self.tr("System: {system}").format(system=status.os_family),
+            self.tr("Monitor: {monitor}").format(monitor=", ".join(status.monitor_connectors) or self.tr("nicht erkannt")),
+            self.tr("Korrigierte EDID geladen: {value}").format(value=yes(status.corrected_edid_loaded)),
+            self.tr("Boot-Fix gespeichert: {value}").format(value=yes(status.boot_configuration_present and status.firmware_valid)),
+            self.tr("Ubuntu-Automatik installiert / aktiv: {installed} / {active}").format(installed=yes(status.automation_installed), active=yes(status.automation_active)),
+        )))
 
-    def apply_provider(self) -> None:
-        provider = str(self.provider_combo.currentData() or "")
-        if provider not in {"local", "open_hardware_control"}:
+    def _start_action(self, action):
+        if self._busy:
             return
-        if provider == "open_hardware_control":
-            answer = QMessageBox.question(
-                self, "Vorhandenen Fix übernehmen?",
-                "Open Hardware Control übernimmt den bekannten MSI-Fix und verwendet weiterhin genau "
-                "den vorhandenen Dienst msi-vrr-games.service. Es wird kein zweiter Wächter gestartet.",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.No,
-            )
-            if answer == QMessageBox.StandardButton.Yes:
-                action = "automation-install" if (self.last_status or inspect_status()).os_family == "ubuntu" else "install"
-                self._start_action(action, confirmed=True)
-            return
-        STATE_ROOT.mkdir(parents=True, exist_ok=True)
-        path = STATE_ROOT / "provider.json"
-        temporary = path.with_suffix(".tmp")
-        temporary.write_text(json.dumps({"selected": "local", "actual": "local"}), encoding="utf-8")
-        os.replace(temporary, path)
-        self.refresh_status()
-
-    def _start_action(self, action: str, *, confirmed: bool = False) -> None:
         status = self.last_status or inspect_status()
-        descriptions = {
-            "install": (
-                "MSI MAG 274QPF X30MV – VRR aktivieren?",
-                "Die anonymisierte EDID wird als Boot-Ressource eingerichtet. Das Profil gilt für alle "
-                "DisplayPort-Anschlüsse; HDMI bleibt unverändert. Das sudo-Passwort wird ausschließlich "
-                "im Terminal eingegeben. Es erfolgt kein automatischer Neustart.",
-            ),
-            "desktop": ("Desktop-VRR einrichten?", "GNOME übernimmt den variablen Modus als normaler Benutzer."),
-            "automation-install": (
-                "Ubuntu-Automatik installieren / übernehmen?",
-                "Der vorhandene Benutzerdienst wird kontrolliert übernommen. Es wird kein zweiter Dienst gestartet.",
-            ),
-            "automation-remove": (
-                "Automatik deaktivieren?",
-                "Vorher alle Spiele beenden. Der Boot-/EDID-Fix bleibt installiert.",
-            ),
-            "game-test": (
-                "VRR im Spiel testen?",
-                "Nach zehn Sekunden werden 60 Sekunden lang echte DRM-Werte gemessen. Wechsel jetzt in das fokussierte Spiel.",
-            ),
-            "uninstall": (
-                "MSI-VRR-Fix deinstallieren?",
-                "Alle Spiele vorher beenden. Nur eindeutig zu diesem Profil gehörende Bootdateien, der exakte "
-                "Kernelparameter und die MSI-EDID werden entfernt. Andere Einstellungen bleiben bestehen. "
-                "Die Änderung wird erst nach einem bestätigten Neustart wirksam.",
-            ),
-        }
         if action.startswith("automation") and status.os_family != "ubuntu":
-            QMessageBox.warning(self, "Nicht verfügbar", "Fedora bleibt von der Ubuntu-Automatik unverändert.")
             return
-        if not confirmed:
-            title, body = descriptions[action]
-            answer = QMessageBox.question(
-                self, title, body,
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.No,
-            )
-            if answer != QMessageBox.StandardButton.Yes:
+        if action not in {"status", "game-test"}:
+            body = ("Alle Spiele vorher beenden. Der lokale Dienst und die eindeutig zu diesem Profil gehörenden Bootdateien werden entfernt. Ein nötiger Neustart erfolgt nicht automatisch."
+                    if action == "uninstall" else
+                    "Der Fix wird lokal eingerichtet. Ubuntu/GNOME erhält zusätzlich Desktop-VRR und die Spielautomatik. Andere DP-Monitore vorher trennen. Ein nötiger Neustart erfolgt nicht automatisch."
+                    if action == "install-local" else
+                    "Dieser einzelne Reparaturschritt verändert die vorhandene Einrichtung. Vor dem Entfernen der Automatik alle Spiele beenden.")
+            if QMessageBox.question(self, "Hardware Fix", self.tr(body),
+                                   QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                   QMessageBox.StandardButton.No) != QMessageBox.StandardButton.Yes:
                 return
-        spec = terminal_spec(action)
+        job_id = uuid.uuid4().hex
+        spec = terminal_spec(action, job_id)
         started = QProcess.startDetached(spec[0], spec[1]) if spec else False
-        launched = started[0] if isinstance(started, tuple) else bool(started)
-        if not launched:
-            QMessageBox.warning(
-                self, "Terminal konnte nicht geöffnet werden",
-                "Ein unterstütztes Terminal und Python 3 werden benötigt.",
-            )
+        if not (started[0] if isinstance(started, tuple) else bool(started)):
+            QMessageBox.warning(self, "Hardware Fix", self.tr("Terminal konnte nicht geöffnet werden. Ein unterstütztes Terminal und Python 3 werden benötigt."))
             return
-        self.summary.setText("Hardware-Fix-Aktion läuft im Terminal …")
+        self._job_id, self._started_at, self._busy = job_id, time.monotonic(), True
+        self.refresh_status()
+        self.summary.setText(self.tr("Hardware-Fix-Aktion läuft im Terminal …"))
         self.result_timer.start()
 
-    def _poll_result(self) -> None:
-        path = STATE_ROOT / "last-result.json"
+    def _poll_result(self):
         try:
-            payload = json.loads(path.read_text(encoding="utf-8"))
+            payload = json.loads((STATE_ROOT / "last-result.json").read_text(encoding="utf-8"))
         except (OSError, ValueError, TypeError):
+            payload = {}
+        if not isinstance(payload, dict) or payload.get("job_id") != self._job_id:
+            if time.monotonic() - self._started_at > 30:
+                self._finish(False, missing=True)
             return
-        job_id = str(payload.get("job_id") or "")
-        if not payload.get("finished"):
-            self._last_job_id = job_id
-            return
-        if job_id and job_id == self._last_job_id:
-            self.result_timer.stop()
-            self.refresh_status()
-            if payload.get("success") is not True:
-                QMessageBox.warning(self, "Hardware Fix", "Die Aktion wurde nicht erfolgreich abgeschlossen. Details stehen im Protokoll.")
+        if payload.get("finished") is True:
+            self._finish(payload.get("success") is True)
+        elif time.monotonic() - self._started_at > 1800:
+            self._finish(False, missing=True)
 
-    def show_log(self) -> None:
-        path = STATE_ROOT / "last-result.json"
-        try:
-            payload = json.loads(path.read_text(encoding="utf-8"))
-            log_path = Path(str(payload.get("log_path") or ""))
-            text = log_path.read_text(encoding="utf-8", errors="replace")[-20_000:]
-        except (OSError, ValueError, TypeError):
-            text = "Noch kein Hardware-Fix-Protokoll vorhanden."
-        QMessageBox.information(self, "Hardware Fix · Protokoll", text)
-
-    def refresh_language(self) -> None:
+    def _finish(self, success, *, missing=False):
+        self.result_timer.stop()
+        self._busy = False
         self.refresh_status()
+        if not success:
+            text = ("Kein Ergebnis vom Terminal erhalten. Terminal und Protokoll prüfen."
+                    if missing else "Die Aktion wurde nicht erfolgreich abgeschlossen. Details stehen im Protokoll.")
+            QMessageBox.warning(self, "Hardware Fix", self.tr(text))
+
+    def show_log(self):
+        try:
+            payload = json.loads((STATE_ROOT / "last-result.json").read_text(encoding="utf-8"))
+            job = payload.get("job_id", "")
+            if not isinstance(job, str) or len(job) != 32 or any(char not in "0123456789abcdef" for char in job):
+                raise ValueError("Invalid job")
+            path = STATE_ROOT / (job + ".log")
+            if path.is_symlink():
+                raise ValueError("Unexpected link")
+            with path.open("rb") as stream:
+                stream.seek(0, 2)
+                stream.seek(max(0, stream.tell() - 20_000))
+                text = redact_private_text(stream.read(20_000).decode("utf-8", errors="replace"))
+        except (OSError, ValueError, TypeError, AttributeError):
+            text = self.tr("Noch kein Hardware-Fix-Protokoll vorhanden.")
+        dialog = QMessageBox(self)
+        dialog.setWindowTitle("Hardware Fix")
+        dialog.setTextFormat(Qt.TextFormat.PlainText)
+        dialog.setText(text)
+        dialog.exec()
+
+    def refresh_language(self):
+        for widget, source in self._texts:
+            widget.setText(self.tr(source))
+        self.status_button.setAccessibleName(self.tr("Status prüfen"))
+        self.status_button.setToolTip(self.tr("Status prüfen"))
+        self.refresh_status()
+        if self._busy:
+            self.summary.setText(self.tr("Hardware-Fix-Aktion läuft im Terminal …"))

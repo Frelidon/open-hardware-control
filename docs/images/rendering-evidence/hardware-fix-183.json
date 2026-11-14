@@ -1,0 +1,122 @@
+[
+  {
+    "file": "hardware-fix-183-light-de-2551-main.png",
+    "theme": "light",
+    "language": "de",
+    "size": [
+      2551,
+      1337
+    ],
+    "details": false,
+    "status": "synthetic; no hardware writes",
+    "sha256": "faf0adfbeb42b15bb524b1890fe52f4300ec71a34c91e7bcf5aa6b3a0653ebf3"
+  },
+  {
+    "file": "hardware-fix-183-light-de-1440-main.png",
+    "theme": "light",
+    "language": "de",
+    "size": [
+      1440,
+      1000
+    ],
+    "details": false,
+    "status": "synthetic; no hardware writes",
+    "sha256": "8389e929ae28ef48272b03b2853aa4d8995c3106fc178896a7d926e63cad2f63"
+  },
+  {
+    "file": "hardware-fix-183-light-de-1000-details.png",
+    "theme": "light",
+    "language": "de",
+    "size": [
+      1000,
+      900
+    ],
+    "details": true,
+    "status": "synthetic; no hardware writes",
+    "sha256": "71c1a6e71d761c6fe5ea318fda2d75b7855d19f33e0fd2022a4bd92240a070aa"
+  },
+  {
+    "file": "hardware-fix-183-light-fr-1000-main.png",
+    "theme": "light",
+    "language": "fr",
+    "size": [
+      1000,
+      900
+    ],
+    "details": false,
+    "status": "synthetic; no hardware writes",
+    "sha256": "af513109f777b0eac79de11794b150c6abacf5b6ee568c0e8d09cf08616064fc"
+  },
+  {
+    "file": "hardware-fix-183-light-en-1440-details.png",
+    "theme": "light",
+    "language": "en",
+    "size": [
+      1440,
+      1000
+    ],
+    "details": true,
+    "status": "synthetic; no hardware writes",
+    "sha256": "dd41378a81b1fa9b337760d0596d47eef0ff01aaa401bf39689e106e9a9e2eaf"
+  },
+  {
+    "file": "hardware-fix-183-dark-de-2551-main.png",
+    "theme": "dark",
+    "language": "de",
+    "size": [
+      2551,
+      1337
+    ],
+    "details": false,
+    "status": "synthetic; no hardware writes",
+    "sha256": "0d6d47138d42f6fb90fbd4f299f0ebaf919071171ce78d782692135d632ba4a1"
+  },
+  {
+    "file": "hardware-fix-183-dark-de-1440-main.png",
+    "theme": "dark",
+    "language": "de",
+    "size": [
+      1440,
+      1000
+    ],
+    "details": false,
+    "status": "synthetic; no hardware writes",
+    "sha256": "59f9d61d8ce922094f66ed7f47fe02f084e0b4a0d9de24a8a8e5d418b52099cb"
+  },
+  {
+    "file": "hardware-fix-183-dark-de-1000-details.png",
+    "theme": "dark",
+    "language": "de",
+    "size": [
+      1000,
+      900
+    ],
+    "details": true,
+    "status": "synthetic; no hardware writes",
+    "sha256": "42e26e31a8fb8752cf8a9a6af9ea70dcf75886df75f0835adeff13d67469c44e"
+  },
+  {
+    "file": "hardware-fix-183-dark-fr-1000-main.png",
+    "theme": "dark",
+    "language": "fr",
+    "size": [
+      1000,
+      900
+    ],
+    "details": false,
+    "status": "synthetic; no hardware writes",
+    "sha256": "2e1ab70b7bdac229c83ec9ac7ab6e8057c95c0a6d699643ebeec34ec05777548"
+  },
+  {
+    "file": "hardware-fix-183-dark-en-1440-details.png",
+    "theme": "dark",
+    "language": "en",
+    "size": [
+      1440,
+      1000
+    ],
+    "details": true,
+    "status": "synthetic; no hardware writes",
+    "sha256": "a437feaad3ee899a89125f9d31ae6700d575faf3d883de10e9549259c5ce23a3"
+  }
+]

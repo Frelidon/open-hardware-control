@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 import time
 
-PATCH = '2066c56832b221da3169be8173875e3bcb2dab4fb1c3eb99f1382b803920116e'
+from vrr_hardware import PATCH
 class Props(c.Structure):
     _fields_ = [('count', c.c_uint32), ('ids', c.POINTER(c.c_uint32)), ('values', c.POINTER(c.c_uint64))]
 class Prop(c.Structure):

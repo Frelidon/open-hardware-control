@@ -1,4 +1,21 @@
-# Open Hardware Control 3.4.29.176 STABLE – GitHub-Veröffentlichung
+# Open Hardware Control – GitHub-Quellupload und Veröffentlichungen
+
+Aktuelle Entwicklung: 3.4.29.183 INTERN. Der Eigentümer hat am 14.11.26 den
+GitHub-Upload des neuen Standes beauftragt. Ziel ist der Entwicklungsbranch
+`codex/hardware-fix-3.4.29.183`; der Upload erfolgt als normaler Quell-Push aus
+einem sauberen Commit. Enthalten sind auch die lokal bereits abgeschlossenen
+Entwicklungen .177 bis .182, die auf dem öffentlichen .176-Stand aufbauen.
+BUILD_CHANNEL bleibt INTERN. Kein Tag, Veröffentlichungsbranch oder öffentlicher
+Release wird dadurch erzeugt; die sechs geprüften Pakete bleiben lokal.
+
+Die GitHub-Anbindung dient der Repository-/Ergebniskontrolle. Der lokale Commit
+wird mit Git übertragen, damit Commitidentität und vorhandene Historie erhalten
+bleiben; die Anbindung bietet keinen lokalen Git-Push. Die vollständige lokale
+Testsuite und die Release-Wächter sind bestanden. Für den Quellupload bestanden
+weitere 43 betroffene Regressionen sowie Datenschutz- und Registerprüfungen.
+Alle 723 Quelldateien entsprechen bytegleich dem bereits geprüften Paketstand.
+
+Der folgende Veröffentlichungsnachweis betrifft weiterhin die öffentliche .176.
 
 ## Abschluss und Installationsprüfung
 

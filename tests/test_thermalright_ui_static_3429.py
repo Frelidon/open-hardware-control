@@ -12,9 +12,11 @@ BUILD = (ROOT / "scripts" / "build_release.py").read_text(encoding="utf-8")
 DESKTOP = (ROOT / "packaging/kraken-control.desktop.in").read_text(encoding="utf-8")
 
 
-def test_thermalright_studio_is_a_full_width_lcd_tile() -> None:
+def test_thermalright_studio_has_a_dedicated_full_width_device_workspace() -> None:
     assert "from thermalright_display_ui import ThermalrightDisplayStudio" in MAIN
-    assert '("thermalright", self.thermalright_display_studio, 3)' in MAIN
+    assert 'self.lcd_workspace = LcdDeviceShell(' in MAIN
+    assert 'self.thermalright_display_studio, self.lcd_tile_area' in MAIN
+    assert 'layout.addWidget(self.lcd_workspace)' in MAIN
 
 
 def test_detected_levita_offers_verified_trcc_installer_and_all_local_catalogs() -> None:
@@ -107,7 +109,9 @@ def test_video_card_thumbnails_use_a_bounded_persistent_background_queue() -> No
     assert "self.thumbnail_workers: list[QProcess] = []" in UI
     assert "for _worker_number in range(2):" in UI
     assert "self.thumbnail_progress = QProgressBar()" in UI
-    assert "Cache bleibt für nächste Programmstarts erhalten" in UI
+    assert 'QLabel("Galerievorschauen vorbereiten")' in UI
+    assert 'self.thumbnail_progress.setFormat("%p% · %v/%m")' in UI
+    assert "Das LCD-Design und die Übertragung laufen unabhängig weiter." in UI
     assert "def _queue_video_thumbnail" in UI
     assert "def _start_thumbnail_workers" in UI
     assert "return self._queue_video_thumbnail(media)" in UI

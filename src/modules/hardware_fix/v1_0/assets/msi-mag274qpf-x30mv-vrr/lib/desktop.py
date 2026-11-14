@@ -46,6 +46,14 @@ def main():
                            '→ Anzeige → MSI → Adaptive Sync/Variable Bildwiederholrate aktivieren. '
                            'Das EDID-/Boot-Setup funktioniert unabhängig davon.')
     serial, monitors, logical, global_properties = state
+    target_current = [mode for spec, modes, _ in monitors
+                      if spec[1:3] == ('MSI', 'MAG 274 X30MV')
+                      for mode in modes if mode[6].get('is-current')]
+    if (target_current and all(mode[6].get('refresh-rate-mode') == 'variable'
+                              or mode[0].endswith('+vrr') for mode in target_current)
+            and persisted_vrr(Path.home() / '.config/monitors.xml')):
+        print('FERTIG: GNOME verwendet den variablen Modus; die Auswahl ist dauerhaft gespeichert.')
+        return
     info = {spec[0]: (spec, modes, properties) for spec, modes, properties in monitors}
     configuration = []
     found = False

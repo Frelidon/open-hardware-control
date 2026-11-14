@@ -13,7 +13,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from modules.lcd_media_manager.v1_0 import (  # noqa: E402
+from modules.lcd_media_manager.v1_1 import (  # noqa: E402
     DesignLibraryState,
     library_media_items,
 )

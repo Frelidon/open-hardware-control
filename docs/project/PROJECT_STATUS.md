@@ -1,5 +1,482 @@
 # Open Hardware Control — Project Status
 
+## GitHub-Quellupload .183 · 14.11.26
+
+Der Eigentümer hat den Upload des geprüften INTERN-Standes auf GitHub beauftragt.
+Ziel ist `codex/hardware-fix-3.4.29.183`, ein neuer Entwicklungsbranch mit normalem
+Quell-Push. Er enthält den vollständigen aktuellen Stand einschließlich der
+bisher nur lokalen Entwicklungen .177 bis .182. BUILD_CHANNEL bleibt INTERN;
+kein Tag, öffentlicher Release oder Paketupload. README, Veröffentlichungsleitfaden
+und Release Notes unterscheiden Quellbranch und lokale Downloadpakete.
+Die vollständige .183-Testsuite und Release-Wächter sind bereits bestanden.
+Für diesen Upload bestanden erneut 43 Hardware-Fix-/UI-/Lokalisierungs-/Layout-
+und Sicherheitsregressionen sowie Datenschutzscan und Modulregister. Alle 723
+Quelldateien sind bytegleich mit dem geprüften Paketstand; die zehn Bildhashes
+stimmen. Frühere Hinweise auf unverändertes GitHub unten
+sind historische Nachweise vor diesem Folgeauftrag. Gebaute Pakete und externe
+Sicherungen werden durch den Quellupload nicht verändert.
+
+## Lokale Aktualisierung .183 · 14.11.26
+
+Auf ausdrücklichen Folgeauftrag sind Benutzer- und Systeminstallation jetzt
+3.4.29.183 INTERN; DEB-Paketstand 3.4.29.183~intern2. Vorherige Benutzerkopie,
+Einstellungen, Profile und native Plugins wurden privat gesichert. Nach geordnetem
+Programmende wurde zusätzlich der letzte Einstellungsstand festgehalten.
+Alle 716 installierbaren Dateien der lokalen Laufzeit und sämtliche 799 regulären
+DEB-Paketdateien sind bytegleich mit den geprüften Paketen. Native C++-Bauquellen
+gehören nicht zur installierten Laufzeit; die DEB enthält keine Test-GIF-Sammlung.
+Alle 93 geschützten Dateien waren vor dem normalen Neustart unverändert;
+18 gesondert geprüfte Profil-/Plugin-/JSON-Dateien auch danach. Laufende
+Einstellungs-, Sperr- und Protokolldateien dürfen sich beim Start aktualisieren.
+
+Normaler Ubuntu-/Wayland-Start mit .183 bestätigt: CPU-Kurve und nativer RGB-Pfad
+aktiv, gespeichertes Levita-Design geladen und Dauerbetrieb gestartet. Ein anfänglicher
+USB-Konflikt des eigenen TRCC-Daemons wurde durch dessen bestehende einmalige
+Wiederanlauflogik behoben; kein fehlerfreier Erstversuch wird behauptet.
+Der korrigierte VRR-Benutzerdienst blieb durchgehend aktiv und unverändert.
+Kein Systemneustart, neuer Spiel-/VRR-Messlauf oder Fedora-Hardwaretest.
+Diese nachträgliche Installationsprüfung ändert die gebauten Pakete und ihre
+rollierenden Sicherungen nicht. Frühere Angaben zur laufenden .182 unten sind
+historisch; GitHub bleibt unverändert.
+
+## Paketabschluss .183 · 14.11.26
+
+Alle sechs Artefakte gebaut und unabhängig geprüft: Laufzeit-/Entwickler-ZIP,
+Quell-TAR, vollständiges Local-AI-Gitbundle, DEB und RPM. Sechs Dist-SHA256,
+ZIP-CRCs und vollständige Manifeste, Quell-TAR-Manifest, Bundle-Historie,
+DEB-Metadaten/Root-Eigentümer sowie RPM-Header-/Payload-Digests bestanden.
+474 Python-Laufzeitquellen und 169 Assets sind in ZIP/TAR/DEB/RPM bytegleich.
+Genau beide .182/.183-Sicherungen bleiben erhalten; je acht Hashes verifiziert.
+Der RPM-Bau nutzte den vorhandenen Standardbibliothek-Writer, da rpmbuild hier
+nicht installiert ist. Keine neue Fedora-Liveprüfung wird daraus abgeleitet.
+
+Benutzer- und Systeminstallation wurden durch diesen Auftrag nicht aktualisiert;
+die .182-Benutzerkopie behält den vorangegangenen kleinen VRR-Hotfix. Es wurde
+kein Anwendungs-/Systemneustart ausgeführt. Pakete und Sicherungen bleiben
+unveränderte Schnappschüsse vor diesem nachträglichen Verifikationsnachweis.
+Der Snapshotcommit im vollständigen Gitbundle ist `8169680`; GitHub unverändert.
+
+## Quellfreigabe .183 · 13.11.26
+
+1.763 Tests und fünf Untertests bestanden, einschließlich echter Qt-Oberfläche
+in vier Sprachen, drei Fenstergrößen und beiden Themen. 474 Python-Laufzeitquellen,
+2.658 gemeinsame Nachrichten-IDs. Kompilierung, Sicherheit/Datenschutz,
+Modulregister und sämtliche restlichen Release-Prüfungen bestanden. Die erste
+Gesamtsuite scheiterte nur an zwölf gesperrten Testsockets; der Wiederholungslauf
+mit freigegebenen lokalen Sockets und deaktivierten Hardwarezugriffen bestand
+vollständig. Danach wurde der alte ZIP-Dateiname in beiden Installationsanleitungen
+berichtigt und der unveränderte restliche Wächterteil erfolgreich fortgesetzt.
+Keine Prüfung wurde ausgelassen oder abgeschwächt. Zehn vollständige
+Hauptfensteraufnahmen samt Hashes stehen unter `docs/images/rendering-evidence/`
+(`hardware-fix-183.json`); Fixstatus ist synthetisch. Vorbauabschnitte darunter
+bleiben historische Schritte. Paketbau und abschließende Artefaktprüfung folgen.
+Die laufende Benutzer-/Systeminstallation bleibt .182; kein neuer Fedora-Live-
+oder physischer Boot-/Deinstallationstest. GitHub bleibt unverändert.
+
+## Entwicklung .183 · 13.11.26 — Hardware Fix lokal und übersichtlich
+
+Hardware Fix bleibt 1.0. Zwei Hauptaktionen installieren den lokalen Fix oder
+entfernen ihn einschließlich Ubuntu-Automatik. Anbieterwahl und bloßes
+Umetikettieren entfallen auf Eigentümerwunsch. Der lokale Benutzerdienst läuft
+unabhängig vom OHC-Fenster; es gibt weiterhin nur einen Wächter und denselben
+Dienstnamen. Erfolgreiche explizite Installation speichert local/local.
+Diagnose, Spieltest und einzelne Reparaturschritte bleiben in Weitere Optionen.
+Technische Zustände stehen standardmäßig eingeklappt und vollständig übersetzt.
+
+`workflow.py` koordiniert nur bestehende feste Schritte: fehlender Boot-Fix,
+nach geladenem Override Desktop und Automatik ausschließlich auf Ubuntu/GNOME.
+Gesunde Bootressourcen und bereits dauerhaft aktives GNOME-VRR werden nicht
+erneut geschrieben. Erstinstallation wartet auf nötigen Neustart und kann über
+Installieren fortgesetzt werden. Fedora behält seinen bisherigen Bootpfad.
+UUID-gebundene Terminalergebnisse beheben übersehene schnelle Abschlüsse;
+veraltete Resultate, Doppelklicks und Startfehler werden abgefangen. Protokolle
+sind begrenzt, redigiert und im Dialog als Klartext behandelt. Exakte Boottoken
+und fehlerhafte Anbieter-JSON sind zusätzlich abgesichert. Der MSI-Hashfix aus
+dem vorangegangenen Live-Nachweis ist enthalten. Keine Änderung an EDID/Timings.
+
+Lokalisierung 1.0 ergänzt `hardware_fix_messages.py`, atomar über
+`content_ui_messages.py` und die vier Sprachdateien: 2.658 gemeinsame IDs.
+Hardware-Prüfung 1.0 passt die Breite nur im Hardware-Fix-Unterbereich an;
+`page.py`/`navigation.py` berücksichtigen die signalgesperrte Seitennavigation.
+Der Hauptfensterkopf zeigt dort den lokalen Standard. Hardware Fix verwendet
+die gemeinsame Theme-Registry und Disclosure-Komponente; sein Hintergrund bleibt
+für die vorhandene Darstellung transparent; Warnungen folgen dem Thema. `tools/render_hardware_fix.py` prüft echte
+Hauptfensteransichten mit isolierten Einstellungen und synthetischem Status.
+
+Neue Regressionen `test_hardware_fix_setup_3429183.py` und
+`test_hardware_fix_vrr_identity.py`. 38 gezielte Prüfungen bestanden. Zehn echte Qt-Hauptfensteransichten mit
+synthetischem Fixstatus prüfen drei Größen und beide Themen, einschließlich
+langer Übersetzungen und aufgeklappter Details. Nach Abwarten der vorhandenen
+Seitenüberblendung ist der helle Hintergrund korrekt; die signalgesperrte
+Navigation und Breiten-/Umbruchkorrektur verhindern seitliches Abschneiden.
+Der vollständige Sandbox-Lauf hatte 1.750 bestandene Tests, fünf Untertests
+und zwölf Berechtigungsfehler bei lokalen Unix-/Loopback-Testsockets. Der
+Wiederholungslauf außerhalb dieser Socket-Sperre folgt mit weiterhin
+deaktivierten Hardwarezugriffen. Paketierung und Sicherungen folgen.
+Kein GitHub-Auftrag.
+
+## VRR-Monitorerkennung korrigiert · 13.11.26
+
+Hardware Fix 1.0: Die gebündelten VRR-Lesehelfer verwendeten noch die Prüfsumme
+der früheren EDID statt der seit der Anonymisierung ausgelieferten Profil-EDID.
+Dadurch erkannte die Ubuntu-Automatik den MSI nicht und meldete im fokussierten
+Mirage fälschlich keinen passenden Vollbild-/Randlosmodus; der Hardwarelesewert
+war unbekannt. `vrr_hardware.py` verwendet jetzt die exakte korrigierte
+Profilprüfsumme; die Terminaldiagnose importiert dieselbe Konstante. Die festen
+Ressourcenprüfsummen sind aktualisiert. Keine Änderung an EDID, Bootparametern,
+Timings, Fedora-Installationspfad oder GNOME-Schreib-/Rücknahmegrenzen.
+
+Ubuntu 26.10, GNOME 51.0, Kernel 7.3.0-10: Mirage war fokussiert, 2560×1440 auf
+dem MSI und vom Compositor als fullscreen markiert (im Spiel laut Eigentümer
+randlos). Vorher 15 DRM-Messungen mit VRR_ENABLED=0. Nach gesicherter Installation
+des korrigierten Benutzerdienstes erkannte die Automatik das Spiel, setzte
+AppIndicators einmal begrenzt zurück und meldete nach dessen Wiederfreigabe
+VRR_ENABLED=1. Weitere Messungen bestätigen 1; dies ist Treiberreadback, keine
+optische Bild-/Frequenzmessung. AppIndicators ist wieder freigegeben, owned=false.
+
+16 gezielte Tests bestanden: echte Profil-EDID bis Monitor-/CRTC-Zuordnung,
+Randlosmodus auf versetztem Zweitmonitor, Fokusverlust, Werte 0/1/unbekannt,
+Ablehnung fremder EDID und erhaltene Ubuntu-/Fedora-Befehls-/Guardverträge.
+Der erste Qt-Testaufruf ohne Offscreen-Plattform brach im eingeschränkten
+Desktopzugriff ab; der vollständige gezielte Wiederholungslauf mit
+QT_QPA_PLATFORM=offscreen bestand. Fedora wurde nur isoliert geprüft;
+keine neue Fedora-Hardwareprüfung und kein neuer Gesamtversions-/Paketbau.
+Zusammen mit Repository-/Sicherheitsprüfungen bestehen 21 Tests; Modulregister
+und Dateibudgets sind konsistent. Drei betroffene Dateien sind zusätzlich in
+der Benutzerinstallation gesichert, übernommen und bytegleich geprüft; deren
+Profilressourcenprüfung besteht. Der laufende OHC-Prozess wurde nicht neu
+gestartet. Die Systeminstallation und vorhandenen .182-Pakete bleiben auf dem
+bisherigen Stand; dieser kleine Hotfix ist noch kein neuer Gesamt-Release.
+
+EDID-Override bleibt aktiv. Die gesicherte Originaldatei enthält weiterhin
+Range-Flag 0 statt 1. Linux v7.3 `drm_edid.c:get_monitor_range` verlangt weiterhin
+DRM_EDID_RANGE_LIMITS_ONLY_FLAG; kein passender MSI-X30MV-Eintrag in dieser
+Quirk-Tabelle gefunden. Das spricht für Beibehaltung; ein Live-Gegenversuch
+ohne Override wurde nicht vorgenommen und benötigt einen getrennten Neustart.
+Quelle: https://github.com/torvalds/linux/blob/v7.3/drivers/gpu/drm/drm_edid.c#L6208
+
+## Verifizierter lokaler Abschluss .182 · 12.11.26
+
+Quellcommit `61a5f0d`, Anwendung 3.4.29.182 INTERN: vollständiger Release-Lauf
+mit 1.736 Tests und fünf Untertests, Kompilierung, Sicherheit, Datenschutz,
+Modulbudgets und allen übrigen Wächtern bestanden. 472 Python-Laufzeitquellen,
+2.618 gemeinsame Nachrichten-IDs in vier Sprachen. Die alte Vorschauprüfung
+benutzt jetzt den wirklichen Effekt→Levita-Komposition-Einstieg; ihre sieben
+Positions-/Playback-/Mirror-Assertions bleiben erhalten. Die ergänzten echten
+QMovie-Prüfungen sichern innere Sichtbarkeit, Pause/Fortsetzung und Sticky-Hide.
+
+Alle sechs Pakete gebaut und geprüft: Dist-SHA256, ZIP-CRCs/Manifeste,
+Quell-TAR-Manifest, vollständiges Git-Bundle, DEB/RPM-Metadaten, Root-Eigentümer,
+Rechte und RPM-Payloaddigests. 472 Quellen und 169 Original-Assets stimmen in
+allen Formaten bytegenau überein. Genau die zwei externen Sicherungen .181/.182
+bleiben erhalten; in beiden jeweils acht SHA256-Einträge verifiziert.
+
+Vorherige .181-Benutzerkopie und geschützte Einstellungen/Profile/Plugins sind
+privat gesichert. Nur der durch UID, Kommando und Startzeit bestätigte OHC-
+Prozess wurde geordnet mit SIGTERM beendet. Benutzer- und Systemkopie sind nun
+.182 (DPKG 3.4.29.182~intern2); beide installierten 472-Quellbäume und 169 Assets
+wurden bytegenau mit dem geprüften Source verglichen. Einstellungen, Profile
+und beide unterschiedlichen nativen RGB-Plugins waren vor dem Neustart gleich;
+Profile und beide Plugins wurden auch danach erneut hashgleich bestätigt.
+
+Die installierte Benutzerkopie wurde als echtes Wayland-Fenster mit temporären
+Einstellungen und deaktivierten Hardwarezugriffen in beiden Themen geprüft:
+GPU, alle drei LCD-Arbeitsbereiche und Einstellungen. Zehn vollständige Grabs
+stehen unter `docs/images/rendering-evidence/`; Zuordnung/Größen/Digests in
+`ui-workspaces-3429182.json`. LCD-Werte sind Beispielinhalte, GPU-Werte bleiben
+ohne Abfrage unbekannt. Kein physischer Ausgabe- oder Übertaktungstest wird
+aus diesen Bildern abgeleitet. Offscreen-Regressionen ergänzen drei Größen
+und vier Sprachen einschließlich offener Bereiche und unveränderter Entwürfe.
+
+Die normale .182-Benutzerinstallation läuft wieder. Der aktuelle Sitzungslog
+bestätigt aktive CPU-Kurve, gespeichertes Startprofil, sechs RGB-Geräte,
+GPU-Hardwaremodus, gestarteten nativen RGB-Arbeiter und aktives Levita-
+Startdesign. Die fünf Direct-Geräte melden im beobachteten Startfenster
+`errors=0`; physischer Readback ist dort ausdrücklich nicht verfügbar.
+Eine Qt-Portal-Registrierungswarnung wurde erfasst; die bestätigten RGB-/LCD-
+Starts folgten danach. Keine neue Fedora-/Windows- oder optische Geräteprüfung.
+
+Pakete und externe Sicherungen bleiben unveränderte Schnappschüsse vor diesem
+nachträglichen Installationsnachweis. GitHub wurde nicht verändert.
+
+## Quellfreigabe .182 · 12.11.26 — Paketierung folgt
+
+Der Eigentümer beauftragt jetzt die weitere LCD-Bereinigung, eine gemeinsame
+GPU-Seite mit erkennbarem Grafikkartenbild, Übertaktung und großer Lüfterkurve
+sowie eine neue Reihenfolge bestehender Einstellungen. Der Hintergrund steht
+zuerst, häufige Darstellungs-/Startoptionen vor technischen Diagnosen. Bestehende
+Modelle, Profile, native Animationen, Themen und alle Besitzer-/Schreibpfade
+bleiben maßgeblich. Keine neuen Hardwarebefehle oder zusätzlichen Spielfunktionen.
+
+Die Umsetzung ist als kleine Kompositionsmodule vorhanden. 43 gezielte
+LCD-Verträge, 30 bestehende GPU-Prüfungen plus neuer Qt-Durchlauf und zwei
+Settings-Prüfungen bestanden. Vier vollständige UI-/Lokalisierungstests
+bestätigen 2.618 gemeinsame IDs in DE/EN/ES/FR. Vollständige Hauptfenster-
+aufnahmen prüfen LCD/GPU/Einstellungen in beiden Themen bei 2551×1337,
+1440×1000 und 1000×900, mit temporären Einstellungen und ohne Hardwarezugriffe.
+Der abschließende read-only Review hat keine offenen UI-Befunde.
+Vollständige Release-Prüfung bestanden: 1.736 Tests und fünf Untertests,
+Kompilierung, Sicherheit, Datenschutz, Modulbudgets und restliche Wächter.
+472 Python-Laufzeitquellen; Paketierung und Installation folgen.
+Letzte vollständig geprüfte und laufende Benutzer-/Systemversion bleibt .181.
+GitHub bleibt unverändert. Aktueller Auftrag und Entwürfe: `UI_REDESIGN_PLAN.md`.
+
+## Verifizierter lokaler Abschluss .181 · 12.11.26
+
+Quellcommit `75d146d`, Anwendung 3.4.29.181 INTERN: 1.732 Tests und fünf Untertests,
+Kompilierung, Sicherheits-/Datenschutzscan, Modulbudgets und alle übrigen
+Release-Prüfungen bestanden. Nach dem vollständigen Testlauf wurden alte lokale
+Bytecode-Caches entfernt und die restlichen unveränderten Wächterprüfungen
+fortgesetzt; es wurde keine Prüfung ausgelassen. 464 Python-Laufzeitquellen,
+2.584 gemeinsame Nachrichten-IDs in vier Sprachen.
+
+Alle sechs Artefakte (Laufzeit-/Entwickler-ZIP, Quell-TAR, Git-Bundle, DEB, RPM)
+sind gebaut. Sechs Dist-SHA256, beide ZIP-CRCs/vollständigen Manifeste,
+Quell-TAR-Manifest, Bundle, Paketmetadaten/Root-Eigentümer/Rechte und RPM-Digests
+bestanden. Alle 464 Pythonquellen und 169 Original-Assetdateien stimmen in
+ZIP/Quellarchiv/DEB/RPM exakt überein. Genau die zwei vollständigen externen
+Sicherungen .180/.181 bleiben erhalten; jeweils acht SHA256-Einträge geprüft.
+
+Die bisherige .180-Benutzerkopie sowie Einstellungen, Profile und beide
+unterschiedlichen nativen RGB-Plugins wurden privat gesichert. Nur der durch
+UID, Kommando und Startzeit bestätigte OHC-Prozess wurde mit SIGTERM geordnet
+beendet. Benutzer- und Systemkopie sind jetzt .181 (DPKG 3.4.29.181~intern2);
+beide installierten 464-Quellbäume sind bytegleich. Einstellungen, Profile und
+Plugins waren unmittelbar vor dem normalen Neustart unverändert; Profile und
+beide Plugins auch danach erneut hashgleich. Laufende Benutzereingaben werden
+nicht durch Rückspielen der Sicherung überschrieben.
+
+Die tatsächlich installierte Benutzerkopie wurde in einem eigenen Wayland-
+Fenster mit temporären Einstellungen und deaktivierten Hardwarezugriffen
+geprüft: Gehäuse, Hilfe, alle 15 Designpaare, integrierter LCD-Manager inklusive
+Abbrechen und Profil-Aufklappen/-Schließen in beiden Themen. Die Bilder zeigen
+keine Live-Hardwareprüfung: Gehäusepositionen stammen aus einer isolierten Kopie
+der vorhandenen UI-Daten; Gerätewerte bleiben ohne Hardwarezugriff leer.
+Die separaten Offscreen-Tests prüfen zusätzlich drei Größen und vier Sprachen.
+
+Die normale Benutzerinstallation ist wieder gestartet. Der aktuelle Sitzungslog
+bestätigt das gespeicherte Startprofil, das nach frischem CPU-Wert fortgesetzte
+Kühlprofil, sechs RGB-Geräte, den gestarteten nativen RGB-Arbeiter und das aktive
+gespeicherte Levita-Startdesign. Die fünf Direct-Geräte melden im beobachteten
+Startfenster `errors=0`; die GPU verwendet ihren gemeldeten Hardwaremodus.
+Dies ist Protokollevidenz, keine optische Messung am Lüfter/LCD und kein neuer
+Fedora- oder Windows-Hardwarenachweis.
+
+Die gebauten Pakete und Sicherungen bleiben unveränderte Schnappschüsse vor
+diesem nachträglichen Installationsnachweis. Kein GitHub-Upload oder Release.
+
+## Lokale Entwicklung .181 · 12.11.26 — Quellprüfung abgeschlossen
+
+Der Eigentümer beauftragt den nächsten UI-Schritt: modernere Gehäuseübersicht,
+gemeinsame Unterbereiche mit sanfter Profilführung, zehn zusätzliche abgestimmte
+Designpaare samt Größenreglern, integrierter LCD-Manager, klare Fortschritts-
+und Hardwarestatusanzeigen sowie bessere Hilfe. Vorhandene Einstellungen,
+Profile, native RGB-/LCD-Animationen und Steuerzuständigkeiten bleiben maßgeblich.
+
+Neue gemeinsame UI-Bereiche 1.0 (`ui_sections/v1_0`) zeichnen Themenflächen und
+große Köpfe. Eine begrenzte 420-ms-Führung verschiebt nur die nächstgelegene
+vorhandene Scrollleiste und wird durch Nutzerbedienung, Seitenwechsel oder die
+Animationsabschaltung beendet. Profil-Arbeitsbereich 1.1 verwendet die gemeinsame
+Fassade; PC-Gehäuseprofile bleiben 1.5 mit reiner UI-Korrektur und unverändertem
+öffentlichen Modell-/Speichervertrag. Gehäuse-/Profilauswahl, PC-Zeichnung,
+Komponentenkarte und erweiterte Referenz-/Katalogbereiche werden klarer gegliedert.
+
+Designs & Spiele 1.1 besitzt 15 unterschiedliche Original-Medienpaare und zehn
+angehängte RGB-Vorlagen (insgesamt 45, alte Indizes unverändert). Jeder LCD-
+Hintergrund kann echt auf 50–200 Prozent skaliert werden; Matrix besitzt außerdem
+vier vorhandene Zeichenvarianten. Auswahl/Größenregler wenden nichts an.
+Nur ausdrückliches Anwenden startet nötigenfalls einen begrenzten asynchronen
+Encoder; veraltete Aufträge werden verworfen, nur das genau passende atomare
+Cache-Ergebnis geht an die bisherigen Anwendenbesitzer. Verlassen der Seite
+beendet die Vorbereitung; eine inzwischen neuere LCD-Absicht verwirft verspätete
+Ergebnisse. `mp4_metadata.py` prüft Cache-Strukturen mit höchstens 1 MiB Metadaten,
+512 Atomen und Tiefe acht auf H.264, 1600×720 und positive Dauer bis 35 Sekunden.
+Keine Videoframedekodierung oder zusätzlicher Prüfprozess im GUI-Thread.
+Ebene 2 bleibt erhalten.
+
+LCD-Medienmanager 1.1 ersetzt das Zusatzfenster durch einen eingebetteten Editor
+für Levita und Kraken mit Speichern/Abbrechen. Öffnen nutzt vorhandene Inventuren
+statt rekursiver Scans. Quellen, Aliasnamen und nicht-destruktive Ausblendungen
+bleiben im bestehenden Format. Der Galerie-Fortschritt wird von LCD-Übertragung
+und Wiedergabe ausdrücklich getrennt. Hilfe 1.0 bewahrt vier Sprachinhalte und
+Links in einer oben ausgerichteten Bibliothek/Artikelfläche. Übersichtserkennung
+1.0 trennt lokale Inventurdaten von Telemetrie und Steuerfreigabe. GPU-Steuerung
+1.0 ergänzt `read_status.py` für tatsächlichen LACT-Lesestatus und begrenzte
+Fehlerprotokollierung, ohne neue Schreib- oder Freigabelogik.
+
+Der reproduzierte Qt-Hauptfensterabsturz ist auf die Herausnahme vorhandener
+Comboboxen aus noch elternlosen Layouts eingegrenzt und behoben: Die Gehäuse- und
+Profilauswahl erhält vorher einen expliziten Qt-Eigentümer. Begrenzte
+Mindestinhaltsbreiten verhindern außerdem schmale, seitlich abgeschnittene
+Gehäuseinhalte; volle Profilnamen und stabile Daten-IDs bleiben erhalten.
+
+30 aktuelle Hub-/Größen-/Metadatenregressionen und 184 gemeinsame
+RGB-Schleifenprüfungen bestehen. Zwölf Abschnitts-/Gehäusetests bestätigen
+sanfte Bewegung, manuellen Abbruch, Lebensdauer und vollständige Hauptfenster-
+Renderzyklen bei 2551×1337, 1440×1000 und 1000×900 in beiden Themen. Hub, Gehäuse
+und Hilfe wurden als echte Qt-Hauptfenster mit isolierten Einstellungen und
+deaktivierten Hardwarezugriffen aufgenommen; auch aufgeklappte Gehäusebereiche
+sind geprüft. Vier vollständige UI-/Lokalisierungstests bestehen mit 2.584
+gemeinsamen Sprach-IDs. Helle/dunkle LCD-Manageransichten wurden ebenfalls geprüft.
+Quellfreigabe: 1.732 Tests und fünf Untertests sowie Kompilierung, Sicherheit,
+Datenschutz, Modulbudgets und alle weiteren Release-Prüfungen bestanden. Alte
+lokale Bytecode-Caches wurden vor dem Abschluss der restlichen Wächterprüfungen
+entfernt; keine Quelländerung danach. 464 Python-Laufzeitquellen. Paketbau,
+Zwei-Versionen-Sicherungen und Installation folgen; installiert bleibt .180.
+Kein GitHub-Auftrag und keine reale Fedora-Hardwareprüfung für .181.
+
+Weitere gewünschte GPU-/Lüfterkurven-Gestaltung und alte LCD-Bereichsbereinigung
+folgen getrennt nach Konzepten. Frühere offene Punkte werden nicht als erledigt
+ausgegeben: zusätzliche modulare Herstellerunterstützung, RGB-Farbauswahl,
+weitergehende Automations-/Kalender-/Nachtlichtabläufe, echte Spieltelemetrie und
+Windows-Hardwareunterstützung. Details: `UI_REDESIGN_PLAN.md` und `ROADMAP.md`.
+
+## Lokale Entwicklung .180 · 11.11.26
+
+Der Eigentümer zeigt die installierte .179-Profilseite mit allen Bereichen
+geöffnet: Tabellen-/Editor-/Sicherungshöhen verdrängen die Übersicht, deren
+Kacheln praktisch leere Streifen werden. Profil-Arbeitsbereich 1.1 ersetzt den
+unscrollbaren Aufbau durch eine durchsuchbare Bibliothek und eine zusammenhängende
+Profilkarte in einem äußeren Scrollbereich. Große lokale Bereichsköpfe öffnen
+Bearbeitung, technische Werte sowie übersichtlich getrennte Einzelprofile und
+Komplettsicherung. Gespeicherte Bereichskacheln besitzen geschützte Inhaltshöhen,
+adaptive Spalten und eigene Kurven-/Farb-/LCD-Vorschauen; Anwenden bleibt die
+Hauptaktion, weitere Aktionen stehen im Menü. Die generische Aufklappkomponente
+anderer Menüs bleibt unverändert.
+
+Profil-IDs, JSON-Schema, Startprofile, schreibgeschützte Standardprofile und alle
+bisherigen Hardware-/Besitzprüfungen bleiben erhalten. Auswahl und Darstellung
+speichern oder übertragen nichts. Ungespeicherte Eingaben, Such-/Filterzustand
+und eine ausdrücklich leere Auswahl für einen neuen Entwurf überstehen den
+Sprachwechsel. Erfolgreich gespeicherte neue Entwürfe werden anschließend ausdrücklich ausgewählt.
+Bei gleichzeitig gespeicherten Legacy-LCD-Standardwerten zeigt die LCD-Kachel
+das aktivierte Levita-Medium mit passendem Titel und gebündeltem Poster.
+Der separat angewendete Profilhintergrund und globale Hintergründe
+werden nicht durch eine Kartenauswahl oder das Aufklappen verändert. Helle/dunkle
+Paletten einschließlich der Symbole bleiben berücksichtigt; DE/EN/ES/FR besitzen
+2.515 gemeinsame Nachrichten-IDs.
+
+Gezielte echte Qt-Geometrieprüfung bestanden: 2551×1337, 1440×1000 und 1000×900
+Pixel; zusätzlich Sprachwechsel in vier Sprachen und beide Themen, alle Bereiche
+gleichzeitig offen.
+Geprüft sind lesbare Werte/Symbole, überlappungsfreie Kacheln, vollständige
+Bereichsinhalte, erreichbare Sicherungsaktionen und Entwurfs-/Auswahlerhalt.
+Vollständiger Release-Wächter bestanden: 1.644 Tests und fünf Untertests,
+443 Python-Laufzeitquellen und 2.515 gemeinsame Sprach-IDs. Sicherheit, Datenschutz,
+Modulbudgets und bestehende Ubuntu-/Fedora-Verträge bestanden. Alle sechs Pakete
+und beide .179/.180-Sicherungen sind geprüft; Benutzer- und Systemkopie .180 sind
+installiert. Zusätzlicher nativer Wayland-Sichtnachweis bestanden (unten).
+Kein GitHub-Auftrag; kein realer Fedora-Hardwarelauf wird behauptet.
+
+## Lokale Entwicklung .179 · 11.11.26
+
+Nach dem .178-Start meldet der Eigentümer eine CPU-Sensorwarnung beim Profilstart.
+Das bereitgestellte Sitzungslog enthält den Fehler bereits: zuvor war eine gültige
+Temperatur vorhanden, beim Profilaufruf fehlte ein frischer Snapshot. Das passt zu
+einem Start-/Bereitschaftsrennen; keine dauerhafte Sensorabwesenheit ist bewiesen.
+
+Profil-Kühlungsbereitschaft 1.0 wartet bei fehlender frischer CPU-Temperatur bis zu
+zehn Sekunden asynchron auf den vorhandenen Sensorprozess. Die 2,5-s-Frischegrenze,
+Sensorvalidierung und bestehenden Schreib-/Besitz-/Kalibrierungswege bleiben
+unverändert. Geänderte Bedienelemente, ein neuer Profil-/Kühlungsauftrag, Shutdown,
+verlorenes Kühlgerät oder Fristablauf verwerfen die wartende Anwendung. Bei Erfolg
+wird nur der bisherige geprüfte Anwendenpfad erneut aufgerufen. Kein synchroner
+sysfs-Ersatz und keine verspätete Anwendung nach einem fehlgeschlagenen Versuch.
+
+Laufzeitprotokoll 1.0 ergänzt begrenzte, thread-sichere Python-/Thread-/Unraisable-
+und Qt-Warnungs-/Fehlererfassung mit erhaltenen ursprünglichen Hooks. Private
+Fehlerdatei und sichtbares allgemeines Log erhalten dieselben Ereignisse. Ein
+GUI-Timer überträgt vorhandene Modulfehler ohne Rückkopplung und doppeltes
+Fehlerdateischreiben; identische Warnungsfluten werden kurz dedupliziert.
+Explizite show_error-Meldungen werden auch vor Berechtigungsweiterleitung geloggt.
+
+Gezielte synthetische Regressionen bestanden: fehlend→frisch, strikte Frist
+auch bei verspätet gültigen Werten, Abbruch/neuer Auftrag/Bedienung/Shutdown,
+Geräteverlust, Hook-Delegation, Datenschutz, Fehlerbrücke ohne Rückkopplung,
+Versionserhalt und gleichzeitige Fehlerschreiber. NZXT-Livewerte bleiben
+sichtbar, während wartende Profil-Zielwerte vor Readback-Überschreiben geschützt
+werden. Qt-Warnungen sind ausdrücklich Warnungen, keine behaupteten Abstürze.
+Vollständige Abschlussprüfung und lokaler Versionswechsel folgen.
+Kein GitHub-Auftrag für .179.
+
+## Lokale Entwicklung .178 · 11.11.26
+
+Profil-Arbeitsbereich 1.0 ersetzt die sichtbare Tabelle durch durchsuchbare
+Profilkarten, echte gespeicherte Bereichskacheln und aufklappbare Bearbeitung,
+technische Details und Import/Export/Sicherung. Bestehende IDs, JSON-Schema,
+Startprofile, sichere Anwendenwege und vollständige Werte bleiben erhalten.
+Benutzerprofile werden durch Auswahl, Suche oder Sprachwechsel nicht angewendet.
+
+Programm-Hintergründe 1.0 ergänzt sechs eigene lokale Videohintergründe: Matrix
+Code Rain, Aurora Silk, Nebula Depth, Liquid Prism, Ocean Caustics und Solar Orbit.
+Ein Decoder mit begrenzter Darstellung gibt bei deaktivierter, unsichtbarer oder
+minimierter Oberfläche die Quelle frei. Die Profilseite zeigt das zuletzt
+angewendete LCD-Basismedium oder die gespeicherte RGB-Animation; andere Seiten
+verwenden wieder die globale Auswahl. Die Vorschau verändert keine Einstellungen
+oder Hardware. Ohne wirklich angewendetes Startprofil wird kein aktives Profil
+allein aus der zuletzt bearbeiteten ID geraten. Globale Animation-Abschaltung,
+Studio-Themes und Inaktivitätsregeln haben weiter Vorrang.
+
+Matrix LCD erhält additive Zeichenvarianten +30 %, +50 % und +100 %. +30 % ist
+die neue Standardauswahl; Original und bereits gespeicherte Dateipfade bleiben
+unverändert. Keine Sensordaten sind eingebrannt; die bestehende Ebene 2 bleibt.
+Gezielte Regressionen bestanden: reine Filter/Zusammenfassungen, lokale Medienprüfung,
+Matrix-Varianten und Decoderlebensdauer sowie echte vierfache Qt-Sprachwechsel,
+ungespeicherte Eingaben, Standardprofilschutz und temporäre Hintergrundrückkehr.
+Alle acht neuen MP4s vollständig dekodiert, ursprüngliche Medienhashes erhalten;
+Schleifen periodisch und an der Naht mit normalen Frame-Abständen verglichen.
+Dunkle/helle/schmale Qt-Ansichten geprüft; Kontrast der Karten und Symbole auch
+nach Themenwechsel korrigiert. Vollständiger Wächter und Installation folgen.
+Kein GitHub-Auftrag für .178.
+
+## Local development .177 · 11.11.26
+
+Owner-approved implementation in progress: original Matrix RGB/LCD pair, five matching design pairs and a Designs & Games sidebar parent with Games/Automation children. Native rendering, existing sensor layers, settings and hardware boundaries remain. ATMOSFAR ProjectVenus-Win64-Shipping.exe, ACMirage.exe and witcher3.exe basenames are verified read-only from installed executables; game cards prepare editable existing automation rules only. No screen capture/live telemetry is claimed. The running .176 installation is unchanged until validation and local upgrade; no publication is requested for this work.
+
+Validation .177: the full release gate passes 1,609 tests and five subtests, including four-language real Qt construction and 448 complete sidebar pointer gestures. All 35 RGB presets pass the common renderer loop audit; old media hashes remain unchanged. Matrix video is 1600×720, 360 frames, 30 source FPS and 12 seconds, fully decoded; exact renderer periodicity passes and seam change 0.06652 is below maximum ordinary adjacent change 0.07044. Original dark/light hub and game-page renders reviewed. Matrix RGB calculation measures about 1.7 ms for 114 LEDs and 4.4 ms for 1,024 LEDs on this host (render timing, not optical delivery). 424 runtime Python files and 2,468 shared language IDs. Security/privacy, module budgets and repository checks pass. Fedora/Ubuntu existing fixture lanes pass; no real Fedora hardware or optical Matrix test is claimed. Packaging/install checks follow.
+
+
+Local .177 completion: all six artifacts and both retained .176/.177 INTERN
+release sets pass their SHA256 manifests. ZIP CRC, ZIP/DEB/RPM source parity
+for 424 Python files, Matrix media inclusion, DEB directory modes and RPM root
+ownership are verified. The private previous-install archive and final saved
+settings/profile/native-plugin baseline are verified before installation and
+launch. User installer completes; APT confirms dependencies but hits its local
+package Pathname-is-not-absolute error even from a no-space path. Installing
+the identical verified local DEB through Polkit/dpkg succeeds; DPKG reports
+3.4.29.177~intern2. Both installed trees and Matrix assets match source exactly.
+The user launcher starts .177, five native workers report zero errors,
+Sapphire External Control remains active and the previously saved Levita
+composition resumes under the existing daemon cadence. No Python traceback.
+The current design was not replaced with Matrix; its explicit apply actions
+remain available to the owner. Post-launch user interaction/live cooling
+updates change normal settings and a stored fan value; the saved baseline is
+preserved privately and no newer live choices are overwritten. No optical
+Matrix or real Fedora test is claimed. No GitHub push/tag/release performed.
+
+Private design research · 11.11.26: the owner requests a read-only inspection
+of the installed SignalRGB designs, an overview of independently implementable
+ideas and an original Matrix-like LCD design. Local installation exposes five
+base effect HTML files, 209 component definitions (106 fan models, 47 brands)
+and 480 plugin source files. The configured user effect directory is empty.
+Public marketplace Show-all views expose 455 distinct content IDs: 274 RGB,
+96 LCD (55 information, 27 background, 14 touch), 20 audio and 65 game entries.
+These are shop metadata, not installed/purchased-code or compatibility claims.
+No plugin/effect was executed, no account/cookie data exported and no hardware
+writer started. Only public names/access labels/thumbnail URLs were cataloged.
+
+The private sibling folder `Designstudie-2026-11-11` contains searchable HTML,
+CSV/JSON inventories and an original OHC Code Rain renderer. It produces a
+1600×720, 12-second, 30-FPS seamless background and a separate clearly labeled
+demo overlay. Phase 0/1 matches exactly; the last/first pixel change is within
+ordinary adjacent-frame changes. Both videos decode completely; the preview
+GIF has 144 frames and a 12-second duration. No SignalRGB source/artwork is used
+in the renderer. HTML references/IDs and script syntax pass static checks; an
+integrated-browser file-URL restriction prevents its browser-render QA. There
+is no new installed OHC version, library-setting change, LCD application or
+GitHub publication for this study. Integration into the owned LCD catalog and
+editable live sensor layer remains a subsequent implementation step.
+
 Publication completed · 11.11.26: .176 STABLE is public and marked Latest:
 https://github.com/Frelidon/open-hardware-control/releases/tag/v3.4.29.176
 Main was fast-forwarded normally to release source commit
@@ -1911,3 +2388,90 @@ The 3.4.29 codebase has also begun an incremental local-AI-oriented split of the
 - Confirm no secrets/personal logs are present.
 - Complete the local package build and the two-version external backup.
 - Require an explicit project-owner request before any GitHub push/tag/release.
+
+Prüfabschluss .178: Vollständiger Release-Wächter mit 1.624 Tests und fünf
+Untertests bestanden. 433 Python-Laufzeitquellen und 2.501 gemeinsame Sprach-IDs.
+Sicherheits-/Datenschutzprüfung, Modulbudgets und Repository-Verträge bestanden.
+Alle acht neuen Videos vollständig dekodiert; periodische Renderer und
+Schleifennaht dokumentiert. Bestehende Medien-Prüfsummen unverändert.
+Dunkle, helle und schmale Qt-Ansicht geprüft. Vorhandene Fedora-/Ubuntu-Fixtures
+bestanden; kein realer Fedora- oder optischer LCD-Livetest wird behauptet.
+Paketbau, Sicherungsverifikation und lokaler Versionswechsel folgen.
+
+Lokaler Abschluss .178: Alle sechs Artefakte, beide .177/.178-INTERN-Sicherungen
+und 433 identische Python-Quellen in ZIP/DEB/RPM geprüft. Alle neuen Videos und
+Poster sind in den drei Laufzeitpaketen bytegleich. Private .177-Installation
+sowie endgültige Einstellungen/Profile/beide Plugins vor Start gesichert.
+Benutzer- und Systemkopie .178 installiert; DPKG 3.4.29.178~intern2 bestätigt.
+Profile und beide Plugins erhalten, gestartete Benutzerkopie ohne Python-Traceback.
+Der Benutzer meldet anschließend einen CPU-Sensorfehler beim Profilstart;
+dieser steht bereits im Log und wird als gesonderte .179 untersucht.
+Keine GitHub-Veröffentlichung.
+
+Prüfabschluss .179: Vollständiger Release-Wächter mit 1.642 Tests und fünf
+Untertests bestanden. 438 Python-Laufzeitquellen und 2.507 gemeinsame Sprach-IDs.
+Echte viersprachige Qt-Konstruktion einschließlich fehlend→frisch-Profilwarten
+ohne Hardwareaktion geprüft. Strikter Fristablauf, Neuauftrag, Bedienänderung,
+Shutdown, Geräteverlust, Hook-Delegation, zentraler Modul-Sink und konkurrierende
+Fehlerschreiber bestehen. Sicherheit/Datenschutz/Modulbudgets unverändert erfüllt.
+Bestehende Fedora-/Ubuntu-Fixtures bestanden; kein realer Fedora-/PWM-Ausfalltest.
+Paketbau und lokaler Upgrade-Nachweis folgen. Keine GitHub-Veröffentlichung.
+
+Lokaler Abschluss .179: Alle sechs Artefakte und beide .178/.179-INTERN-
+Sicherungen mit SHA256 geprüft. ZIP-CRC, 438 identische Python-Quellen in
+ZIP/DEB/RPM, neue Medien/Poster sowie DEB-Modi und RPM-Eigentümer geprüft.
+Private .178-Installation und endgültige Einstellungen/Profile/Plugins vor
+Start gesichert. Benutzer- und Systemkopie .179 installiert, DPKG bestätigt
+3.4.29.179~intern2; beide Quellbäume und neuen Medien bytegleich. Profile und
+beide nativen Plugins auch nach Start unverändert.
+
+Realer Startnachweis auf dem vorhandenen Ubuntu-System: CPU-Snapshot beim
+Profilaufruf 2,89 s alt, also korrekt nicht verwendbar. Das Profil wartet
+asynchron und erhält noch in derselben Sekunde einen frischen Wert; der
+bisherige modale CPU-Fehler tritt nicht auf. Sensorprozess mit korrekter
+Versionsangabe gestartet, keine neuen expliziten Fehlerzeilen im Sitzungslog.
+Fünf native RGB-Arbeiter ohne gemeldete Fehlerzähler. Eine nicht fatale
+Qt-Portal-Registrierungswarnung wird jetzt ausdrücklich als Warnung im
+allgemeinen Log erfasst; deren Betriebssystemursache wurde nicht geändert.
+Kein Rechnerneustart-/Fedora-Livetest und kein GitHub-Upload durchgeführt.
+
+
+Lokaler Abschluss .180: Alle sechs Artefakte und die beiden .179/.180-INTERN-
+Sicherungen mit SHA256 geprüft; ZIP-CRC, 443 identische Python-Quellen in
+ZIP/DEB/RPM, gebündelte Hintergründe/Matrix-Medien, DEB-Verzeichnismodi und
+RPM-Eigentümer geprüft. Privater vorheriger .179-Installationsstand einschließlich
+endgültiger Einstellungen, Profile und beider getrennter Native-Plugins gesichert.
+Installationswechsel nach geprüfter Prozessidentität und geordnetem Shutdown.
+Vor dem Neustart bleiben alle vier Dateien bytegleich; unmittelbar nach Start
+sind Profil-JSON und beide Plugins ebenfalls unverändert. Spätere im laufenden
+Programm gespeicherte Profiländerungen werden nicht durch Sicherungen ersetzt.
+
+Benutzer- und Systemkopie .180 installiert, DPKG 3.4.29.180~intern2 bestätigt.
+Beide Kopien entsprechen sämtlichen 443 Python-Laufzeitquellen und den geprüften
+Medien bytegenau; nur profiles_workspace/v1_1 ist vorhanden. Gestartete Benutzerkopie
+ohne Python-Traceback und ohne explizite Fehlerzeilen im Sitzungslog; fünf native
+RGB-Arbeiter melden Fehlerzähler null. Normal gespeicherte Laufzeit-/Fensterwerte
+sind keine Installationsmigration und werden nicht auf den Vorstartstand gesetzt.
+Kein GitHub-Upload, Rechnerneustart oder realer Fedora-Hardwarelauf durchgeführt.
+
+
+Nativer Sichtnachweis .180: Die tatsächlich installierte Benutzerkopie wurde
+zusätzlich in einem eigenen Wayland-Fenster mit isolierten Beispieldaten und
+vollständig deaktivierten Hardwaretransporten geprüft. GNOME weist maximiert
+2560×1341 Pixel zu. In dieser realen Fenstergröße bestehen alle geöffneten
+Bereiche, volle Text-/Symbolhöhen, erreichbare Aktionen, vier Sprachen, beide
+Themen und Entwurfs-/Speicherauswahlprüfungen. Die drei festen Fenstergrößen sind
+separat durch die Offscreen-Regressionsprüfung belegt; ein vom Compositor
+überschriebener Resize-Auftrag wird nicht als nativer Größennachweis ausgegeben.
+Native eigene Fensteraufnahme: [dunkel](../images/rendering-evidence/profiles-installed-3429180-dark.png)
+und [hell](../images/rendering-evidence/profiles-installed-3429180-light.png).
+Beide Aufnahmen wurden angesehen. Persönliche Hardware/Profile bleiben außerhalb
+des isolierten Prüffensters; ein Testprofil ist kein gemessener Livezustand.
+
+
+Der zusätzliche native Hintergrundnachweis aktiviert nach dem Anzeigen den
+vorhandenen Seiten-Sichtbarkeitscallback des normalen App-Starts. Der isolierte
+Abhängigkeits-Test hatte diesen Startschritt ausgelassen. Anschließend läuft der
+bestehende Matrix-Decoder mit nicht leerem 960×432-Bild und ohne Playerfehler;
+helle und dunkle Aufnahmen zeigen den Hintergrund hinter den lesbaren Flächen.
+Keine Produktänderung oder zusätzliche Decoderinstanz wurde dafür eingebaut.

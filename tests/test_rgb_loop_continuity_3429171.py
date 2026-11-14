@@ -42,7 +42,7 @@ def _boundaries(effect, count, renderer):
         rate = .24 if effect == "spinner" else .18
         scale = 1. if renderer == "gpu" else motion_scale(count)
         return [cycle / (rate * scale) for cycle in (1, 2, 5)]
-    rates = {"breathing": (1.,), "rainbow": (.16,), "wave": (.30,),
+    rates = {"code_rain": (1/12.,), "breathing": (1.,), "rainbow": (.16,), "wave": (.30,),
              "pulse": (.44,), "alternating": (1.,), "sparkle": (8.,),
              "converge": (.22,), "crossflow": (.16, .13), "depthwave": (.12, .20)}
     return [cycle / rate for rate in rates[effect] for cycle in (1, 2, 5)]

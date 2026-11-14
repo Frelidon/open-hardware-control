@@ -1,5 +1,23 @@
 # GPU Control 1.0
 
+`.182` keeps the existing public controls and guarded LACT workflows on one
+scrollable GPU page. `workspace_ui.py` composes the large GPU artwork and live
+cards above two responsive tuning/fan groups, then expandable stress-test,
+profile, measurement, hardware and diagnostic sections. `workspace_layout.py`
+routes the existing seven section indices to their actual on-page bodies;
+there is no hidden tab stack. Resizing and opening sections reuse the same
+widgets, retaining unsaved tuning values, curve points and profile drafts.
+The curve reserves a compact fan strip and shares its enlarged plot rectangle
+with pointer mapping. Its paint colors follow the application palette.
+This is an internal presentation change, so the module remains API 1.0.
+
+`.181` adds `read_status.py`: the service badge starts unverified, becomes green
+only after a validated read, and reports failed/empty reads honestly. Both
+asynchronous Ubuntu and synchronous Fedora/injected-client errors enter the
+existing privacy-filtered general/error/GPU logs with a bounded ten-second
+deduplication cache. Old readings receive an explicit stale tooltip after a
+failure. These presentation states are never consulted by the write/test gates.
+
 `.153` uses `cockpit_ui.py` for composition, `read_worker.py` for Qt-free bounded read-only LACT requests,
 `read_probe.py` for a cancellable QProcess/deadline and `read_ui.py` for validated
 stale-result-safe presentation. Ubuntu uses this path; Fedora keeps the prior
@@ -12,18 +30,17 @@ columns stack their workflow and control cards, retain the entire caption in
 an accessible clickable wrapped checkbox, and permit vertical scrolling only
 when needed. No control or safety note is removed to fit a viewport.
 
-Version 3.4.29.130 keeps both page scrollbars disabled and fits the complete
-wide cockpit through compact cards/actions. Custom artwork import/reset is
-available beside the GPU image. `preview_requires_graphics_load()` makes the
+Custom artwork import/reset remains available below the GPU image.
+`preview_requires_graphics_load()` makes the
 test split explicit: fan-only candidates use the reversible LACT physical fan
 test and never resolve or launch vkmark/glmark2; clock or power changes retain
 the guarded load path.
 
 This module reads GPU information from LACT's local Unix socket. Its primary
-controls form a responsive three-column cockpit matching the approved visual
-reference: overview/tuning, fan workflow and load-test/presentation reflow from
-three to two to one column. Compact live cards and synchronized wide
-slider/number tracks expose power and clock values without changing the
+controls form one responsive workspace. Tuning and fan controls sit side by
+side when space permits and stack on narrower windows; additional functions
+remain reachable below without switching main tabs. Compact live cards and
+synchronized slider/number tracks expose power and clock values without changing the
 underlying LACT limits. It can trial
 bounded GPU tuning, a validated five-point fan curve or a static fan speed.
 LACT reverts unconfirmed

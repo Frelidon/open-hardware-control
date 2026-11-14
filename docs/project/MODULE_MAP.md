@@ -1,9 +1,85 @@
 # Open Hardware Control — Modulkarte für Coding-KIs
 
+## .182 LCD-/GPU-Arbeitsbereiche und priorisierte Einstellungen
+
+`lcd_workspace/v1_0/`: reine Qt-Komposition/Navigation um vorhandene Levita-
+Bibliothek, Vorschau, Layer-Editor und Betriebswidgets. Die Daten-/Transport-
+verträge von Levita 1.7, LCD Runtime 1.1 und Medienmanager 1.1 bleiben erhalten.
+`gpu_control/v1_0/`: gemeinsame Darstellung vorhandener Tuning-/Fan-/Test-
+Bedienelemente mit unveränderten Controllern. `kraken_control.py:make_settings_tab`
+sortiert 17 vorhandene bereits besessene Gruppen ohne neue Einstellungswerte.
+`lcd_workspace/v1_0/composition.py` besitzt bestehende Zeilen vor dem Umsetzen;
+`navigation.py` misst nur den aktiven Arbeitsbereich; `devices.py` erhält
+Reihenfolge-/Sichtbarkeits-API und explizite Gerätewahl. Bibliothek und Vorschau
+pausieren ihre bestehenden lokalen Prozesse außerhalb ihres Arbeitsbereichs.
+`gpu_control/v1_0/workspace_ui.py` komponiert Grafik, Livewerte, OC/Kurve und
+Details; `workspace_layout.py` erhält die sieben alten Routen ohne Tab-Stapel.
+`refresh_workspace_language()` rekonstruiert Livekarten aus demselben Snapshot.
+`gpu_workspace_messages.py` und `lcd_workspace_messages.py` ergänzen atomar
+19 beziehungsweise 15 Quellen; zusammen 2.618 gemeinsame Nachrichten-IDs.
+Gezielte Regressionen: `test_lcd_workspace_3429182.py`,
+`test_gpu_workspace_3429182.py`, `test_settings_order_3429182.py`.
+Keine neue USB-/PWM-/LACT-Schreiblogik.
+
+Zusätzliche UI-Anschlüsse: `display_effects/v1_11/base_page.py` öffnet den
+vorhandenen Ebene-2-Editor direkt in Levita-Komposition. Der Dashboard-Einstieg
+zur LCD-Auswahl öffnet die Bibliothek der aktuellen Gerätefamilie. Verborgene
+Kraken-QMovies und die schwebende Rundvorschau beachten auch die inneren
+Arbeitsbereiche; physische LCD-/Hardwaretimer bleiben unverändert.
+
+## .181 · Bereiche, Paargrößen, LCD-Manager, Hilfe und Erkennung
+
+- `ui_sections/v1_0/cards.py`, `reveal.py`: gemeinsame Themenflächen/Köpfe und
+  abbrechbare Scrollführung; Profile und `compact_panels.Disclosure` delegieren.
+- `pc_case_profiles/v1_5/workspace.py`, `case_page.py`, `component_summary.py`:
+  Gehäuse-/Profilleiste, PC-Zeichnung und direkte Entwürfe; unveränderte Controller.
+- `design_hub/v1_1/catalog.py`, `size_controls.py`: 15 Paar-IDs/feste Originaldateien,
+  je Paar Zoom und echte Matrix-Varianten; `scaling.py` rein, `preparation.py`
+  begrenzter asynchroner Encoder mit Absichts-/Verbergeabbruch; `mp4_metadata.py`
+  begrenzte strukturelle H.264-/Geometrie-/Dauerprüfung, `controller.py` bestehende Anwendenbesitzer.
+- `lcd_media_manager/v1_1/panel.py`: eingebetteter Entwurf mit Save/Cancel und
+  vorhandener Inventur; `dialog.py` nur Wrapper; Quelle-/Schema-/Decodergrenzen erhalten.
+- `help_center/v1_0/page.py`, `topics.py`, `controller.py`: Hilfeaufbau, originale
+  Themenzeichnung und bestehende viersprachige Inhalte/Navigation.
+- `dashboard_status/v1_0/model.py`, `cards.py`, `device_rows.py`: reine erkennbare
+  Inventur und explizite Karten-/Zeilenstatus ohne Erkennung oder Schreibzugriff.
+- `gpu_control/v1_0/read_status.py`: LACT-Lesestatus und begrenzte Fehler; übrige
+  GPU-Controller und Sicherheitsprüfungen bleiben maßgeblich.
+
+Gezielte Dateien: `test_section_reveal_3429181.py`, `test_design_hub_size_3429181.py`,
+`test_design_hub_mp4_3429181.py`, `test_case_workspace_ownership_3429181.py`,
+`test_lcd_inline_manager_3429181.py`, `test_help_inventory_3429181.py`,
+`test_gpu_read_status_3429181.py`; vollständiger UI-/Release-Wächter bleibt Pflicht.
+
+## .180 Lesbare Profilkarte und geöffnete Unterbereiche
+
+Aktueller einziger Pfad `profiles_workspace/v1_1/`: `page.py` hält Auswahl und
+neue Entwürfe; `composition.py` baut den äußeren Scrollbereich, Bibliothek und
+Profilkarte, `layout.py` verteilt Spalten/Inhaltshöhen, `surfaces.py` zeichnet
+lokale Bereichsköpfe und `summary.py` gespeicherte Werte/Originalgrafiken.
+`model.py`/`cards.py` und die versteckte ID-Tabelle erhalten sichere Auswahl/CRUD;
+kein Panelwechsel wendet Hardware oder globale Hintergrundeinstellungen an.
+
+## .179 Profilstart und Laufzeitfehler
+
+`profile_cooling/v1_0/restore.py`: frischen Sensor abwarten, Auftrag abbrechen,
+bestehende Hardwarepfade erneut prüfen. `runtime_logging/v1_0/error_capture.py`:
+Python-/Qt-/Modulfehler begrenzt erfassen; `error_bridge.py`: allgemeines GUI-Log.
+`privacy_logging.py` bleibt die gemeinsame private redigierte Fehlerdatei.
+
+## .178 Profile und Programm-Hintergründe
+
+Ursprünglicher Aufbau in .178 (heute `profiles_workspace/v1_1/`): Bibliothek/Karten, reine Filter/Zusammenfassung und
+aufklappbare Editor-/Detail-/Transferpanels. Legacy-CRUD bleibt ID-basiert.
+`app_backgrounds/v1_0/`: feste Medien, ein Decoder und separater angewendeter
+Profilzustand. Keine Vorschau schreibt Hardware oder globale Einstellungen.
+`tools/render_app_backgrounds.py` / `render_code_rain.py`: eigene periodische
+Videos, Matrix-Zeichengrößen; bestehende Dateien unverändert.
+
 ## .95 Display preview paths
 
 `lcd_levita/v1_7/media_preview.py`: selected-video driver, pending/confirmed
-composition, firmware release. `lcd_media_manager/v1_0/preview_visibility.py`
+composition, firmware release. `lcd_media_manager/v1_1/preview_visibility.py`
 and `video_preview.py`: shared exposed-viewport/local decoding without hardware.
 `display_effects/v1_11/page.py` / `library.py`: transient exploration, clear/live
 fallback, stable data IDs and current translated details. `light_bands_renderer.py`
@@ -124,7 +200,7 @@ Schreibbesitz und SDK-Grenzen bleiben bei den bisherigen Transportwegen.
 | `src/modules/hardware_backends/v1_0/` | Reine, fail-closed Auswahl- und Auflösungsrichtlinie für vorhandene Hardware-Unterbauten | Nein |
 | `src/modules/temperature_history/v1_2/` | Begrenzter RAM-Sitzungspuffer, datierter interaktiver Qt-Canvas, skalierbare Splitter, rein lesende gruppierte Linux-hwmon-Sensorerkennung und ausdrücklicher CSV-/JSON-Berichtsexport | Nur die vom Nutzer gewählte Berichtsdatei |
 | `src/modules/responsive_gallery/v1_0/` | Breitenabhängige Spaltenzahl, Viewport-Resize-Bündelung und gleichmäßige Kachelverteilung | Nein |
-| `src/modules/lcd_media_manager/v1_0/` | Mehrere lokale Designordner/Einzelmedien einschließlich GIF, Anzeigenamen und nicht-destruktive Ausblendungen für Levita und Kraken | Nur QSettings; Quelldateien unverändert |
+| `src/modules/lcd_media_manager/v1_1/` | Mehrere lokale Designordner/Einzelmedien einschließlich GIF, Anzeigenamen und nicht-destruktive Ausblendungen für Levita und Kraken | Nur QSettings; Quelldateien unverändert |
 | `src/modules/cooling_safety/v1_0/` | Modellbezogene PWM-Untergrenzen und fail-closed Begrenzung vor Kühlungswrites | Nein |
 | `src/modules/pc_case_profiles/v1_5/` | Zentrale Gehäuse-Seite, 30 originale detaillierte Zeichnungen, gemeinsame RGB/LED/PWM-Zuordnung und optionale eigene Kühlungspositionen | Nein; PWM-Zuordnung delegiert nur vorhandenes chassis-only Mapping ohne Aktivierung/Kalibrierung |
 | `src/modules/rgb_studio/v1_15/` | Galerie, direkte Block-/ARGB-Auswahl und stabile physische Bindungen, native/zonengenaue GPU-Routen, Direct-Anschlusseditoren, manuelle Profilpins, Anschlussdiagnose und Qt-freie zählabhängige Effektabtastung | Nein; bestehender Hosttransport/SDK-Worker bleibt einziger Schreibpfad |

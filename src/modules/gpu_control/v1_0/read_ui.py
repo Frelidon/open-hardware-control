@@ -5,8 +5,9 @@ from __future__ import annotations
 from PySide6.QtCore import QTimer
 
 from modules.mainboard_driver_setup.v1_1.distribution import detect_distribution
-from .client import LactClient, clock_controls
+from .client import LactClient
 from .read_probe import GpuReadProbe
+from .read_status import log_failure, set_state
 
 
 class GpuReadUiMixin:
@@ -43,6 +44,8 @@ class GpuReadUiMixin:
         # only the concrete Unix-socket client can be serialized to a process.
         if not self._ubuntu_async_reads or not isinstance(self.client, LactClient):
             return False
+        if kind != "metrics" or getattr(self, "gpu_read_state", "unknown") != "connected":
+            set_state(self, "loading")
         self.gpu_read_probe.request(kind, self.client.path, gpu_id)
         return True
 
@@ -84,8 +87,11 @@ class GpuReadUiMixin:
                 self.stats = data["stats"]
                 self._fill_table(self.metrics, self.stats)
                 self._refresh_gpu_dashboard()
+                set_state(self, "connected")
 
     def _gpu_read_failed(self, kind: str, reason: str) -> None:
+        set_state(self, "failed", kind=kind, reason=reason)
+        log_failure(self, kind, reason)
         if kind == "inventory":
             self.baseline = None
             self.overdrive_enabled = None
@@ -108,15 +114,5 @@ class GpuReadUiMixin:
         self._display_gpu_ownership(*data["ownership"])
         QTimer.singleShot(0, self, self.apply_startup_gpu_profile)
         QTimer.singleShot(0, self, self._consume_pending_main_gpu_profile)
-        if self.gpu_vendor != "NVIDIA" and self.overdrive_enabled is False:
-            message = (self.tr("AMD-Overdrive ist vorbereitet. Bitte den Rechner neu starten und danach GPU und LACT aktualisieren.")
-                       if self.overdrive_prepared else
-                       self.tr("AMD-Overdrive ist aus. In LACT aktivieren, neu starten und hier aktualisieren."))
-        elif self.gpu_vendor != "NVIDIA" and self.overdrive_enabled is None:
-            message = self.tr("Overdrive-Status unbekannt. GPU-Steuerung gesperrt.")
-        elif not self.baseline and not clock_controls({}, self.clocks):
-            message = self.tr("Noch kein LACT-GPU-Profil. Grundwerte in LACT setzen und hier aktualisieren.")
-        else:
-            message = self.tr("LACT verbunden · GPU-Werte sind ausgelesen. Schreibzugriff erst nach dem Kurztest.")
-        self.status.setText(message)
+        set_state(self, "connected")
         self._sync_buttons()

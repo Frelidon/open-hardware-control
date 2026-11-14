@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.176 STABLE
+# Open Hardware Control by Frelidon 3.4.29.183 INTERN
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -51,47 +51,47 @@ Projekt-Repository: <https://github.com/Frelidon/open-hardware-control>
 
 ## Thermalright Levita Vision Display
 
-**Das 1600×720-Display der Thermalright Levita Vision 360 ARGB Black wird unterstützt.** Das lokale Display-Studio kombiniert eigene Bilder und Videos (Ebene 1) mit einem vollständigen TRCC-Hardwaredesign oder frei verschiebbaren OHC-Live-Werten für CPU, GPU, RAM, Uhrzeit und eigenen Text (Ebene 2). Mitgeliefert werden elf eigene OHC-Hintergründe, zwölf eigene editierbare Datenlayouts, vier eigene Ebene-1-Animationen sowie fünf OHC-Effektfamilien mit zwölf Varianten. Hersteller-/TRCC-Katalogmedien, importierte Benutzerdateien, Stock-Clips und fremde Designbestandteile werden nicht mitgeliefert.
+**Das 1600×720-Display der Thermalright Levita Vision 360 ARGB Black wird unterstützt.** Das lokale Display-Studio kombiniert eigene Bilder und Videos (Ebene 1) mit einem vollständigen TRCC-Hardwaredesign oder frei verschiebbaren OHC-Live-Werten für CPU, GPU, RAM, Uhrzeit und eigenen Text (Ebene 2). Mitgeliefert werden elf eigene OHC-Hintergründe, zwölf eigene editierbare Datenlayouts, vier eigene Ebene-1-Animationen sowie sechs OHC-Effektfamilien mit sechzehn Varianten. Hersteller-/TRCC-Katalogmedien, importierte Benutzerdateien, Stock-Clips und fremde Designbestandteile werden nicht mitgeliefert.
 
 Der sichere Testmodus ist standardmäßig aktiv; echte USB-Übertragung erfolgt nur über das separat installierte GPL-Backend **TRCC Linux** (9.10.4 empfohlen). Pumpe und Radiatorlüfter der Levita laufen über getrennt bestätigte Mainboard-PWM-Header (`PUMP_FAN`, `CPU_FAN`) mit sicherem 70-%-/10-s-Test; CoolerControl blockiert parallele Schreibzugriffe.
 
-## Neu in 3.4.29.176 STABLE
+## Neu in 3.4.29.183 INTERN
 
-- Lüfteranschlüsse ausdrücklich als „Nicht angeschlossen“ überspringen und später erneut zuordnen.
-- Stopptest bis zwei Minuten mit kurzer Treiber-Absturzsicherung und Rückstellung bei Weiter/Abbruch.
-- Automatisch weiße Lüfterbeleuchtung während der Zuordnung; das bisherige RGB-Design kehrt danach zurück.
-- Temperaturaufzeichnung mit Sensorsymbolen, Auswahl per Ziehen und übersichtlichen Messwertkarten.
+- Hardware Fix mit Installieren und Deinstallieren als Hauptaktionen; lokale Installation als Standard.
+- Diagnose und einzelne Reparaturschritte bleiben unter Weitere Optionen erreichbar.
+- Korrigierte MSI-VRR-Erkennung und zuverlässige Rückmeldung der Terminalaktionen.
+- Getrennte Ubuntu-/GNOME- und Fedora-Einrichtung; alle Beschriftungen in vier Sprachen.
 
 ## Installation
 
-Die folgenden Dateinamen gelten für den kommenden lokalen Bau; Pakete sind noch nicht freigegeben.
+Die lokalen INTERN-Pakete sind gebaut und geprüft; Benutzer- und Systemkopie sind aktualisiert. Der Quellstand wird auf `codex/hardware-fix-3.4.29.183` bereitgestellt. Downloadpakete dieser Version sind noch nicht als GitHub-Release veröffentlicht.
 
 ### Fedora und Nobara – RPM
 
-Lade `open-hardware-control-3.4.29.176-1.noarch.rpm` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control-3.4.29.183-0.intern2.noarch.rpm` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.176-1.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.183-0.intern2.noarch.rpm
 ```
 
 ### Debian, Ubuntu und Linux Mint – DEB
 
-Lade `open-hardware-control_3.4.29.176_all.deb` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control_3.4.29.183~intern2_all.deb` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.176_all.deb'
+sudo apt install './open-hardware-control_3.4.29.183~intern2_all.deb'
 ```
 
 ### Universelles Installationspaket – ZIP
 
-Für Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_176.zip` herunter und führe aus:
+Für Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_183_INTERN.zip` herunter und führe aus:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_176.zip
-cd open-hardware-control-3.4.29.176
+unzip open_hardware_control_v3_4_29_183_INTERN.zip
+cd open-hardware-control-3.4.29.183-INTERN
 chmod +x install.sh
 ./install.sh
 ```
@@ -125,7 +125,7 @@ English version: [docs/README.en.md](docs/README.en.md)
 
 ## Status
 
-Öffentliche Version, bereitgestellt ohne Garantie. Kanal **STABLE**, Lizenz **GPL-3.0-or-later**. Mitwirken: [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) · Hilfe: [.github/SUPPORT.md](.github/SUPPORT.md) · Sicherheitsmeldungen: [.github/SECURITY.md](.github/SECURITY.md)
+Lokale Entwicklungsversion, bereitgestellt ohne Garantie. Kanal **INTERN**, Lizenz **GPL-3.0-or-later**. Mitwirken: [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) · Hilfe: [.github/SUPPORT.md](.github/SUPPORT.md) · Sicherheitsmeldungen: [.github/SECURITY.md](.github/SECURITY.md)
 
 ## Module
 
@@ -160,12 +160,12 @@ Liest nur lokale Steam-Workshop-Metadaten, wählt Wallpaper über Plasmas offizi
 
 ## Versionsverlauf
 
-**3.4.29.176** – Lüfter-Assistent mit unbenutzten Anschlüssen und neue Temperaturansicht.
+**3.4.29.183** – Lokale Hardware-Fix-Einrichtung, klare Bedienung und korrigierte MSI-VRR-Erkennung.
 
-**3.4.29.175** – Modellkatalog mit Produktlinks und stabile Menüauswahl.
+**3.4.29.182** – LCD-Arbeitsbereiche, gemeinsame GPU-Seite und priorisierte Einstellungen.
 
-**3.4.29.174** – Unabhängige Standard-DPI je Mausprofil.
+**3.4.29.181** – Gemeinsame UI-Bereiche, 15 Designpaare und Größenwahl.
 
-**3.4.29.173** – Lesbares Haussymbol nach Themen-/Akzentwechsel.
+**3.4.29.180** – Lesbare Profilkarten, gestaltete Unterbereiche und sichere Entwurfsdarstellung.
 
 Alle früheren Versionen bis 2.9.x: [docs/CHANGELOG.md](docs/CHANGELOG.md) und [docs/releases/](docs/releases/).

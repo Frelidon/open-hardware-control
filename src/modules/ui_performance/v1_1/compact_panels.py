@@ -1,24 +1,14 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Small compositional containers; no theme overrides or background layers."""
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QBoxLayout, QToolButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QBoxLayout, QWidget
+from modules.ui_sections.v1_0.cards import SectionCard
 
 
-class Disclosure(QWidget):
+class Disclosure(SectionCard):
+    """Compatibility constructor backed by the shared full-width section card."""
     def __init__(self, title, body, expanded=False):
-        super().__init__()
-        layout=QVBoxLayout(self);layout.setContentsMargins(0,0,0,0)
-        self.button=QToolButton();self.button.setText(title)
-        self.button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        self.button.setCheckable(True);self.button.setChecked(expanded)
-        self.body=body
-        layout.addWidget(self.button);layout.addWidget(body)
-        self.button.toggled.connect(self.toggle)
-        self.toggle(expanded)
-
-    def toggle(self,expanded):
-        self.body.setVisible(expanded)
-        self.button.setArrowType(Qt.ArrowType.DownArrow if expanded else Qt.ArrowType.RightArrow)
+        super().__init__(title, "", None, body, expanded=expanded)
 
 
 class ResponsiveColumns(QWidget):

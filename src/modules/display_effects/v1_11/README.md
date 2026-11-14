@@ -23,7 +23,7 @@ stable choice IDs.
 
 `lcd_levita/v1_7/media_preview.py` stores pending/confirmed canvas state and
 animates selected layout videos independently of card hover. Shared decoder and
-all-ancestor clipping are in `lcd_media_manager/v1_0/`; this package preserves
+all-ancestor clipping are in `lcd_media_manager/v1_1/`; this package preserves
 its BundledVideoPreview export. Decoding/composition unloads its decoder source
 and frame buffer outside the exposed canvas or while hidden/minimized, with a
 20-FPS composition cap. The native
@@ -33,3 +33,8 @@ their existing still preview; firmware hand-off clears the live snapshot.
 Tests cover actual Qt playback, viewport hide/resume, immutable browsing/failure
 fallback, staging isolation, current four-language details and stable first-open
 geometry. Rendered source/native assets and complete video decode are checked.
+
+The 3.4.29.182 LCD workspace connection opens the existing Layer 2 editor in
+Levita Composition directly, including when Kraken or another inner workspace
+was selected. This changes navigation only: it neither applies/restages a design
+nor writes settings, and it retains the current unsaved composition.

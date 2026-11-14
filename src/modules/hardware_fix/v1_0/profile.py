@@ -8,6 +8,7 @@ from dataclasses import dataclass
 import hashlib
 import os
 from pathlib import Path
+import re
 import shlex
 import shutil
 import sys
@@ -59,10 +60,10 @@ RESOURCE_HASHES = {
     "EDID/vrr-korrigiert.bin": CORRECTED_EDID_SHA256,
     "lib/auto_setup.py": "0699bcd88febdf9b0eb43eb81224a5d9d044ddc5e24f864d6bad1ed0020f3dc3",
     "lib/auto_vrr.py": "cd66fcb28c1eb1b09c3c4f4e21a6341f44480cf456479bd7123de81c6979d12a",
-    "lib/desktop.py": "1758141ef9535accac84293ed36d6339415688f4b23637d749cadc12116b9cc1",
+    "lib/desktop.py": "6f67113cce0052afc476e5e04f1c5866893ad7d1ee7ee5c74e469fc625b5d14d",
     "lib/install.py": "d6ecacc1316c43bbc7f1c8fa2b50dd915a9d154661ea3cd57d87a30c49e6a2d0",
-    "lib/status.py": "1fc948fabc2ab82115be52d1e1dc4b1ae5bbaaee2e7d2bd080ec6a3f19e69970",
-    "lib/vrr_hardware.py": "fa91f3857d5140be37c87b0142b2735358b876bebadd09ac4c5bbed87d20fe91",
+    "lib/status.py": "4f6bf4e64fc89d335b01a169e8887ff6763df910f5f004e63b7dfd822a3bceaa",
+    "lib/vrr_hardware.py": "0065b2af31fbac3b043a33c4fc36b02f42b284f5360a5d67eb7dd6882aa83974",
     "lib/x11_games.py": "ee0c26a62635e7a9d868929a544657d86b1f15d1d976f9137bbb19cbe6236664",
 }
 
@@ -115,21 +116,23 @@ def os_family(path: Path = Path("/etc/os-release")) -> str:
     return "unsupported"
 
 
-def runner_argv(action: str) -> list[str] | None:
+def runner_argv(action: str, job_id: str | None = None) -> list[str] | None:
     allowed = {
-        "preflight", "status", "install", "desktop", "automation-install",
+        "preflight", "status", "install", "install-local", "desktop", "automation-install",
         "automation-status", "automation-remove", "game-test", "uninstall",
     }
     if action not in allowed:
         return None
+    if job_id is not None and not re.fullmatch(r"[0-9a-f]{32}", job_id):
+        return None
     runner = Path(__file__).with_name("runner.py")
-    return [os.fspath(Path(sys.executable).resolve()), os.fspath(runner), action]
+    return [os.fspath(Path(sys.executable).resolve()), os.fspath(runner), action, *([job_id] if job_id else [])]
 
 
-def terminal_spec(action: str) -> tuple[str, list[str]] | None:
+def terminal_spec(action: str, job_id: str | None = None) -> tuple[str, list[str]] | None:
     """Wrap one fixed runner action in an interactive terminal."""
 
-    command = runner_argv(action)
+    command = runner_argv(action, job_id)
     if not command:
         return None
     terminal = next(

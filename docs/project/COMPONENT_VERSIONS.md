@@ -1,4 +1,142 @@
-# Komponenten- und Versionsübersicht – Version 3.4.29.176 STABLE
+# Komponenten- und Versionsübersicht – Version 3.4.29.183 INTERN
+
+## Paketabschluss .183 · 14.11.26
+
+Alle sechs Artefakte gebaut und unabhängig geprüft: Laufzeit-/Entwickler-ZIP,
+Quell-TAR, vollständiges Local-AI-Gitbundle, DEB und RPM. Sechs Dist-SHA256,
+ZIP-CRCs und vollständige Manifeste, Quell-TAR-Manifest, Bundle-Historie,
+DEB-Metadaten/Root-Eigentümer sowie RPM-Header-/Payload-Digests bestanden.
+474 Python-Laufzeitquellen und 169 Assets sind in ZIP/TAR/DEB/RPM bytegleich.
+Genau beide .182/.183-Sicherungen bleiben erhalten; je acht Hashes verifiziert.
+Der RPM-Bau nutzte den vorhandenen Standardbibliothek-Writer, da rpmbuild hier
+nicht installiert ist. Keine neue Fedora-Liveprüfung wird daraus abgeleitet.
+
+Benutzer- und Systeminstallation wurden durch diesen Auftrag nicht aktualisiert;
+die .182-Benutzerkopie behält den vorangegangenen kleinen VRR-Hotfix. Es wurde
+kein Anwendungs-/Systemneustart ausgeführt. Pakete und Sicherungen bleiben
+unveränderte Schnappschüsse vor diesem nachträglichen Verifikationsnachweis.
+Der Snapshotcommit im vollständigen Gitbundle ist `8169680`; GitHub unverändert.
+
+## Quellfreigabe .183 · 13.11.26
+
+1.763 Tests und fünf Untertests bestanden, einschließlich echter Qt-Oberfläche
+in vier Sprachen, drei Fenstergrößen und beiden Themen. 474 Python-Laufzeitquellen,
+2.658 gemeinsame Nachrichten-IDs. Kompilierung, Sicherheit/Datenschutz,
+Modulregister und sämtliche restlichen Release-Prüfungen bestanden. Die erste
+Gesamtsuite scheiterte nur an zwölf gesperrten Testsockets; der Wiederholungslauf
+mit freigegebenen lokalen Sockets und deaktivierten Hardwarezugriffen bestand
+vollständig. Danach wurde der alte ZIP-Dateiname in beiden Installationsanleitungen
+berichtigt und der unveränderte restliche Wächterteil erfolgreich fortgesetzt.
+Keine Prüfung wurde ausgelassen oder abgeschwächt. Zehn vollständige
+Hauptfensteraufnahmen samt Hashes stehen unter `docs/images/rendering-evidence/`
+(`hardware-fix-183.json`); Fixstatus ist synthetisch. Vorbauabschnitte darunter
+bleiben historische Schritte. Paketbau und abschließende Artefaktprüfung folgen.
+Die laufende Benutzer-/Systeminstallation bleibt .182; kein neuer Fedora-Live-
+oder physischer Boot-/Deinstallationstest. GitHub bleibt unverändert.
+
+## Entwicklung .183 · 13.11.26 — Hardware Fix lokal und übersichtlich
+
+Hardware Fix bleibt 1.0. Zwei Hauptaktionen installieren den lokalen Fix oder
+entfernen ihn einschließlich Ubuntu-Automatik. Anbieterwahl und bloßes
+Umetikettieren entfallen auf Eigentümerwunsch. Der lokale Benutzerdienst läuft
+unabhängig vom OHC-Fenster; es gibt weiterhin nur einen Wächter und denselben
+Dienstnamen. Erfolgreiche explizite Installation speichert local/local.
+Diagnose, Spieltest und einzelne Reparaturschritte bleiben in Weitere Optionen.
+Technische Zustände stehen standardmäßig eingeklappt und vollständig übersetzt.
+
+`workflow.py` koordiniert nur bestehende feste Schritte: fehlender Boot-Fix,
+nach geladenem Override Desktop und Automatik ausschließlich auf Ubuntu/GNOME.
+Gesunde Bootressourcen und bereits dauerhaft aktives GNOME-VRR werden nicht
+erneut geschrieben. Erstinstallation wartet auf nötigen Neustart und kann über
+Installieren fortgesetzt werden. Fedora behält seinen bisherigen Bootpfad.
+UUID-gebundene Terminalergebnisse beheben übersehene schnelle Abschlüsse;
+veraltete Resultate, Doppelklicks und Startfehler werden abgefangen. Protokolle
+sind begrenzt, redigiert und im Dialog als Klartext behandelt. Exakte Boottoken
+und fehlerhafte Anbieter-JSON sind zusätzlich abgesichert. Der MSI-Hashfix aus
+dem vorangegangenen Live-Nachweis ist enthalten. Keine Änderung an EDID/Timings.
+
+Lokalisierung 1.0 ergänzt `hardware_fix_messages.py`, atomar über
+`content_ui_messages.py` und die vier Sprachdateien: 2.658 gemeinsame IDs.
+Neue Regressionen `test_hardware_fix_setup_3429183.py` und
+`test_hardware_fix_vrr_identity.py`. Vollständige Release-Prüfung, Sichtkontrolle,
+Paketierung und beide rollierenden Sicherungen folgen. Kein GitHub-Auftrag.
+
+Lokaler Abschluss 12.11.26 (.182): 1.736 Tests/fünf Untertests und alle Release-
+Wächter bestanden. Sechs Pakete und beide .181/.182-Sicherungen verifiziert;
+Benutzer-/Systemkopie .182 mit je 472 Quellen/169 Assets bytegleich installiert.
+Installierte Wayland-Ansichten in beiden Themen, Erhalt der Profile/Plugins und
+normaler Start geprüft. Paket-/Sicherungsstände bleiben unverändert vor diesem
+nachträglichen Nachweis; kein GitHub-Upload. Ältere Vorbauangaben sind historisch.
+
+## Entwicklung .182 · 12.11.26
+
+LCD-Arbeitsbereich 1.0 ist eine neue reine Kompositions-/Navigationsschicht.
+GPU-Steuerung 1.0 erhält einen gemeinsamen Arbeitsbereich mit bestehenden
+Widgets/IDs. Host-Einstellungen werden nach Wichtigkeit geordnet. Bestehende
+LCD-/GPU-/Treiber-/Backendversionen und Hardwarebesitzer ändern sich nicht.
+472 Python-Laufzeitquellen, 2.618 Nachrichten-IDs in vier Sprachen; gezielte
+UI-/Entwurfs-/Sprach-/Sichtbarkeitsprüfungen und drei Qt-Fenstergrößen in beiden
+Themen bestanden. Vollprüfung mit 1.736 Tests/fünf Untertests, Kompilierung,
+Sicherheit/Datenschutz und Modulbudgets bestanden. Pakete/Installation folgen.
+Installiert .181.
+
+Lokaler Abschluss 12.11.26: .181 in Benutzer- und Systemkopie installiert;
+beide Bäume mit 464 Pythonquellen geprüft. 1.732 Tests/fünf Untertests,
+2.584 Sprach-IDs, sechs Pakete und beide .180/.181-Sicherungen verifiziert.
+Installierte Wayland-Ansichten in beiden Themen, Profile/Plugin-Erhalt und
+normaler RGB-/Levita-Start geprüft. Backendversionen bleiben unverändert.
+Nachfolgende Vorbauangaben dokumentieren den zeitlichen Entwicklungsstand.
+
+## Entwicklung .181 · 12.11.26 — noch nicht installiert
+
+Gemeinsame UI-Bereiche 1.0, Hilfe 1.0 und Übersichtserkennung 1.0 sind neue
+Darstellungs-/Lesemodule. Designs & Spiele 1.1 erweitert auf 15 unterschiedliche
+Paare und reale je-Paar-LCD-Größen; LCD-Medienmanager 1.1 ist eingebettet.
+PC-Gehäuseprofile 1.5, Profil-Arbeitsbereich 1.1, GPU-Steuerung 1.0 und UI-Leistung
+1.1 behalten ihre öffentlichen Verträge und delegieren neue Darstellung bzw.
+eindeutigen Lesestatus. Bestehende Backend-/Treiber-/Hardwareversionen ändern sich
+nicht. Lokalisierung 1.0 hat aktuell 2.584 gemeinsame IDs in DE/EN/ES/FR.
+30 aktuelle Hub-/Größen-/Metadatentests und 184 RGB-Schleifenprüfungen bestehen.
+Zwölf Abschnitts-/Gehäusetests prüfen vollständige Hauptfenster-Grabs in drei
+Größen und beiden Themen; Hub, Gehäuse und Hilfe sind im echten Qt-Hauptfenster
+geprüft. Der Qt-Eigentümerfehler beim Umhängen vorhandener Comboboxen und schmale
+Inhaltsbreiten sind korrigiert. Vier vollständige UI-/Lokalisierungstests
+bestätigen 2.584 IDs. Neuere LCD-Absichten und Seitenverbergen verwerfen
+Encoderaufträge; eine begrenzte H.264-/MP4-Metadatenprüfung schützt Cache-Ergebnisse.
+Quellfreigabe mit 1.732 Tests/fünf Untertests, Sicherheit, Datenschutz und
+Modulbudgets bestanden; 464 Laufzeitquellen. Pakete/Sicherungen und Installation folgen.
+Letzte verifizierte Benutzer-/Systemversion bleibt .180.
+
+## Entwicklung .180 · 11.11.26
+
+Profil-Arbeitsbereich 1.1 ist unter `profiles_workspace/v1_1/` aktuell. Neue
+Kompositions-, Layout-, Flächen- und Zusammenfassungsmodule halten Bibliothek,
+Profilkarte und geöffnete Unterbereiche lesbar; der äußere Scrollbereich übernimmt
+Mehrhöhe. Reine Modelle, vorhandene ID-/CRUD-/Startverträge und Hardware-Unterbauten
+bleiben erhalten. Lokalisierung 1.0 besitzt 2.515 gemeinsame IDs. Vier Sprachen,
+beide Themen und drei Fenstergrößen bestehen die gezielte echte Qt-Geometrieprüfung.
+Vollständige Release-Prüfung, Paketbau/Sicherungen und lokale Installation folgen;
+kein GitHub-Auftrag und kein realer Fedora-Hardwarelauf.
+
+Vollständiger .180-Wächter: 1.644 Tests und fünf Untertests bestanden;
+443 Python-Laufzeitquellen und 2.515 gemeinsame Sprach-IDs. Alle sechs Pakete,
+beide .179/.180-Sicherungen und beide installierten Quell-/Medienstände geprüft.
+Benutzer- und Systemkopie .180 laufen bzw. sind installiert; keine neue Hardware-
+Kompatibilitätsbehauptung und kein GitHub-Upload.
+
+## Entwicklung .179 · 11.11.26
+
+Profil-Kühlungsbereitschaft 1.0 ergänzt höchstens zehn Sekunden asynchrones
+Sensorwarten. Laufzeitprotokoll 1.0 ergänzt Fehler-Hooks und GUI-Brücke;
+Lokalisierung 1.0 besitzt 2.507 IDs. ProcessRuntime 1.1 und sämtliche Schreib-
+Unterbauten bleiben unverändert. Kein veralteter Sensorwert wird akzeptiert.
+
+## Entwicklung .178 · 11.11.26
+
+Profil-Arbeitsbereich 1.0 und Programm-Hintergründe 1.0 sind neue reine
+Oberflächenmodule. Display-Effekte 1.11 erhält additive Matrix-Varianten;
+Lokalisierung 1.0 enthält 2.501 gemeinsame IDs. Bestehende native RGB-/LCD-/GPU-
+Unterbauten bleiben unverändert. Keine neue Hardware-Kompatibilitätsbehauptung.
 
 Öffentliche .176-Veröffentlichung am 11.11.26 beauftragt. STABLE-Wächter:
 1.587 Tests und fünf Untertests bestanden; alle sechs Artefakte, beide
@@ -91,14 +229,16 @@ behaupteter erfolgreicher Live-Test auf Fedora.
 
 | Komponente | Version / Stand |
 |---|---|
-| Open Hardware Control by Frelidon | 3.4.29.171 INTERN (vorbereitet; .170 installiert) · öffentlicher OHC-eigener Designkatalog, sichtbare unabhängige Feature-Reifegrade/-Versionen, portable echte Scroll-Sichtbarkeitsprüfung, vollständiger Levita-UI-Pause-/Fortsetzungsvertrag und zuverlässiges Ausblenden eigener LCD-Medien ohne TRCC-Systemkatalog; später Snapshot-Prozesscallback abgesichert; Fedora-Liveprüfung und optische Kontrolle bleiben offen |
+| Open Hardware Control by Frelidon | 3.4.29.181 INTERN in Entwicklung; zuletzt .180 Benutzer/System verifiziert · Hauptfenster-/UI-Sprachprüfung bestanden; Gesamtwächter, Paket-/Sicherungsnachweis und Installation noch ausstehend |
+| OHC Designs & Spiele | Modul 1.1 · 15 Originalpaare, je Paar LCD-Zoom 50–200 Prozent und vier Matrix-Zeichenvarianten · begrenzte asynchrone Cache-Vorbereitung mit Absichts-/Verbergeabbruch, struktureller H.264-/Geometrie-/Dauerprüfung nur nach Anwenden · Layer 2 und bestehende Besitzer erhalten; keine Frame-Synchronisation oder neue Spieltelemetrie |
+| OHC UI-Bereiche / Hilfe / Übersichtserkennung | Module 1.0 / 1.0 / 1.0 · gemeinsame Themenflächen/abbrechbare Scrollführung, vorhandene Hilfeinhalte, explizite lokale Inventur · Darstellung ist keine Telemetrie-/Schreibfreigabe |
 | OHC Feature Lifecycle | Modul 1.0 · reine zentrale Darstellungsmetadaten; aktiviert/deaktiviert keine Funktion und verändert weder Einstellungen noch Hardwarebesitz |
 | OHC Snapshot-Manager | Modul 1.0 · read-only Distribution-/Dateisystem-/Backend-/Snapper-/Btrfs-Erkennung · GameMode/Gamescope/Programmliste/KDE-Vollbild plus optionale Mehrkern-CPU-und-GPU-Hysterese · moderne gekoppelte Regler-/Zahlenkarten · manuelle Zeit-/Dauersperre · feste Snapper-Timer und begrenzte Btrfs-Discard-Werte ausschließlich über eigenen root-owned Polkit-Helfer · atomarer JSON-Metadatenexport · einzeln bestätigtes Löschen ab Snapshot 1 · kein Ein-Klick-Rollback und keine beliebigen Befehle/Pfade |
-| OHC GPU-Steuerung | Modul 1.0 · LACT 0.10.1+ als optionale lokale API · responsives Drei-Spalten-Cockpit mit vertikalem Scroll-Rückfall für kleine Fenster · vollständige umbrochene Lüftertexte · fünf direkt ziehbare und zahlengekoppelte Lüfterpunkte · lokaler GPU-Bildimport/-reset · reiner Lüftertest garantiert ohne Grafiklast · Leistungslimit standardmäßig höchstens LACT-Werkswert, darüber explizite Freischaltung · Kurztest mit automatischer LACT-Rückstellung · nur bestätigte Werte dauerhaft · CoolerControl-GPU-Lüfter muss freigegeben sein · OpenRGB-RGB getrennt |
+| OHC GPU-Steuerung | Modul 1.0 · LACT 0.10.1+ als optionale lokale API · gemeinsame responsive GPU-Seite mit Grafikkartenbild/Livekarten, OC und großer Lüfterkurve sowie Detailbereichen darunter; schmale Fenster stapeln die Bereiche · vollständige umbrochene Lüftertexte · fünf direkt ziehbare und zahlengekoppelte Lüfterpunkte · lokaler GPU-Bildimport/-reset · reiner Lüftertest garantiert ohne Grafiklast · Leistungslimit standardmäßig höchstens LACT-Werkswert, darüber explizite Freischaltung · Kurztest mit automatischer LACT-Rückstellung · nur bestätigte Werte dauerhaft · CoolerControl-GPU-Lüfter muss freigegeben sein · OpenRGB-RGB getrennt |
 | OHC Prozesslaufzeit / LCD Runtime | Module 1.1 / 1.1 · bestätigte Sendefortschritte, Befehls-/Framefristen, isolierte Spielerkennung und privates Moduljournal |
 | OHC Levita-Daemongesundheit | Modul 1.1 · reine Klassifizierung ausdrücklicher USB-Besitzerkonflikte und primärer Backendfehler · Ubuntu stoppt nur eigene Wiederholungen und hält gespeichertes Design unverändert · kein automatisches Beenden fremder Programme; Fedora-Rückstellung unverändert |
 | OHC Laufzeitprotokoll / Absturzwiederherstellung | Module 1.0 / 1.0 · sichtbarer 60-Minuten-Ringpuffer · 30.000-Zeilen-/4-MiB-Hartgrenze · vollständige aktuelle/vorherige Sitzung · privates rotiertes 2-MiB-Fehlerlog · privater 2-MiB-Absturzring mit exakt fünf Minuten Wiederherstellung nach unvollständigem Ende · Fatal-Signal-Python-Stacks aller Threads · Diagnoseauszug nur nach ausdrücklicher Sammlung |
-| OHC-Lokalisierung | Modul 1.0 · je ein vollständiges Laufzeitmodul für Deutsch, Englisch, Spanisch und Französisch · 2.154 gemeinsame Nachrichtenquellen je Sprache einschließlich LED-Pfad-Hinweis, USB-Besitzerstatus, wiederhergestellter Designs, Snapshot-Manager, GPU, Hardware-Checker, Gehäuse-Raumdaten, räumlicher RGB-Designs, LED-Assistent, TRCC-Installation, CPU-Automatik und Hilfe · vollständiger Offscreen-Sprachwächter |
+| OHC-Lokalisierung | Modul 1.0 · DE/EN/ES/FR atomar mit aktuell 2.584 gemeinsamen IDs · vollständiger UI-/Sprachwächter vor Freigabe verpflichtend |
 | OHC Hardware-Checker | Modul 1.0 · begrenzte read-only CPU-/SMT-/Virtualisierungs-/Board-/PCIe-GPU-/NVMe-/RAM-Erkennung · Polkit-eigene DMI-Abfrage ohne Passwortzugriff · optionaler ausdrücklicher vkmark-, glmark2- oder Vulkan-vkcube-Lasttest · keine BIOS-, Takt-, Spannungs-, Lüfter-, Firmware- oder SSD-Schreibänderung |
 | OHC Anwendungsabschluss | Modul 1.1 · X/Fensterschließen lässt OHC im Tray weiterlaufen oder minimiert ohne Tray in die Taskleiste · nur sichtbares manuelles Beenden im Tray-Kontextmenü führt die geordnete Hardware-Rückgabe und Qt-Beendigung aus · kontrollierte TRCC-Neustarts übertragen die exakt geprüfte Kindprozesszuordnung auf die neue PID · unabhängiger Lebenszeitwächter für exakte OHC-Kinder und protokollierte Fehler · keine fremden Prozesssignale |
 | OHC UI-Themes | Modul 1.0 · getrennte helle/dunkle/Studio-Paletten und semantische Stilwerte · reine getrennte Qt-Stilfragmente · registrierter Erweiterungspunkt für zukünftige Designs · Systemmodus übernimmt native Qt-Palette |
@@ -109,19 +249,19 @@ behaupteter erfolgreicher Live-Test auf Fedora.
 | OHC-Anwendungsaktivierung | Modul 1.0 · privater lokaler Socket mit fester `show`-Nachricht · bestehende Prozesssperre bleibt Hardware-Autorität · Desktop-Starttokens nur bei `--autostart` unterdrückt |
 | OHC Reaktionsfähiger Start | Modul 1.0 · Geräteinitialisierung nach erstem Qt-Zyklus · zusammengefasste CoolerControl-Prüfung außerhalb des GUI-Prozesses · unbekannter Besitzerstatus fail-closed |
 | OHC Display-Effekte | Modul 1.11 · sichtbare Layout-Videos und bestätigte Vorschaukopie · neu gerenderte Lichtbänder · prozeduraler Rauch · responsive grafische Ebene-1- und Sensorlayout-Kacheln · fünf abstrakte Fremddesigns × vier Farbvarianten · 15 menschenfreie Natur-/Weltraumclips · acht aus 3200×1440 übersampelte OHC Light Bands · direkte Thermalright-Firmware-Rückgabe · kein eigener paralleler TRCC-/USB-Schreibpfad |
-| OHC Responsive Galerien / LCD-Medienmanager | Module 1.0 / 1.0 · tatsächliche Viewportbreite bis zwölf Spalten · mehrere lokale Ordner und Einzelbilder/-videos · eigene Anzeigenamen und nicht-destruktive Ausblendungen · lesbare TRCC-Kategorienamen · keine Veränderung oder Auslieferung externer Quelldateien |
+| OHC Responsive Galerien / LCD-Medienmanager | Module 1.0 / 1.1 · tatsächliche Viewportbreite; eingebetteter Quellen-/Medienentwurf für Levita und Kraken mit Save/Cancel und bestehender Inventur · Quellen, Anzeigenamen und nicht-destruktive Ausblendungen · Originale unverändert |
 | OHC Bereichs-Unterreiter | Modul 1.0 · wiederverwendbare browserähnliche Unterreiter · stabile Seiten-IDs · mehrere Leisten und Seitenleiste bleiben synchron · keine Hardwareabhängigkeit |
 | OHC OpenLinkHub-Update | Modul 1.0 · offizieller fester GitHub-Release-Endpunkt · vorhandene DNF-/APT-Quellen oder streng erkannter Benutzerdienst · veröffentlichte SHA-256 · Backup/Rollback · ausdrückliche Bestätigung |
 | OHC Wallpaper Engine for KDE | Modul 1.3 · CaptSilver v1.4 kompatibel · Pause/Fortsetzen/Weiter/Ton über Plasmas registriertes `/WallpaperEngine`-D-Bus-Objekt · DisplayMode 0/1/2 pro Bildschirm · lokalisierter Assistent mit bestätigter KDE-Hilfspaketprüfung · offizielle SHA256-verifizierte Fedora-RPM-Installation erst nach zwei Bestätigungen über Polkit/DNF · zentral zwischengespeicherter Workshop-Katalog und Vorschaubilder · Steam-Originale unverändert |
 | OHC Profile Bundle | Modul 1.0 · vollständiger privater ZIP-Export/Import mit typisierten Einstellungen, Profilen, Gehäuse/RGB/PWM/Lüftermodellen/LED-Verläufen und Medien · Datei-Hintergrundprozess · Pfad-/SHA-Prüfung und Rückfallkopie · Bestätigung beim nächsten Start und erneute Hardwarefreigabe |
-| OHC RGB-Effekt-Engine | Modul 1.15 · 13 eigene Algorithmen und 34 Vorlagen einschließlich sechs räumlicher Designs und vier wiederhergestellter OHC Originals · kompakte responsive Galerie mit bis zu sechs Karten · synchronisierte Navigation/Kategorieauswahl · einstellbarer räumlicher Ablauf mit Tempo, acht Laufrichtungen und echter LED-/Lüfterreihenfolge · laufende Effekte ausschließlich mit vollständigem Geräteframe · Sichttests mit Rückstellung · native GPU-Animationen als Standard · expliziter profilfähiger ARGB-Steuerweg und begrenzter manueller LED-Zonen-Editor |
+| OHC RGB-Effekt-Engine | Modul 1.15 · 14 eigene Algorithmen und 45 Vorlagen, zehn nur angehängt · gemeinsame Galerie-/Worker-/physische/GPU-Berechnung, native Schreibpfade und bestätigte LED-/ARGB-Zuordnungen erhalten · keine neue Hardwarefreigabe |
 | OHC Hardware-Unterbauten | Modul 1.0 · persistente Automatik-/Direktauswahl · TRCC Linux für Levita · OHC Linux-hwmon für Mainboard-PWM · ausdrückliche Auswahl fällt bei Nichtverfügbarkeit nicht still zurück · kommende Adapter deaktiviert |
 | OHC NCT6687-Treiber-/MOK-Assistent | Modul 1.1 · getrennte feste Abhängigkeitsbefehle für Ubuntu, Fedora und Arch Linux anhand `/etc/os-release` · Ubuntu-Aktualisierung/Installation getrennt · vorhandener fester Git-Checkout nur per `pull --ff-only` · gemeinsame Upstream-/DKMS-Schritte · MSI-X870-Optionen nur bei passender DMI-Erkennung · optionale per-user Polkit-Dauerfreigabe als fünfter Schritt · asynchroner read-only Secure-Boot-/MOK-/Modulstatus · kein Passwortzugriff, automatischer Neustart oder Secure-Boot-Umgehung |
 | OHC Temperaturverlauf | Modul 1.2 · kompakter CPU/GPU/Kühlmittel-Verlauf plus eigene Kühlungs-Unterseite · gruppierte read-only Linux-hwmon-Sensoren · höchstens 24 Stunden/28.800 Messpunkte im RAM · lokales Datum/Uhrzeit · skalierbare Splitter · ausdrücklicher CSV-/JSON-Export frei gewählter Zeiträume/Sensoren · keine automatische Persistenz und kein Steuerungsbesitz |
 | OHC Kühlungssicherheit | Modul 1.0 · modellbezogene Untergrenzen an Regler-, Profil-, Kurven- und finaler Schreibgrenze · Levita vorsichtig 50 % Pumpe/25 % Radiator, da Thermalright nur Maximaldrehzahlen veröffentlicht · vorhandene NZXT-Bereiche bleiben erhalten |
 | OHC Kühlungszustand | Modul 1.0 · reine Startprofilrichtlinie trennt bekannte alte NZXT-Assistentenwünsche nur auf bestätigtem Ubuntu/Levita ohne bereites NZXT vom expliziten PC-Startprofil · Pendingwert und nutzereigene Kühlung bleiben erhalten · keine PWM-Schreibfreigabe; Fedora-/NZXT-Guard unverändert |
 | OHC Mainboard-Fan-Modul | 3.4.29.80 · Linux hwmon/NCT6687 · freundliche eindeutige Headernamen ohne doppelte PWM-Angabe · kalibrierungspflichtige PWM-Kanäle · schrittweiser Zuordnungsassistent mit direktem nächsten Lüfter · vollständiges Zurücksetzen aller Gehäuselüfter-Zuordnungen bei erhaltenen Kurven · persistente und sichtbar blau markierte Automatik/Schnellprofile · Backend-Auswahl und asynchroner fail-closed Besitzerstatus · 100-%-Leistungs-Override · rückstellender 0-%-/10-s-Stopptest je Gehäuselüfter · sichere PWM/DC-Umschaltung nur über vorhandenes `pwmN_mode`, sonst BIOS-Erklärung · prozessgebundene Polkit-Helfersitzung · automatische Kurvenänderungen als gebündelte Zustands-/60-s-Heartbeat-Zeile · Fallback/Firmware-Rückgabe |
-| OHC Thermalright-Levita-Modul | Anwendung 3.4.29.80 · nicht vorhandene Kühlmittelquelle wird weder angezeigt noch angeboten · lesbarer separater Sicherheitshinweis · Datenoberfläche Modul 1.7 · Daemongesundheit Modul 1.1 · automatische und manuelle streng validierte Wiederherstellung · sichtbarkeitsgebundene Galerien/Vorschauen · LCD-Medienmanager Modul 1.0 · Leistung/Spielerkennung Modul 1.1 mit Zehn-Sekunden-Abfrage · 15 LCD-FPS Standard, 60 nur experimentell · Abschaltwächter Modul 1.0 mit Stopp eines OHC-eigenen Daemons beim Ende · Display-Effekte Modul 1.11 · Display USB `87ad:70db` · ein TRCC-Daemon als einziger USB-Besitzer |
+| OHC Thermalright-Levita-Modul | Anwendung 3.4.29.80 · nicht vorhandene Kühlmittelquelle wird weder angezeigt noch angeboten · lesbarer separater Sicherheitshinweis · Datenoberfläche Modul 1.7 · Daemongesundheit Modul 1.1 · automatische und manuelle streng validierte Wiederherstellung · sichtbarkeitsgebundene Galerien/Vorschauen · LCD-Medienmanager Modul 1.1 · Leistung/Spielerkennung Modul 1.1 mit Zehn-Sekunden-Abfrage · 15 LCD-FPS Standard, 60 nur experimentell · Abschaltwächter Modul 1.0 mit Stopp eines OHC-eigenen Daemons beim Ende · Display-Effekte Modul 1.11 · Display USB `87ad:70db` · ein TRCC-Daemon als einziger USB-Besitzer |
 | Qt Multimedia | PySide6 QtMultimedia · lokaler H.264-Lesepfad ausschließlich für sichtbare Display-Effektvorschau |
 | OpenRGB | Ubuntu: 1.1, lokal gegen System-Qt 6.11.2 gebaut, mit dokumentiertem MSI-761-Patch im root-owned privaten Backend-Verzeichnis `/usr/local/lib/open-hardware-control-backends/openrgb-1.1` · unsichtbarer verwalteter Prozess · Native Engine 0.2 oder paralleler SDK-Fallback · Ubuntu SDK 6, Fedora-Standard SDK 5 · kein mitgelieferter universeller Binärtreiber |
 | OHC OpenRGB-SDK-Helfer | Protokoll 4–6 · Ubuntu 6, Fedora 5 · vollständige Gerätepakete für laufende Effekte; einmaliger Direct-Kompatibilitäts-Fallback bleibt · validiertes `RESIZEZONE` · Controller-/Zonensynchronisation · Modus-/Farbrücklesung · Loopback-only · begrenzte Geräte-/LED-/Paketwerte · Socket-Antwort ist keine optische Bestätigung |

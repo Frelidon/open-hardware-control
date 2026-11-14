@@ -11,8 +11,9 @@ from PySide6.QtCore import QStandardPaths, Qt, QTimer
 from PySide6.QtGui import QPixmap, QTransform
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QFileDialog, QFormLayout, QGroupBox, QHBoxLayout,
-    QLabel, QLineEdit, QMessageBox, QPushButton, QVBoxLayout, QWidget,
+    QLabel, QLineEdit, QMessageBox, QPushButton, QVBoxLayout, QWidget, QGridLayout, QSizePolicy,
 )
+from modules.ui_performance.v1_1.compact_panels import ResponsiveColumns
 
 from modules.gpu_profiles.v1_0 import (
     GPU_MODELS, append_or_replace_profile, config_digest, detect_model,
@@ -38,15 +39,19 @@ class GpuProfileUiMixin:
 
         card = QGroupBox(self.tr("Grafikkartenprofil"))
         card.setObjectName("gpuProfileCard")
-        card_row = QHBoxLayout(card)
+        card_row = QVBoxLayout(card)
+        columns = ResponsiveColumns(760)
         self.gpu_profile_art = QLabel()
         self.gpu_profile_art.setObjectName("gpuProfileArtwork")
         self.gpu_profile_art.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.gpu_profile_art.setMinimumSize(460, 245)
-        card_row.addWidget(self.gpu_profile_art, 3)
+        self.gpu_profile_art.setMinimumSize(0, 150); self.gpu_profile_art.setMaximumHeight(180)
+        self.gpu_profile_art.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        columns.addWidget(self.gpu_profile_art, 2)
         form_host = QWidget()
         form = QFormLayout(form_host)
         self.gpu_model_combo = QComboBox()
+        self.gpu_model_combo.setMinimumContentsLength(22)
+        self.gpu_model_combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
         self.gpu_model_combo.addItem(self.tr("Automatisch nach Gerätename"), "")
         for row in GPU_MODELS:
             self.gpu_model_combo.addItem(
@@ -70,22 +75,23 @@ class GpuProfileUiMixin:
         form.addRow(self.tr("Profilname"), self.gpu_profile_name)
         form.addRow(self.gpu_profile_autostart)
         form.addRow(self.gpu_profile_zero_rpm)
-        card_row.addWidget(form_host, 2)
+        columns.addWidget(form_host, 3); card_row.addWidget(columns)
         outer.addWidget(card)
 
         artwork = QGroupBox(self.tr("Eigenes Grafikkartenbild"))
         artwork.setObjectName("gpuArtworkCard")
-        artwork_row = QHBoxLayout(artwork)
+        artwork_row = QGridLayout(artwork)
         import_button = QPushButton(self.tr("Transparentes PNG/WebP importieren"))
         import_button.clicked.connect(self.import_gpu_profile_artwork)
         remove_art = QPushButton(self.tr("Eigenes Bild entfernen"))
         remove_art.clicked.connect(self.remove_gpu_profile_artwork)
-        artwork_row.addWidget(import_button)
-        artwork_row.addWidget(remove_art)
-        artwork_row.addWidget(QLabel(self.tr("Original bleibt erhalten; OHC verwaltet eine Kopie.")), 1)
+        artwork_row.addWidget(import_button, 0, 0)
+        artwork_row.addWidget(remove_art, 0, 1)
+        art_note = QLabel(self.tr("Original bleibt erhalten; OHC verwaltet eine Kopie.")); art_note.setWordWrap(True)
+        artwork_row.addWidget(art_note, 1, 0, 1, 2)
         outer.addWidget(artwork)
 
-        actions = QHBoxLayout()
+        actions = QGridLayout()
         save = QPushButton(self.tr("GPU-Werte als Profil speichern"))
         save.setObjectName("gpuPrimaryAction")
         save.clicked.connect(self.save_current_gpu_profile)
@@ -97,9 +103,8 @@ class GpuProfileUiMixin:
         delete = QPushButton(self.tr("GPU-Profil löschen"))
         delete.setObjectName("gpuDangerAction")
         delete.clicked.connect(self.delete_selected_gpu_profile)
-        for button in (save, load, apply_button, delete):
-            actions.addWidget(button)
-        actions.addStretch()
+        for index, button in enumerate((save, load, apply_button, delete)):
+            actions.addWidget(button, index // 2, index % 2)
         outer.addLayout(actions)
         self.gpu_profile_status = QLabel(self.tr(
             "Taktung, Leistung, Lüfterkurve, Zero-RPM und Lasttest werden gespeichert."

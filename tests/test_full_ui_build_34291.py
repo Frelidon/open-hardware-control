@@ -55,6 +55,7 @@ def dispose_window(host: application.KrakenControl) -> None:
     studio = host.thermalright_display_studio
     # The test has exercised startup intent but must not let its delayed retry
     # outlive the window.  Quiesce UI-only owners without firmware restoration.
+    host.background_widget.media_background.shutdown()
     studio.shutdown_started = True
     studio.startup_apply_active = False
     studio.thumbnail_shutting_down = True
@@ -292,11 +293,14 @@ assert tuple(application.UI_TRANSLATIONS[language]["0 % / 2 min testen"] for lan
     "Test 0% / 2 min", "Probar 0 % / 2 min", "Tester 0 % / 2 min",
 )
 
-assert window.tabs.count() == 19
+assert window.tabs.count() == 21
 assert window.tabs.tabText(window.design_automation_page_index) == "Automationszentrale"
 assert window.navigation_items["automations"].data(0, Qt.ItemDataRole.UserRole) == window.design_automation_page_index
 assert window.tabs.tabText(window.programs_page_index) == "Programme"
 assert window.navigation_items["programs"].data(0, Qt.ItemDataRole.UserRole) == window.programs_page_index
+hub_parent = window.navigation_items["design_hub"]
+assert [window.navigation_item_key(hub_parent.child(i)) for i in range(hub_parent.childCount())] == ["paired_designs", "games", "automations"]
+assert window.navigation_items["automations"].parent() is hub_parent
 assert window.tabs.tabText(13) == "Gehäuse"
 assert window.tabs.tabText(window.gpu_control_page_index) == "Grafikkarte"
 assert window.navigation_items["case"].data(0, Qt.ItemDataRole.UserRole) == 13
@@ -311,7 +315,7 @@ assert window.navigation_items["display_effects"].data(0, Qt.ItemDataRole.UserRo
 assert window.help_page_index == 12
 navigation_root = window.navigation.invisibleRootItem()
 assert [window.navigation_item_key(navigation_root.child(index)) for index in range(navigation_root.childCount())] == [
-    "overview", *(key for key in application.NAVIGATION_DEFAULT_ORDER if key != "display_effects")
+    "overview", *(key for key in application.NAVIGATION_DEFAULT_ORDER if key not in {"display_effects", "automations"})
 ]
 assert window.nav_display_effects.parent() is window.nav_lcd
 assert window.nav_lcd_studio.parent() is window.nav_lcd
@@ -408,7 +412,7 @@ for _refresh in range(2):
     )
 assert application._GIF_SAFETY_TEXT in labels
 assert application._ABOUT_SUMMARY_TEXT in labels
-assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.176 STABLE")
+assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.183 INTERN")
 assert window.temp_card.isHidden()
 assert not window.cpu_temp_card.isHidden()
 assert window.mainboard_sensor_source.findData("liquid") == -1
@@ -626,11 +630,16 @@ if render_dir:
     assert modules_box.grab().save(str(output / "settings-modules-panel.png"))
     window.tabs.setCurrentIndex(5)
     qt_app.processEvents()
+    window.profile_workspace.transfers.button.setChecked(True)
+    qt_app.processEvents()
     assert window.profile_bundle_controller.buttons[0].isVisible()
     assert window.grab().save(str(output / "profiles-complete-package.png"))
 # .172 hardware subnavigation and language refresh retain all existing views.
+# Geometry must be checked on a mapped window; hidden scroll areas defer layout.
 window.settings.setValue("setup/completed", True)
 window.settings.setValue("dependencies/desktop_design_offer_330", True)
+window.show()
+qt_app.processEvents()
 for language in ("de", "en", "es", "fr"):
     window.apply_ui_language(language, persist=False, log_change=False)
     parent = window.navigation_items["hardware_checker"]
@@ -644,6 +653,17 @@ for language in ("de", "en", "es", "fr"):
         assert window.hardware_checker_page.section_tabs.currentIndex() == section
         assert window.page_title_label.text() == window.tr_static(caption)
         assert window.sidebar_artwork.category == key
+        if key == "hardware_fix":
+            previous_size = window.size()
+            for width, height in ((1000, 900), (1440, 1000), (2551, 1337)):
+                window.resize(width, height)
+                for _ in range(3):
+                    qt_app.processEvents()
+                fix = window.hardware_checker_page.hardware_fix_panel
+                assert fix.horizontalScrollBar().maximum() == 0
+                assert window.hardware_checker_page.horizontalScrollBar().maximum() == 0
+                assert fix.activate_button.isVisible() and fix.uninstall_button.isVisible()
+            window.resize(previous_size)
     assert len(window.hardware_checker_page.supported_devices_page.cards) == 41
 # Complete real press/move/release gestures from every expandable section.
 # Regresses rows moving under a held pointer and opening a second page.
@@ -654,9 +674,9 @@ window.show_all_navigation_modules()
 window.show()
 for language in ("de", "en", "es", "fr"):
     window.apply_ui_language(language, persist=False, log_change=False)
-    for origin in ("lcd_studio", "display_effects", "temperature_recording", "hardware_fix", "supported_devices"):
+    for origin in ("lcd_studio", "display_effects", "temperature_recording", "hardware_fix", "supported_devices", "paired_designs", "games", "automations"):
         for destination in ("rgb_studio", "settings", "profiles", "about", "lcd_studio", "display_effects",
-                            "cooling_controls", "temperature_recording", "hardware_checker", "hardware_fix", "supported_devices"):
+                            "cooling_controls", "temperature_recording", "hardware_checker", "hardware_fix", "supported_devices", "paired_designs", "games", "automations"):
             window.navigation.setCurrentItem(window.navigation_items[origin])
             item = window.navigation_items[destination]
             qt_app.processEvents()
@@ -678,6 +698,8 @@ for language in ("de", "en", "es", "fr"):
                 assert window.navigation.currentItem() is item, (language, origin, destination)
 
 window.reset_navigation_customization()
+assert window.navigation_items["automations"].parent() is window.navigation_items["design_hub"]
+assert window.navigation_items["design_hub"].childCount() == 3
 assert all(window.navigation_items[key].parent() is window.navigation_items["hardware_checker"]
            for key in ("hardware_fix", "supported_devices"))
 window.tabs.setCurrentIndex(0)
@@ -709,6 +731,79 @@ for language in ("de", "en", "es", "fr"):
     wizard.reject()
 window.mainboard_channels = {}
 window.mainboard_fan_profiles.pop(channel.stable_id, None)
+
+# .179 temporarily missing sensors wait without a modal dialog or direct write.
+with patch.object(window, 'defer_cooling_action_for_gif', return_value=False), patch.object(window, 'read_amd_cpu_temperature', return_value=(None, 'synthetic unavailable')), patch.object(window, 'show_error', side_effect=AssertionError('sensor wait must be nonmodal')):
+    window.kraken_write_busy = False
+    window.transmit_profile_cooling({'fan_mode':'curve'}, 'synthetic profile')
+    assert window.profile_cooling_wait.pending is not None
+with patch.object(window, 'read_amd_cpu_temperature', return_value=(52., 'synthetic CPU')), patch.object(window, 'cooling_device_ready', return_value=True), patch.object(window, 'transmit_profile_cooling') as retry_existing:
+    window.profile_cooling_wait.check()
+    assert retry_existing.call_count == 1
+    assert window.profile_cooling_wait.pending is None
+
+# .178 profile cards keep legacy IDs/CRUD and never apply on selection/filter.
+workspace = window.profile_workspace
+original_users = list(window.user_profiles)
+original_current = window.current_profile_id
+sample = {'id':'ui-profile-check','name':'Private test name','description':'draft data','category':'RGB','payload':{'rgb':{'studio_effect':'code_rain','studio_brightness':75}},'builtin':False}
+window.user_profiles.append(sample)
+workspace.refresh()
+with patch.object(window, 'apply_profile_payload', side_effect=AssertionError('selection must not apply')), patch.object(window, 'save_profiles', side_effect=AssertionError('browsing must not save')):
+    workspace.select(sample['id'])
+    assert window.selected_profile()['id'] == sample['id']
+    assert workspace.edit.isEnabled() and workspace.delete.isEnabled()
+    workspace.search.setText('Private')
+    assert not workspace.cards[sample['id']].isHidden()
+    workspace.search.setText('no matching name')
+    assert not workspace.empty.isHidden()
+    assert window.selected_profile()['id'] == sample['id']
+    workspace.search.clear()
+    window.profile_name_input.setText('Unsaved name')
+    window.profile_description_input.setText('Unsaved description')
+    for language in ('de','en','es','fr'):
+        window.apply_ui_language(language,persist=False,log_change=False)
+        assert window.selected_profile()['id'] == sample['id']
+        assert window.profile_name_input.text() == 'Unsaved name'
+        assert window.profile_description_input.text() == 'Unsaved description'
+        assert workspace.filter.itemData(0) == 'all'
+        assert workspace.filter.itemText(0) == window.tr_static('Alle Profile')
+        assert window.background_theme_combo.findData('Sternenfeld') >= 0
+        assert window.background_theme_combo.itemText(window.background_theme_combo.findData('Sternenfeld')) == window.tr_static('Sternenfeld')
+    workspace.select('builtin-quiet')
+    assert not workspace.edit.isEnabled() and not workspace.delete.isEnabled()
+    assert workspace.duplicate.isEnabled() and workspace.apply.isEnabled()
+    workspace.new_profile()
+    assert window.selected_profile() is None
+    assert window.profile_name_input.text() == ''
+    assert workspace.editor.button.isChecked()
+    assert not workspace.update.isEnabled()
+workspace.select(sample['id'])
+with patch.object(window, 'save_profiles'):
+    window.duplicate_selected_profile()
+assert window.selected_profile()['id'] != sample['id']
+assert window.selected_profile()['payload'] == sample['payload']
+assert window.selected_profile()['builtin'] is False
+window.user_profiles = original_users
+window.current_profile_id = original_current
+workspace.search.clear();workspace.filter.setCurrentIndex(0);workspace.refresh()
+workspace.editor.button.setChecked(False)
+window.apply_ui_language('de',persist=False,log_change=False)
+assert window.profiles_table.parentWidget() is workspace and window.profiles_table.isHidden()
+# Applied-profile background has independent state; visiting other pages restores
+# the global choice and never changes persisted background preferences.
+from modules.app_backgrounds.v1_0.profile import mark_applied, sync as sync_profile_background
+configured_theme = window.background_theme
+persisted_background = window.settings.value('ui/background_theme')
+window.tabs.setCurrentIndex(5)
+mark_applied(window, {'rgb':{'studio_effect':'code_rain','studio_primary':'00ff66'}})
+assert window.background_widget.media_background.rgb.effect_id == 'code_rain'
+workspace.select('builtin-quiet')
+assert window.background_widget.media_background.rgb.effect_id == 'code_rain'
+window.tabs.setCurrentIndex(4);sync_profile_background(window)
+assert window.background_widget.media_background.rgb is None
+assert window.background_theme == configured_theme
+assert window.settings.value('ui/background_theme') == persisted_background
 
 dispose_window(window)
 

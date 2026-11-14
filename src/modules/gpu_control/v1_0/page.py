@@ -15,7 +15,7 @@ from PySide6.QtGui import QDesktopServices, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDoubleSpinBox, QFormLayout, QFrame, QGridLayout, QGroupBox, QHBoxLayout,
     QLabel, QMenu, QMessageBox, QPushButton, QScrollArea, QSlider, QSpinBox, QTabWidget,
-    QVBoxLayout, QWidget,
+    QVBoxLayout, QWidget, QLayout,
 )
 
 from .client import LactClient, LactError, clock_controls, config_equivalent, healthy_stats, proposed_config
@@ -30,10 +30,12 @@ from .reset_ui import GpuResetUiMixin
 from .read_ui import GpuReadUiMixin
 from .cockpit_ui import GpuCockpitUiMixin
 from .read_worker import read_device
+from .read_status import set_state
 from .snapshot import forget_snapshot, read_snapshot, write_snapshot
 from .stress import benchmark_command, benchmark_gpu_environment
 from .stress_ui import GpuStressUiMixin
 from .tables import GpuTableMixin
+from .workspace_layout import WorkspaceSections
 
 
 def fan_preview_change_requested(changes: dict[str, Any]) -> bool:
@@ -91,21 +93,26 @@ class GpuControlPage(GpuCockpitUiMixin, GpuReadUiMixin, GpuDashboardUiMixin, Gpu
         self.setFrameShape(self.Shape.NoFrame)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
         content = QWidget()
+        content.setMaximumWidth(1800)
         layout = QVBoxLayout(content)
         layout.setContentsMargins(12, 10, 14, 12)
         layout.setSpacing(8)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
         self._build_gpu_dashboard(layout)
         self.status = QLabel("LACT wird erst beim Öffnen dieser Seite abgefragt.")
         self.status.setObjectName("muted")
         self.status.setWordWrap(True)
         layout.addWidget(self.status)
-        toolbar = QWidget()
+        toolbar = self.gpu_toolbar = QWidget()
         toolbar.setObjectName("gpuToolbar")
         bar = QGridLayout(toolbar)
         bar.setContentsMargins(12, 10, 12, 10)
         bar.setHorizontalSpacing(10)
         bar.setVerticalSpacing(8)
+        self.gpu_toolbar_layout = bar
         self.devices = QComboBox()
         self.devices.currentIndexChanged.connect(self._select_device)
         self.refresh_button = QPushButton("GPU und LACT aktualisieren")
@@ -126,7 +133,7 @@ class GpuControlPage(GpuCockpitUiMixin, GpuReadUiMixin, GpuDashboardUiMixin, Gpu
         bar.setColumnStretch(1, 1)
         layout.addWidget(toolbar)
 
-        self.sections = QTabWidget()
+        self.sections = WorkspaceSections(self)
         self.sections.setObjectName("gpuSections")
         layout.addWidget(self.sections)
         self._build_tuning()
@@ -153,6 +160,7 @@ class GpuControlPage(GpuCockpitUiMixin, GpuReadUiMixin, GpuDashboardUiMixin, Gpu
         if self.preview_active or getattr(self, "stress_process", None) is not None:
             return
         self.refresh_rgb_lighting_inventory()
+        set_state(self, "loading")
         if self._request_gpu_read("inventory"):
             self.baseline = None
             self.overdrive_enabled = None
@@ -161,10 +169,7 @@ class GpuControlPage(GpuCockpitUiMixin, GpuReadUiMixin, GpuDashboardUiMixin, Gpu
         try:
             rows = self.client.devices()
         except LactError as exc:
-            self.baseline = None
-            self.overdrive_enabled = None
-            self.status.setText(self.tr("LACT-Dienst nicht erreichbar: {reason}").format(reason=exc))
-            self._sync_buttons()
+            self._gpu_read_failed("inventory", str(exc))
             return
         self._populate_gpu_devices(rows)
 
@@ -194,16 +199,18 @@ class GpuControlPage(GpuCockpitUiMixin, GpuReadUiMixin, GpuDashboardUiMixin, Gpu
         self._sync_tuning_sliders()
         self.free_fan_button.setEnabled(False)
         if not gpu_id:
+            set_state(self, "empty")
             self.status.setText(self.tr("LACT meldet keine Grafikkarte."))
             self._sync_buttons()
             return
         if self._request_gpu_read("device", gpu_id):
             self._sync_buttons()
             return
+        set_state(self, "loading")
         try:
             self._apply_gpu_read(read_device(self.client, gpu_id, ownership_reader=coolercontrol_gpu_claim))
         except LactError as exc:
-            self.status.setText(self.tr("GPU-Daten konnten nicht gelesen werden: {reason}").format(reason=exc))
+            self._gpu_read_failed("device", str(exc))
             self._refresh_gpu_dashboard()
         self._sync_buttons()
 

@@ -17,14 +17,10 @@ class GpuCockpitUiMixin:
         self.tuning_form = form
         self.tuning_gpu_name = QLabel(self.tr("Grafikkarte"))
         self.tuning_gpu_name.setObjectName("gpuDeviceHeading")
-        form.addRow(self.tuning_gpu_name)
         self.tuning_gpu_art = QLabel()
         self.tuning_gpu_art.setObjectName("gpuCockpitArtwork")
         self.tuning_gpu_art.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.tuning_gpu_art.setMinimumHeight(80)
-        self.tuning_gpu_art.setMaximumHeight(105)
-        form.addRow(self.tuning_gpu_art)
-        artwork_actions = QWidget()
+        artwork_actions = self.tuning_artwork_actions = QWidget()
         artwork_row = QHBoxLayout(artwork_actions)
         artwork_row.setContentsMargins(0, 0, 0, 0)
         import_artwork = QPushButton(self.tr("Eigenes GPU-Bild importieren"))
@@ -33,7 +29,6 @@ class GpuCockpitUiMixin:
         reset_artwork.clicked.connect(self.remove_gpu_profile_artwork)
         artwork_row.addWidget(import_artwork)
         artwork_row.addWidget(reset_artwork)
-        form.addRow(artwork_actions)
         self.power = QDoubleSpinBox()
         self.power.setDecimals(1)
         self.power.setSuffix(" W")
@@ -62,10 +57,11 @@ class GpuCockpitUiMixin:
         )
         self.tuning_note = QLabel(self.tuning_base_note)
         self.tuning_note.setWordWrap(True)
-        self.tuning_note.setMaximumHeight(34)
         self.tuning_note.setToolTip(self.tuning_base_note)
+        form.addRow(self.tuning_note)
         actions = QWidget()
         row = QGridLayout(actions)
+        self.tuning_actions_grid = row
         row.setContentsMargins(0, 0, 0, 0)
         self.test_button = QPushButton("Änderung kurz testen")
         self.test_button.setToolTip(self.tuning_base_note)
@@ -105,16 +101,16 @@ class GpuCockpitUiMixin:
 
     def _tuning_row(self, title: str, spin, *, factor: int = 1) -> tuple[QFrame, QSlider]:
         row = QFrame(objectName="gpuTuningRow")
-        layout = QHBoxLayout(row)
-        layout.setContentsMargins(10, 5, 10, 5)
-        layout.setSpacing(10)
+        layout = QGridLayout(row)
+        layout.setContentsMargins(10, 8, 10, 8)
+        layout.setSpacing(8)
         label = QLabel(self.tr(title), objectName="gpuTuningLabel")
-        label.setMinimumWidth(130)
+        label.setWordWrap(True)
         slider = QSlider(Qt.Orientation.Horizontal)
         slider.setObjectName("gpuTuningSlider")
-        slider.setMinimumWidth(105)
+        slider.setMinimumWidth(80)
         spin.setObjectName("gpuTuningSpin")
-        spin.setMinimumWidth(105)
+        spin.setMinimumWidth(95)
         slider.setRange(round(spin.minimum() * factor), round(spin.maximum() * factor))
         slider.setValue(round(spin.value() * factor))
         slider.valueChanged.connect(
@@ -123,9 +119,10 @@ class GpuCockpitUiMixin:
             )
         )
         spin.valueChanged.connect(lambda value, control=slider, scale=factor: control.setValue(round(value * scale)))
-        layout.addWidget(label)
-        layout.addWidget(slider, 1)
-        layout.addWidget(spin)
+        layout.addWidget(label, 0, 0, 1, 2)
+        layout.addWidget(slider, 1, 0)
+        layout.addWidget(spin, 1, 1)
+        layout.setColumnStretch(0, 1)
         return row, slider
 
     def _sync_tuning_sliders(self) -> None:
@@ -166,62 +163,37 @@ class GpuCockpitUiMixin:
         ))
 
     def _assemble_control_cockpit(self) -> None:
-        """Present the three primary GPU jobs together, like a hardware cockpit."""
-        pages = (self.tuning_page, self.fan_page, self.stress_page)
-        self.gpu_hero_card.show()
-        self.gpu_metrics_panel.setParent(self.tuning_page)
-        self.tuning_form.insertRow(1, self.gpu_metrics_panel)
-        for page in pages:
-            index = self.sections.indexOf(page)
-            if index >= 0:
-                self.sections.removeTab(index)
-
-        cockpit = QWidget()
-        cockpit.setObjectName("gpuCockpit")
-        self.gpu_cockpit_layout = QGridLayout(cockpit)
-        self.gpu_cockpit_layout.setContentsMargins(0, 12, 0, 0)
-        self.gpu_cockpit_layout.setHorizontalSpacing(12)
-        self.gpu_cockpit_layout.setVerticalSpacing(12)
-
-        self.gpu_cockpit_columns = []
-        for title, page in (("Übersicht && Taktung", self.tuning_page),
-                            (self.tr("Lüfter"), self.fan_page),
-                            ("Lasttest && Darstellung", self.stress_page)):
-            column = QGroupBox(title)
-            column.setObjectName("gpuWorkspaceColumn")
-            column.setMinimumWidth(250)
-            column_layout = QVBoxLayout(column)
-            column_layout.setContentsMargins(10, 16, 10, 10)
-            column_layout.addWidget(page)
-            page.show()
-            self.gpu_cockpit_columns.append(column)
-        self.sections.insertTab(0, cockpit, "Steuerung")
-        self.sections.setCurrentWidget(cockpit)
-        self.gpu_cockpit_page = cockpit
+        """Compose live summary and editors on one page with direct section routes."""
+        from .workspace_ui import build_workspace
+        build_workspace(self)
         QTimer.singleShot(0, self, self._layout_gpu_cockpit)
 
+    def refresh_workspace_language(self):
+        """Restore dynamic presentation after the shared text translation pass."""
+        self.fan_visual.refresh_language()
+        self.fan_edit_hint.setText(self._fan_curve_locked_text())
+        self._update_fan_workflow()
+        self._refresh_gpu_dashboard()
+        if self.devices.currentText():
+            self.tuning_gpu_name.setText(self.devices.currentText())
+
     def _layout_gpu_cockpit(self) -> None:
-        layout = getattr(self, "gpu_cockpit_layout", None)
-        columns = getattr(self, "gpu_cockpit_columns", ())
-        if layout is None or not columns:
-            return
-        while layout.count():
-            layout.takeAt(0)
-        width = self.viewport().width()
-        if width >= 900:
-            positions = ((0, 0, 1, 1), (0, 1, 1, 1), (0, 2, 1, 1))
-        elif width >= 620:
-            positions = ((0, 0, 1, 1), (0, 1, 1, 1), (1, 0, 1, 2))
-        else:
-            positions = ((0, 0, 1, 1), (1, 0, 1, 1), (2, 0, 1, 1))
-        for column, position in zip(columns, positions):
-            layout.addWidget(column, *position)
-        for column_index in range(3):
-            layout.setColumnStretch(column_index, 1 if width >= 900 else 0)
-        # Fixed-height subcards silently clipped translated fan captions.
-        # Retain the whole editor and permit scrolling only when necessary.
+        from .workspace_ui import reflow_toolbar
+        if not hasattr(self, 'gpu_primary_workspace'): return
+        self.gpu_primary_workspace.reflow(); self.gpu_summary_panel.reflow()
+        reflow_toolbar(self)
+        self._layout_tuning_actions()
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         QTimer.singleShot(0, self, self._layout_fan_controls)
+
+    def _layout_tuning_actions(self):
+        grid = self.tuning_actions_grid
+        while grid.count(): grid.takeAt(0)
+        columns = 2 if self.tuning_page.width() >= 570 else 1
+        for index, control in enumerate((self.test_button, self.save_button, self.preview_cancel, self.more_tuning_actions)):
+            control.setMinimumHeight(38)
+            grid.addWidget(control, index // columns, index % columns)
+        grid.setColumnStretch(0, 1); grid.setColumnStretch(1, 0 if columns == 1 else 1)
 
     def resizeEvent(self, event) -> None:  # type: ignore[no-untyped-def]
         super().resizeEvent(event)

@@ -147,8 +147,8 @@ from modules.display_effects.v1_11 import DisplayEffectsPage
 from modules.display_settings.v1_0 import build_display_settings
 from modules.section_tabs.v1_0 import SectionTabsController
 from modules.openlinkhub_update.v1_0.controller import OpenLinkHubUpdateMixin
-from modules.lcd_media_manager.v1_0 import (
-    DesignLibraryDialog,
+from modules.lcd_media_manager.v1_1 import (
+    DesignLibraryPanel,
     friendly_media_name,
     library_media_items,
     load_library_state,
@@ -403,7 +403,7 @@ from modules.platform_support.v1_0 import IS_WINDOWS, platform_display_name, run
 # Sidebar customization. Overview, Settings, customization and Help always stay
 # visible. Settings can still be reordered with the functional module rows.
 NAVIGATION_DEFAULT_ORDER = (
-    "gpu", "case", "hardware_checker", "snapshot_manager", "automations", "programs", "cooling", "rgb_studio", "lcd", "display_effects", "wallpaper_engine", "openlinkhub",
+    "gpu", "case", "hardware_checker", "snapshot_manager", "programs", "cooling", "rgb_studio", "design_hub", "automations", "lcd", "display_effects", "wallpaper_engine", "openlinkhub",
     "profiles", "settings", "about", "log", "desktop_designs",
 )
 NAVIGATION_LEGACY_DEFAULTS = (
@@ -1336,6 +1336,9 @@ class InteractionAuditLogger(QObject):
         return False
 
 
+from modules.app_backgrounds.v1_0.catalog import VIDEO_THEMES
+
+
 class AnimatedBackgroundWidget(QWidget):
     """Procedural background rendered to a CPU-side QImage for Wayland/HiDPI safety."""
 
@@ -1353,7 +1356,7 @@ class AnimatedBackgroundWidget(QWidget):
         "Sonnenaufgang",
         "Eisnebel",
         "Minimaler Fluss",
-    )
+    ) + tuple(VIDEO_THEMES)
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -1379,6 +1382,8 @@ class AnimatedBackgroundWidget(QWidget):
         ]
         self._timer = QTimer(self)
         self._timer.timeout.connect(self._tick)
+        from modules.app_backgrounds.v1_0.media import MediaBackground
+        self.media_background = MediaBackground(self)
 
     def configure(self, *, enabled: bool, theme: str, fps: int, intensity: int, pause_inactive: bool) -> None:
         self._enabled = bool(enabled) and theme != "Aus"
@@ -1388,6 +1393,7 @@ class AnimatedBackgroundWidget(QWidget):
         self._pause_inactive = bool(pause_inactive)
         self._timer.setInterval(max(16, round(1000 / self._fps)))
         self._frame_dirty = True
+        self.media_background.configure()
         self._sync_timer()
         if not self._enabled:
             self._frame = QImage()
@@ -1399,6 +1405,9 @@ class AnimatedBackgroundWidget(QWidget):
         self._sync_timer()
 
     def _sync_timer(self) -> None:
+        if hasattr(self, "media_background"):
+            self.media_background.sync()
+            return
         if self._enabled and self._window_active and self.isVisible():
             self._timer.start()
         else:
@@ -1484,6 +1493,8 @@ class AnimatedBackgroundWidget(QWidget):
             painter.drawPixmap(self.rect(), self._pixmap)
 
     def _paint_scene(self, painter: QPainter, w: int, h: int, base: QColor) -> None:
+        if self.media_background.paint(painter, w, h, base):
+            return
         canvas = QRectF(0, 0, w, h)
         accent = self.palette().color(QPalette.ColorRole.Highlight)
         dark = QColor("#07111f") if base.lightness() < 150 else QColor("#dcefff")
@@ -2899,9 +2910,25 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         if hasattr(self, "hardware_checker_page"): self.hardware_checker_page.refresh_language()
         if hasattr(self, "snapshot_manager_page"): self.snapshot_manager_page.refresh_language()
         if hasattr(self, "programs_page"): self.programs_page.refresh_language()
+        if hasattr(self, "profile_workspace"):
+            self.profile_workspace.refresh_language()
+        if hasattr(self, "design_hub_page"): self.design_hub_page.refresh_language()
         if hasattr(self, "refresh_runtime_health"): self.refresh_runtime_health()
         if hasattr(self, "feature_setting_cards"): refresh_feature_settings(self)
         if hasattr(self, "refresh_backend_update_language"): self.refresh_backend_update_language()
+        from modules.dashboard_status.v1_0.cards import refresh as refresh_inventory_status
+        refresh_inventory_status(self)
+        studio = getattr(self, "thermalright_display_studio", None)
+        if studio is not None and hasattr(studio, "library_manager_panel"):
+            studio.library_manager_panel.refresh_language()
+        if studio is not None and hasattr(studio, "refresh_workspace_summary"):
+            studio.refresh_workspace_summary()
+        if hasattr(self, "kraken_lcd_library_panel"):
+            self.kraken_lcd_library_panel.refresh_language()
+        if hasattr(self, "gpu_control_page"):
+            from modules.gpu_control.v1_0.read_status import refresh as refresh_gpu_read_status
+            refresh_gpu_read_status(self.gpu_control_page)
+            self.gpu_control_page.refresh_workspace_language()
 
     def on_language_changed(self, _index: int = -1) -> None:
         if not hasattr(self, "language_combo"):
@@ -3255,6 +3282,14 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.navigation_items["programs"].setData(
             0, Qt.ItemDataRole.UserRole, self.programs_page_index
         )
+        from modules.design_hub.v1_1.page import DesignHubPage
+        from modules.design_hub.v1_1.games import GamesPage
+        self.design_hub_page = DesignHubPage(self)
+        self.design_hub_page_index = self.tabs.addTab(self.design_hub_page, "Abgestimmte Designs")
+        self.games_page = GamesPage(self)
+        self.games_page_index = self.tabs.addTab(self.games_page, "Spieleintegration")
+        from modules.design_hub.v1_1.navigation import install as install_design_navigation
+        install_design_navigation(self)
         self.tabs.tabBar().hide()
         self.tabs.currentChanged.connect(self.update_page_header)
         self.tabs.currentChanged.connect(self.sync_navigation_to_page)
@@ -3284,6 +3319,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
 
     def update_page_header(self, page: int) -> None:
         titles = {
+            getattr(self, "design_hub_page_index", -1): ("Abgestimmte Designs", "Passende Farben und Animationen für Lüfter und Display gemeinsam entdecken."),
+            getattr(self, "games_page_index", -1): ("Spieleintegration", "Spiele mit vorhandenen Gesamtprofilen verbinden und nach Spielende zurückwechseln."),
             getattr(self, "gpu_control_page_index", -1): ("Grafikkarte", "LACT-Tuning, Lüfterbesitz und GPU-Hardware."),
             getattr(self, "snapshot_manager_page_index", -1): ("Snapshot-Manager", "Snapshots erkennen, Aufräumlast begrenzen und Spiele schützen."),
             getattr(self, "design_automation_page_index", -1): ("Automationszentrale", "Profile nach Zeit, Anwendung oder Spiel automatisch wechseln."),
@@ -3312,6 +3349,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         if page == getattr(self, "hardware_checker_page_index", -1):
             section = self.hardware_checker_page.section_tabs.currentIndex()
             title = ("Hardware-Prüfung", "Hardware Fix", "Von OHC unterstützte Geräte")[section]
+            if section == 1:
+                subtitle = "Lokale Installation · empfohlen"
         if hasattr(self, "page_title_label"):
             self.page_title_label.setText(self.tr_static(title))
             self.page_subtitle_label.setText(self.tr_static(subtitle))
@@ -3363,95 +3402,19 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         menu.exec(self.more_button.mapToGlobal(self.more_button.rect().bottomRight()))
 
     def make_help_tab(self) -> QWidget:
-        page = QWidget()
-        root = QVBoxLayout(page)
-        root.setContentsMargins(16, 14, 22, 22)
-        root.setSpacing(14)
-        root.addWidget(self.make_module_hero(
-            "?", "Hilfe & Anleitungen",
-            "Schritt-für-Schritt-Anleitungen für die wichtigsten Bereiche. Über Links kannst du direkt zum passenden Bereich springen.",
-            "Integriert",
-        ))
-
-        self.help_search = QLineEdit()
-        self.help_search.setPlaceholderText("Hilfe durchsuchen …")
-        self.help_search.textChanged.connect(self.populate_help_topics)
-        root.addWidget(self.help_search)
-
-        body = QHBoxLayout()
-        self.help_topic_tree = QTreeWidget()
-        self.help_topic_tree.setHeaderHidden(True)
-        self.help_topic_tree.setMinimumWidth(230)
-        self.help_topic_tree.setMaximumWidth(330)
-        self.help_topic_tree.setAccessibleName("Anleitung auswählen")
-        self.help_topic_tree.currentItemChanged.connect(self.on_help_topic_selected)
-        body.addWidget(self.help_topic_tree)
-
-        self.help_browser = QTextBrowser()
-        self.help_browser.setOpenLinks(False)
-        self.help_browser.setOpenExternalLinks(False)
-        self.help_browser.anchorClicked.connect(self.on_help_link_clicked)
-        body.addWidget(self.help_browser, 1)
-        root.addLayout(body, 1)
-        self.populate_help_topics()
-        return page
+        from modules.help_center.v1_0.page import build_page
+        return build_page(self)
 
     def help_topics_for_language(self) -> dict[str, dict[str, object]]:
         return HELP_TOPICS.get(self.ui_language, HELP_TOPICS["de"])
 
     def populate_help_topics(self, _text: str = "") -> None:
-        if not hasattr(self, "help_topic_tree"):
-            return
-        query = self.help_search.text().strip().casefold() if hasattr(self, "help_search") else ""
-        selected_id = ""
-        current = self.help_topic_tree.currentItem()
-        if current is not None:
-            selected_id = str(current.data(0, Qt.ItemDataRole.UserRole) or "")
-        self.help_topic_tree.blockSignals(True)
-        self.help_topic_tree.clear()
-        first: QTreeWidgetItem | None = None
-        selected_item: QTreeWidgetItem | None = None
-        for topic_id, topic in self.help_topics_for_language().items():
-            title = str(topic.get("title", topic_id))
-            intro = str(topic.get("intro", ""))
-            steps = " ".join(str(step) for step in topic.get("steps", ()))
-            haystack = f"{title} {intro} {steps}".casefold()
-            if query and query not in haystack:
-                continue
-            item = QTreeWidgetItem([title])
-            item.setData(0, Qt.ItemDataRole.UserRole, topic_id)
-            self.help_topic_tree.addTopLevelItem(item)
-            if first is None:
-                first = item
-            if topic_id == selected_id:
-                selected_item = item
-        self.help_topic_tree.blockSignals(False)
-        target = selected_item or first
-        if target is not None:
-            self.help_topic_tree.setCurrentItem(target)
-            self.show_help_topic(str(target.data(0, Qt.ItemDataRole.UserRole) or "getting_started"))
-        else:
-            self.help_browser.setHtml("<p>Keine passende Anleitung gefunden.</p>")
+        from modules.help_center.v1_0.controller import populate
+        populate(self)
 
     def show_help_topic(self, topic_id: str) -> None:
-        if not hasattr(self, "help_browser"):
-            return
-        topic = self.help_topics_for_language().get(topic_id)
-        if topic is None:
-            topic = self.help_topics_for_language().get("getting_started", {})
-        title = str(topic.get("title", "Hilfe"))
-        intro = str(topic.get("intro", ""))
-        steps = tuple(str(step) for step in topic.get("steps", ()))
-        page = topic.get("page")
-        list_html = "".join(f"<li>{step}</li>" for step in steps)
-        open_label = {"de": "Passenden Bereich öffnen", "en": "Open matching section", "es": "Abrir el apartado", "fr": "Ouvrir la section"}.get(self.ui_language, "Passenden Bereich öffnen")
-        action = ""
-        if isinstance(page, int):
-            action = f'<p><a href="ohc://page/{page}"><b>→ {open_label}</b></a></p>'
-        self.help_browser.setHtml(
-            f"<h2>{title}</h2><p>{intro}</p><ol>{list_html}</ol>{action}"
-            "<hr><p><small>Open Hardware Control · integrierte Hilfe</small></p>"
-        )
+        from modules.help_center.v1_0.controller import show_topic
+        show_topic(self, topic_id)
 
     def on_help_topic_selected(self, current: QTreeWidgetItem | None, _previous: QTreeWidgetItem | None) -> None:
         if current is None:
@@ -3472,16 +3435,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             QDesktopServices.openUrl(url)
 
     def open_help_center(self, topic_id: str = "getting_started") -> None:
-        if hasattr(self, "help_page_index"):
-            self.tabs.setCurrentIndex(self.help_page_index)
-        if hasattr(self, "help_topic_tree"):
-            root = self.help_topic_tree.invisibleRootItem()
-            for index in range(root.childCount()):
-                item = root.child(index)
-                if str(item.data(0, Qt.ItemDataRole.UserRole) or "") == topic_id:
-                    self.help_topic_tree.setCurrentItem(item)
-                    break
-        self.show_help_topic(topic_id)
+        from modules.help_center.v1_0.controller import open_help
+        open_help(self, topic_id)
 
     def load_navigation_order(self) -> list[str]:
         raw = str(self.settings.value("navigation/order", "") or "")
@@ -3498,7 +3453,12 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         for key in NAVIGATION_DEFAULT_ORDER:
             if key not in order:
                 order.append(key)
-        return order
+        # Old personal orders lack the new section. Place only that new item
+        # beside RGB; preserve the relative order of every existing section.
+        if "design_hub" not in saved:
+            order.remove("design_hub")
+        from modules.design_hub.v1_1.catalog import normalize_order
+        return normalize_order(order)
 
     def load_navigation_hidden(self) -> set[str]:
         raw = str(self.settings.value("navigation/hidden", "") or "")
@@ -3548,6 +3508,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             "hardware_checker": ("Hardware-Prüfung", 14),
             "snapshot_manager": ("◫   Snapshot-Manager", 16),
             "automations": ("⌁   Automationszentrale", -1),
+            "design_hub": ("Designs & Spiele", -1),
             "programs": ("▦   Programme", -1),
             "cooling": ("▥◉   Kühlung", 1),
             "rgb_studio": ("◉   RGB-Studio", 2),
@@ -3691,7 +3652,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                     item.setText(0, translated_base)
                     item.setFlags((item.flags() | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled) & ~Qt.ItemFlag.ItemIsDragEnabled & ~Qt.ItemFlag.ItemIsDropEnabled)
                     continue
-                if key in {"cooling_controls", "temperature_recording", "lcd_studio", "display_effects", "hardware_fix", "supported_devices"}:
+                if key in {"cooling_controls", "temperature_recording", "lcd_studio", "display_effects", "hardware_fix", "supported_devices", "paired_designs", "games", "automations"}:
                     item.setText(0, translated_base)
                     item.setFlags(
                         (item.flags() | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
@@ -3734,7 +3695,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                 root.takeChild(0)
             root.addChild(self.nav_overview)
             for key in NAVIGATION_DEFAULT_ORDER:
-                if key == "display_effects":
+                if key in {"display_effects", "automations"}:
                     continue
                 item = movable.get(key) or self.navigation_items.get(key)
                 if item is not None:
@@ -3747,6 +3708,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             self.restore_temperature_recording_navigation()
             for key in ("hardware_fix", "supported_devices"):
                 self.navigation_items["hardware_checker"].addChild(self.navigation_items[key])
+            from modules.design_hub.v1_1.navigation import install as install_design_navigation
+            install_design_navigation(self)
         finally:
             self.navigation.blockSignals(False)
         self.save_navigation_preferences()
@@ -3822,7 +3785,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         for action in getattr(self, "kraken_menu_actions", []):
             action.setVisible(show_all or self.devices_ready)
         current = self.navigation.currentItem()
-        if current is not None and current.isHidden():
+        if current is not None and (current.isHidden() or (current.parent() is not None and current.parent().isHidden())):
             self.navigation.setCurrentItem(self.nav_overview)
 
     def refresh_all_devices(self) -> None:
@@ -4909,6 +4872,9 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.cpu_topology_card = ValueCard("CPU-Aufbau", cpu_topology, "Linux /proc/cpuinfo")
         self.gpu_model_card = ValueCard("Grafikkarte", gpu_model, gpu_path or "Linux DRM")
         self.gpu_memory_card = ValueCard("Grafikspeicher", gpu_memory, "Linux DRM")
+        from modules.dashboard_status.v1_0.cards import initialize as initialize_inventory_status
+        initialize_inventory_status(self, cpu_model=cpu_model, cpu_topology=cpu_topology,
+                                    gpu_model=gpu_model, gpu_memory=gpu_memory, gpu_path=gpu_path)
         self.dashboard_card_entries: list[tuple[str, str, ValueCard]] = [
             ("water_temperature", "Kraken-Wassertemperatur", self.temp_card),
             ("cpu_temperature", "CPU-Temperatur", self.cpu_temp_card),
@@ -4931,10 +4897,17 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         qv.setContentsMargins(14, 12, 14, 12)
         qv.addWidget(QLabel("Schnellaktionen", objectName="sectionTitle"))
         ql = QHBoxLayout()
+        def open_lcd_library():
+            worktabs = (self.thermalright_display_studio.workspace_tabs
+                        if self.lcd_workspace.device.currentData() == "thermalright"
+                        else self.lcd_tile_area.tabs)
+            worktabs.setCurrentIndex(0)
+            self.tabs.setCurrentIndex(3)
+            self.lcd_scroll_page.verticalScrollBar().setValue(0)
         actions = [
             ("❄  Kühlung öffnen", "Lüfter & Pumpe steuern", lambda: self.tabs.setCurrentIndex(1), True),
             ("◉  RGB-Studio öffnen", "Beleuchtung anpassen", lambda: self.tabs.setCurrentIndex(2), False),
-            ("▣  LCD ändern", "Bild oder GIF auswählen", lambda: self.tabs.setCurrentIndex(3), False),
+            ("▣  LCD ändern", "Bild oder GIF auswählen", open_lcd_library, False),
             ("☷  Profil anwenden", "Leise · Ausbalanciert · Leistung", lambda: self.tabs.setCurrentIndex(5), False),
         ]
         for title, hint, callback, primary in actions:
@@ -5000,23 +4973,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         hv = QVBoxLayout(hardware)
         hv.setContentsMargins(14, 12, 14, 12)
         hv.addWidget(QLabel("Erkannte Hardware", objectName="sectionTitle"))
-        for title, detail in (
-            ("NZXT Kraken", "Kühlmittel · Pumpe · Radiator · LCD"),
-            ("Mainboard / NCT6687", "Sensoren · Systemlüfter · PWM"),
-            ("OpenRGB Geräte", "RGB-Studio · ENE-DRAM · Controller"),
-            ("AMD GPU", "Temperatur · Auslastung · Hardwaredaten"),
-        ):
-            row = QFrame()
-            row.setObjectName("hardwareListRow")
-            rl = QHBoxLayout(row)
-            rl.setContentsMargins(10, 8, 10, 8)
-            text = QLabel(f"<b>{title}</b><br><span style='color:#8f9cad'>{detail}</span>")
-            text.setTextFormat(Qt.TextFormat.RichText)
-            rl.addWidget(text, 1)
-            ok = QLabel("● OK")
-            ok.setObjectName("healthGood")
-            rl.addWidget(ok)
-            hv.addWidget(row)
+        from modules.dashboard_status.v1_0.device_rows import build as build_hardware_rows
+        build_hardware_rows(self, hv)
         all_devices = QPushButton("Alle Geräte anzeigen  ›")
         all_devices.clicked.connect(lambda: self.tabs.setCurrentIndex(2))
         hv.addWidget(all_devices)
@@ -8963,6 +8921,11 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         library_actions.addWidget(self.kraken_lcd_library_button)
         library_layout.addWidget(library_note)
         library_layout.addLayout(library_actions)
+        self.kraken_lcd_library_panel = DesignLibraryPanel(self.kraken_lcd_library_state, self.tr_static, known_media=())
+        self.kraken_lcd_library_panel.saved.connect(self.save_kraken_lcd_library_manager)
+        self.kraken_lcd_library_panel.canceled.connect(self.kraken_lcd_library_panel.hide)
+        self.kraken_lcd_library_panel.hide()
+        library_layout.addWidget(self.kraken_lcd_library_panel)
         il.addWidget(library_box)
         self.refresh_kraken_lcd_library()
 
@@ -9471,10 +9434,10 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             saved_order = []
         if not isinstance(saved_order, list):
             saved_order = []
-        self.lcd_tile_area = ReorderableTileArea(
-            "lcd-tiles",
+        from modules.lcd_workspace.v1_0 import LegacyTileGroups, LcdDeviceShell
+        self.lcd_tile_area = LegacyTileGroups(
+            ReorderableTileArea,
             [
-                ("thermalright", self.thermalright_display_studio, 3),
                 ("preview", preview_box, 1),
                 ("display", display_box, 1),
                 ("clock", clock_box, 1),
@@ -9486,7 +9449,12 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             [str(item) for item in saved_order],
         )
         self.lcd_tile_area.orderChanged.connect(self.save_lcd_tile_order)
-        layout.addWidget(self.lcd_tile_area)
+        self.lcd_workspace = LcdDeviceShell(
+            self.thermalright_display_studio, self.lcd_tile_area, self.is_thermalright_cooling(),
+        )
+        self.lcd_workspace.device.currentIndexChanged.connect(self.sync_active_page_performance)
+        self.lcd_tile_area.tabs.currentChanged.connect(self.sync_active_page_performance)
+        layout.addWidget(self.lcd_workspace)
         layout.addStretch()
         self.lcd_section_area = None
         self.lcd_scroll_page = page
@@ -9653,6 +9621,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         box.setTitle(f"Komplexe LCD-Designs · NZXT-ESC-Import · {suffix}")
 
     def update_lcd_hardware_layout(self, has_kraken: bool, thermalright_present: bool) -> None:
+        self.dashboard_thermalright_present = bool(thermalright_present)
         area = getattr(self, "lcd_tile_area", None)
         if area is None:
             return
@@ -10833,6 +10802,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         ))
 
         build_feature_settings(self, layout)
+        feature_box = layout.itemAt(layout.count() - 2).widget()
+        authority_box = layout.itemAt(layout.count() - 1).widget()
 
         design_box = QGroupBox("Design")
         design_form = QFormLayout(design_box)
@@ -10900,7 +10871,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.language_combo.currentIndexChanged.connect(self.on_language_changed)
         layout.addWidget(language_box)
 
-        layout.addWidget(build_module_visibility_settings(self))
+        navigation_box = build_module_visibility_settings(self)
+        layout.addWidget(navigation_box)
 
         backend_box = QGroupBox("Hardware-Unterbauten")
         backend_form = QFormLayout(backend_box)
@@ -10953,9 +10925,13 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         layout.addWidget(temperature_box)
 
         build_display_settings(self, layout)
+        display_box = layout.itemAt(layout.count() - 2).widget()
+        levita_fps_box = layout.itemAt(layout.count() - 1).widget()
         build_performance_settings(self, layout)
+        performance_box = layout.itemAt(layout.count() - 1).widget()
         from modules.process_runtime.v1_1.health import build as build_runtime_health
         build_runtime_health(self, layout)
+        runtime_box = layout.itemAt(layout.count() - 1).widget()
 
         background_box = QGroupBox("Animierter Hintergrund")
         background_form = QFormLayout(background_box)
@@ -10963,10 +10939,9 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.background_enabled_checkbox.setChecked(self.background_enabled)
         self.background_enabled_checkbox.setAccessibleName("Animation aktivieren")
         self.background_theme_combo = QComboBox()
-        self.background_theme_combo.addItems(AnimatedBackgroundWidget.THEMES)
-        self.background_theme_combo.setCurrentText(
-            self.background_theme if self.background_theme in AnimatedBackgroundWidget.THEMES else DEFAULT_BACKGROUND_THEME
-        )
+        for theme in AnimatedBackgroundWidget.THEMES:
+            self.background_theme_combo.addItem(theme, theme)
+        self.background_theme_combo.setCurrentIndex(max(0, self.background_theme_combo.findData(self.background_theme)))
         self.background_theme_combo.setAccessibleName("Hintergrundthema")
         self.background_enabled_checkbox.toggled.connect(self.on_background_enabled_toggled)
         self.background_fps_combo = QComboBox()
@@ -10987,10 +10962,9 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         background_buttons_layout.addWidget(apply_background)
         background_buttons_layout.addWidget(disable_background)
         background_note = QLabel(
-            f"Alle vierzehn Animationen werden prozedural aus dem GPL-Quellcode erzeugt. Version {APP_DISPLAY_VERSION} rendert sie "
-            "in einer sicheren CPU-Offscreen-Ebene hinter der Bedienoberfläche. Beim Ausschalten bleibt das zuletzt "
-            "gewählte Thema gespeichert und kann direkt wieder aktiviert werden. Es werden keine fremden Videos, "
-            "Bilder oder Online-Downloads mitgeliefert."
+            "Prozedurale Animationen und sechs eigene Videohintergründe. Auf der Profilseite erscheint "
+            "das zuletzt angewendete LCD- oder RGB-Design; andere Seiten behalten den eingestellten Hintergrund. "
+            "Ausgeschaltete oder unsichtbare Videos geben ihren Decoder frei."
         )
         background_note.setWordWrap(True)
         background_note.setObjectName("muted")
@@ -11136,6 +11110,25 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         about.setWordWrap(True)
         al.addWidget(about)
         layout.addWidget(about_box)
+        # Keep construction and signal wiring unchanged. Reorder only the
+        # already-owned groups: everyday appearance/start choices first,
+        # technical diagnostics and experimental controls further down.
+        sections = (
+            ("background", background_box), ("design", design_box),
+            ("language", language_box), ("display", display_box),
+            ("temperature", temperature_box), ("program", app_box),
+            ("performance", performance_box), ("navigation", navigation_box),
+            ("features", feature_box), ("authority", authority_box),
+            ("backends", backend_box), ("access", device_box),
+            ("dependencies", dependency_box), ("runtime", runtime_box),
+            ("levita_fps", levita_fps_box), ("experimental", experimental_box),
+            ("notice", about_box),
+        )
+        for key, section in sections:
+            section.setProperty("settingsSection", key)
+            layout.removeWidget(section)
+        for _key, section in sections:
+            layout.addWidget(section)
         layout.addStretch()
 
         scroll.setWidget(content)
@@ -11143,117 +11136,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         return page
 
     def make_profiles_tab(self) -> QWidget:
-        page = QWidget()
-        outer = QVBoxLayout(page)
-        outer.setContentsMargins(16, 14, 22, 22)
-        outer.setSpacing(14)
-        outer.addWidget(self.make_module_hero(
-            "☷", "Profile", "Kühlung, GPU, LCD, RGB, Design und Anzeige gemeinsam sichern.", "Profile"))
-
-        startup_box = QGroupBox("Profil beim Start")
-        startup_form = QFormLayout(startup_box)
-        self.profile_startup_combo = QComboBox()
-        self.profile_startup_combo.currentIndexChanged.connect(self.profile_startup_changed)
-        startup_form.addRow("Automatisch laden", self.profile_startup_combo)
-        startup_note = QLabel("Kühlungsprofile werden erst nach erfolgreicher Kraken-Erkennung übertragen.")
-        startup_note.setWordWrap(True)
-        startup_note.setObjectName("muted")
-        startup_form.addRow(startup_note)
-        outer.addWidget(startup_box)
-
-        editor = QGroupBox("Profil erstellen oder aktualisieren")
-        form = QFormLayout(editor)
-        self.profile_name_input = QLineEdit()
-        self.profile_name_input.setPlaceholderText("z. B. Gaming, Leise Nacht oder Sommer")
-        self.profile_category_combo = QComboBox()
-        for category in ("Gesamt", "Kühlung", "GPU", "LCD", "RGB", "Design", "Benutzerdefiniert"):
-            self.profile_category_combo.addItem(category, category)
-        self.profile_description_input = QLineEdit()
-        self.profile_description_input.setPlaceholderText("Kurze Beschreibung")
-        profile_editor_buttons = QWidget()
-        peb = QHBoxLayout(profile_editor_buttons)
-        peb.setContentsMargins(0, 0, 0, 0)
-        create_profile = QPushButton("Als neues Profil speichern")
-        create_profile.clicked.connect(self.create_profile_from_current)
-        update_profile = QPushButton("Ausgewähltes Profil aktualisieren")
-        update_profile.clicked.connect(self.update_selected_profile)
-        peb.addWidget(create_profile)
-        peb.addWidget(update_profile)
-        form.addRow("Name", self.profile_name_input)
-        form.addRow("Kategorie", self.profile_category_combo)
-        form.addRow("Beschreibung", self.profile_description_input)
-        profile_sections = QWidget()
-        profile_sections_layout = QHBoxLayout(profile_sections)
-        profile_sections_layout.setContentsMargins(0, 0, 0, 0)
-        self.profile_section_checks: dict[str, QCheckBox] = {}
-        for key, title in (("cooling", "Kühlung"), ("gpu", "GPU"), ("lcd", "LCD"), ("rgb", "RGB"), ("design", "Design & Anzeige")):
-            checkbox = QCheckBox(title); checkbox.setChecked(True)
-            checkbox.toggled.connect(self.on_profile_sections_changed)
-            self.profile_section_checks[key] = checkbox; profile_sections_layout.addWidget(checkbox)
-        profile_sections_layout.addStretch()
-        self.profile_category_combo.currentIndexChanged.connect(self.apply_profile_category_to_sections)
-        form.addRow("Gespeicherte Bereiche", profile_sections)
-        form.addRow(profile_editor_buttons)
-        outer.addWidget(editor)
-
-        self.profiles_table = QTableWidget(0, 4)
-        self.profiles_table.setHorizontalHeaderLabels(["Name", "Kategorie", "Beschreibung", "Typ"])
-        self.profiles_table.verticalHeader().setVisible(False)
-        self.profiles_table.horizontalHeader().setStretchLastSection(True)
-        self.profiles_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.profiles_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        header = self.profiles_table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
-        self.profiles_table.itemSelectionChanged.connect(self.on_profile_selection_changed)
-        self.profiles_table.doubleClicked.connect(lambda _index: self.apply_selected_profile())
-        outer.addWidget(self.profiles_table, 1)
-
-        contents_box = QGroupBox("Gespeicherter Profilinhalt")
-        contents_layout = QVBoxLayout(contents_box)
-        self.profile_contents_summary = QLabel("Profil auswählen, um alle gespeicherten Bereiche und Werte zu sehen.")
-        self.profile_contents_summary.setWordWrap(True)
-        self.profile_contents_summary.setObjectName("infoText")
-        contents_layout.addWidget(self.profile_contents_summary)
-        self.profile_contents_tree = QTreeWidget()
-        self.profile_contents_tree.setHeaderLabels(["Bereich / Einstellung", "Gespeicherter Wert"])
-        self.profile_contents_tree.setRootIsDecorated(True)
-        self.profile_contents_tree.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        self.profile_contents_tree.header().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        self.profile_contents_tree.setMinimumHeight(190)
-        contents_layout.addWidget(self.profile_contents_tree)
-        outer.addWidget(contents_box)
-
-        buttons = QHBoxLayout()
-        apply_profile = QPushButton("Profil anwenden")
-        apply_profile.clicked.connect(self.apply_selected_profile)
-        duplicate_profile = QPushButton("Duplizieren")
-        duplicate_profile.clicked.connect(self.duplicate_selected_profile)
-        rename_profile = QPushButton("Umbenennen")
-        rename_profile.clicked.connect(self.rename_selected_profile)
-        delete_profile = QPushButton("Löschen")
-        delete_profile.clicked.connect(self.delete_selected_profile)
-        import_profile = QPushButton("Importieren")
-        import_profile.clicked.connect(self.import_profiles)
-        export_profile = QPushButton("Exportieren")
-        export_profile.clicked.connect(self.export_selected_profile)
-        for button in (apply_profile, duplicate_profile, rename_profile, delete_profile, import_profile, export_profile):
-            buttons.addWidget(button)
-        buttons.addStretch()
-        outer.addLayout(buttons)
-
-        from modules.profile_bundle.v1_0.controller import build_bundle_controls
-        build_bundle_controls(self, outer)
-
-        self.profile_status_label = QLabel("Noch kein Profil ausgewählt.")
-        self.profile_status_label.setWordWrap(True)
-        self.profile_status_label.setObjectName("muted")
-        outer.addWidget(self.profile_status_label)
-        self.load_profiles()
-        self.refresh_profiles_table()
-        return page
+        from modules.profiles_workspace.v1_1.page import build_page
+        return build_page(self)
 
     @staticmethod
     def make_external_link(text: str, url: str) -> QLabel:
@@ -11780,6 +11664,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                 self.add_profile_payload_tree(item, child_value, depth + 1)
 
     def refresh_profile_contents(self, profile: dict[str, object] | None) -> None:
+        if hasattr(self, "profile_workspace"):
+            self.profile_workspace.show_profile(profile)
         if not hasattr(self, "profile_contents_tree"):
             return
         self.profile_contents_tree.clear()
@@ -11812,45 +11698,12 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             self.profile_contents_tree.addTopLevelItem(root)
             self.add_profile_payload_tree(root, value)
             root.setExpanded(True)
+        if hasattr(self, "profile_workspace"):
+            self.profile_workspace.show_profile(profile)
 
     def refresh_profiles_table(self) -> None:
-        if not hasattr(self, "profiles_table"):
-            return
-        current_item = self.profiles_table.item(self.profiles_table.currentRow(), 0) if self.profiles_table.currentRow() >= 0 else None
-        selected_before = str(current_item.data(Qt.ItemDataRole.UserRole) or "") if current_item is not None else ""
-        profiles = self.all_profiles()
-        self.profiles_table.setRowCount(len(profiles))
-        for row, profile in enumerate(profiles):
-            values = (
-                str(profile.get("name", "Unbenannt")),
-                str(profile.get("category", "Gesamt")),
-                str(profile.get("description", "")),
-                "Standard" if profile.get("builtin") else "Eigenes Profil",
-            )
-            for column, value in enumerate(values):
-                item = QTableWidgetItem(value)
-                if column == 0:
-                    item.setData(Qt.ItemDataRole.UserRole, str(profile.get("id", "")))
-                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-                self.profiles_table.setItem(row, column, item)
-        if hasattr(self, "profile_startup_combo"):
-            saved_startup = str(self.settings.value("profiles/startup", "none"))
-            self.profile_startup_combo.blockSignals(True)
-            self.profile_startup_combo.clear()
-            self.profile_startup_combo.addItem("Kein automatisches Profil", "none")
-            self.profile_startup_combo.addItem("Zuletzt verwendetes Profil", "last")
-            for profile in profiles:
-                self.profile_startup_combo.addItem(str(profile.get("name", "Profil")), str(profile.get("id", "")))
-            startup_index = self.profile_startup_combo.findData(saved_startup)
-            self.profile_startup_combo.setCurrentIndex(max(0, startup_index))
-            self.profile_startup_combo.blockSignals(False)
-        target_profile_id = selected_before or self.current_profile_id
-        if target_profile_id:
-            for row in range(self.profiles_table.rowCount()):
-                item = self.profiles_table.item(row, 0)
-                if item and item.data(Qt.ItemDataRole.UserRole) == target_profile_id:
-                    self.profiles_table.selectRow(row)
-                    break
+        if hasattr(self, "profile_workspace"):
+            self.profile_workspace.refresh()
 
     def apply_profile_by_id(self, profile_id: str, *, startup: bool = False) -> None:
         profile = next((item for item in self.all_profiles() if str(item.get("id")) == profile_id), None)
@@ -11908,7 +11761,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
     def on_profile_selection_changed(self) -> None:
         profile = self.selected_profile()
         if profile is None:
-            self.profile_status_label.setText("Noch kein Profil ausgewählt.")
+            self.profile_status_label.setText(self.tr_static("Noch kein Profil ausgewählt."))
             self.refresh_profile_contents(None)
             return
         self.profile_name_input.setText(str(profile.get("name", "")))
@@ -11924,8 +11777,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             self.profile_category_combo.setCurrentIndex(max(0, self.profile_category_combo.findData(category)))
         finally:
             self._syncing_profile_sections = False
-        profile_type = "Standardprofil" if profile.get("builtin") else "eigenes Profil"
-        self.profile_status_label.setText(f"Ausgewählt: {profile.get('name')} · {profile_type}")
+        profile_type = self.tr_static("Standardprofil" if profile.get("builtin") else "Eigenes Profil")
+        self.profile_status_label.setText(f"{self.tr_static('Profile')}: {profile.get('name')} · {profile_type}")
         self.refresh_profile_contents(profile)
 
     def current_lcd_profile_mode(self) -> str:
@@ -12147,6 +12000,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.current_profile_id = profile_id
         self.save_profiles()
         self.refresh_profiles_table()
+        if hasattr(self, "profile_workspace"):
+            self.profile_workspace.select(profile_id)
         self.footer_status.setText(f"Profil „{name}“ gespeichert")
 
     def update_selected_profile(self) -> None:
@@ -12181,6 +12036,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.current_profile_id = str(copy_profile["id"])
         self.save_profiles()
         self.refresh_profiles_table()
+        if hasattr(self, "profile_workspace"):
+            self.profile_workspace.select(str(copy_profile["id"]))
 
     def rename_selected_profile(self) -> None:
         profile = self.selected_profile()
@@ -12229,6 +12086,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.apply_profile_payload(payload, str(profile.get("name", "Profil")))
 
     def apply_profile_payload(self, payload: dict[str, object], name: str, *, startup: bool = False) -> None:
+        from modules.profile_cooling.v1_0.restore import cancel as cancel_profile_cooling
+        cancel_profile_cooling(self)
         gpu = payload.get("gpu")
         if isinstance(gpu, dict) and hasattr(self, "gpu_control_page"): self.gpu_control_page.restore_main_profile_payload(gpu, startup=startup)
 
@@ -12486,8 +12345,13 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             if self.cooling_device_ready():
                 self.transmit_profile_cooling(cooling, name)
         self.save_settings()
+        from modules.app_backgrounds.v1_0.profile import mark_applied
+        mark_applied(self, payload)
         self.profile_status_label.setText(f"Aktiv: {name}")
         self.footer_status.setText(f"Profil „{name}“ angewendet")
+        pending_cooling = getattr(getattr(self, "profile_cooling_wait", None), "pending", None)
+        if pending_cooling is not None:
+            self.footer_status.setText(self.tr_static("Kühlprofil wartet auf frische CPU-Temperatur."))
 
     def load_profile_cooling_controls(self, cooling: dict[str, object]) -> None:
         self.pump_slider.setValue(self.safe_cooling_duty("pump", int(cooling.get("pump", self.pump_slider.value()))))
@@ -12520,6 +12384,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.cpu_curve_force_update = True
 
     def transmit_profile_cooling(self, cooling: dict[str, object], name: str) -> None:
+        from modules.profile_cooling.v1_0.restore import cancel, wait_for_cpu
+        cancel(self)
         if self.defer_cooling_action_for_gif(
             "Kühlprofil",
             lambda: self.transmit_profile_cooling(cooling, name),
@@ -12535,10 +12401,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         needs_cpu = any(self.cooling_mode_kind(mode) == "curve" for mode in requested_modes.values())
         cpu_temp, sensor_label = self.read_amd_cpu_temperature()
         if needs_cpu and cpu_temp is None:
-            self.show_error(
-                "Das Profil enthält eine CPU-Temperaturkurve, aber der CPU-Sensor ist nicht verfügbar.\n\n"
-                + sensor_label
-            )
+            wait_for_cpu(self, cooling, name)
             return
         if getattr(self, "is_thermalright_cooling", lambda: False)():
             applied: list[tuple[str, int, str, str, bool]] = []
@@ -12917,7 +12780,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
 
     def _restorable_background_theme(self) -> str:
         """Return a real animation theme that can be restored after disabling."""
-        current = self.background_theme_combo.currentText() if hasattr(self, "background_theme_combo") else self.background_theme
+        current = (self.background_theme_combo.currentData() or self.background_theme_combo.currentText()) if hasattr(self, "background_theme_combo") else self.background_theme
         if current in AnimatedBackgroundWidget.THEMES and current != "Aus":
             return current
         if self.background_last_theme in AnimatedBackgroundWidget.THEMES and self.background_last_theme != "Aus":
@@ -12928,14 +12791,14 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         """Immediately toggle animation while preserving the selected theme."""
         if enabled:
             theme = self._restorable_background_theme()
-            if self.background_theme_combo.currentText() == "Aus":
+            if (self.background_theme_combo.currentData() or self.background_theme_combo.currentText()) == "Aus":
                 self.background_theme_combo.blockSignals(True)
-                self.background_theme_combo.setCurrentText(theme)
+                self.background_theme_combo.setCurrentIndex(max(0, self.background_theme_combo.findData(theme)))
                 self.background_theme_combo.blockSignals(False)
             self.background_theme = theme
             self.background_last_theme = theme
         else:
-            current = self.background_theme_combo.currentText()
+            current = (self.background_theme_combo.currentData() or self.background_theme_combo.currentText())
             if current != "Aus" and current in AnimatedBackgroundWidget.THEMES:
                 self.background_last_theme = current
                 self.background_theme = current
@@ -12959,7 +12822,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.footer_status.setText("Animation aktiviert" if self.background_enabled else "Animation ausgeschaltet")
 
     def apply_background_settings(self) -> None:
-        selected_theme = self.background_theme_combo.currentText()
+        selected_theme = (self.background_theme_combo.currentData() or self.background_theme_combo.currentText())
         requested_enabled = self.background_enabled_checkbox.isChecked()
         if selected_theme == "Aus":
             requested_enabled = False
@@ -12991,7 +12854,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
 
     def disable_background(self) -> None:
         # Disabling must not overwrite the selected theme with 'Aus'.
-        current = self.background_theme_combo.currentText()
+        current = (self.background_theme_combo.currentData() or self.background_theme_combo.currentText())
         if current != "Aus" and current in AnimatedBackgroundWidget.THEMES:
             self.background_last_theme = current
             self.background_theme = current
@@ -13013,7 +12876,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             self.background_enabled_checkbox.blockSignals(True)
             self.background_enabled_checkbox.setChecked(self.background_enabled)
             self.background_enabled_checkbox.blockSignals(False)
-            self.background_theme_combo.setCurrentText(self.background_theme)
+            self.background_theme_combo.setCurrentIndex(max(0, self.background_theme_combo.findData(self.background_theme)))
             index = self.background_fps_combo.findData(self.background_fps)
             self.background_fps_combo.setCurrentIndex(max(0, index))
             self.background_intensity_slider.setValue(self.background_intensity)
@@ -13206,7 +13069,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             self.background_enabled_checkbox.blockSignals(True)
             self.background_enabled_checkbox.setChecked(self.background_enabled)
             self.background_enabled_checkbox.blockSignals(False)
-            self.background_theme_combo.setCurrentText(self.background_theme)
+            self.background_theme_combo.setCurrentIndex(max(0, self.background_theme_combo.findData(self.background_theme)))
             fps_index = self.background_fps_combo.findData(self.background_fps)
             self.background_fps_combo.setCurrentIndex(max(0, fps_index))
             self.background_intensity_slider.setValue(self.background_intensity)
@@ -13674,6 +13537,10 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         run.run("timers", lambda: stop_owned_timers(self))
         if hasattr(self, "design_automation_controller"):
             run.run("design-automation", self.design_automation_controller.shutdown)
+        if hasattr(self, "design_hub_page"):
+            run.run("design-hub", self.design_hub_page.shutdown)
+        if hasattr(self, "background_widget"):
+            run.run("app-background", self.background_widget.media_background.shutdown)
         if hasattr(self, "process_runtime"):
             run.run("sensor-runtime", self.process_runtime.shutdown)
         thermalright_studio = getattr(self, "thermalright_display_studio", None)
@@ -14461,9 +14328,12 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
                 self.pump_card.set_value(f"{int(pump_speed)} rpm", f"{pump_duty:.0f} % Leistung" if pump_duty is not None else "")
             if fan_speed is not None:
                 self.fan_card.set_value(f"{int(fan_speed)} rpm", f"{fan_duty:.0f} % Leistung" if fan_duty is not None else "")
-            if pump_duty is not None:
+            # Keep the loaded target controls stable while a curve profile waits
+            # for sensors; live duty/RPM cards above still show actual readback.
+            waiting_for_profile_cpu = getattr(getattr(self, "profile_cooling_wait", None), "pending", None) is not None
+            if pump_duty is not None and not waiting_for_profile_cpu:
                 self.pump_slider.setValue(int(round(pump_duty)))
-            if fan_duty is not None:
+            if fan_duty is not None and not waiting_for_profile_cpu:
                 self.fan_slider.setValue(int(round(fan_duty)))
             self.apply_dashboard_card_visibility(save=False)
             self.refresh_cooling_dashboard_summary()
@@ -18519,8 +18389,12 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         window_active = self.isVisible() and not self.isMinimized()
         sync_visible_page_timer(self, timer, tabs, getattr(self, "rgb_page_scroll", None), self.update_rgb_studio_preview)
         self.background_widget.set_window_active(window_active)
+        from modules.app_backgrounds.v1_0.profile import sync as sync_profile_background
+        sync_profile_background(self)
         self.display_effects_page.set_window_active(window_active)
-        lcd_active = active_page_visible(self, tabs, getattr(self, "lcd_scroll_page", None))
+        preview_box = getattr(self, "lcd_preview_box", None)
+        lcd_active = (active_page_visible(self, tabs, getattr(self, "lcd_scroll_page", None))
+                      and preview_box is not None and preview_box.isVisible())
         for movie in (getattr(self, "lcd_preview_movie", None), getattr(self, "hardware_animation_movie", None)):
             if movie is not None:
                 state = movie.state()
@@ -18534,6 +18408,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
             for button in getattr(self, "builtin_lcd_theme_buttons", {}).values():
                 if isinstance(button, AnimatedGifTileButton):
                     button.stop_preview()
+        self.update_lcd_sticky_preview_visibility()
 
     def current_rgb_design_snapshot(self) -> tuple[int, str, RGBEffectConfig]:
         data = self.rgb_studio_design_combo.currentData()
@@ -20366,16 +20241,23 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.kraken_lcd_library_load_button.setEnabled(bool(compatible))
 
     def open_kraken_lcd_library_manager(self) -> None:
-        dialog = DesignLibraryDialog(self.kraken_lcd_library_state, self.tr_static, self)
-        if not dialog.exec():
+        panel = self.kraken_lcd_library_panel
+        if panel.isVisible():
+            panel.hide()
             return
-        self.kraken_lcd_library_state = dialog.state()
-        self.settings.setValue(
-            "lcd/design_library_v1", save_library_state(self.kraken_lcd_library_state)
-        )
+        known = [Path(str(self.kraken_lcd_library_combo.itemData(index)))
+                 for index in range(self.kraken_lcd_library_combo.count())
+                 if self.kraken_lcd_library_combo.itemData(index)]
+        panel.set_state(self.kraken_lcd_library_state, known_media=known)
+        panel.show()
+
+    def save_kraken_lcd_library_manager(self, state) -> None:
+        self.kraken_lcd_library_state = state
+        self.settings.setValue('lcd/design_library_v1', save_library_state(state))
         self.settings.sync()
+        self.kraken_lcd_library_panel.hide()
         self.refresh_kraken_lcd_library()
-        self.log_message("LCD-MANAGER: eigene Ordner und Einzeldateien aktualisiert")
+        self.log_message('LCD-MANAGER: eigene Ordner und Einzeldateien aktualisiert')
 
     def load_selected_kraken_lcd_library_item(self) -> None:
         raw_path = str(self.kraken_lcd_library_combo.currentData() or "")
@@ -20751,7 +20633,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         movie.setCacheMode(QMovie.CacheMode.CacheNone)
         movie.frameChanged.connect(lambda _frame: self._set_lcd_preview_pixmap(movie.currentPixmap()))
         self.lcd_preview_movie = movie
-        if active_page_visible(self, self.tabs, self.lcd_scroll_page):
+        if active_page_visible(self, self.tabs, self.lcd_scroll_page) and self.lcd_preview_box.isVisible():
             movie.start()
 
     def update_lcd_sticky_preview_visibility(self) -> None:
@@ -20759,6 +20641,9 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         page = getattr(self, "lcd_scroll_page", None)
         box = getattr(self, "lcd_preview_box", None)
         if sticky is None or page is None or box is None:
+            return
+        if not box.isVisible() or not active_page_visible(self, self.tabs, page):
+            sticky.hide()
             return
         if not bool(getattr(self, "lcd_round_preview_available", True)):
             sticky.hide()
@@ -21120,7 +21005,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.hardware_animation_movie = movie
         self.preview.clear()
         self.preview.setMovie(movie)
-        if active_page_visible(self, self.tabs, self.lcd_scroll_page):
+        if active_page_visible(self, self.tabs, self.lcd_scroll_page) and self.lcd_preview_box.isVisible():
             movie.start()
         self.file_name_label.setText(
             f"{self.tr_static('Animierte Hardwaredaten')} · {self.hardware_animation_design_combo.currentText()}"
@@ -21271,7 +21156,7 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         self.hardware_animation_movie = movie
         self.preview.clear()
         self.preview.setMovie(movie)
-        if active_page_visible(self, self.tabs, self.lcd_scroll_page):
+        if active_page_visible(self, self.tabs, self.lcd_scroll_page) and self.lcd_preview_box.isVisible():
             movie.start()
         background_name = self.selected_lcd_file.name if self.selected_lcd_file else "—"
         self.file_name_label.setText(
@@ -22683,10 +22568,10 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         )
 
     def show_error(self, message: str) -> None:
+        self.log_message("FEHLER: " + message)
         if re.search(r"insufficient permissions|permission denied|could not open.*permissions", message, re.IGNORECASE):
             self.show_permission_error(message)
             return
-        self.log_message("FEHLER: " + message)
         QMessageBox.critical(self, APP_NAME, message)
 
 
@@ -22752,6 +22637,9 @@ def run_application(argv: list[str] | None = None) -> int:
 
     try:
         install_application_exception_logging()
+        from modules.runtime_logging.v1_0.error_capture import ErrorCapture
+        runtime_error_capture = ErrorCapture()
+        runtime_error_capture.install()
         from modules.application_shutdown.v1_1.diagnostics import latest_shutdown_report
         from modules.application_shutdown.v1_1.journal import observe_lifetime
         from modules.crash_recovery.v1_0 import recover_crash_context
@@ -22777,6 +22665,8 @@ def run_application(argv: list[str] | None = None) -> int:
         activation_server = ApplicationActivationServer(activation_endpoint, app)
         activation_available = activation_server.start()
         window = KrakenControl()
+        from modules.runtime_logging.v1_0.error_bridge import ErrorLogBridge
+        window.runtime_error_bridge = ErrorLogBridge(window, runtime_error_capture)
         if unexpected_previous_exit:
             detail = previous_shutdown.reason or "unbekannte Ursache"
             phase = previous_shutdown.phase or "—"
@@ -22810,6 +22700,8 @@ def run_application(argv: list[str] | None = None) -> int:
         append_startup_event(f"ENDE: normaler Programmabschluss · Exit-Code {exit_code}")
         return int(exit_code)
     finally:
+        if "runtime_error_capture" in locals():
+            runtime_error_capture.restore()
         instance_lock.release()
 
 

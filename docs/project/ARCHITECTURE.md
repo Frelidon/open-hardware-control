@@ -1,5 +1,153 @@
 # Open Hardware Control — Architecture
 
+## Entwicklung .183 · 13.11.26 — Hardware Fix lokal und übersichtlich
+
+Hardware Fix bleibt 1.0. Zwei Hauptaktionen installieren den lokalen Fix oder
+entfernen ihn einschließlich Ubuntu-Automatik. Anbieterwahl und bloßes
+Umetikettieren entfallen auf Eigentümerwunsch. Der lokale Benutzerdienst läuft
+unabhängig vom OHC-Fenster; es gibt weiterhin nur einen Wächter und denselben
+Dienstnamen. Erfolgreiche explizite Installation speichert local/local.
+Diagnose, Spieltest und einzelne Reparaturschritte bleiben in Weitere Optionen.
+Technische Zustände stehen standardmäßig eingeklappt und vollständig übersetzt.
+
+`workflow.py` koordiniert nur bestehende feste Schritte: fehlender Boot-Fix,
+nach geladenem Override Desktop und Automatik ausschließlich auf Ubuntu/GNOME.
+Gesunde Bootressourcen und bereits dauerhaft aktives GNOME-VRR werden nicht
+erneut geschrieben. Erstinstallation wartet auf nötigen Neustart und kann über
+Installieren fortgesetzt werden. Fedora behält seinen bisherigen Bootpfad.
+UUID-gebundene Terminalergebnisse beheben übersehene schnelle Abschlüsse;
+veraltete Resultate, Doppelklicks und Startfehler werden abgefangen. Protokolle
+sind begrenzt, redigiert und im Dialog als Klartext behandelt. Exakte Boottoken
+und fehlerhafte Anbieter-JSON sind zusätzlich abgesichert. Der MSI-Hashfix aus
+dem vorangegangenen Live-Nachweis ist enthalten. Keine Änderung an EDID/Timings.
+
+Lokalisierung 1.0 ergänzt `hardware_fix_messages.py`, atomar über
+`content_ui_messages.py` und die vier Sprachdateien: 2.658 gemeinsame IDs.
+Neue Regressionen `test_hardware_fix_setup_3429183.py` und
+`test_hardware_fix_vrr_identity.py`. Vollständige Release-Prüfung, Sichtkontrolle,
+Paketierung und beide rollierenden Sicherungen folgen. Kein GitHub-Auftrag.
+
+## .182 · LCD-/GPU-Arbeitsbereiche und Einstellungsreihenfolge
+
+Die .182-Komposition verwendet bestehende Qt-Widgets. Der
+Levita-Arbeitsbereich delegiert Modelle, Layer-2-Editor, Medienvorschau und
+Transport an ihre bisherigen Besitzer; LCD- und Kraken-Pfade bleiben getrennt.
+GPU-Komposition hält bestehende Bedienelemente und gespeicherte Entwürfe auf
+einer gemeinsamen Seite, ohne LACT-Client-, Kurztest- oder Ownership-Verträge
+zu ändern. Einstellungen werden erst nach vollständiger Konstruktion sortiert,
+damit ihre Initialisierungs-/Signalreihenfolge unverändert bleibt.
+`lcd_workspace/v1_0/composition.py` gibt bisherigen Layoutzeilen einen Qt-Besitzer,
+`navigation.py` misst nur den aktiven Bereich. `devices.py` erhält die alten
+Kachel-Schlüssel/Reihenfolgen und bevorzugt die erkannte Familie nur bis zur
+expliziten Nutzerwahl. Galerie/Hovertimer pausieren außerhalb der Bibliothek;
+der bestehende Vorschaudecoder bleibt an die sichtbare Komposition gebunden.
+`gpu_control/v1_0/workspace_ui.py` und `workspace_layout.py` behalten dieselben
+Widgets und sieben Routen auf einer Scrollseite. Kurvenmalen und Ziehen teilen
+dieselbe Geometrie. Sprachwechsel rekonstruiert Livewerte aus dem bestehenden
+Snapshot und erzeugt keine zusätzliche Abfrage. Quellen-/Sprach-/Geometrie-
+Regressionen prüfen beide Themen und schmale Fenster.
+
+Zusätzliche UI-Anschlüsse: `display_effects/v1_11/base_page.py` öffnet den
+vorhandenen Ebene-2-Editor direkt in Levita-Komposition. Der Dashboard-Einstieg
+zur LCD-Auswahl öffnet die Bibliothek der aktuellen Gerätefamilie. Verborgene
+Kraken-QMovies und die schwebende Rundvorschau beachten auch die inneren
+Arbeitsbereiche; physische LCD-/Hardwaretimer bleiben unverändert.
+
+## .181 · Gemeinsame Bereiche, Designgrößen und eingebettete Bibliotheken
+
+`ui_sections/v1_0/cards.py` besitzt gemeinsame Themenflächen/Bereichsköpfe;
+`reveal.py` führt ausschließlich die nächste bestehende Scrollleiste mit einem
+420-ms-Auftrag. Nutzergesten, Seitenverbergen und neue Aufträge verwerfen alte
+Bewegungen; eine bedingte Rückkehr beim Schließen hält den Inhalt bis zum Ende
+sichtbar. Keine Layout-Skalierung, Screenshots, neuen Decoder oder Hardwarewrites.
+`ui_performance/v1_1/compact_panels.py:Disclosure` und
+`profiles_workspace/v1_1/surfaces.py` bleiben Kompatibilitätsfassaden.
+
+`pc_case_profiles/v1_5/workspace.py`, `case_page.py` und `component_summary.py`
+ändern ausschließlich Aufbau/Details der vorhandenen Gehäuseseite. Modelle,
+Profil-IDs, LED-/PWM-/ARGB-Routen, Entwurfscommit und Kalibrierung bleiben bei
+bestehenden Controllern. Comboboxen erhalten vor dem Herausnehmen aus bisherigen
+elternlosen Layouts ausdrücklich einen Qt-Eigentümer; sonst kann ein ungültiger
+nativer Widget-Item-Cache erst beim vollständigen Hauptfensterrendern abstürzen.
+Begrenzte Mindestinhaltsbreiten erhalten schmale Viewports ohne horizontales
+Abschneiden. Daher keine öffentliche Modulvertragsänderung.
+
+Einziger aktueller Paarpfad: `design_hub/v1_1`. `catalog.py` enthält 15 feste
+Originalquellen und deren genaue Dateierlaubnis, `size_controls.py` bewahrt
+Zoom/Matrix-Varianten je stabiler Paar-ID. `scaling.py` baut reine, begrenzte
+Fit-/Zoom-/Pad-/Crop-Pläne; `preparation.py` besitzt einen asynchronen ffmpeg-
+Prozess und atomare Cache-Dateien. Auftrag, Quelle und Größe müssen vor späterem
+Anwenden unverändert passen. Eine gesonderte LCD-Absichtsgeneration verwirft
+verspätete Ergebnisse nach neuerer LCD-Bedienung; Verbergen der Seite beendet
+die Vorbereitung. `mp4_metadata.py` prüft MP4-Struktur mit 1-MiB-Lesebudget,
+höchstens 512 Atomen/Tiefe acht, genau einer H.264-Videospur, 1600×720 in Spur
+und Sample sowie positiver Dauer bis 35 Sekunden. Mediennutzdaten werden dabei
+übersprungen, nicht im GUI-Thread dekodiert. `controller.py` delegiert an bestehende Besitzer;
+`preview.py` zeichnet dieselbe unverzerrte Geometrie und hält einen sichtbaren
+Decoder. Zehn RGB-Konfigurationen werden nur angehängt; Algorithmen bleiben in
+der gemeinsamen bestehenden Effekt-Engine. Kein gekoppelter Geräte-Frame-Takt.
+
+Einziger aktueller Bibliothekspfad: `lcd_media_manager/v1_1`. `panel.py` hält den
+nicht-destruktiven Editorentwurf und explizite Speichern-/Abbrechen-Signale.
+`dialog.py` bleibt ein kleiner Wrapper für frühere Aufrufer. Hostseiten übergeben
+bereits indexierte Medien (höchstens 2.500 Pfade); Öffnen scannt keine Verzeichnisse.
+Modell/Schema, Quellgrenzen und gemeinsame sichtbarkeitsgebundene Decodierung
+bleiben erhalten. Der Vorschau-Cachefortschritt ist kein LCD-Transferfortschritt.
+
+`help_center/v1_0` trennt Themenzeichnung, Aufbau und vorhandene Hilfecontroller.
+`dashboard_status/v1_0` trennt reine Inventurklassifizierung von statischen Karten
+und Hardwarezeilen, ohne zusätzliche Erkennung. `gpu_control/v1_0/read_status.py`
+klassifiziert bestehende LACT-Leseereignisse und begrenzt identische redigierte
+Fehler, ohne Steuerfreigabe aus grüner Darstellung abzuleiten.
+
+Der Layoutabsturz ist korrigiert; vollständige echte Qt-Hauptfensteraufnahmen von
+Hub, Gehäuse und Hilfe sowie vier UI-/Lokalisierungstests bestehen. Der gesamte
+Release-Wächter, Paket-/Sicherungsprüfung und lokale .181-Installation stehen
+weiter aus; installierter Prüfstand bleibt .180.
+
+## .180 · Scrollbarer Profil-Arbeitsbereich 1.1
+
+Der einzige aktuelle Pfad ist `profiles_workspace/v1_1/`. `page.py` behält
+ID-Auswahl, Sprachwechsel und Entwurfszustand; `composition.py` baut Bibliothek,
+Profilkarte und bestehende Aktionsverbindungen. `layout.py` verteilt responsive
+Spalten und berechnet Kachelhöhen anhand der verfügbaren Breite. `surfaces.py`
+zeichnet lokale Themenflächen und Bereichsköpfe, `summary.py` zeigt gespeicherte
+Werte mit eigenen Kurven/Farbproben und ausschließlich bekannten gebündelten
+LCD-Postern. Ein äußerer Scrollbereich übernimmt Mehrhöhe bei geöffneten Panels.
+Die generische Disclosure-Komponente anderer Seiten bleibt unverändert.
+
+Verborgene elterngebundene Tabelle und vorhandene Host-Controller erhalten
+Profil-IDs, CRUD, Bundle-Austausch und Startprofile. Ein expliziter neuer Entwurf
+ist von fehlender bisheriger Auswahl getrennt: ein Sprachwechsel darf ihn nicht
+mit einem vorhandenen Profil als Aktualisierungsziel verbinden. Kein Panel-,
+Filter- oder Auswahlereignis speichert Einstellungen oder schreibt Hardware.
+Die unabhängige angewendete Hintergrundkopie aus .178 bleibt maßgeblich.
+
+## .179 · Profil-Bereitschaft und zentrale Fehlerbrücke
+
+`profile_cooling/v1_0/restore.py` verwaltet genau einen ausstehenden Auftrag und
+dessen unveränderte Bedienwert-Baseline. Frische Werte kommen ausschließlich aus
+dem vorhandenen Sensorprozess. Die Wiederholung nutzt die bisherigen geschützten
+Kühlpfade. Laufzeitprotokoll `error_capture.py` hält eine begrenzte thread-sichere
+Warteschlange; `error_bridge.py` überträgt sie ausschließlich im GUI-Thread.
+`append_error_event` benachrichtigt einen privaten Sink, GUI-Logging unterdrückt
+die Benachrichtigung und die Brücke das erneute Persistieren. Keine Endlosschleife.
+
+## .178 · Profil-Arbeitsbereich und Hintergrundkomposition
+
+`profiles_workspace/v1_0` komponiert UI um bestehende sichere Profile-Controller;
+`model.py` bleibt rein, `cards.py` wählt stabile IDs, `page.py` hält die verborgene
+elterngebundene Tabellenkompatibilität. Keine Schemaänderung.
+`app_backgrounds/v1_0` ergänzt die bestehende RGB32-Hintergrundebene um einen
+sichtbarkeitsgebundenen lokalen Decoder, statische Bilder oder einen kleinen
+RGB-Renderer. Lokales Dateiprüfen/Decoder-Aufbau erfolgt außerhalb paint.
+Ein unabhängiger angewendeter Payload-Snapshot trennt aktive Profile von Auswahl
+und Bearbeitung. Sensor-Overlays auf dem LCD werden weder ersetzt noch erfunden.
+
+## 11.11.26 – Design Hub 1.0 (.177)
+
+`design_hub/v1_0` separates immutable pair metadata, pure periodic LED sampling, visibility-bound Qt/video previews, rule preparation and host-controller delegation. The RGB renderer gains one appended preset without renumbering. The LCD catalog appends one MP4/JPG and keeps its first/default entry. Applying LCD changes Layer 1 only; existing Layer 2 remains owned by the Levita studio. Both target requests keep their own asynchronous status and ownership gates. Existing automation rules remain in their original store; opening a game draft saves or activates nothing.
+
 ## 11.11.26 – Fan mapping lifecycle and sensor cards (.176)
 
 `fan_mapping/v1_0/wizard.py` extracts the existing wizard composition; `runtime.py`
@@ -541,7 +689,7 @@ does not invent missing server lengths or continuously override manual edits.
 - `src/modules/rgb_studio/v1_15/` — RGB gallery, direct block/header selection with independently persisted stable bindings and explicit native/controller-zone GPU routing; generic bounded Direct-header pixel editor, protected manual counts, semantic ARGB diagnostics and full-width transfer status. Lazy exports keep count-aware pure sampling helpers Qt-free. Every configured zone renders independently without changing the existing sole-writer queue or 25-Hz target; SDK throughput is not physical readback.
 - `src/modules/display_effects/v1_11/` — bounded effect state, procedural smoke renderer, attributed/filterable offline media catalog, responsive Layer-1/Layer-2 cards, explicit firmware restore, visibility-bound local MP4 preview and profile-start staging through the existing Levita studio.
 - `src/modules/responsive_gallery/v1_0/` — reusable actual-viewport column calculation and coalesced Qt resize relay for card grids.
-- `src/modules/lcd_media_manager/v1_0/` — non-destructive multi-folder/individual-media references, exclusions, editable display aliases and safe fallback names; original files remain untouched.
+- `src/modules/lcd_media_manager/v1_1/` — embedded non-destructive multi-folder/individual-media references, exclusions, editable display aliases and safe fallback names; original files remain untouched.
 - `src/modules/section_tabs/v1_0/` — reusable synchronized in-page tabs for sidebar sections with child pages; navigation state only.
 - `src/modules/responsive_startup/v1_0/` — bounded/coalesced CoolerControl status process plus fail-closed host integration; no PWM writer.
 - `src/ui_layout.py` — persisted UI layout/navigation model.

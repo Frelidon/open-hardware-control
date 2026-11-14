@@ -79,10 +79,11 @@ def test_effect_page_explains_and_exposes_canonical_startup_saving():
 
 
 def test_bundled_effect_catalog_is_complete_attributed_and_bounded():
-    assert len(DESIGNS) == 5
+    assert len(DESIGNS) == 6
     assert len(next(design for design in DESIGNS if design.ident == "ohc-light-bands").variants) == 8
-    assert all(len(design.variants) == 1 for design in DESIGNS if design.ident != "ohc-light-bands")
-    assert len(designs_for_category("ohc_original")) == 5
+    assert all(len(design.variants) == 1 for design in DESIGNS if design.ident not in {"ohc-light-bands", "ohc-code-rain"})
+    assert len(next(design for design in DESIGNS if design.ident == "ohc-code-rain").variants) == 4
+    assert len(designs_for_category("ohc_original")) == 6
     assert all(design.ident.startswith("ohc-") for design in DESIGNS)
     assert all(design.creator == "Frelidon / Open Hardware Control" for design in DESIGNS)
     rejected = " ".join(f"{design.ident} {design.title} {design.description}" for design in DESIGNS).casefold()
@@ -120,7 +121,7 @@ def test_library_uses_graphical_cards_and_keeps_attribution_links():
     assert "Originalquelle" in library.credit_label.text()
     assert library.credit_label.text().count("<a href=") == 3
     library.category_combo.setCurrentIndex(library.category_combo.findData("ohc_original"))
-    assert len(library._design_cards) == 5
+    assert len(library._design_cards) == 6
     app.processEvents()
 
 

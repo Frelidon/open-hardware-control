@@ -1,5 +1,316 @@
 # Open Hardware Control — verbindliches Modulregister
 
+## GitHub-Quellupload .183 · 14.11.26
+
+Der Eigentümer hat den Upload des geprüften INTERN-Standes auf GitHub beauftragt.
+Ziel ist `codex/hardware-fix-3.4.29.183`, ein neuer Entwicklungsbranch mit normalem
+Quell-Push. Er enthält den vollständigen aktuellen Stand einschließlich der
+bisher nur lokalen Entwicklungen .177 bis .182. BUILD_CHANNEL bleibt INTERN;
+kein Tag, öffentlicher Release oder Paketupload. README, Veröffentlichungsleitfaden
+und Release Notes unterscheiden Quellbranch und lokale Downloadpakete.
+Die vollständige .183-Testsuite und Release-Wächter sind bereits bestanden.
+Für diesen Upload bestanden erneut 43 Hardware-Fix-/UI-/Lokalisierungs-/Layout-
+und Sicherheitsregressionen sowie Datenschutzscan und Modulregister. Alle 723
+Quelldateien sind bytegleich mit dem geprüften Paketstand; die zehn Bildhashes
+stimmen. Frühere Hinweise auf unverändertes GitHub unten
+sind historische Nachweise vor diesem Folgeauftrag. Gebaute Pakete und externe
+Sicherungen werden durch den Quellupload nicht verändert.
+
+## Lokale Aktualisierung .183 · 14.11.26
+
+Auf ausdrücklichen Folgeauftrag sind Benutzer- und Systeminstallation jetzt
+3.4.29.183 INTERN; DEB-Paketstand 3.4.29.183~intern2. Vorherige Benutzerkopie,
+Einstellungen, Profile und native Plugins wurden privat gesichert. Nach geordnetem
+Programmende wurde zusätzlich der letzte Einstellungsstand festgehalten.
+Alle 716 installierbaren Dateien der lokalen Laufzeit und sämtliche 799 regulären
+DEB-Paketdateien sind bytegleich mit den geprüften Paketen. Native C++-Bauquellen
+gehören nicht zur installierten Laufzeit; die DEB enthält keine Test-GIF-Sammlung.
+Alle 93 geschützten Dateien waren vor dem normalen Neustart unverändert;
+18 gesondert geprüfte Profil-/Plugin-/JSON-Dateien auch danach. Laufende
+Einstellungs-, Sperr- und Protokolldateien dürfen sich beim Start aktualisieren.
+
+Normaler Ubuntu-/Wayland-Start mit .183 bestätigt: CPU-Kurve und nativer RGB-Pfad
+aktiv, gespeichertes Levita-Design geladen und Dauerbetrieb gestartet. Ein anfänglicher
+USB-Konflikt des eigenen TRCC-Daemons wurde durch dessen bestehende einmalige
+Wiederanlauflogik behoben; kein fehlerfreier Erstversuch wird behauptet.
+Der korrigierte VRR-Benutzerdienst blieb durchgehend aktiv und unverändert.
+Kein Systemneustart, neuer Spiel-/VRR-Messlauf oder Fedora-Hardwaretest.
+Diese nachträgliche Installationsprüfung ändert die gebauten Pakete und ihre
+rollierenden Sicherungen nicht. Frühere Angaben zur laufenden .182 unten sind
+historisch; GitHub bleibt unverändert.
+
+## Paketabschluss .183 · 14.11.26
+
+Alle sechs Artefakte gebaut und unabhängig geprüft: Laufzeit-/Entwickler-ZIP,
+Quell-TAR, vollständiges Local-AI-Gitbundle, DEB und RPM. Sechs Dist-SHA256,
+ZIP-CRCs und vollständige Manifeste, Quell-TAR-Manifest, Bundle-Historie,
+DEB-Metadaten/Root-Eigentümer sowie RPM-Header-/Payload-Digests bestanden.
+474 Python-Laufzeitquellen und 169 Assets sind in ZIP/TAR/DEB/RPM bytegleich.
+Genau beide .182/.183-Sicherungen bleiben erhalten; je acht Hashes verifiziert.
+Der RPM-Bau nutzte den vorhandenen Standardbibliothek-Writer, da rpmbuild hier
+nicht installiert ist. Keine neue Fedora-Liveprüfung wird daraus abgeleitet.
+
+Benutzer- und Systeminstallation wurden durch diesen Auftrag nicht aktualisiert;
+die .182-Benutzerkopie behält den vorangegangenen kleinen VRR-Hotfix. Es wurde
+kein Anwendungs-/Systemneustart ausgeführt. Pakete und Sicherungen bleiben
+unveränderte Schnappschüsse vor diesem nachträglichen Verifikationsnachweis.
+Der Snapshotcommit im vollständigen Gitbundle ist `8169680`; GitHub unverändert.
+
+## Quellfreigabe .183 · 13.11.26
+
+1.763 Tests und fünf Untertests bestanden, einschließlich echter Qt-Oberfläche
+in vier Sprachen, drei Fenstergrößen und beiden Themen. 474 Python-Laufzeitquellen,
+2.658 gemeinsame Nachrichten-IDs. Kompilierung, Sicherheit/Datenschutz,
+Modulregister und sämtliche restlichen Release-Prüfungen bestanden. Die erste
+Gesamtsuite scheiterte nur an zwölf gesperrten Testsockets; der Wiederholungslauf
+mit freigegebenen lokalen Sockets und deaktivierten Hardwarezugriffen bestand
+vollständig. Danach wurde der alte ZIP-Dateiname in beiden Installationsanleitungen
+berichtigt und der unveränderte restliche Wächterteil erfolgreich fortgesetzt.
+Keine Prüfung wurde ausgelassen oder abgeschwächt. Zehn vollständige
+Hauptfensteraufnahmen samt Hashes stehen unter `docs/images/rendering-evidence/`
+(`hardware-fix-183.json`); Fixstatus ist synthetisch. Vorbauabschnitte darunter
+bleiben historische Schritte. Paketbau und abschließende Artefaktprüfung folgen.
+Die laufende Benutzer-/Systeminstallation bleibt .182; kein neuer Fedora-Live-
+oder physischer Boot-/Deinstallationstest. GitHub bleibt unverändert.
+
+## Entwicklung .183 · 13.11.26 — Hardware Fix lokal und übersichtlich
+
+Hardware Fix bleibt 1.0. Zwei Hauptaktionen installieren den lokalen Fix oder
+entfernen ihn einschließlich Ubuntu-Automatik. Anbieterwahl und bloßes
+Umetikettieren entfallen auf Eigentümerwunsch. Der lokale Benutzerdienst läuft
+unabhängig vom OHC-Fenster; es gibt weiterhin nur einen Wächter und denselben
+Dienstnamen. Erfolgreiche explizite Installation speichert local/local.
+Diagnose, Spieltest und einzelne Reparaturschritte bleiben in Weitere Optionen.
+Technische Zustände stehen standardmäßig eingeklappt und vollständig übersetzt.
+
+`workflow.py` koordiniert nur bestehende feste Schritte: fehlender Boot-Fix,
+nach geladenem Override Desktop und Automatik ausschließlich auf Ubuntu/GNOME.
+Gesunde Bootressourcen und bereits dauerhaft aktives GNOME-VRR werden nicht
+erneut geschrieben. Erstinstallation wartet auf nötigen Neustart und kann über
+Installieren fortgesetzt werden. Fedora behält seinen bisherigen Bootpfad.
+UUID-gebundene Terminalergebnisse beheben übersehene schnelle Abschlüsse;
+veraltete Resultate, Doppelklicks und Startfehler werden abgefangen. Protokolle
+sind begrenzt, redigiert und im Dialog als Klartext behandelt. Exakte Boottoken
+und fehlerhafte Anbieter-JSON sind zusätzlich abgesichert. Der MSI-Hashfix aus
+dem vorangegangenen Live-Nachweis ist enthalten. Keine Änderung an EDID/Timings.
+
+Lokalisierung 1.0 ergänzt `hardware_fix_messages.py`, atomar über
+`content_ui_messages.py` und die vier Sprachdateien: 2.658 gemeinsame IDs.
+Hardware-Prüfung 1.0 passt die Breite nur im Hardware-Fix-Unterbereich an;
+`page.py`/`navigation.py` berücksichtigen die signalgesperrte Seitennavigation.
+Der Hauptfensterkopf zeigt dort den lokalen Standard. Hardware Fix verwendet
+die gemeinsame Theme-Registry und Disclosure-Komponente; sein Hintergrund bleibt
+für die vorhandene Darstellung transparent; Warnungen folgen dem Thema. `tools/render_hardware_fix.py` prüft echte
+Hauptfensteransichten mit isolierten Einstellungen und synthetischem Status.
+
+Neue Regressionen `test_hardware_fix_setup_3429183.py` und
+`test_hardware_fix_vrr_identity.py`. Vollständige Release-Prüfung, Sichtkontrolle,
+Paketierung und beide rollierenden Sicherungen folgen. Kein GitHub-Auftrag.
+
+Entwicklung 13.11.26: Hardware Fix bleibt 1.0. Die gebündelte
+`assets/msi-mag274qpf-x30mv-vrr/lib/vrr_hardware.py`-Konstante entspricht jetzt
+der anonymisierten korrigierten Profil-EDID. `lib/status.py` importiert sie,
+`profile.py` aktualisiert die beiden Ressourcenhashes. Erhalten: exakte
+EDID-Identität, read-only DRM, bestehende AppIndicators-Grenzen und getrennte
+Ubuntu-/Fedora-Installationswege. Neue Regressionen:
+`tests/test_hardware_fix_vrr_identity.py`; mit bestehenden Hardware-Fix-Tests
+16 Prüfungen bestanden. Ubuntu-Live: Mirage vorher VRR_ENABLED=0, nach einem
+begrenzten automatischen AppIndicators-Reset 1 bei wieder aktiver Erweiterung.
+Fedora nur isolierte Regressionen, kein Hardwarelauf. Insgesamt 21 Tests mit
+Repository-/Sicherheitsprüfungen bestanden. Benutzerdienst und drei betroffene
+Dateien der Benutzerinstallation sind gesichert aktualisiert; Systemkopie und
+.182-Pakete unverändert. Kein Versions-/Paketbau.
+
+Abschluss 12.11.26 (.182): Quellcommit `61a5f0d`; 1.736 Tests und fünf Untertests
+sowie sämtliche Release-Wächter bestanden. Sechs Pakete, 472 Laufzeitquellen,
+169 Original-Assets und genau beide .181/.182-Sicherungen mit je acht SHA256
+verifiziert. Benutzer- und Systemkopie .182 bytegleich installiert; echte
+installierte Wayland-Ansichten von GPU, drei LCD-Arbeitsbereichen und Einstellungen
+in beiden Themen mit isolierten Werten geprüft. Geschützte Einstellungen vor
+Start, Profile und beide nativen Plugins zusätzlich nach normalem Start unverändert.
+Normaler CPU-/RGB-/Levita-Start protokolliert; keine neue optische/Fedora-/Windows-
+Prüfung und kein GitHub-Upload. Vorbauabschnitte unten sind historisch; aktueller
+Nachweis und Bildmetadaten stehen in `PROJECT_STATUS.md`.
+
+Entwicklung 12.11.26 (.182): LCD-Arbeitsbereich 1.0 unter
+`src/modules/lcd_workspace/v1_0/` ordnet vorhandene Bibliotheks-, Kompositions-
+und Betriebswidgets; Levita 1.7 und LCD-Medienmanager 1.1 behalten Daten- und
+Transportverträge. GPU-Steuerung bleibt 1.0: ausschließlich interne Komposition
+mit erkennbarer GPU-Grafik, Livewerten, OC und vergrößerter Kurve auf einer Seite.
+LACT-Client, Sicherheits-/Besitzprüfungen, Test/Commit und gespeicherte Profile
+bleiben unverändert. Hauptorchestrator `make_settings_tab` sortiert 17 bereits
+besessene Gruppen nach Konstruktion; stabile `settingsSection`-Eigenschaften
+ermöglichen sprachunabhängige Prüfungen. Keine neuen Einstellungs-Schlüssel.
+Hintergrund zuerst, alltägliche Darstellung/Start vor technischen Diagnosen.
+
+Neue Dateien: `lcd_workspace/v1_0/{__init__,composition,navigation,devices}.py`
+und README; `gpu_control/v1_0/{workspace_ui,workspace_layout}.py`.
+LCD-Adapter erhalten acht Kachel-Schlüssel, Reihenfolge, Priorisierung und
+Sichtbarkeit sowie die explizite Gerätewahl bei verspäteter Erkennung.
+Drei Arbeitsbereiche messen ausschließlich den sichtbaren Inhalt. Galerie-
+und Vorschauarbeit bleibt an den passenden Bereich gebunden und läuft nach
+Rückkehr wieder an. GPU behält sieben logische Routen auf derselben Scrollseite;
+Livewerte beim Sprachwechsel stammen aus dem bestehenden Snapshot.
+Lokalisierung ergänzt `gpu_workspace_messages.py` (19 Quellen) und
+`lcd_workspace_messages.py` (15 Quellen), atomar in vier Sprachen: 2.618 IDs.
+Neue Regressionen: `test_lcd_workspace_3429182.py`,
+`test_gpu_workspace_3429182.py`, `test_settings_order_3429182.py`.
+43 gezielte LCD-Verträge, 30 bestehende GPU-Prüfungen plus neuer Qt-Durchlauf,
+zwei Settings-Prüfungen und vier vollständige UI-/Lokalisierungstests bestanden.
+Vollständige Release-Prüfung mit 1.736 Tests/fünf Untertests, Kompilierung,
+Sicherheits-/Datenschutzscan und Modulbudgets bestanden. Pakete/Installation folgen.
+Letzte verifizierte Benutzer-/Systeminstallation .181.
+Kein GitHub-Auftrag; keine zusätzliche Hardware- oder optische Freigabe.
+
+Zusätzliche UI-Anschlüsse: `display_effects/v1_11/base_page.py` öffnet den
+vorhandenen Ebene-2-Editor direkt in Levita-Komposition. Der Dashboard-Einstieg
+zur LCD-Auswahl öffnet die Bibliothek der aktuellen Gerätefamilie. Verborgene
+Kraken-QMovies und die schwebende Rundvorschau beachten auch die inneren
+Arbeitsbereiche; physische LCD-/Hardwaretimer bleiben unverändert.
+
+Abschluss 12.11.26 (.181): Quellcommit `75d146d`; 1.732 Tests und fünf Untertests
+sowie Sicherheits-/Datenschutz-/Budget- und restliche Release-Prüfungen bestanden.
+464 Laufzeitquellen und 169 Assets in allen Formaten bytegleich; alle sechs
+Pakete und genau beide .180/.181-Sicherungen mit je acht SHA256 geprüft.
+Benutzer- und Systemkopie .181 installiert, beide 464-Quellbäume identisch.
+Profile und beide unterschiedlichen RGB-Plugins vor/nach Start hashgleich;
+Einstellungen vor Start unverändert. Echte installierte Wayland-Ansichten von
+Gehäuse/Hilfe/Designpaaren/LCD-Manager/Profilführung in beiden Themen mit
+isolierten Einstellungen und ohne Hardwarezugriffe geprüft. Normales Startprofil,
+CPU-Frischefortsetzung, nativer RGB-Start ohne gemeldete Fehler und aktives Levita-
+Startdesign durch Sitzungslog bestätigt. Keine optische Geräteprüfung/Fedora-
+Liveprüfung oder GitHub-Veröffentlichung. Ältere Vorbauangaben unten bleiben
+historische Entwicklungsschritte; aktueller Nachweis in `PROJECT_STATUS.md`.
+
+Entwicklung 12.11.26 (.181): Neue gemeinsame UI-Bereiche 1.0 unter
+`src/modules/ui_sections/v1_0/` trennen `cards.py` (Themenflächen/Köpfe) und
+`reveal.py` (abbrechbare 420-ms-Führung der bestehenden Scrollleiste).
+`ui_performance/v1_1/compact_panels.py:Disclosure` und
+`profiles_workspace/v1_1/surfaces.py` bleiben Fassaden. Profil-Arbeitsbereich 1.1
+und PC-Gehäuseprofile 1.5 ändern nur Darstellung/Scrollführung; Gehäuse-/Profil-
+Auswahl, PC-Zeichnung und direkte Komponentenentwürfe behalten IDs, Speicherformat,
+Zuordnungen und bestehende Bestätigungs-/Schreibpfade. Öffentliche Modellverträge
+bleiben erhalten. Der Hauptfenster-Layoutabsturz ist durch expliziten Qt-Besitz
+vor Herausnahme der Comboboxen aus elternlosen Layouts korrigiert. Begrenzte
+Combobox-Mindestinhaltsbreiten verhindern horizontales Abschneiden im schmalen
+Gehäusefenster. Volle Hauptfensteraufnahmen von Hub/Gehäuse/Hilfe bestehen.
+
+Designs & Spiele 1.1 ist ausschließlich unter `src/modules/design_hub/v1_1/`
+aktuell. 15 unterschiedliche Original-Medienpaare behalten die fünf bisherigen
+IDs; zehn RGB-Vorlagen werden nach den bisherigen 35 angehängt. `catalog.py`
+prüft genaue feste Medienmitgliedschaft, `size_controls.py` speichert je Paar
+LCD-Zoom 50–200 Prozent und die vier echten Matrix-Zeichenvarianten.
+`scaling.py` hält reine unverzerrte Transformations-/Cachepläne,
+`preparation.py` einen begrenzten asynchronen Encoder mit atomarer Fertigstellung
+und Abbruch veralteter Aufträge. Eine getrennte LCD-Absichtsgeneration verwirft
+verspätete Ergebnisse; Seitenverbergen beendet die Vorbereitung.
+`mp4_metadata.py` prüft die Cache-Struktur mit höchstens 1 MiB Metadaten,
+512 Atomen und Tiefe acht auf eine H.264-Spur, 1600×720 und positive Dauer bis
+35 Sekunden, ohne Videoframes im GUI-Thread zu dekodieren. Auswahl/Regler
+schreiben keine Hardware; `controller.py` akzeptiert nur passende vorbereitete
+Medien und delegiert die bestehenden Besitzer. Ebene 2 und Originalmedien
+bleiben unverändert.
+
+LCD-Medienmanager 1.1 ist ausschließlich unter
+`src/modules/lcd_media_manager/v1_1/` aktuell. `panel.py` besitzt eingebettete
+Speichern-/Abbrechen-Entwürfe für Levita und Kraken; `dialog.py` bleibt ein kleiner
+Wrapper. Vorhandene Inventuren werden übergeben (höchstens 2.500 Pfade), statt
+beim Öffnen rekursiv zu scannen. Quellenformat und Grenzen bleiben bestehen;
+Originale werden nicht umbenannt, verschoben oder gelöscht. Vorschau-Cache-
+Fortschritt ist ausdrücklich von LCD-Transfer und Wiedergabe getrennt.
+
+Hilfe 1.0 unter `src/modules/help_center/v1_0/` trennt `page.py`, `topics.py`
+und `controller.py`, bewahrt Suche, Themen-IDs und viersprachige Inhalte/Links.
+Übersichtserkennung 1.0 unter `src/modules/dashboard_status/v1_0/` trennt reine
+Inventurklassifizierung (`model.py`), statische Karten (`cards.py`) und bereits
+bestätigte Gerätezeilen (`device_rows.py`), ohne neue Entdeckung oder Freigabe.
+GPU-Steuerung 1.0 ergänzt `read_status.py` für ehrlichen LACT-Lesestatus,
+Stale-Hinweise und begrenzte redigierte Fehler. Vorhandene Freigaben, Kurztests
+und Schreibwege bleiben unverändert. Lokalisierung 1.0 ergänzt
+`case_sections_messages.py`, `design_hub_size_messages.py`,
+`help_dashboard_messages.py` und `lcd_manager_messages.py`, atomar in DE/EN/ES/FR:
+2.584 gemeinsame IDs durch vier UI-/Lokalisierungstests bestätigt.
+30 aktuelle Hub-/Größen-/Metadatenregressionen, 184 RGB-Schleifenprüfungen und
+zwölf Abschnitts-/Gehäusetests bestanden. Echte vollständige Hauptfenster-Grabs
+in beiden Themen und drei Größen einschließlich offener Gehäusebereiche geprüft;
+isolierte helle/dunkle Manager-Ansichten bleiben ergänzende Evidenz.
+Quellfreigabe bestanden: 1.732 Tests und fünf Untertests, Kompilierung, Sicherheit,
+Datenschutz, Modulbudgets und restliche Release-Prüfungen nach Entfernung alter
+lokaler Bytecode-Caches; 464 Python-Laufzeitquellen. Pakete, beide rollierenden
+Sicherungen und Benutzer-/Systeminstallation folgen; installiert bleibt .180. Kein GitHub-Auftrag/Fedora-Live-Nachweis.
+
+
+Entwicklung 11.11.26 (.180): Profil-Arbeitsbereich 1.1 ist ausschließlich unter
+`src/modules/profiles_workspace/v1_1/` aktuell; der bisherige Versionsordner wird
+ersetzt. `page.py` hält ID-Auswahl und neue/ungespeicherte Entwürfe, `model.py`
+bleibt rein und `cards.py` besitzt auswählbare Bibliothekskarten. Vier neue Dateien
+trennen den Aufbau: `composition.py` verbindet vorhandene CRUD-/Bundle-Aktionen,
+`layout.py` berechnet responsive Spalten und lesbare Kachelhöhen, `surfaces.py`
+zeichnet lokale Themenflächen und große Bereichsköpfe, `summary.py` zeigt echte
+Speicherwerte mit eigenen Kurven/Farbproben und erlaubten gebündelten LCD-Postern.
+Der äußere Scrollbereich nimmt geöffnete Bearbeitung/Details/Transfers auf;
+die generische Aufklappkomponente bleibt unverändert. Host-Controller, versteckte
+elterngebundene ID-Tabelle, Schema, Startprofile, Besitz-/Schreibwege und aktive
+Hintergrundkopie bleiben erhalten. Ein neuer Entwurf behält seine leere Auswahl
+beim Sprachwechsel. Lokalisierung 1.0 ergänzt `profile_panels_messages.py`, atomar
+DE/EN/ES/FR: 2.515 gemeinsame IDs. Gezielte echte Qt-Geometrieprüfung besteht für
+drei Größen, vier Sprachen und zwei Themen, alle Bereiche offen. Vollständiger
+Wächter bestanden: 1.644 Tests und fünf Untertests, 443 Laufzeitquellen.
+Alle sechs Pakete, beide .179/.180-Sicherungen und beide installierten
+443-Quellbäume geprüft. Kein GitHub-Auftrag.
+
+Entwicklung 11.11.26 (.179): Profil-Kühlungsbereitschaft 1.0 unter
+`src/modules/profile_cooling/v1_0/` ergänzt `restore.py` für höchstens zehn Sekunden
+Warten auf frische Sensordaten. Keine Änderung an ProcessRuntime 1.1s 2,5-s-Frische,
+Timeout oder Hardwarebesitz. Hauptorchestrator verwirft alte Profil-/Kühlaufträge;
+Bedienungsänderung/Shutdown/Frist/fehlendes Gerät verhindern spätes Anwenden.
+Laufzeitprotokoll 1.0 ergänzt `error_capture.py` und `error_bridge.py`: begrenzte
+thread-sichere Python-/Thread-/Unraisable-/Qt-Erfassung, zentraler Privatlog-Sink
+in `src/privacy_logging.py` und GUI-seitige Übernahme durch `src/log_view_support.py`
+ohne Rückkopplung oder doppeltes Fehlerdateischreiben. Hauptfenster verbindet
+und löst Hooks explizit. Bestehende Sys-/Native-Crash-Protokolle bleiben erhalten.
+Lokalisierung 1.0 ergänzt `profile_cooling_messages.py`, atomar DE/EN/ES/FR:
+2.507 gemeinsame IDs. Keine Firmware-/PWM-/RGB-/LCD-Transportänderung.
+ProcessRuntime 1.1-Diagnose bewahrt die bekannte APP_VERSION als technische
+Buildangabe; sie wird nicht mehr fälschlich als IPv4 in [IP] umgewandelt.
+Private Detailwerte bleiben weiterhin redigiert. Die gemeinsame Fehlerdatei
+serialisiert Rotation und Schreiben über einen reentranten Thread-Lock.
+
+Entwicklung 11.11.26 (.178): Profil-Arbeitsbereich 1.0 unter
+`src/modules/profiles_workspace/v1_0/` trennt `model.py`, `cards.py` und `page.py`.
+Die unsichtbare elterngebundene Kompatibilitätstabelle bewahrt bestehende
+Profil-ID-/CRUD-/Bundle-Verträge; der Haupteinstieg delegiert nur den Aufbau.
+Programm-Hintergründe 1.0 unter `src/modules/app_backgrounds/v1_0/` trennt
+`catalog.py`, `media.py` und `profile.py`: sechs lokale Videos, ein sichtbarkeits-
+gebundener Decoder, CPU-RGB32-Komposition und temporärer angewendeter Profilzustand.
+LCD-Medium hat Vorrang vor RGB; Auswahl/Bearbeitung erzeugt keinen Aktivzustand.
+`tools/render_app_backgrounds.py` erzeugt fünf originale periodische Videostudien;
+`tools/render_code_rain.py` erzeugt additive +30-/+50-/+100-Prozent-Varianten.
+Display-Effekte 1.11 bewahrt bisherige Design-/Varianten-IDs, wählt bei neuer
+Matrix-Auswahl +30 Prozent vor. Lokalisierung 1.0 ergänzt
+`profile_background_messages.py` atomar in DE/EN/ES/FR: 2.501 gemeinsame IDs.
+Globale Hintergrundauswahl verwendet stabile Komboboxdaten auch nach Sprachwechsel.
+UI-Themes 1.0 aktualisiert Karten-/Symbolpaletten nach dem Themenwechsel;
+der bestehende Shutdown-Orchestrator gibt den Hintergrunddecoder ausdrücklich frei.
+Backend-/Schreibbesitz und Fedora-/Ubuntu-Installationspfade bleiben unverändert.
+
+Entwicklung 11.11.26 (.177): Neues Modul Designs & Spiele 1.0 unter
+`src/modules/design_hub/v1_0/` enthält `catalog.py`, `rain.py`, `controller.py`,
+`page.py`, `preview.py`, `games.py` und `navigation.py`. Fünf stabile Designpaare
+verbinden bestehende RGB-Vorlagen und LCD-Assets. Matrix Code Rain ergänzt
+additiv den extensiblen RGB-Effekt-/Vorlagenkatalog in `src/rgb_effects.py` und
+den unveränderten Display-Effekte-1.11-Katalogvertrag; bestehende IDs/Indizes
+bleiben erhalten. `tools/render_code_rain.py` erzeugt den originalen 1600×720-
+Hintergrund ohne Demo-Messwerte, mit periodisch überblendeten Glyphen.
+Navigationseinstellungen 1.0/Temperatur-Navigationsmixin hängen Spiele,
+Designpaare und die unveränderte Designautomatik 1.0 unter einen neuen Bereich;
+eigene Reihenfolgen und bisherige Sichtbarkeitsschlüssel bleiben erhalten.
+Lokalisierung 1.0 ergänzt `design_hub_messages.py` in allen vier Sprachdateien;
+Feature-Reifegrade 1.0 kennzeichnet den neuen Bereich als Alpha. Artwork ergänzt
+eigene Designs-/Spielesymbole. Keine Bildschirmaufnahme, Telemetrie oder neue
+Hardwarebesitz-/Schreibschnittstelle. Vollständiger Wächter: 1.609 Tests und fünf Untertests bestanden, vier Sprachen und 448 echte Zeigergesten; 424 Laufzeitquellen und 2.468 Sprach-IDs. Matrix-MP4 vollständig dekodiert und periodisch geprüft; helle/dunkle Oberfläche geprüft. Alle sechs Pakete, beide .176/.177-INTERN-Sicherungen und 424 identische Quellen in ZIP/DEB/RPM geprüft. Benutzer- und Systeminstallation .177 abgeschlossen (DPKG 3.4.29.177~intern2); beide installierten Quellbäume und Matrix-Assets bytegleich. Native RGB-Arbeiter ohne gemeldete Fehler und gespeicherte Levita-Komposition nach Start bestätigt. Keine optische Matrix-/Fedora-Liveprüfung oder GitHub-Veröffentlichung.
+
+
 Veröffentlichung 11.11.26 (.176): Auf ausdrücklichen Eigentümerauftrag wird
 nur der Build-Kanal von INTERN auf STABLE angehoben. Keine Modulschnittstelle,
 Hardwarefunktion oder Einstellung wird geändert; Versions-/Fenstertiteltests
@@ -69,8 +380,8 @@ Interner GitHub-Upload
 auf `codex/3.4.29-intern` bestätigt (Quellcommit `5fd7989`); kein öffentlicher
 Release-Tag und keine Änderung des Standardzweigs.
 
-**Stand:** 11.11.26
-**Anwendung:** 3.4.29.176 STABLE (öffentlich veröffentlicht und geprüft)
+**Stand:** 14.11.26
+**Anwendung:** 3.4.29.183 INTERN
 
 Lokaler Stand 11.11.26: .174-Benutzerinstallation mit allen 403 Python-Quellen
 verifiziert und gestartet. Fünf native RGB-Arbeiter ohne gemeldete Fehler,
@@ -906,6 +1217,10 @@ Datum: 13.09.26.
 | Funktionsmodule/Einrichtung | 1.0 | `src/modules/setup_features/v1_0/` | Persistente Funktionskarten und Einrichtungsseite, getrennte Navigation, sichere Migration alter Sichtbarkeitsschlüssel; `ownership.py` kapselt die bestehenden Host-Verträge | Deaktivierte Features sperren Hardwarepfade; keine pauschale Löschung von Einstellungen |
 | Feature-Reifegrade | 1.0 | `src/modules/feature_lifecycle/v1_0/` | Zentrale unabhängige Feature-Versionen und Alpha-/Beta-/Release-Candidate-/Stabil-Einstufung für Hauptbereiche | Reine Darstellungsmetadaten; keine Persistenz, Hardwareaktivierung, Steuerhoheit oder Migration |
 | Steuerbesitz | 1.0 | `src/modules/control_authority/v1_0/` | Bestätigte Besitzerwahl je Fachbereich und fail-closed Schreibfreigabe | Kein zusätzlicher Gerätebesitzer oder direkter Hardwarebefehl |
+| Gemeinsame UI-Bereiche | 1.0 | `src/modules/ui_sections/v1_0/` | `cards.py` Themenflächen und große Bereichsköpfe; `reveal.py` begrenzte 420-ms-Führung vorhandener Scrollleisten mit Nutzergesten-/Lebensdauerschutz | Keine Bildschirmkopien, neuen Decoder, Einstellungen oder Hardwarewerte; bestehende Disclosure-/Profilfassaden erhalten |
+| Hilfe | 1.0 | `src/modules/help_center/v1_0/` | `page.py` oben verankerte Bibliothek/Artikel; `topics.py` eigene Themenzeichnung; `controller.py` vorhandene Suche, Themen-IDs und vier Sprachinhalte | Nur ausdrückliche vorhandene Hilfe-/Seitenlinks; Auswahl startet keine Hardware und ändert keine Einstellungen |
+| Übersichtserkennung | 1.0 | `src/modules/dashboard_status/v1_0/` | `model.py` reine Inventur-/Topologieklassifizierung; `cards.py` explizite statische Karten; `device_rows.py` bereits bestätigte Kühlungs-/Mainboard-/RGB-/GPU-Inventur | Keine zusätzliche Erkennung oder Messwerte; Erkannt ist keine Steuerfreigabe und Levita wird nicht als NZXT bezeichnet |
+| Designs & Spiele | 1.1 | `src/modules/design_hub/v1_1/` | 15 feste Original-RGB/LCD-Paare; `size_controls.py` je Paar Zoom/Matrix-Varianten; `scaling.py` reine Pläne; `preparation.py` begrenzter asynchroner Encoder/atomarer Cache und Absichts-/Verbergeabbruch; `mp4_metadata.py` begrenzte H.264-/Geometrie-/Dauerprüfung; `preview.py` sichtbare Vorschau; unveränderte Spielregel-Entwürfe/Untermenüs | Exakte Original-/Ergebnisprüfung vor bestehendem Anwendenbesitzer; keine Hardwareaktion durch Auswahl/Regler, keine neue Telemetrie oder Frame-Synchronisation |
 | Designautomatik | 1.0 | `src/modules/design_automation/v1_0/` | Wiederhergestellter lokaler Plan-/Programm-/Profilmanager und eigener Navigationsbereich | Bestehende Hardware- und Besitzerprüfungen bleiben maßgeblich |
 | Externe Backend-Versionen | 1.0 | `src/modules/backend_updates/v1_0/` | Begrenzte read-only Prüfworker, offizielle Releasequellen, native Paketmetadaten und Ubuntu-spezifische root-owned Pfad-/Manifestprüfung in `executables.py` | Keine automatische Installation/Serviceänderung; fremde Paketmanager bestimmen nicht die Distribution |
 | Levita LCD-Datenoberfläche | 1.7 | `src/modules/lcd_levita/v1_7/` | Layout-/Geometrie-/Theme-Staging, feste 1600:720-Vorschaugeometrie, bis zu zwölf eigene Texte, vier originale Glow-/Partikelrenderer und lokale Ebenenkomposition | Animiertes Dekor läuft als ein Cache-Videostrom unter editierbaren Daten; kein wiederholtes Maskenschreiben und kein zusätzlicher USB-Besitzer |
@@ -915,17 +1230,21 @@ Datum: 13.09.26.
 | Levita-Daemongesundheit | 1.1 | `src/modules/levita_daemon_health/v1_1/` | Exakte Eigenprozess-Erkennung über `/proc`, RSS-Messung, Klassifizierung verlorener/besetzter TRCC-Verbindungen und unmittelbar erneut validierte Signalübergabe; `model.py:is_usb_owner_conflict` trennt USB-Belegung, `backend_failure_detail` wählt den primären Fehler statt letzter Hintzeile | Keine Qt- oder USB-Operation; Ubuntu-Orchestrierung stoppt nur eigene Wiederholungen bei Fremdbesitz, Fedora-Recovery bleibt unverändert; signalisiert ausschließlich einen exakten Prozess desselben Benutzers |
 | Display-Effekte | 1.11 | `src/modules/display_effects/v1_11/` | `page.py` besitzt transiente Auswahl und bestätigte Vorschau-Rückkehr, `library.py` aktualisiert aktuelle Sprachdetails; `light_bands_renderer.py` rendert echte 4800×2160 Quellen; responsive Ebene-1-/Sensorlayout-Kacheln, sichtbarkeitsgebundene 20-FPS-Vorschau, unabhängiger Ebene-2-Animationsschalter, kanonisches Levita-Startdesign, sichere Übergabe und direkter Firmware-Rückgabeknopf | Auswahl und Breitenanpassung bleiben hardwarefrei; Startdesign schreibt nur geprüfte Persistenz, Anwenden beziehungsweise Rückgabe nutzt den bestehenden TRCC-Pfad |
 | Responsive Galerien | 1.0 | `src/modules/responsive_gallery/v1_0/` | Reine Breiten-/Spaltenberechnung, gebündelter Qt-Viewport-Resize-Relay und gleichmäßige Kachelverteilung für LCD- und Effektgalerien | Keine Persistenz und kein Hardwarezugriff |
-| LCD-Medienmanager | 1.0 | `src/modules/lcd_media_manager/v1_0/` | `preview_visibility.py` clippt alle Vorschau-Ahnen/Scroll-Viewports, `video_preview.py` besitzt geteiltes lokales Qt-Decoding und entlädt auf verborgenen Seiten Decoderquelle/Framepuffer vollständig; begrenzte Verwaltung mehrerer lokaler Ordner, einzelner Bilder/Videos, nicht-destruktiver Ausblendungen und eigener Anzeigenamen | Ändert, verschiebt und löscht keine Quelldateien; sichtbare Auswahl wird beim Zurückkehren neu geladen; Fremdmedien werden nicht mit OHC ausgeliefert |
+| LCD-Arbeitsbereich | 1.0 | `src/modules/lcd_workspace/v1_0/` | Komposition und Navigation vorhandener Bibliotheks-, Ebenen-/Vorschau- und Betriebswidgets; getrennte Kraken-Kompatibilität | Ausschließlich Qt-Darstellung; Quellen, Layoutmodell, Startdesign und vorhandene Anwenden-/Transportbesitzer bleiben maßgeblich |
+| LCD-Medienmanager | 1.1 | `src/modules/lcd_media_manager/v1_1/` | `panel.py` eingebetteter nicht-destruktiver Entwurf mit Save/Cancel und vorhandener Inventur; `dialog.py` Wrapper; `model.py` bestehende begrenzte Quellen/Aliase/Ausblendungen; gemeinsame Sichtbarkeit und lokale Decodierung in `preview_visibility.py`/`video_preview.py` | Öffnen scannt nicht rekursiv, Originaldateien unverändert; Galerie-Cachefortschritt ist kein LCD-Transfer; versteckte Decoderquelle wird freigegeben |
 | Anzeigeeinstellungen | 1.0 | `src/modules/display_settings/v1_0/` | Kleine Qt-Oberfläche für Bildschirm, Fensterstartzustand, Geometrie/Skalierung und experimentelle Levita-Bildrate | Nur Aufbau und Signalverbindungen; Persistenz, Platzierung und Hardware-Orchestrierung bleiben beim jeweiligen Besitzer |
 | Levita Leistung/Spielerkennung | 1.1 | `src/modules/levita_performance/v1_1/` | Reine Normalisierung der sicheren/experimentellen FPS, Rückstufungskette, konservative GameMode-/Gamescope-/Programmlisten-Signale und Zehn-Sekunden-Abfrageintervall | Keine Lastheuristik, kein Hardwarezugriff, keine allgemeine Wayland-Fensterbeobachtung |
 | Bereichs-Unterreiter | 1.0 | `src/modules/section_tabs/v1_0/` | Wiederverwendbare browserähnliche Unterreiter für Hauptbereiche mit Seitenleisten-Unterpunkten; mehrere Leisten und Hauptseite bleiben über stabile Seiten-IDs synchron | Reines Navigationsmodul ohne Hardwarezugriff; zunächst für LCD verwendet |
 | Reaktionsfähiger Start | 1.0 | `src/modules/responsive_startup/v1_0/` | `probe.py` koordiniert eine begrenzte, zusammengefasste Qt-Hintergrundprüfung, `ownership_probe.py` kapselt die blockierenden read-only Systemabfragen und `controller.py` hält Mainboard-PWM bis zum bestätigten Besitzerstatus fail-closed | Versioniertes Start-/Besitzmodul; keine Hardware-Schreibbefehle |
+| Profil-Kühlungsbereitschaft | 1.0 | `src/modules/profile_cooling/v1_0/` | `restore.py`: asynchroner frischer CPU-Wert, Zehn-Sekunden-Frist, neuester Auftrag und Bedien-/Shutdown-Abbruch | Keine neue Hardwarefreigabe oder synchrone Sensorlesung |
+| Profil-Arbeitsbereich | 1.1 | `src/modules/profiles_workspace/v1_1/` | `page.py` stabile ID-/Entwurfszustände; `composition.py` scrollbare Bibliothek/Profilkarte; `layout.py` responsive Kachelhöhen; `surfaces.py` gemeinsame UI-Bereiche-Fassade; `summary.py` gespeicherte Werte/Originalgrafiken | Versteckte ID-Tabelle, CRUD-/Start-/Bundleverträge erhalten; keine Hardwareaktion bei Auswahl; abbrechbare Scrollführung bewahrt Entwurf und Nutzerposition |
+| Programm-Hintergründe | 1.0 | `src/modules/app_backgrounds/v1_0/` | Feste lokale Videos, ein Decoder, Profil-Snapshot und bestehende CPU-Komposition; Offline-Renderer unter tools | Sichtbarkeitsgebunden, keine Netzwerk-/Hardware-Schreibwege |
 | Hauptfenster und Seitenkomposition | Legacy 3.4.29.99 | `src/kraken_control.py`, `src/dashboard_layout.py`, `src/localization_catalog.py` | Anwendungseinstieg und noch nicht extrahierte Controller; aufklappbare Kühlungs-/LCD-Unterseiten, hardwareabhängige Lüfterquellen, Zuordnungsreset/-assistent, unabhängige Bildschirm-/Fensterzustandswahl, globale leichte Seitenübergänge und 60-Minuten-Logansicht | X/Fensterschließen hält OHC im Infobereich am Leben; sichtbares manuelles Programmende ausschließlich über **Beenden** im Rechtsklickmenü des Tray-Symbols, Sitzungsende separat |
 | Hardware-Unterbauten | 1.0 | `src/modules/hardware_backends/v1_0/` | Reine Normalisierung und fail-closed Auflösung persistierter Automatik-/Direktauswahl für vorhandenes TRCC Linux und OHC Linux-hwmon | OHC-nativer Levita- und CoolerControl-Adapter bleiben bis zu Implementierung/Validierung nicht auswählbar; keine Hardwarebefehle |
 | Hardware-Checker | 1.0 | `src/modules/hardware_checker/v1_0/` | Begrenzte read-only Linux-/Windows-CIM-Erkennung, serialfreie DMI-Sockel-/RAM-Daten, responsive Übersicht in `cards.py`, separate Detailtabelle und erhaltener Hardware-Fix-/Lasttestpfad | Aktiv; keine Hardwarefreigabe aus Darstellung/Erkennung; bestehende bestätigte Schreib- und Besitzergrenzen bleiben |
-| Hardware Fix | 1.0 | `src/modules/hardware_fix/v1_0/` | Profilregistrierung und Hardware-Checker-Unterseite für MSI MAG 274QPF X30MV – VRR; anonymisierte EDID, Modell-/Ressourcenprüfung, gesperrte feste Terminaljobs, Anbieterübernahme, echte DRM-Messung und profilbezogene Rücknahme | Keine persönliche Seriennummer, keine beliebigen Root-Skripte/Pfade, kein automatischer Neustart; Ubuntu-AppIndicators-Automatik läuft nie auf Fedora |
+| Hardware Fix | 1.0 | `src/modules/hardware_fix/v1_0/` | Profilregistrierung und Hardware-Checker-Unterseite für MSI MAG 274QPF X30MV – VRR; anonymisierte EDID, Modell-/Ressourcenprüfung, gesperrte feste Terminaljobs, lokale Standardeinrichtung, echte DRM-Messung und profilbezogene Rücknahme | Keine persönliche Seriennummer, keine beliebigen Root-Skripte/Pfade, kein automatischer Neustart; Ubuntu-AppIndicators-Automatik läuft nie auf Fedora |
 | Snapshot-Manager | 1.0 | `src/modules/snapshot_manager/v1_0/` | Reine Richtlinie/Hysterese, persistente bounded Aktivitätsprobe in `activity_runtime.py`, Qt-Ansicht in `page.py`/`views.py`, Lebensdauer in `process_runtime.py` und bestätigte Aktionen in `snapshot_actions.py`; Erstellung, Root-Einrichtung, Herkunftsfilter, ProgramManager, Zeit-/CPU-/I/O-Regler und getrennte Admin-/Automatikrechte | Aktiv; keine Hardwarefreigabe aus Darstellung/Erkennung; bestehende bestätigte Schreib- und Besitzergrenzen bleiben |
-| GPU-Steuerung | 1.0 | `src/modules/gpu_control/v1_0/`, `packaging/install-lact.sh` | LACT-Client, fail-closed Feature-/Besitzschutz, responsive Cockpit-/Kurven-/Leistungsansicht; `cockpit_ui.py` trennt Widgetaufbau; `read_worker.py`, `read_probe.py`, `read_ui.py` kapseln Ubuntu-Abfragen mit Frist/Abbruch/Stale-Schutz; explizite Inline-Leistungsbestätigung, getrennte Profile/Tests/Reset/Overdrive und nativer Installer | Aktiv; keine Hardwarefreigabe aus Darstellung/Erkennung; bestehende bestätigte Schreib- und Besitzergrenzen bleiben |
+| GPU-Steuerung | 1.0 | `src/modules/gpu_control/v1_0/`, `packaging/install-lact.sh` | LACT-Client, fail-closed Feature-/Besitzschutz und gemeinsame GPU-Seite über `workspace_ui.py`/`workspace_layout.py`; `read_worker.py`/`read_probe.py`/`read_ui.py` begrenzte Ubuntu-Leseprozesse; `read_status.py` tatsächlicher LACT-Lesestatus, Stale-Hinweis und begrenzte redigierte Fehler | Erfolgreiches Lesen ist keine Schreibfreigabe; Kurztest, CoolerControl-/Besitzschutz und Bestätigungswege erhalten; gemeinsamer UI-/Kurvenarbeitsbereich ohne Vertragsänderung |
 | GPU-Profile | 1.0 | `src/modules/gpu_profiles/v1_0/` | Begrenzte exakte GPU-Profile mit SHA-256, nur darstellende RX-/RTX-Kataloge, normalisierte lokale Artwork-Kopien und wiederhergestellter `visual_catalog.py` mit originalen schematischen Grafiken unter `src/assets/gpu/` | Aktiv; keine Hardwarefreigabe aus Darstellung/Erkennung; bestehende bestätigte Schreib- und Besitzergrenzen bleiben |
 | Temperaturverlauf | 1.2 | `src/modules/temperature_history/v1_2/` | Begrenzter RAM-Puffer, datierte Qt-Zeitachse/Hoveranzeige, skalierbare Splitter, read-only Linux-hwmon-Erkennung und CSV-/JSON-Berichte; `gauge.py` zeigt dieselbe kompakte Celsius-Skala in Übersicht, Kühlung und Aufzeichnung | Höchstens 24 Stunden/28.800 Punkte im RAM; keine automatische Persistenz, kein Hardwarebesitz und Berichtsschreiben nur nach Benutzerauswahl |
 | Kühlungssicherheit | 1.0 | `src/modules/cooling_safety/v1_0/` | Modellabhängige fail-closed Untergrenzen und letzte Begrenzung vor dem Hardware-Schreibpfad | Levita: eigenes vorsichtiges OHC-Minimum 50 % Pumpe/25 % Radiator, da der Hersteller nur Maximal-RPM veröffentlicht; NZXT-Bereich unverändert |
@@ -934,11 +1253,11 @@ Datum: 13.09.26.
 | Anwendungsaktivierung | 1.0 | `src/modules/application_activation/v1_0/` | Private lokale `show`-Nachricht aktiviert das vorhandene Hauptfenster; ausschließlich `--autostart` entfernt Desktop-Starttokens; `autostart.py` korrigiert beim expliziten Benutzerupdate alte Startziele unter Erhalt der Aktivierungswahl | Versioniertes Koordinationsmodul unterhalb der bestehenden Prozess-/Hardware-Sperre |
 | Anwendungsabschluss | 1.1 | `src/modules/application_shutdown/v1_1/` | `process_cleanup.py` beendet den eigenen Pipe-Helfer zuerst über EOF; `sequence.py` isoliert Abschaltphasen; `diagnostics.py` interpretiert das begrenzte Journal; `watcher.py` erkennt Elternprozessende und räumt ausschließlich dokumentierte OHC-Kinder auf; `restart.py` wartet PID-startzeitgeprüft auf das Ende der alten Einzelinstanz vor dem Relaunch. Der RGB-Abschlusslichtschritt liegt nach Effektstopp und vor Sperren-/Enginefreigabe | Firmware-Guard behält seinen eigenen Pfad; Wiederanlauf von CoolerControl ist bei fehlender Polkit-Freigabe best-effort und wird protokolliert; Neustart überspringt Abschlusslicht |
 | Fensterleiste | 1.2 | `src/modules/window_chrome/v1_2/` | Eigene Hauptfensterleiste, compositor-delegierte Größenänderung, explizit verfolgte Randcursor-Freigabe und 48×42-Pixel-Schließfläche bis in die obere rechte Ecke | Fensteraktionen umgehen den Größenänderungsrand; OHC bewegt/fängt die Maus nicht und ändert kein KDE-Zeigerthema außerhalb des ausdrücklichen Desktop-Designwegs |
-| UI-Leistung und SSD-Cache | 1.1 | `src/modules/ui_performance/v1_1/` | `gallery_preparation.py` reserviert endgültige Reihenhöhe; `dynamic_text.py` verfolgt späte Reitertitel; `memory.py` sammelt nach Navigation/Minimieren verzögert Zyklen; `controller.py` verschiebt Cachepflege bis vier bis fünf Sekunden nach der letzten Eingabe und startet sie mit niedriger Nice-/Idle-I/O-Priorität; `maintenance.py` arbeitet in kooperativen Portionen und liefert begrenzte Laufzeittelemetrie | Keine periodische Speicheraufgabe oder private SSD-Auslagerung; Cache enthält nur regenerierbare OHC-Dateien, Originale und aktive Hardwaredateien bleiben unverändert |
+| UI-Leistung und SSD-Cache | 1.1 | `src/modules/ui_performance/v1_1/` | Bestehende leichte Seitenübergänge, portionsweise Galeriearbeit und Eingaberuhe-Cachepflege; `compact_panels.py:Disclosure` delegiert gemeinsame Bereichsköpfe/Scrollführung an UI-Bereiche 1.0 | Keine Screenshots oder Effektpuffer; kein neuer Hardwarebesitzer; bestehende Animationsabschaltung und Callbackverträge erhalten |
 | UI-Themes | 1.0 | `src/modules/ui_themes/v1_0/` | `light.py`, `dark.py` und `studio.py` liefern Paletten-/Semantikwerte; `controller.py` wendet die getrennten reinen `style_base.py`-/`style_controls.py`-Qt-Selektoren einschließlich Kühlungs-Sicherheitsfläche und adaptiver Diagnose-/Gehäuse-/Temperaturtabellen an | Reines Darstellungsmodul; Systemmodus übernimmt die native Palette und passende Semantikwerte, keine Hardwarelogik |
-| PC-Gehäuseprofile | 1.5 | `src/modules/pc_case_profiles/v1_5/` | `editor_sections.py` ordnet lebende Felder in Spalten/Reitern; `inline_editor.py` hält Entwürfe bis Speichern/Abbrechen/Escape/Schließen offen; `profiles.py` validiert den vollständigen einstellungsbasierten RGB-/Lüfter-Topologiesnapshot; `controller.py` synchronisiert CPU_FAN-/PUMP_FAN-/Gehäusezuordnungen in das ausgewählte Profil und bestätigt Konflikte; `case_renderer.py` zeichnet 30 originale Modellansichten; `workspace.py`/`case_page.py` besitzen Gehäuse-Seite und fähigkeitsabhängige Topologie; `spatial_layout.py` verwaltet Richtung, Tempo, echten LED-Reihenfolgeeditor und selbst gemessene Beziehungen | Raumdaten und Zuordnungen sind Einstellungen, keine elektrische Erkennung; Profilübernahme schreibt keine Hardware; keine Kalibrierung/Aktivierung oder Hardwarewrites durch Zuordnung/Abstand; keine Herstellerbilder oder erfundene Maße/LED-Topologie |
+| PC-Gehäuseprofile | 1.5 | `src/modules/pc_case_profiles/v1_5/` | `workspace.py`/`case_page.py` Gehäuse-/Profilleiste und PC-Zeichnung; `component_summary.py` direkte Entwürfe; gemeinsame große Bereiche; vorhandene `editor_sections.py`/`inline_editor.py`, reine Profile/Topologien, 30 eigene Modellansichten und selbst gemessene Raumbeziehungen | UI-Korrektur ohne öffentlichen Modellvertragwechsel; IDs/Zuordnung/Entwurfscommit erhalten; keine Erkennung, Kalibrierung oder Hardwarewrites durch Darstellung, Abstand oder Profilwahl |
 | Programme | 1.0 | `src/modules/programs/v1_0/` | `model.py` liest begrenzt Desktop-Einträge und validiert Profile/Grundordner; `github_release.py` prüft offizielle GitHub-Releasepläne, schreibt Assets, beide Source-Archive, Manifest und SHA256SUMS atomar und liefert nur tatsächlich vorhandene größenpassende AppImages zur Profilwahl; `install_plan.py` baut validierte Flatpak-/Snap-/AppImage-Pläne; `page.py` besitzt Inventar, Suche, Profilverwaltung und getrennte Hintergrundarbeiter | Keine Ausführung entdeckter Desktop-`Exec`; GitHub nur nach Klick, erlaubte HTTPS-Hosts, höchstens 100 Assets/1 GiB je Datei/4 GiB gesamt, keine Überschreibung; AppImage-Zuordnung nur aus dem geprüften heruntergeladenen Plan; Installationsplan sichtbar und nochmals bestätigt, kein Shellaufruf, Systempakete fail-closed |
-| Lokalisierung | 1.0 | `src/modules/localization/v1_0/` | Je ein vollständiges Laufzeitmodul für Deutsch, Englisch, Spanisch und Französisch; 2.259 gleiche Nachrichten-Einträge; reine vierfache Zusatzblöcke liegen budgetgerecht in `snapshot_messages.py`, `next_version_messages.py`, `program_messages.py`, `lifecycle_messages.py`, `shutdown_lighting_messages.py`, `rgb_speed_messages.py`, `retained_lcd_messages.py`, `retained_feature_messages.py`, `retained_ui_messages.py`, `content_ui_messages.py`; Programme sowie Reifegrad-, Snapshot-, GPU-, RGB-, Gehäuse-, CPU- und Hardwaretexte werden werttreu übersetzt | Versionierter Modulordner; alle vier Sprachmodule bei jeder sichtbaren Änderung atomar pflegen |
+| Lokalisierung | 1.0 | `src/modules/localization/v1_0/` | Je ein Laufzeitmodul DE/EN/ES/FR mit aktuell 2.584 identischen Nachrichten-IDs; budgetgerechte gemeinsame Datenblöcke, neu `case_sections_messages.py`, `design_hub_size_messages.py`, `help_dashboard_messages.py`, `lcd_manager_messages.py`; Übersetzung verwendet stabile Daten-IDs | Alle vier Sprachen bei sichtbaren Änderungen atomar pflegen; 2.584 IDs durch vollständige UI- und Release-Prüfung bestätigt |
 | NZXT Kraken | 1.0 legacy | `src/nzxt_backend.py`, `src/kraken_sensors.py`, `src/kraken_cam_streamer.py`, `src/kraken_lcd_designs.py`, `src/nzxt_rgb.py` | Erkennung, Sensoren, LCD-Transport und RGB | Ordner-Migration ausstehend |
 | Mainboard-Kühlung | 1.0 legacy | `src/mainboard_fan_control.py`, `src/ohc_fan_helper.py`, `src/cooling_ownership.py` | hwmon/NCT6687, Polkit-Helfer und Besitzschutz; freundlicher Kernelname getrennt von `PWM N`; bestätigter Gesamtzuordnungsreset bei Kurvenerhalt; konstantes 100-%-Leistungsprofil und optionale `pwmN_mode`-Umschaltung; Kurvenschreibvorgänge werden bei Zustandsänderung, Notfall oder spätestens nach 60 Sekunden einmal gebündelt protokolliert | Ordner-Migration ausstehend; Rücksetzen stoppt laufende OHC-Regelung und gibt zuerst an Firmware/BIOS zurück |
 | Mainboard-Treiber-/MOK-Assistent | 1.1 | `src/modules/mainboard_driver_setup/v1_1/` | Asynchron geprüfter read-only Distributions-/DMI-/Secure-Boot-/MOK-/Modulstatus; getrennte feste Ubuntu-/Fedora-/Arch-Abhängigkeitsbefehle; Ubuntu-Update und Installation separat; vorhandener fester Checkout nur per `pull --ff-only`; gemeinsame DKMS-Schritte; MSI-X870-Optionen nur bei passender DMI-Erkennung; optionale per-user Polkit-Dauerfreigabe als fünfter Schritt | Fremdquellen werden nie automatisch verändert; Konfliktordner/Distributionen fallen geschlossen aus; Dauerfreigabe gilt nur für den festen Lüfterhelfer; kein Passwortzugriff, automatischer Neustart oder Secure-Boot-Umbau |
@@ -985,7 +1304,7 @@ src/thermalright_display_ui.py
   -> src/modules/lcd_levita/v1_7/motion_renderer.py
   -> src/modules/lcd_levita/v1_7/motion_compositor.py
   -> src/modules/levita_performance/v1_1/policy.py
-  -> src/modules/lcd_media_manager/v1_0/model.py + dialog.py
+  -> src/modules/lcd_media_manager/v1_1/model.py + panel.py + dialog.py
   -> src/modules/responsive_gallery/v1_0/layout.py
   -> src/thermalright_display.py
 
@@ -1017,16 +1336,20 @@ dreizeilige persönliche Callouts.
 | Laufzeitprotokoll 1.0 / Levita-Daemongesundheit | `tests/test_runtime_logging_342976.py`, `tests/test_runtime_logic_stub.py`, `tests/test_security_static.py`, `tests/test_thermalright_ui_static_3429.py`, `tests/test_lcd_usb_owner_conflict_3429155.py`, `tests/test_lcd_health_module_globals_3429155.py` |
 | Absturzwiederherstellung 1.0 | `tests/test_crash_recovery_3429119.py`, `tests/test_exit_journal_labels_342991.py`, `tests/test_slot_argb_routes_342985.py`, `tests/test_gpu_fan_stress_3429107.py`, `tests/test_security_static.py` |
 | Levita LCD-Abschaltwächter 1.0 | `tests/test_levita_shutdown_guard_342953.py`, `tests/test_thermalright_preview_queue_342914.py`, `tests/test_security_static.py`, Offscreen-UI-Aufbau |
-| Display-Effekte 1.11 / Responsive Galerien 1.0 / LCD-Medienmanager 1.0 | `tests/test_display_preview_342995.py`, `tests/test_display_effects_342954.py`, `tests/test_media_manager_reports_342975.py`, `tests/test_full_ui_build_34291.py`, `tests/test_thermalright_ui_static_3429.py`, echter Offscreen-MP4-Decodiertest |
+| Display-Effekte 1.11 / Responsive Galerien 1.0 / LCD-Medienmanager 1.1 | `tests/test_display_preview_342995.py`, `tests/test_display_effects_342954.py`, `tests/test_media_manager_reports_342975.py`, `tests/test_lcd_inline_manager_3429181.py`, `tests/test_full_ui_build_34291.py`, `tests/test_thermalright_ui_static_3429.py`, echter Offscreen-MP4-Decodiertest |
+| Gemeinsame UI-Bereiche 1.0 / Profil-Arbeitsbereich 1.1 | `tests/test_section_reveal_3429181.py`, `tests/test_profiles_workspace_geometry_3429180.py`, `tests/test_full_ui_build_34291.py`, helle/dunkle reale Qt-Ansichten |
+| PC-Gehäuseprofile 1.5 / Qt-Eigentümerschaft | `tests/test_case_workspace_ownership_3429181.py`, `tests/test_compact_ui_case_profiles_342959.py`, vollständige Qt-Hauptfenster-Grabs bei drei Größen/beiden Themen; keine Hardwareaktion und keine horizontale Beschneidung |
+| Designs & Spiele 1.1 | `tests/test_design_hub_3429177.py`, `tests/test_design_hub_size_3429181.py`, `tests/test_design_hub_mp4_3429181.py`, `tests/test_rgb_loop_continuity_3429171.py`, `tests/test_full_ui_build_34291.py` |
+| Hilfe 1.0 / Übersichtserkennung 1.0 | `tests/test_help_inventory_3429181.py`, `tests/test_full_ui_build_34291.py`, `tests/test_localization_module_342952.py` |
 | Anzeigeeinstellungen 1.0 | `tests/test_full_ui_build_34291.py`, `tests/test_window_placement_342942.py`, `tests/test_levita_performance_342972.py` |
 | UI-Themes 1.0 | `tests/test_ui_themes_342961.py`, `tests/test_full_ui_build_34291.py`, helle/dunkle Offscreen-Sichtprüfung |
 | Hauptfenster und Seitenkomposition | `tests/test_ui_layout.py`, `tests/test_thermalright_cooling_3429.py`, `tests/test_mainboard_fan_ui_static.py`, Offscreen-UI-Aufbau |
 | Kühlungszustand 1.0 / Profilstart | `tests/test_cooling_state_342990.py`, `tests/test_cpu_defaults_and_case_pwm_3429152.py`, `tests/test_profile_startup_policy_3429155.py`, `tests/test_rgb_profile_autostart_342943.py` |
 | Hardware-Unterbauten / Temperaturverlauf 1.2 / Kühlungssicherheit 1.0 / Profile | `tests/test_hardware_backends_temperature_history_342966.py`, `tests/test_temperature_profiles_safety_342967.py`, `tests/test_media_manager_reports_342975.py`, `tests/test_full_ui_build_34291.py`, Offscreen-Canvas-Aufbau |
 | Hardware-Checker 1.0 | `tests/test_hardware_checker_342996.py`, `tests/test_full_ui_build_34291.py`, `tests/test_localization_module_342952.py`, `tests/test_security_static.py` |
-| Hardware Fix 1.0 | `tests/test_hardware_fix_3429149.py`, `tests/test_full_ui_build_34291.py`, `tests/test_security_static.py` |
+| Hardware Fix 1.0 | `tests/test_hardware_fix_setup_3429183.py`, `tests/test_hardware_fix_vrr_identity.py`, `tests/test_hardware_fix_3429149.py`, `tests/test_full_ui_build_34291.py`, `tests/test_security_static.py` |
 | Snapshot-Manager 1.0 | `tests/test_snapshot_manager_3429127.py`, `tests/test_full_ui_build_34291.py`, `tests/test_localization_module_342952.py`, `tests/test_security_static.py`, `tools/render_snapshot_manager.py` |
-| GPU-Steuerung / GPU-Profile 1.0 | `tests/test_gpu_profiles_3429120.py`, `tests/test_gpu_control_3429102.py`, `tests/test_gpu_fan_stress_3429107.py`, `tests/test_gpu_backend_version_3429103.py`, `tests/test_dependency_helper.py`, `tests/test_full_ui_build_34291.py`, `tests/test_localization_module_342952.py`, `tests/test_security_static.py` |
+| GPU-Steuerung / GPU-Profile 1.0 | `tests/test_gpu_read_status_3429181.py`, `tests/test_gpu_profiles_3429120.py`, `tests/test_gpu_control_3429102.py`, `tests/test_gpu_fan_stress_3429107.py`, `tests/test_gpu_backend_version_3429103.py`, `tests/test_dependency_helper.py`, `tests/test_full_ui_build_34291.py`, `tests/test_localization_module_342952.py`, `tests/test_security_static.py` |
 | Anwendungsaktivierung 1.0 | `tests/test_application_activation_342954.py`, `tests/test_full_ui_build_34291.py` |
 | Anwendungsabschluss 1.1 | `tests/test_application_shutdown_342986.py`, `tests/test_rgb_shutdown_lighting_3429169.py`, `tests/test_exit_journal_labels_342991.py`, `tests/test_mainboard_fan_control.py`, `tests/test_levita_shutdown_guard_342953.py`, `tests/test_security_static.py`, Offscreen-UI-Aufbau |
 | Lokalisierung 1.0 | `tests/test_localization_module_342952.py`, `tests/test_full_ui_build_34291.py`, `tests/test_runtime_logic_stub.py`, `tests/test_security_static.py`, Offscreen-UI-Aufbau |
@@ -1049,6 +1372,8 @@ dreizeilige persönliche Callouts.
 
 | Datum | Modul | Version | Änderung |
 |---|---|---:|---|
+| 12.11.26 | LCD-Arbeitsbereich / GPU-Steuerung / Hauptfenster / Lokalisierung | 1.0 / 1.0 / Legacy / 1.0 · Anwendung 3.4.29.182 | Vorhandene LCD-Funktionen und GPU-Tuning/Kurve übersichtlich komponieren; 17 Einstellungsgruppen nach Wichtigkeit sortieren. Backend-/Hardwarebesitz und gespeicherte Entwürfe bleiben erhalten. 472 Laufzeitquellen, 2.618 Sprach-IDs; gezielte Qt-/Entwurfs-/Sichtbarkeitsprüfung bestanden. 1.736 Tests/fünf Untertests und alle Release-Wächter bestanden; Pakete/Installation folgen. |
+| 12.11.26 | UI-Bereiche / Designs & Spiele / LCD-Medienmanager / Hilfe / Übersichtserkennung / GPU / Gehäuse / Profile / Lokalisierung | 1.0 / 1.1 / 1.1 / 1.0 / 1.0 / 1.0 / 1.5 / 1.1 / 1.0 · Anwendung 3.4.29.181 | Gemeinsame Köpfe und abbrechbare Scrollführung; Gehäuse-/Komponentendarstellung; 15 Originalpaare und reale LCD-Größen mit begrenztem Encoder; eingebetteter nicht-destruktiver Manager; Hilfe/Inventur-/LACT-Lesestatus. Stabile IDs, Schema, Hardwarebesitz und Schreibwege erhalten. 2.584 durch vier UI-/Sprachtests bestätigte IDs; 30 Hub-/Metadatentests, 184 RGB-Schleifenprüfungen und zwölf Abschnitts-/Gehäusetests bestanden. Qt-Besitzfehler vor Layoutentnahme und schmale Combobox-Hints korrigiert; vollständige Hauptfenster-Grabs bestanden. Gesamtprüfung: 1.732 Tests/fünf Untertests und alle Quellfreigaben bestanden; sechs Pakete, beide Sicherungen und beide .181-Installationen mit 464 Quellen verifiziert. |
 | 09.11.26 | OpenRGB Studio / PC-Gehäuseprofile / Anwendungsabschluss / Lokalisierung | 1.15 / 1.5 / 1.1 / 1.0 | Gemeinsame Hardware-/Gehäuse-Effektzeit übernimmt das vollständige monotone Zeitintervall. Der Nutzerlog belegt 350–370 ms für fünf seriell bestätigte Direct-Geräte (ca. 2,7 Gesamtframes/s); eine geordnete persistente Loopback-Verbindung je Controller überträgt verschiedene Controller nun parallel, bei weiter einem OHC-Arbeiter, vollständigen Frames, Latest-frame-wins und 25-Hz-Obergrenze. GPU-/Halterungsstreifen erhalten dieselbe Umlaufdauer wie die Galerie. Abschlussbeleuchtung setzt beim echten Beenden Weiß, Einzelfarbe oder gemeldeten nativen Rainbow; Tray und Neustart bleiben wirkungslos. Reine Regressionen ergänzt; optische Prüfung am Gerät bleibt offen. |
 | 05.11.26 | LCD-Vorschau / Snapshot-Prozesslaufzeit / Release-Test | Testfix / 1.0 / Testfix · Anwendung 3.4.29.168 | Echte verschachtelte Scroll-Sichtbarkeit wird in einer kontrollierten Qt-Hierarchie geprüft; vollständige Anwendung prüft getrennt Medienwahl, Pause/Fortsetzung, Bestätigung und vier Sprachen ohne virtuelle Desktopannahme. Spätes Activity-Probe-Signal nach Zerstörung seines Qt-Eigentümers wird ohne Neustart verworfen. Produktive UI-, Profil-, Vorschau- und Hardwarepfade unverändert. |
 | 05.11.26 | LCD-Vorschau / Release-Test | Testfix / Testfix · Anwendung 3.4.29.167 | Isolierter Vorschauvertrag setzt vor Fensterbau den Levita-Kühlertyp in seinem privaten QSettings-Bereich, sodass die LCD-Seite auf hardwarefreiem Runner und Besitzerrechner gleich vorhanden ist. Produktive USB-Erkennung und Hardwarepfade unverändert. |
@@ -1229,3 +1554,49 @@ Alle 14 verzögerten LCD-Aufrufe sind an ihr Fenster gebunden; reale Qt-Tests
 prüfen Bibliotheks-/Fortschrittsabbruch nach Löschung und lebende Gegenproben.
 OpenLinkHub folgt weder Weiterleitungen noch Umgebungs-Proxies. GPU-Lüftertexte
 nutzen `visuals.py`/`WrappedCheckBox`; schmale Seiten bleiben vollständig scrollbar.
+
+Prüfabschluss .178: Vollständiger Release-Wächter mit 1.624 Tests und fünf
+Untertests bestanden. 433 Python-Laufzeitquellen und 2.501 gemeinsame Sprach-IDs.
+Sicherheits-/Datenschutzprüfung, Modulbudgets und Repository-Verträge bestanden.
+Alle acht neuen Videos vollständig dekodiert; periodische Renderer und
+Schleifennaht dokumentiert. Bestehende Medien-Prüfsummen unverändert.
+Dunkle, helle und schmale Qt-Ansicht geprüft. Vorhandene Fedora-/Ubuntu-Fixtures
+bestanden; kein realer Fedora- oder optischer LCD-Livetest wird behauptet.
+Paketbau, Sicherungsverifikation und lokaler Versionswechsel folgen.
+
+Lokaler Abschluss .178: Alle sechs Artefakte, beide .177/.178-INTERN-Sicherungen
+und 433 identische Python-Quellen in ZIP/DEB/RPM geprüft. Alle neuen Videos und
+Poster sind in den drei Laufzeitpaketen bytegleich. Private .177-Installation
+sowie endgültige Einstellungen/Profile/beide Plugins vor Start gesichert.
+Benutzer- und Systemkopie .178 installiert; DPKG 3.4.29.178~intern2 bestätigt.
+Profile und beide Plugins erhalten, gestartete Benutzerkopie ohne Python-Traceback.
+Der Benutzer meldet anschließend einen CPU-Sensorfehler beim Profilstart;
+dieser steht bereits im Log und wird als gesonderte .179 untersucht.
+Keine GitHub-Veröffentlichung.
+
+Prüfabschluss .179: Vollständiger Release-Wächter mit 1.642 Tests und fünf
+Untertests bestanden. 438 Python-Laufzeitquellen und 2.507 gemeinsame Sprach-IDs.
+Echte viersprachige Qt-Konstruktion einschließlich fehlend→frisch-Profilwarten
+ohne Hardwareaktion geprüft. Strikter Fristablauf, Neuauftrag, Bedienänderung,
+Shutdown, Geräteverlust, Hook-Delegation, zentraler Modul-Sink und konkurrierende
+Fehlerschreiber bestehen. Sicherheit/Datenschutz/Modulbudgets unverändert erfüllt.
+Bestehende Fedora-/Ubuntu-Fixtures bestanden; kein realer Fedora-/PWM-Ausfalltest.
+Paketbau und lokaler Upgrade-Nachweis folgen. Keine GitHub-Veröffentlichung.
+
+Lokaler Abschluss .179: Alle sechs Artefakte und beide .178/.179-INTERN-
+Sicherungen mit SHA256 geprüft. ZIP-CRC, 438 identische Python-Quellen in
+ZIP/DEB/RPM, neue Medien/Poster sowie DEB-Modi und RPM-Eigentümer geprüft.
+Private .178-Installation und endgültige Einstellungen/Profile/Plugins vor
+Start gesichert. Benutzer- und Systemkopie .179 installiert, DPKG bestätigt
+3.4.29.179~intern2; beide Quellbäume und neuen Medien bytegleich. Profile und
+beide nativen Plugins auch nach Start unverändert.
+
+Realer Startnachweis auf dem vorhandenen Ubuntu-System: CPU-Snapshot beim
+Profilaufruf 2,89 s alt, also korrekt nicht verwendbar. Das Profil wartet
+asynchron und erhält noch in derselben Sekunde einen frischen Wert; der
+bisherige modale CPU-Fehler tritt nicht auf. Sensorprozess mit korrekter
+Versionsangabe gestartet, keine neuen expliziten Fehlerzeilen im Sitzungslog.
+Fünf native RGB-Arbeiter ohne gemeldete Fehlerzähler. Eine nicht fatale
+Qt-Portal-Registrierungswarnung wird jetzt ausdrücklich als Warnung im
+allgemeinen Log erfasst; deren Betriebssystemursache wurde nicht geändert.
+Kein Rechnerneustart-/Fedora-Livetest und kein GitHub-Upload durchgeführt.

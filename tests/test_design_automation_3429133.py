@@ -51,10 +51,10 @@ def test_four_original_display_loops_and_matching_rgb_profiles_are_bundled():
             assert design.license_name == "GPL-3.0-or-later"
             assert validated_asset(design.variants[0]).is_file()
             assert validated_asset(design.variants[0], preview=True).is_file()
-    assert [title for title, _config in BUILTIN_DESIGNS[-4:]] == [
+    assert [title for title, _config in BUILTIN_DESIGNS[30:34]] == [
         "Prism Drift", "Twin Wyrm Orbit", "Neon Particle Garden", "Circuit Chase",
     ]
-    assert BUILTIN_DESIGN_CATEGORIES[-4:] == ("Räumlich", "Räumlich", "Energie", "Bewegung")
+    assert BUILTIN_DESIGN_CATEGORIES[30:34] == ("Räumlich", "Räumlich", "Energie", "Bewegung")
 
 
 def test_automation_probe_and_mangohud_path_are_not_shell_executed():

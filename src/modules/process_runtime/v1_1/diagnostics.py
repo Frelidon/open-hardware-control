@@ -17,9 +17,13 @@ def record(module, event, **details):
                 session=SESSION, version=APP_VERSION, module=module, event=event)
     data.update(details)
     # Redact before JSON escaping too (e.g. an address/serial on a stderr line).
-    data = {key: redact_private_text(value)[:8192] if isinstance(value, str) else value
-            for key, value in data.items()}
-    payload = redact_private_text(json.dumps(data, ensure_ascii=False, default=str)) + '\n'
+    data = {key: (APP_VERSION if key == 'version' else redact_private_text(value)[:8192])
+            if isinstance(value, str) else value for key, value in data.items()}
+    clean = json.loads(redact_private_text(json.dumps(data, ensure_ascii=False, default=str)))
+    # Only the trusted build constant is restored after recursive redaction;
+    # arbitrary/nested detail fields retain the privacy filter.
+    clean['version'] = APP_VERSION
+    payload = json.dumps(clean, ensure_ascii=False) + '\n'
     try:
         directory = application_state_directory()
         directory.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -34,7 +38,7 @@ def record(module, event, **details):
             handle.write(payload)
         os.chmod(path, 0o600)
         if event in {'failure', 'exhausted'}:
-            append_error_event(f'MODULE: {module} {event} · {payload.rstrip()}')
+            append_error_event(f'MODULE: {module} {event} · Version {APP_VERSION} · {payload.rstrip()}')
         append_startup_event(f'MODULE: {module} {event} · reason={data.get("reason", "—")} · retry_ms={data.get("retry_ms", "—")}')
         return path
     except OSError:

@@ -6,7 +6,7 @@ from pathlib import Path
 import time
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QPixmap
-from modules.lcd_media_manager.v1_0.preview_visibility import PreviewVisibility, exposed
+from modules.lcd_media_manager.v1_1.preview_visibility import PreviewVisibility, exposed
 from .motion_renderer import render_layer2_motion_frame
 
 
@@ -86,7 +86,7 @@ class MediaPreview(QObject):
         path = video_source(studio.current_media_path())
         if active and path is not None:
             if self.video is None:
-                from modules.lcd_media_manager.v1_0.video_preview import BundledVideoPreview
+                from modules.lcd_media_manager.v1_1.video_preview import BundledVideoPreview
                 self.video = BundledVideoPreview(self)
                 self.video.frame_ready.connect(self.frame)
             self.video.load(path)

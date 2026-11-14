@@ -13,7 +13,7 @@ from modules.localization.v1_0 import UI_TRANSLATIONS  # noqa: E402
 
 def test_lifecycle_catalog_has_unique_semantic_versions_and_expected_stages() -> None:
     catalog = {item.key: item for item in feature_lifecycles()}
-    assert len(catalog) == len(feature_lifecycles()) == 18
+    assert len(catalog) == len(feature_lifecycles()) == 19
     assert catalog["openlinkhub"].stage == "Alpha"
     assert catalog["gpu"].stage == catalog["case"].stage == "Beta"
     assert catalog["hardware_checker"].stage == "Alpha"

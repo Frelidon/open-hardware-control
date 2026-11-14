@@ -5,9 +5,10 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QGroupBox, QHeaderView, QHBoxLayout, QLabel, QPushButton, QScrollArea,
-    QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, QDialog, QDialogButtonBox, QTabWidget,
+    QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, QDialog, QDialogButtonBox, QTabWidget, QFrame, QLayout, QSizePolicy,
 )
 from modules.rgb_studio.v1_15.argb_controls import build_slot_led_button, slot_header_targets, edit_slot_header
+from modules.ui_sections.v1_0.cards import Surface, SectionCard
 from .catalog import case_template
 from .diagram import PCLayoutDiagram
 from .view_state import cooling_slots, layout_synchronized, move_cooling_slot, resize_cooling_slot, set_synchronized
@@ -84,6 +85,10 @@ class CasePage(QScrollArea):
         super().__init__()
         self.host = host
         self.setWidgetResizable(True)
+        self.setFrameShape(QFrame.Shape.NoFrame)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
+        self.viewport().setAutoFillBackground(False)
 
     def showEvent(self, event):
         refresh_case_views(self.host)
@@ -97,8 +102,11 @@ class CasePage(QScrollArea):
 
 def build_case_page(host):
     page = CasePage(host)
-    content = QWidget()
+    content = QWidget(); content.setMaximumWidth(1760)
     layout = QVBoxLayout(content)
+    layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+    layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
+    layout.setSpacing(16)
     layout.setContentsMargins(18, 18, 18, 18)
     host.case_sync_checkbox = QCheckBox("RGB und Kühlung synchronisieren")
     host.case_sync_checkbox.setChecked(layout_synchronized(host))
@@ -120,7 +128,11 @@ def build_case_page(host):
     analysis_row.addWidget(host.case_sync_checkbox)
     analysis_row.addWidget(analyze)
     analysis_row.addWidget(host.case_analysis_label, 1)
-    layout.addLayout(analysis_row)
+    summary = Surface(); summary_layout = QVBoxLayout(summary)
+    summary_layout.setContentsMargins(16, 12, 16, 12); summary_layout.addLayout(analysis_row)
+    layout.addWidget(summary)
+    host.case_workspace.layout().removeWidget(host.case_profile_toolbar)
+    layout.addWidget(host.case_profile_toolbar)
     controls = QGroupBox(host.tr_static("Lüfteranschluss zuordnen"))
     controls_layout = QHBoxLayout(controls)
     host.case_pwm_combo = QComboBox()
@@ -131,8 +143,11 @@ def build_case_page(host):
     controls_layout.addWidget(assign)
     host.case_sections = QTabWidget()
     host.case_sections.setObjectName("caseSections")
+    host.case_sections.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Minimum)
     overview = QWidget(); overview_layout = QVBoxLayout(overview)
+    overview_layout.setContentsMargins(0, 14, 0, 0); overview_layout.setSpacing(16)
     components = QWidget(); components_layout = QVBoxLayout(components)
+    components_layout.setContentsMargins(0, 14, 0, 0); components_layout.setSpacing(16)
     overview_layout.addWidget(host.case_workspace)
     components_layout.addWidget(controls)
     host.case_spatial_panel = CaseSpatialPanel(host)
@@ -180,7 +195,11 @@ def build_case_page(host):
     overview_layout.addWidget(host.case_cooling_box)
     from modules.rgb_studio.v1_15.generic_fans import FanCatalog
     host.case_fan_catalog = FanCatalog(host)
-    overview_layout.addWidget(host.case_fan_catalog)
+    host.case_fan_catalog.setTitle("")
+    host.case_fan_section = SectionCard("Lüfterkatalog", "", "cooling", host.case_fan_catalog)
+    overview_layout.insertWidget(1, host.case_fan_section)
+    host.case_workspace.layout().removeWidget(host.case_reference_section)
+    overview_layout.addWidget(host.case_reference_section)
     page.setWidget(content)
     refresh_case_views(host)
     return page

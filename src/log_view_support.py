@@ -181,7 +181,7 @@ class LogViewActionsMixin:
             characters=buffer.character_count,
         ))
 
-    def log_message(self, message: str) -> None:
+    def log_message(self, message: str, *, persist_error: bool = True) -> None:
         if not message:
             return
         stamp = time.strftime("%H:%M:%S")
@@ -235,8 +235,8 @@ class LogViewActionsMixin:
                     handle.write(line + "\n")
             except OSError:
                 self.session_log_path = None
-        if is_error_log_message(message):
-            append_error_event(message)
+        if persist_error and is_error_log_message(message):
+            append_error_event(message, notify=False)
         self._trim_log_to_character_limit()
 
     def restore_previous_crash_context(self, lines: list[str], snapshot_path: Path) -> None:

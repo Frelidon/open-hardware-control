@@ -58,7 +58,8 @@ class GpuFanCurvePreview(QWidget):
                  editable: Callable[[], bool] | None = None,
                  temperature: Callable[[], float | None] | None = None,
                  rpm: Callable[[], float | None] | None = None,
-                 locked_text: Callable[[], str] | None = None):
+                 locked_text: Callable[[], str] | None = None,
+                 translator: Callable[[str], str] | None = None):
         super().__init__(parent)
         self._points = points
         self._speed = speed
@@ -67,15 +68,20 @@ class GpuFanCurvePreview(QWidget):
         self._temperature = temperature or (lambda: None)
         self._rpm = rpm or (lambda: None)
         self._locked_text = locked_text or (lambda: "")
+        self._tr = translator or (lambda text: text)
         self._drag_index: int | None = None
         self._phase = 0.0
-        self.setMinimumSize(220, 205)
+        self.setMinimumSize(220, 240)
         self.setMouseTracking(True)
         self.setAccessibleName("Interaktive GPU-Lüfterkurve")
-        self.setToolTip("Kurvenpunkt mit der Maus ziehen; exakte Werte stehen links.")
+        self.refresh_language()
         self.timer = QTimer(self)
         self.timer.setInterval(40)
         self.timer.timeout.connect(self._animate)
+
+    def refresh_language(self):
+        self.setToolTip(self._tr("Kurvenpunkt ziehen oder die Werte darunter ändern."))
+        self.update()
 
     def showEvent(self, event):  # noqa: N802
         super().showEvent(event)
@@ -91,8 +97,8 @@ class GpuFanCurvePreview(QWidget):
 
     def _graph_rect(self, bounds: QRectF | None = None) -> QRectF:
         area = bounds or QRectF(self.rect()).adjusted(8, 8, -8, -8)
-        return QRectF(area.left() + 40, area.top() + 145,
-                      area.width() - 70, area.height() - 180)
+        return QRectF(area.left() + 40, area.top() + 82,
+                      area.width() - 70, area.height() - 118)
 
     @staticmethod
     def _plot_point(graph: QRectF, temperature: int, speed: int) -> QPointF:
@@ -157,23 +163,29 @@ class GpuFanCurvePreview(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         bounds = QRectF(self.rect()).adjusted(8, 8, -8, -8)
+        palette = self.palette()
+        accent = palette.color(QPalette.ColorRole.Highlight)
+        base = palette.color(QPalette.ColorRole.Base)
+        foreground = palette.color(QPalette.ColorRole.Text)
+        dark = base.lightness() < 128
         background = QLinearGradient(bounds.topLeft(), bounds.bottomRight())
-        background.setColorAt(0.0, QColor("#111d2a"))
-        background.setColorAt(1.0, QColor("#081019"))
-        painter.setPen(QPen(QColor("#25425a"), 1))
+        background.setColorAt(0.0, base)
+        background.setColorAt(1.0, base.darker(120) if dark else base.darker(103))
+        painter.setPen(QPen(palette.color(QPalette.ColorRole.Mid), 1))
         painter.setBrush(background)
         painter.drawRoundedRect(bounds, 18, 18)
 
-        fan_y = bounds.top() + 72
-        radius = min(52.0, bounds.width() / 9)
+        fan_y = bounds.top() + 46
+        radius = min(25.0, bounds.width() / 13)
         for index, center_x in enumerate((bounds.left() + bounds.width() * .22,
                                           bounds.center().x(),
                                           bounds.left() + bounds.width() * .78)):
             center = QPointF(center_x, fan_y)
-            painter.setPen(QPen(QColor("#45b9ff"), 2))
-            painter.setBrush(QColor(25, 72, 104, 95))
+            painter.setPen(QPen(accent, 2))
+            fan_fill = QColor(accent); fan_fill.setAlpha(35)
+            painter.setBrush(fan_fill)
             painter.drawEllipse(center, radius, radius)
-            painter.setBrush(QColor("#0b1721"))
+            painter.setBrush(base)
             for blade in range(7):
                 angle = self._phase * (1 if index != 1 else -1) + blade * math.tau / 7
                 path = QPainterPath(center)
@@ -186,11 +198,12 @@ class GpuFanCurvePreview(QWidget):
                             center.y() + math.sin(angle + 1.25) * radius * .52),
                 )
                 painter.drawPath(path)
-            painter.setBrush(QColor("#4ec5ff"))
+            painter.setBrush(accent)
             painter.drawEllipse(center, 5, 5)
 
         graph = self._graph_rect(bounds)
-        painter.setPen(QPen(QColor(80, 118, 145, 80), 1))
+        grid_color = QColor(palette.color(QPalette.ColorRole.Mid)); grid_color.setAlpha(80)
+        painter.setPen(QPen(grid_color, 1))
         for step in range(6):
             y = graph.bottom() - graph.height() * step / 5
             painter.drawLine(QPointF(graph.left(), y), QPointF(graph.right(), y))
@@ -205,21 +218,21 @@ class GpuFanCurvePreview(QWidget):
             path.moveTo(plotted[0])
             for point in plotted[1:]:
                 path.lineTo(point)
-            painter.setPen(QPen(QColor("#31b8ff"), 3))
+            painter.setPen(QPen(accent, 3))
             painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.drawPath(path)
-            painter.setPen(QPen(QColor("#a8e8ff"), 2))
-            painter.setBrush(QColor("#0d9de5"))
+            painter.setPen(QPen(accent.lighter(125) if dark else accent.darker(115), 2))
+            painter.setBrush(accent)
             for index, point in enumerate(plotted):
                 radius = 8 if index == self._drag_index else 6
                 if index == self._drag_index:
-                    painter.setBrush(QColor("#eef8ff"))
-                    painter.setPen(QPen(QColor("#2c7cff"), 3))
+                    painter.setBrush(foreground)
+                    painter.setPen(QPen(accent, 3))
                 else:
-                    painter.setBrush(QColor("#0d9de5"))
-                    painter.setPen(QPen(QColor("#a8e8ff"), 2))
+                    painter.setBrush(accent)
+                    painter.setPen(QPen(accent.lighter(125) if dark else accent.darker(115), 2))
                 painter.drawEllipse(point, radius, radius)
-        painter.setPen(QColor("#9db8ca"))
+        painter.setPen(foreground)
         painter.drawText(graph.adjusted(0, 8, 0, 24), Qt.AlignmentFlag.AlignBottom, "25–100 °C")
         temperature = self._temperature()
         rpm = self._rpm()
@@ -229,7 +242,7 @@ class GpuFanCurvePreview(QWidget):
                          f"LIVE · {temperature_text} · {rpm_text}")
         if self._editable():
             painter.drawText(bounds.adjusted(16, 10, 0, 0), Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft,
-                             "PUNKTE ZIEHEN")
+                             self._tr("Punkte ziehen"))
         else:
             painter.setPen(QColor("#fbbf24"))
             painter.drawText(bounds.adjusted(16, 10, -16, 0),

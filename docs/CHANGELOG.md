@@ -1,5 +1,75 @@
 # Changelog
 
+## 3.4.29.183 INTERN · 13.11.26
+
+- Hardware Fix zeigt Installieren und Deinstallieren als Hauptaktionen. Lokale
+  Installation ist Standard; doppelte Anbieterwahl entfällt. Einzelaktionen,
+  Diagnose und Protokoll bleiben unter Weitere Optionen erreichbar.
+- Der Installationsablauf nutzt vorhandene Bootressourcen, beendet sich vor
+  Desktopänderungen bei nötigem Neustart und richtet Ubuntu/GNOME vollständig
+  über denselben lokalen Dienst ein. Fedora behält seinen getrennten Pfad.
+- Schnelle Terminalabschlüsse, veraltete Ergebnisse und Doppelklicks werden
+  zuverlässig behandelt. Protokollanzeige bleibt begrenzt und redigiert.
+- MSI-VRR-Erkennung entspricht wieder der anonymisierten ausgelieferten EDID;
+  alle neuen Oberflächen- und Statusmeldungen liegen in vier Sprachen vor.
+
+## 3.4.29.182 INTERN · 12.11.26 (locally verified)
+
+1,736 tests/five subtests and all release gates pass. Six packages and both
+.181/.182 backups verified; user/system installations match all 472 sources
+and 169 assets. Installed Wayland views in both themes, protected settings,
+profiles/plugins and normal CPU/RGB/Levita startup checked. No GitHub upload.
+
+- Organize LCD library, composition and operation while preserving existing media, sensor layers and guarded apply paths.
+- Retain GPU artwork and live values alongside overclocking and a larger fan curve on one shared page; preserve tests, rollback and ownership.
+- Put animated background settings first and prioritize common appearance/start options without removing existing controls.
+- Complete release gate passes 1,736 tests/five subtests plus compilation, security, privacy and module budgets; 2,618 atomic language IDs, 472 runtime sources. Packages and both local installations verified. No GitHub publication requested.
+
+## 3.4.29.181 INTERN · 12.11.26 (locally verified)
+
+Lokaler Abschluss: 1.732 Tests und fünf Untertests, sechs Pakete und beide
+.180/.181-Sicherungen geprüft; Benutzer-/Systemkopie mit 464 Quellen installiert.
+Native installierte Ansichten in beiden Themen und Profil-/Plugin-Erhalt geprüft.
+Kein GitHub-Upload.
+
+- Share palette-aware section cards and cancellable 420-ms scroll reveal across profiles, case workspace and existing disclosures; preserve drafts, backgrounds and animation preferences.
+- Refine case/profile selection, PC drawing and direct component details without changing model IDs, routes, calibration or hardware writes.
+- Expand matching designs from five to 15 distinct original bundled LCD sources, append ten RGB presets without renumbering, and add per-pair 50–200% LCD zoom plus real Matrix glyph variants.
+- Prepare zoomed LCD copies only on explicit apply through one bounded cancellable encoder, atomic cache completion and exact source/size validation; discard stale LCD intent and cancel on page hide. Bound MP4 metadata checks to 1 MiB, 512 atoms and depth eight, requiring H.264 1600×720 and positive duration up to 35 seconds; preserve sensor Layer 2 and existing apply owners.
+- Embed the non-destructive LCD source/media manager in both display pages with explicit Save/Cancel; label gallery-preview preparation independently from LCD transfer.
+- Refresh help layout, static inventory recognition and GPU/LACT read-status reporting; retain existing translations, navigation and write guards.
+- Fix native Qt layout ownership before moving existing case/profile combos and bound their minimum content width for narrow windows. Full-window hub/case/help renders, 12 section/case tests, four UI/localization tests with 2,584 IDs, 30 current hub/metadata tests and 184 RGB loop checks pass. Full release validation, packaging/backups and local installation remain pending; .180 remains installed. No GitHub publication requested.
+
+## 3.4.29.180 INTERN · 11.11.26
+
+- Keep profile summaries readable when editing, technical details and transfer panels are all open. A page-level scroll area and content-aware tile heights prevent compressed empty-looking cards.
+- Present a searchable profile library beside one detailed profile card, with a primary apply action, an additional-actions menu and large styled section headers. Separate individual JSON profiles from complete-package backup actions.
+- Preserve saved IDs/schema, startup and guarded apply paths, built-in protection, four-language drafts and the independently applied-profile background. A new draft keeps no update target across a live language change.
+- Add real Qt geometry regressions at three sizes in four languages and both themes. Full release validation, package verification and local installation remain pending; no GitHub publication requested.
+
+## 3.4.29.179 INTERN · 11.11.26
+
+- Wait up to ten seconds for a fresh CPU sample when a curve profile meets temporary sensor unavailability; keep the existing 2.5-second freshness and hardware guards.
+- Cancel pending applies on new requests, cooling edits, shutdown, timeout or a missing cooling device. Real sensor failures remain nonmodal and explicitly logged with context.
+- Capture Python, thread, unraisable and Qt errors in bounded privacy-filtered logs and forward module failures to the general UI/session log without feedback loops or duplicate durable entries.
+- Preserve Matrix sizes, video backgrounds, profiles and settings from .178. No GitHub publication requested.
+
+## 3.4.29.178 INTERN · 11.11.26
+
+- Replace the visible profile table with searchable cards, saved-section summaries and collapsed editor/details/backup panels; retain IDs, startup behavior and protected apply paths.
+- Add six original local app video backgrounds, including Matrix, with one visibility-bound decoder and aspect-preserving bounded CPU composition.
+- Show the explicitly applied profile's LCD base media or saved RGB animation only on Profiles; restore the global background elsewhere without persisting the transient choice.
+- Add Matrix LCD characters +30% (new default), +50%, +100%; retain original media and saved selections.
+- Translate all controls and background choices atomically in German, English, Spanish and French.
+
+## 3.4.29.177 INTERN · 11.11.26
+
+- Add original Matrix Code Rain for RGB fans and a seamless 1600×720 LCD background without baked-in sample readings; preserve existing presets, topology and sensor layers.
+- Add Designs & Games between RGB and LCD with five matching design pairs, game-profile setup and the existing Automation Center as fixed children. Preserve rules and custom navigation order.
+- Use visibility-bound shared LCD decoding and the existing native/SDK/TRCC apply owners. Apply RGB/LCD independently or request both; report actual completion in their studios.
+- Prepare editable ATMOSFAR, Mirage and Witcher 3 profile rules without saving or enabling them on navigation. Screen ambience and game telemetry remain unimplemented.
+- Provide all labels in DE/EN/ES/FR; validation and local package evidence are recorded in project status.
+
 ## 3.4.29.176 STABLE · 11.11.26
 
 - Add an explicit reversible disconnected-header choice to fan mapping. Skip such ports while retaining curve settings, disable their automation and show a compact unused-header section with remapping access. Never infer absence from zero RPM.

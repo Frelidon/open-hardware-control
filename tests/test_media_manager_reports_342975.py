@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 sys.path.insert(0, str(SRC))
 
-from modules.lcd_media_manager.v1_0 import (  # noqa: E402
+from modules.lcd_media_manager.v1_1 import (  # noqa: E402
     DesignLibraryDialog,
     DesignLibraryState,
     friendly_media_name,
@@ -93,6 +93,6 @@ def test_current_module_versions_and_responsive_viewport_watchers_are_registered
     assert "ViewportResizeRelay" in effects
     assert "responsive_column_count" in effects
     assert "ViewportResizeRelay" in studio
-    assert "DesignLibraryDialog" in studio
+    assert "DesignLibraryPanel" in studio
     assert "QSplitter" in panel
     assert "TemperatureReportDialog" in panel

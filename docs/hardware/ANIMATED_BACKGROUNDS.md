@@ -1,17 +1,31 @@
-# Animierte Hintergründe – Version 2.9.4
+# Animierte Programm-Hintergründe · 3.4.29.178 INTERN
 
-Kraken Control 2.9.4 enthält keine heruntergeladenen Videos, GIFs oder Stockbilder. Sämtliche Hintergründe werden zur Laufzeit mit Qt `QPainter` aus mathematischen Formen, Gradienten und Partikeln erzeugt.
+Zwölf prozedurale QPainter-Themen und sechs eigene lokale Videohintergründe
+stehen unter Einstellungen → Animierter Hintergrund zur Auswahl. Matrix Code
+Rain ergänzt Aurora Silk, Nebula Depth, Liquid Prism, Ocean Caustics und Solar
+Orbit. Keine fremden Stockvideos, Downloads oder SignalRGB-Dateien werden benutzt.
+Die Offline-Renderer unter tools und die berechneten Schleifennachweise sind
+im Entwicklerpaket enthalten. Die Videos laufen ohne Ton, mit begrenzter
+CPU-Komposition und einem sichtbarkeitsgebundenen Qt-Videodecoder.
 
-## Vorteile
+Die globale Auswahl und Intensität bleiben gespeichert. Ausgeschaltet,
+unsichtbar, minimiert oder gemäß Einstellung inaktiv werden Videodecoder und
+Frame-Timer angehalten beziehungsweise entladen. Studio-Themes behalten ihre
+Animationssperre. Im hellen Design bleibt die Darstellung abgeschwächt lesbar.
 
-- keine unklaren Bild- oder Videolizenzen
-- keine Internetverbindung
-- keine zusätzlichen Codecs
-- kleine Paketgröße
-- Farbe passt sich an die Akzentfarbe an
-- Quellcode unter GPL-3.0-or-later vollständig einsehbar
+Auf Profile kann das ausdrücklich angewendete Profil ein eigenes LCD-Basismedium
+oder seinen gespeicherten RGB-Effekt zeigen. Die Auswahl anderer Karten wendet
+keine Geräte an und wechselt diesen aktiven Hintergrund nicht. Beim Verlassen
+kehrt die globale Auswahl zurück, ohne die temporäre Wahl zu speichern.
+Die Sensordatenebene des LCD bleibt unverändert; der Programm-Hintergrund zeigt
+nur dessen Basismedium. Nach Neustart entsteht ein aktiver Hintergrund erst bei
+wirklicher Anwendung eines Startprofils. Explizites Animation-Aus hat Vorrang.
 
-## Themen
+Siehe [Entwurf und tatsächliche Qt-Renderings](PROFILE_WORKSPACE_DESIGN.md),
+[Modulregister](../project/MODULE_REGISTRY.md) und
+[Release Notes](../releases/RELEASE_NOTES_v3.4.29.178.md).
+
+## Ursprüngliche prozedurale Themen
 
 1. Sternenfeld
 2. Kosmischer Nebel

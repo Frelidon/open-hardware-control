@@ -57,7 +57,7 @@ def test_registry_points_to_current_levita_performance_and_window_modules() -> N
         "mainboard_driver_setup": "v1_1",
         "wallpaper_engine": "v1_3",
         "responsive_gallery": "v1_0",
-        "lcd_media_manager": "v1_0",
+        "lcd_media_manager": "v1_1",
         "temperature_history": "v1_2",
         "pc_case_profiles": "v1_5",
         "cooling_state": "v1_0",

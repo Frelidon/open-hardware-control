@@ -7,6 +7,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 import json
 from pathlib import Path
+import re
 import subprocess
 
 from .profile import (
@@ -55,7 +56,8 @@ def _is_profile_monitor(data: bytes) -> bool:
 
 def _contains_parameter(path: Path) -> bool:
     try:
-        return KERNEL_PARAMETER in path.read_text(encoding="utf-8", errors="replace")
+        tokens = re.findall(r"drm\.edid_firmware=[^\s\"']+", path.read_text(encoding="utf-8", errors="replace"))
+        return KERNEL_PARAMETER in tokens
     except OSError:
         return False
 
@@ -66,6 +68,8 @@ def _provider_metadata() -> tuple[str, str]:
     path = STATE_ROOT / "provider.json"
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(raw, dict):
+            return selected, actual
         candidate = str(raw.get("selected") or "")
         if candidate in {"local", "open_hardware_control"}:
             selected = candidate
