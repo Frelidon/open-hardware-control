@@ -17,14 +17,18 @@ import uuid
 if __package__ in {None, ""}:
     sys.path.insert(0, os.fspath(Path(__file__).resolve().parents[3]))
     from modules.hardware_fix.v1_0.profile import ASSET_ROOT, STATE_ROOT, os_family, validate_profile_assets
-    from modules.hardware_fix.v1_0.status import status_json
+    from modules.hardware_fix.v1_0.status import status_json, inspect_status
+    from modules.hardware_fix.v1_0.workflow import install_local
+    from privacy_logging import redact_private_text
 else:
     from .profile import ASSET_ROOT, STATE_ROOT, os_family, validate_profile_assets
-    from .status import status_json
+    from .status import status_json, inspect_status
+    from .workflow import install_local
+    from privacy_logging import redact_private_text
 
 
 ACTIONS = {
-    "preflight", "status", "install", "desktop", "automation-install",
+    "preflight", "status", "install", "install-local", "desktop", "automation-install",
     "automation-status", "automation-remove", "game-test", "uninstall",
 }
 
@@ -62,7 +66,8 @@ def _command(action: str, family: str) -> list[str]:
 
 
 def main(arguments: list[str]) -> int:
-    if len(arguments) != 1 or arguments[0] not in ACTIONS:
+    if (len(arguments) not in {1, 2} or arguments[0] not in ACTIONS
+            or (len(arguments) == 2 and not re.fullmatch(r"[0-9a-f]{32}", arguments[1]))):
         print("Unbekannte Hardware-Fix-Aktion.", file=sys.stderr)
         return 2
     action = arguments[0]
@@ -85,7 +90,7 @@ def main(arguments: list[str]) -> int:
         except BlockingIOError:
             print("Für dieses Profil läuft bereits eine Aktion.", file=sys.stderr)
             return 3
-        job_id = uuid.uuid4().hex
+        job_id = arguments[1] if len(arguments) == 2 else uuid.uuid4().hex
         log_path = STATE_ROOT / f"{job_id}.log"
         result_path = STATE_ROOT / "last-result.json"
         payload: dict[str, object] = {
@@ -95,44 +100,59 @@ def main(arguments: list[str]) -> int:
             "boot_id_before": Path("/proc/sys/kernel/random/boot_id").read_text().strip(),
         }
         _atomic_json(result_path, payload)
-        command = _command(action, family)
-        print("Hardware Fix:", action, "·", family, flush=True)
-        output_lines: list[str] = []
-        with log_path.open("w", encoding="utf-8") as log:
-            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-            assert process.stdout is not None
-            for line in process.stdout:
-                line = line[:8192]
-                output_lines.append(line)
-                if sum(map(len, output_lines)) > 1_000_000:
-                    output_lines = output_lines[-2000:]
-                log.write(line)
-                log.flush()
-                print(line, end="", flush=True)
-            exit_code = process.wait()
-        output = "".join(output_lines)
-        success_markers = {
-            "install": "FERTIG: EDID im Boot-Abbild und Bootparameter geprüft.",
-            "automation-install": "FERTIG: Ubuntu-Automatik installiert",
-        }
-        marker = success_markers.get(action)
-        success = exit_code == 0 and (marker is None or marker in output)
+        reboot_pending = False
         backup = ""
-        match = re.search(r"^Sicherung:\s*(/var/backups/msi-vrr-recovery/[^\s]+)", output, re.M)
-        if match:
-            backup = match.group(1)
+        with log_path.open("w", encoding="utf-8") as log:
+            def execute(step: str) -> int:
+                nonlocal backup
+                print("Hardware Fix:", step, "·", family, flush=True)
+                log.write("Hardware Fix: " + step + " · " + family + "\n")
+                process = subprocess.Popen(_command(step, family), stdout=subprocess.PIPE,
+                                           stderr=subprocess.STDOUT, text=True)
+                assert process.stdout is not None
+                marker = {
+                    "install": "FERTIG: EDID im Boot-Abbild und Bootparameter geprüft.",
+                    "automation-install": "FERTIG: Ubuntu-Automatik installiert",
+                }.get(step)
+                found = marker is None
+                written = 0
+                for line in process.stdout:
+                    found = found or bool(marker and marker in line)
+                    match = re.search(r"^Sicherung:\s*(/var/backups/msi-vrr-recovery/[^\s]+)", line)
+                    if match:
+                        backup = match.group(1)
+                    safe = redact_private_text(line[:8192])
+                    if written < 1_000_000:
+                        log.write(safe)
+                        log.flush()
+                        written += len(safe)
+                    print(safe, end="", flush=True)
+                result = process.wait()
+                return result if result else (0 if found else 1)
+
+            try:
+                if action == "install-local":
+                    exit_code, reboot_pending = install_local(
+                        family, os.environ.get("XDG_CURRENT_DESKTOP", ""), inspect_status, execute,
+                    )
+                else:
+                    exit_code = execute(action)
+                success = exit_code == 0
+                if success and action in {"install-local", "install", "automation-install", "automation-remove", "uninstall"}:
+                    # The standalone local service is independent of OHC's GUI.
+                    _atomic_json(STATE_ROOT / "provider.json", {"selected": "local", "actual": "local"})
+                after = json.loads(status_json())
+            except Exception as error:
+                message = redact_private_text(str(error))
+                print("FEHLER:", message, file=sys.stderr, flush=True)
+                log.write("FEHLER: " + message + "\n")
+                exit_code, success, after = 1, False, None
         payload.update({
             "finished": True, "finished_at": int(time.time()), "exit_code": exit_code,
             "success": success, "backup_directory": backup,
-            "status_after": json.loads(status_json()),
+            "reboot_pending": reboot_pending, "status_after": after,
         })
         _atomic_json(result_path, payload)
-        if success and action in {"automation-install", "install"}:
-            provider = STATE_ROOT / "provider.json"
-            _atomic_json(provider, {"selected": "open_hardware_control", "actual": "open_hardware_control"})
-        elif success and action in {"automation-remove", "uninstall"}:
-            provider = STATE_ROOT / "provider.json"
-            _atomic_json(provider, {"selected": "local", "actual": "local"})
         print("\nErgebnis:", "erfolgreich" if success else "fehlgeschlagen", flush=True)
         return 0 if success else (exit_code or 1)
 

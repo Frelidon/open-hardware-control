@@ -1,5 +1,126 @@
 # Open Hardware Control — verbindliches Modulregister
 
+## GitHub-Quellupload .183 · 14.11.26
+
+Der Eigentümer hat den Upload des geprüften INTERN-Standes auf GitHub beauftragt.
+Ziel ist `codex/hardware-fix-3.4.29.183`, ein neuer Entwicklungsbranch mit normalem
+Quell-Push. Er enthält den vollständigen aktuellen Stand einschließlich der
+bisher nur lokalen Entwicklungen .177 bis .182. BUILD_CHANNEL bleibt INTERN;
+kein Tag, öffentlicher Release oder Paketupload. README, Veröffentlichungsleitfaden
+und Release Notes unterscheiden Quellbranch und lokale Downloadpakete.
+Die vollständige .183-Testsuite und Release-Wächter sind bereits bestanden.
+Für diesen Upload bestanden erneut 43 Hardware-Fix-/UI-/Lokalisierungs-/Layout-
+und Sicherheitsregressionen sowie Datenschutzscan und Modulregister. Alle 723
+Quelldateien sind bytegleich mit dem geprüften Paketstand; die zehn Bildhashes
+stimmen. Frühere Hinweise auf unverändertes GitHub unten
+sind historische Nachweise vor diesem Folgeauftrag. Gebaute Pakete und externe
+Sicherungen werden durch den Quellupload nicht verändert.
+
+## Lokale Aktualisierung .183 · 14.11.26
+
+Auf ausdrücklichen Folgeauftrag sind Benutzer- und Systeminstallation jetzt
+3.4.29.183 INTERN; DEB-Paketstand 3.4.29.183~intern2. Vorherige Benutzerkopie,
+Einstellungen, Profile und native Plugins wurden privat gesichert. Nach geordnetem
+Programmende wurde zusätzlich der letzte Einstellungsstand festgehalten.
+Alle 716 installierbaren Dateien der lokalen Laufzeit und sämtliche 799 regulären
+DEB-Paketdateien sind bytegleich mit den geprüften Paketen. Native C++-Bauquellen
+gehören nicht zur installierten Laufzeit; die DEB enthält keine Test-GIF-Sammlung.
+Alle 93 geschützten Dateien waren vor dem normalen Neustart unverändert;
+18 gesondert geprüfte Profil-/Plugin-/JSON-Dateien auch danach. Laufende
+Einstellungs-, Sperr- und Protokolldateien dürfen sich beim Start aktualisieren.
+
+Normaler Ubuntu-/Wayland-Start mit .183 bestätigt: CPU-Kurve und nativer RGB-Pfad
+aktiv, gespeichertes Levita-Design geladen und Dauerbetrieb gestartet. Ein anfänglicher
+USB-Konflikt des eigenen TRCC-Daemons wurde durch dessen bestehende einmalige
+Wiederanlauflogik behoben; kein fehlerfreier Erstversuch wird behauptet.
+Der korrigierte VRR-Benutzerdienst blieb durchgehend aktiv und unverändert.
+Kein Systemneustart, neuer Spiel-/VRR-Messlauf oder Fedora-Hardwaretest.
+Diese nachträgliche Installationsprüfung ändert die gebauten Pakete und ihre
+rollierenden Sicherungen nicht. Frühere Angaben zur laufenden .182 unten sind
+historisch; GitHub bleibt unverändert.
+
+## Paketabschluss .183 · 14.11.26
+
+Alle sechs Artefakte gebaut und unabhängig geprüft: Laufzeit-/Entwickler-ZIP,
+Quell-TAR, vollständiges Local-AI-Gitbundle, DEB und RPM. Sechs Dist-SHA256,
+ZIP-CRCs und vollständige Manifeste, Quell-TAR-Manifest, Bundle-Historie,
+DEB-Metadaten/Root-Eigentümer sowie RPM-Header-/Payload-Digests bestanden.
+474 Python-Laufzeitquellen und 169 Assets sind in ZIP/TAR/DEB/RPM bytegleich.
+Genau beide .182/.183-Sicherungen bleiben erhalten; je acht Hashes verifiziert.
+Der RPM-Bau nutzte den vorhandenen Standardbibliothek-Writer, da rpmbuild hier
+nicht installiert ist. Keine neue Fedora-Liveprüfung wird daraus abgeleitet.
+
+Benutzer- und Systeminstallation wurden durch diesen Auftrag nicht aktualisiert;
+die .182-Benutzerkopie behält den vorangegangenen kleinen VRR-Hotfix. Es wurde
+kein Anwendungs-/Systemneustart ausgeführt. Pakete und Sicherungen bleiben
+unveränderte Schnappschüsse vor diesem nachträglichen Verifikationsnachweis.
+Der Snapshotcommit im vollständigen Gitbundle ist `8169680`; GitHub unverändert.
+
+## Quellfreigabe .183 · 13.11.26
+
+1.763 Tests und fünf Untertests bestanden, einschließlich echter Qt-Oberfläche
+in vier Sprachen, drei Fenstergrößen und beiden Themen. 474 Python-Laufzeitquellen,
+2.658 gemeinsame Nachrichten-IDs. Kompilierung, Sicherheit/Datenschutz,
+Modulregister und sämtliche restlichen Release-Prüfungen bestanden. Die erste
+Gesamtsuite scheiterte nur an zwölf gesperrten Testsockets; der Wiederholungslauf
+mit freigegebenen lokalen Sockets und deaktivierten Hardwarezugriffen bestand
+vollständig. Danach wurde der alte ZIP-Dateiname in beiden Installationsanleitungen
+berichtigt und der unveränderte restliche Wächterteil erfolgreich fortgesetzt.
+Keine Prüfung wurde ausgelassen oder abgeschwächt. Zehn vollständige
+Hauptfensteraufnahmen samt Hashes stehen unter `docs/images/rendering-evidence/`
+(`hardware-fix-183.json`); Fixstatus ist synthetisch. Vorbauabschnitte darunter
+bleiben historische Schritte. Paketbau und abschließende Artefaktprüfung folgen.
+Die laufende Benutzer-/Systeminstallation bleibt .182; kein neuer Fedora-Live-
+oder physischer Boot-/Deinstallationstest. GitHub bleibt unverändert.
+
+## Entwicklung .183 · 13.11.26 — Hardware Fix lokal und übersichtlich
+
+Hardware Fix bleibt 1.0. Zwei Hauptaktionen installieren den lokalen Fix oder
+entfernen ihn einschließlich Ubuntu-Automatik. Anbieterwahl und bloßes
+Umetikettieren entfallen auf Eigentümerwunsch. Der lokale Benutzerdienst läuft
+unabhängig vom OHC-Fenster; es gibt weiterhin nur einen Wächter und denselben
+Dienstnamen. Erfolgreiche explizite Installation speichert local/local.
+Diagnose, Spieltest und einzelne Reparaturschritte bleiben in Weitere Optionen.
+Technische Zustände stehen standardmäßig eingeklappt und vollständig übersetzt.
+
+`workflow.py` koordiniert nur bestehende feste Schritte: fehlender Boot-Fix,
+nach geladenem Override Desktop und Automatik ausschließlich auf Ubuntu/GNOME.
+Gesunde Bootressourcen und bereits dauerhaft aktives GNOME-VRR werden nicht
+erneut geschrieben. Erstinstallation wartet auf nötigen Neustart und kann über
+Installieren fortgesetzt werden. Fedora behält seinen bisherigen Bootpfad.
+UUID-gebundene Terminalergebnisse beheben übersehene schnelle Abschlüsse;
+veraltete Resultate, Doppelklicks und Startfehler werden abgefangen. Protokolle
+sind begrenzt, redigiert und im Dialog als Klartext behandelt. Exakte Boottoken
+und fehlerhafte Anbieter-JSON sind zusätzlich abgesichert. Der MSI-Hashfix aus
+dem vorangegangenen Live-Nachweis ist enthalten. Keine Änderung an EDID/Timings.
+
+Lokalisierung 1.0 ergänzt `hardware_fix_messages.py`, atomar über
+`content_ui_messages.py` und die vier Sprachdateien: 2.658 gemeinsame IDs.
+Hardware-Prüfung 1.0 passt die Breite nur im Hardware-Fix-Unterbereich an;
+`page.py`/`navigation.py` berücksichtigen die signalgesperrte Seitennavigation.
+Der Hauptfensterkopf zeigt dort den lokalen Standard. Hardware Fix verwendet
+die gemeinsame Theme-Registry und Disclosure-Komponente; sein Hintergrund bleibt
+für die vorhandene Darstellung transparent; Warnungen folgen dem Thema. `tools/render_hardware_fix.py` prüft echte
+Hauptfensteransichten mit isolierten Einstellungen und synthetischem Status.
+
+Neue Regressionen `test_hardware_fix_setup_3429183.py` und
+`test_hardware_fix_vrr_identity.py`. Vollständige Release-Prüfung, Sichtkontrolle,
+Paketierung und beide rollierenden Sicherungen folgen. Kein GitHub-Auftrag.
+
+Entwicklung 13.11.26: Hardware Fix bleibt 1.0. Die gebündelte
+`assets/msi-mag274qpf-x30mv-vrr/lib/vrr_hardware.py`-Konstante entspricht jetzt
+der anonymisierten korrigierten Profil-EDID. `lib/status.py` importiert sie,
+`profile.py` aktualisiert die beiden Ressourcenhashes. Erhalten: exakte
+EDID-Identität, read-only DRM, bestehende AppIndicators-Grenzen und getrennte
+Ubuntu-/Fedora-Installationswege. Neue Regressionen:
+`tests/test_hardware_fix_vrr_identity.py`; mit bestehenden Hardware-Fix-Tests
+16 Prüfungen bestanden. Ubuntu-Live: Mirage vorher VRR_ENABLED=0, nach einem
+begrenzten automatischen AppIndicators-Reset 1 bei wieder aktiver Erweiterung.
+Fedora nur isolierte Regressionen, kein Hardwarelauf. Insgesamt 21 Tests mit
+Repository-/Sicherheitsprüfungen bestanden. Benutzerdienst und drei betroffene
+Dateien der Benutzerinstallation sind gesichert aktualisiert; Systemkopie und
+.182-Pakete unverändert. Kein Versions-/Paketbau.
+
 Abschluss 12.11.26 (.182): Quellcommit `61a5f0d`; 1.736 Tests und fünf Untertests
 sowie sämtliche Release-Wächter bestanden. Sechs Pakete, 472 Laufzeitquellen,
 169 Original-Assets und genau beide .181/.182-Sicherungen mit je acht SHA256
@@ -259,8 +380,8 @@ Interner GitHub-Upload
 auf `codex/3.4.29-intern` bestätigt (Quellcommit `5fd7989`); kein öffentlicher
 Release-Tag und keine Änderung des Standardzweigs.
 
-**Stand:** 12.11.26
-**Anwendung:** 3.4.29.182 INTERN
+**Stand:** 14.11.26
+**Anwendung:** 3.4.29.183 INTERN
 
 Lokaler Stand 11.11.26: .174-Benutzerinstallation mit allen 403 Python-Quellen
 verifiziert und gestartet. Fünf native RGB-Arbeiter ohne gemeldete Fehler,
@@ -1121,7 +1242,7 @@ Datum: 13.09.26.
 | Hauptfenster und Seitenkomposition | Legacy 3.4.29.99 | `src/kraken_control.py`, `src/dashboard_layout.py`, `src/localization_catalog.py` | Anwendungseinstieg und noch nicht extrahierte Controller; aufklappbare Kühlungs-/LCD-Unterseiten, hardwareabhängige Lüfterquellen, Zuordnungsreset/-assistent, unabhängige Bildschirm-/Fensterzustandswahl, globale leichte Seitenübergänge und 60-Minuten-Logansicht | X/Fensterschließen hält OHC im Infobereich am Leben; sichtbares manuelles Programmende ausschließlich über **Beenden** im Rechtsklickmenü des Tray-Symbols, Sitzungsende separat |
 | Hardware-Unterbauten | 1.0 | `src/modules/hardware_backends/v1_0/` | Reine Normalisierung und fail-closed Auflösung persistierter Automatik-/Direktauswahl für vorhandenes TRCC Linux und OHC Linux-hwmon | OHC-nativer Levita- und CoolerControl-Adapter bleiben bis zu Implementierung/Validierung nicht auswählbar; keine Hardwarebefehle |
 | Hardware-Checker | 1.0 | `src/modules/hardware_checker/v1_0/` | Begrenzte read-only Linux-/Windows-CIM-Erkennung, serialfreie DMI-Sockel-/RAM-Daten, responsive Übersicht in `cards.py`, separate Detailtabelle und erhaltener Hardware-Fix-/Lasttestpfad | Aktiv; keine Hardwarefreigabe aus Darstellung/Erkennung; bestehende bestätigte Schreib- und Besitzergrenzen bleiben |
-| Hardware Fix | 1.0 | `src/modules/hardware_fix/v1_0/` | Profilregistrierung und Hardware-Checker-Unterseite für MSI MAG 274QPF X30MV – VRR; anonymisierte EDID, Modell-/Ressourcenprüfung, gesperrte feste Terminaljobs, Anbieterübernahme, echte DRM-Messung und profilbezogene Rücknahme | Keine persönliche Seriennummer, keine beliebigen Root-Skripte/Pfade, kein automatischer Neustart; Ubuntu-AppIndicators-Automatik läuft nie auf Fedora |
+| Hardware Fix | 1.0 | `src/modules/hardware_fix/v1_0/` | Profilregistrierung und Hardware-Checker-Unterseite für MSI MAG 274QPF X30MV – VRR; anonymisierte EDID, Modell-/Ressourcenprüfung, gesperrte feste Terminaljobs, lokale Standardeinrichtung, echte DRM-Messung und profilbezogene Rücknahme | Keine persönliche Seriennummer, keine beliebigen Root-Skripte/Pfade, kein automatischer Neustart; Ubuntu-AppIndicators-Automatik läuft nie auf Fedora |
 | Snapshot-Manager | 1.0 | `src/modules/snapshot_manager/v1_0/` | Reine Richtlinie/Hysterese, persistente bounded Aktivitätsprobe in `activity_runtime.py`, Qt-Ansicht in `page.py`/`views.py`, Lebensdauer in `process_runtime.py` und bestätigte Aktionen in `snapshot_actions.py`; Erstellung, Root-Einrichtung, Herkunftsfilter, ProgramManager, Zeit-/CPU-/I/O-Regler und getrennte Admin-/Automatikrechte | Aktiv; keine Hardwarefreigabe aus Darstellung/Erkennung; bestehende bestätigte Schreib- und Besitzergrenzen bleiben |
 | GPU-Steuerung | 1.0 | `src/modules/gpu_control/v1_0/`, `packaging/install-lact.sh` | LACT-Client, fail-closed Feature-/Besitzschutz und gemeinsame GPU-Seite über `workspace_ui.py`/`workspace_layout.py`; `read_worker.py`/`read_probe.py`/`read_ui.py` begrenzte Ubuntu-Leseprozesse; `read_status.py` tatsächlicher LACT-Lesestatus, Stale-Hinweis und begrenzte redigierte Fehler | Erfolgreiches Lesen ist keine Schreibfreigabe; Kurztest, CoolerControl-/Besitzschutz und Bestätigungswege erhalten; gemeinsamer UI-/Kurvenarbeitsbereich ohne Vertragsänderung |
 | GPU-Profile | 1.0 | `src/modules/gpu_profiles/v1_0/` | Begrenzte exakte GPU-Profile mit SHA-256, nur darstellende RX-/RTX-Kataloge, normalisierte lokale Artwork-Kopien und wiederhergestellter `visual_catalog.py` mit originalen schematischen Grafiken unter `src/assets/gpu/` | Aktiv; keine Hardwarefreigabe aus Darstellung/Erkennung; bestehende bestätigte Schreib- und Besitzergrenzen bleiben |
@@ -1226,7 +1347,7 @@ dreizeilige persönliche Callouts.
 | Kühlungszustand 1.0 / Profilstart | `tests/test_cooling_state_342990.py`, `tests/test_cpu_defaults_and_case_pwm_3429152.py`, `tests/test_profile_startup_policy_3429155.py`, `tests/test_rgb_profile_autostart_342943.py` |
 | Hardware-Unterbauten / Temperaturverlauf 1.2 / Kühlungssicherheit 1.0 / Profile | `tests/test_hardware_backends_temperature_history_342966.py`, `tests/test_temperature_profiles_safety_342967.py`, `tests/test_media_manager_reports_342975.py`, `tests/test_full_ui_build_34291.py`, Offscreen-Canvas-Aufbau |
 | Hardware-Checker 1.0 | `tests/test_hardware_checker_342996.py`, `tests/test_full_ui_build_34291.py`, `tests/test_localization_module_342952.py`, `tests/test_security_static.py` |
-| Hardware Fix 1.0 | `tests/test_hardware_fix_3429149.py`, `tests/test_full_ui_build_34291.py`, `tests/test_security_static.py` |
+| Hardware Fix 1.0 | `tests/test_hardware_fix_setup_3429183.py`, `tests/test_hardware_fix_vrr_identity.py`, `tests/test_hardware_fix_3429149.py`, `tests/test_full_ui_build_34291.py`, `tests/test_security_static.py` |
 | Snapshot-Manager 1.0 | `tests/test_snapshot_manager_3429127.py`, `tests/test_full_ui_build_34291.py`, `tests/test_localization_module_342952.py`, `tests/test_security_static.py`, `tools/render_snapshot_manager.py` |
 | GPU-Steuerung / GPU-Profile 1.0 | `tests/test_gpu_read_status_3429181.py`, `tests/test_gpu_profiles_3429120.py`, `tests/test_gpu_control_3429102.py`, `tests/test_gpu_fan_stress_3429107.py`, `tests/test_gpu_backend_version_3429103.py`, `tests/test_dependency_helper.py`, `tests/test_full_ui_build_34291.py`, `tests/test_localization_module_342952.py`, `tests/test_security_static.py` |
 | Anwendungsaktivierung 1.0 | `tests/test_application_activation_342954.py`, `tests/test_full_ui_build_34291.py` |

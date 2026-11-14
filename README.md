@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.182 INTERN
+# Open Hardware Control by Frelidon 3.4.29.183 INTERN
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -55,43 +55,43 @@ Projekt-Repository: <https://github.com/Frelidon/open-hardware-control>
 
 Der sichere Testmodus ist standardmäßig aktiv; echte USB-Übertragung erfolgt nur über das separat installierte GPL-Backend **TRCC Linux** (9.10.4 empfohlen). Pumpe und Radiatorlüfter der Levita laufen über getrennt bestätigte Mainboard-PWM-Header (`PUMP_FAN`, `CPU_FAN`) mit sicherem 70-%-/10-s-Test; CoolerControl blockiert parallele Schreibzugriffe.
 
-## Neu in 3.4.29.182 INTERN
+## Neu in 3.4.29.183 INTERN
 
-- LCD-Arbeitsbereich mit klarer Bibliothek, Komposition und Displaybetrieb; vorhandene Designs und Einstellungen bleiben erhalten.
-- Gemeinsame GPU-Seite mit erkennbarem Grafikkartenbild, Livewerten, Übertaktung und großer Lüfterkurve.
-- Animierter Hintergrund zuerst in den Einstellungen; häufige Darstellungsoptionen stehen vor technischen Details.
-- Bestehende Hardwarebesitzer, Kurztests, Profile und helle/dunkle Darstellung bleiben maßgeblich.
+- Hardware Fix mit Installieren und Deinstallieren als Hauptaktionen; lokale Installation als Standard.
+- Diagnose und einzelne Reparaturschritte bleiben unter Weitere Optionen erreichbar.
+- Korrigierte MSI-VRR-Erkennung und zuverlässige Rückmeldung der Terminalaktionen.
+- Getrennte Ubuntu-/GNOME- und Fedora-Einrichtung; alle Beschriftungen in vier Sprachen.
 
 ## Installation
 
-Die folgenden lokalen INTERN-Pakete sind gebaut und geprüft. Benutzer- und Systemkopie sind aktualisiert; GitHub bleibt unverändert.
+Die lokalen INTERN-Pakete sind gebaut und geprüft; Benutzer- und Systemkopie sind aktualisiert. Der Quellstand wird auf `codex/hardware-fix-3.4.29.183` bereitgestellt. Downloadpakete dieser Version sind noch nicht als GitHub-Release veröffentlicht.
 
 ### Fedora und Nobara – RPM
 
-Lade `open-hardware-control-3.4.29.182-0.intern2.noarch.rpm` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control-3.4.29.183-0.intern2.noarch.rpm` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.182-0.intern2.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.183-0.intern2.noarch.rpm
 ```
 
 ### Debian, Ubuntu und Linux Mint – DEB
 
-Lade `open-hardware-control_3.4.29.182~intern2_all.deb` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control_3.4.29.183~intern2_all.deb` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.182~intern2_all.deb'
+sudo apt install './open-hardware-control_3.4.29.183~intern2_all.deb'
 ```
 
 ### Universelles Installationspaket – ZIP
 
-Für Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_182_INTERN.zip` herunter und führe aus:
+Für Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_183_INTERN.zip` herunter und führe aus:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_182_INTERN.zip
-cd open-hardware-control-3.4.29.182-INTERN
+unzip open_hardware_control_v3_4_29_183_INTERN.zip
+cd open-hardware-control-3.4.29.183-INTERN
 chmod +x install.sh
 ./install.sh
 ```
@@ -160,13 +160,12 @@ Liest nur lokale Steam-Workshop-Metadaten, wählt Wallpaper über Plasmas offizi
 
 ## Versionsverlauf
 
+**3.4.29.183** – Lokale Hardware-Fix-Einrichtung, klare Bedienung und korrigierte MSI-VRR-Erkennung.
+
 **3.4.29.182** – LCD-Arbeitsbereiche, gemeinsame GPU-Seite und priorisierte Einstellungen.
 
 **3.4.29.181** – Gemeinsame UI-Bereiche, 15 Designpaare und Größenwahl.
 
 **3.4.29.180** – Lesbare Profilkarten, gestaltete Unterbereiche und sichere Entwurfsdarstellung.
-
-**3.4.29.179** – Frische CPU-Werte beim Profilstart und zentrale Fehlerprotokollierung.
-
 
 Alle früheren Versionen bis 2.9.x: [docs/CHANGELOG.md](docs/CHANGELOG.md) und [docs/releases/](docs/releases/).

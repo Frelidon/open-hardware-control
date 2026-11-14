@@ -3349,6 +3349,8 @@ class KrakenControl(FeatureOwnershipMixin, BackendUpdatesMixin, UiThemeMixin, Gp
         if page == getattr(self, "hardware_checker_page_index", -1):
             section = self.hardware_checker_page.section_tabs.currentIndex()
             title = ("Hardware-Prüfung", "Hardware Fix", "Von OHC unterstützte Geräte")[section]
+            if section == 1:
+                subtitle = "Lokale Installation · empfohlen"
         if hasattr(self, "page_title_label"):
             self.page_title_label.setText(self.tr_static(title))
             self.page_subtitle_label.setText(self.tr_static(subtitle))

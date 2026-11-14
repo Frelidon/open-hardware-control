@@ -412,7 +412,7 @@ for _refresh in range(2):
     )
 assert application._GIF_SAFETY_TEXT in labels
 assert application._ABOUT_SUMMARY_TEXT in labels
-assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.182 INTERN")
+assert window.windowTitle().startswith("Open Hardware Control by Frelidon 3.4.29.183 INTERN")
 assert window.temp_card.isHidden()
 assert not window.cpu_temp_card.isHidden()
 assert window.mainboard_sensor_source.findData("liquid") == -1
@@ -635,8 +635,11 @@ if render_dir:
     assert window.profile_bundle_controller.buttons[0].isVisible()
     assert window.grab().save(str(output / "profiles-complete-package.png"))
 # .172 hardware subnavigation and language refresh retain all existing views.
+# Geometry must be checked on a mapped window; hidden scroll areas defer layout.
 window.settings.setValue("setup/completed", True)
 window.settings.setValue("dependencies/desktop_design_offer_330", True)
+window.show()
+qt_app.processEvents()
 for language in ("de", "en", "es", "fr"):
     window.apply_ui_language(language, persist=False, log_change=False)
     parent = window.navigation_items["hardware_checker"]
@@ -650,6 +653,17 @@ for language in ("de", "en", "es", "fr"):
         assert window.hardware_checker_page.section_tabs.currentIndex() == section
         assert window.page_title_label.text() == window.tr_static(caption)
         assert window.sidebar_artwork.category == key
+        if key == "hardware_fix":
+            previous_size = window.size()
+            for width, height in ((1000, 900), (1440, 1000), (2551, 1337)):
+                window.resize(width, height)
+                for _ in range(3):
+                    qt_app.processEvents()
+                fix = window.hardware_checker_page.hardware_fix_panel
+                assert fix.horizontalScrollBar().maximum() == 0
+                assert window.hardware_checker_page.horizontalScrollBar().maximum() == 0
+                assert fix.activate_button.isVisible() and fix.uninstall_button.isVisible()
+            window.resize(previous_size)
     assert len(window.hardware_checker_page.supported_devices_page.cards) == 41
 # Complete real press/move/release gestures from every expandable section.
 # Regresses rows moving under a held pointer and opening a second page.

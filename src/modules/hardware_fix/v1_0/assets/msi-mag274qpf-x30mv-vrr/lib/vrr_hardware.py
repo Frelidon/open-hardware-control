@@ -5,7 +5,8 @@ import hashlib
 import os
 from pathlib import Path
 
-PATCH='2066c56832b221da3169be8173875e3bcb2dab4fb1c3eb99f1382b803920116e'
+# Same anonymized corrected EDID shipped by the Hardware Fix profile.
+PATCH='7d975778662fb0f3b16aba96dbd0282a072c6b6b7fb992967f79846f82d13fdc'
 class Props(c.Structure):
     _fields_=[('count',c.c_uint32),('ids',c.POINTER(c.c_uint32)),('values',c.POINTER(c.c_uint64))]
 class Prop(c.Structure):

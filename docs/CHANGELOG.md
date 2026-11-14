@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.4.29.183 INTERN · 13.11.26
+
+- Hardware Fix zeigt Installieren und Deinstallieren als Hauptaktionen. Lokale
+  Installation ist Standard; doppelte Anbieterwahl entfällt. Einzelaktionen,
+  Diagnose und Protokoll bleiben unter Weitere Optionen erreichbar.
+- Der Installationsablauf nutzt vorhandene Bootressourcen, beendet sich vor
+  Desktopänderungen bei nötigem Neustart und richtet Ubuntu/GNOME vollständig
+  über denselben lokalen Dienst ein. Fedora behält seinen getrennten Pfad.
+- Schnelle Terminalabschlüsse, veraltete Ergebnisse und Doppelklicks werden
+  zuverlässig behandelt. Protokollanzeige bleibt begrenzt und redigiert.
+- MSI-VRR-Erkennung entspricht wieder der anonymisierten ausgelieferten EDID;
+  alle neuen Oberflächen- und Statusmeldungen liegen in vier Sprachen vor.
+
 ## 3.4.29.182 INTERN · 12.11.26 (locally verified)
 
 1,736 tests/five subtests and all release gates pass. Six packages and both

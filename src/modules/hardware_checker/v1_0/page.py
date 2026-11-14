@@ -15,7 +15,7 @@ from shiboken6 import isValid
 from PySide6.QtWidgets import (
     QAbstractItemView, QApplication, QCheckBox, QFormLayout, QFrame, QGridLayout, QHeaderView, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QScrollArea, QSpinBox, QTableWidget, QTableWidgetItem,
-    QTabWidget, QVBoxLayout, QWidget,
+    QSizePolicy, QTabWidget, QVBoxLayout, QWidget,
 )
 
 from modules.hardware_fix.v1_0 import HardwareFixPanel
@@ -196,9 +196,15 @@ class HardwareCheckerPage(HardwareOverviewMixin, QScrollArea):
         from .supported_devices import SupportedDevicesPage
         self.supported_devices_page = SupportedDevicesPage(self.host, self.translate)
         self.section_tabs.addTab(self.supported_devices_page, "Von OHC unterstützte Geräte")
+        self.section_tabs.currentChanged.connect(self._section_geometry)
         outer_layout.addWidget(self.section_tabs)
         self.setWidget(body)
         self._populate_cards()
+
+    def _section_geometry(self, index: int) -> None:
+        # Hidden checker controls must not impose their width on the fix page.
+        horizontal = QSizePolicy.Policy.Ignored if index == 1 else QSizePolicy.Policy.Preferred
+        self.section_tabs.setSizePolicy(horizontal, QSizePolicy.Policy.Expanding)
 
     def start_full_check(self) -> None:
         if self.scan_process is not None or self.dmi_process is not None:

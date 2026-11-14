@@ -1,5 +1,160 @@
 # Open Hardware Control — Project Status
 
+## GitHub-Quellupload .183 · 14.11.26
+
+Der Eigentümer hat den Upload des geprüften INTERN-Standes auf GitHub beauftragt.
+Ziel ist `codex/hardware-fix-3.4.29.183`, ein neuer Entwicklungsbranch mit normalem
+Quell-Push. Er enthält den vollständigen aktuellen Stand einschließlich der
+bisher nur lokalen Entwicklungen .177 bis .182. BUILD_CHANNEL bleibt INTERN;
+kein Tag, öffentlicher Release oder Paketupload. README, Veröffentlichungsleitfaden
+und Release Notes unterscheiden Quellbranch und lokale Downloadpakete.
+Die vollständige .183-Testsuite und Release-Wächter sind bereits bestanden.
+Für diesen Upload bestanden erneut 43 Hardware-Fix-/UI-/Lokalisierungs-/Layout-
+und Sicherheitsregressionen sowie Datenschutzscan und Modulregister. Alle 723
+Quelldateien sind bytegleich mit dem geprüften Paketstand; die zehn Bildhashes
+stimmen. Frühere Hinweise auf unverändertes GitHub unten
+sind historische Nachweise vor diesem Folgeauftrag. Gebaute Pakete und externe
+Sicherungen werden durch den Quellupload nicht verändert.
+
+## Lokale Aktualisierung .183 · 14.11.26
+
+Auf ausdrücklichen Folgeauftrag sind Benutzer- und Systeminstallation jetzt
+3.4.29.183 INTERN; DEB-Paketstand 3.4.29.183~intern2. Vorherige Benutzerkopie,
+Einstellungen, Profile und native Plugins wurden privat gesichert. Nach geordnetem
+Programmende wurde zusätzlich der letzte Einstellungsstand festgehalten.
+Alle 716 installierbaren Dateien der lokalen Laufzeit und sämtliche 799 regulären
+DEB-Paketdateien sind bytegleich mit den geprüften Paketen. Native C++-Bauquellen
+gehören nicht zur installierten Laufzeit; die DEB enthält keine Test-GIF-Sammlung.
+Alle 93 geschützten Dateien waren vor dem normalen Neustart unverändert;
+18 gesondert geprüfte Profil-/Plugin-/JSON-Dateien auch danach. Laufende
+Einstellungs-, Sperr- und Protokolldateien dürfen sich beim Start aktualisieren.
+
+Normaler Ubuntu-/Wayland-Start mit .183 bestätigt: CPU-Kurve und nativer RGB-Pfad
+aktiv, gespeichertes Levita-Design geladen und Dauerbetrieb gestartet. Ein anfänglicher
+USB-Konflikt des eigenen TRCC-Daemons wurde durch dessen bestehende einmalige
+Wiederanlauflogik behoben; kein fehlerfreier Erstversuch wird behauptet.
+Der korrigierte VRR-Benutzerdienst blieb durchgehend aktiv und unverändert.
+Kein Systemneustart, neuer Spiel-/VRR-Messlauf oder Fedora-Hardwaretest.
+Diese nachträgliche Installationsprüfung ändert die gebauten Pakete und ihre
+rollierenden Sicherungen nicht. Frühere Angaben zur laufenden .182 unten sind
+historisch; GitHub bleibt unverändert.
+
+## Paketabschluss .183 · 14.11.26
+
+Alle sechs Artefakte gebaut und unabhängig geprüft: Laufzeit-/Entwickler-ZIP,
+Quell-TAR, vollständiges Local-AI-Gitbundle, DEB und RPM. Sechs Dist-SHA256,
+ZIP-CRCs und vollständige Manifeste, Quell-TAR-Manifest, Bundle-Historie,
+DEB-Metadaten/Root-Eigentümer sowie RPM-Header-/Payload-Digests bestanden.
+474 Python-Laufzeitquellen und 169 Assets sind in ZIP/TAR/DEB/RPM bytegleich.
+Genau beide .182/.183-Sicherungen bleiben erhalten; je acht Hashes verifiziert.
+Der RPM-Bau nutzte den vorhandenen Standardbibliothek-Writer, da rpmbuild hier
+nicht installiert ist. Keine neue Fedora-Liveprüfung wird daraus abgeleitet.
+
+Benutzer- und Systeminstallation wurden durch diesen Auftrag nicht aktualisiert;
+die .182-Benutzerkopie behält den vorangegangenen kleinen VRR-Hotfix. Es wurde
+kein Anwendungs-/Systemneustart ausgeführt. Pakete und Sicherungen bleiben
+unveränderte Schnappschüsse vor diesem nachträglichen Verifikationsnachweis.
+Der Snapshotcommit im vollständigen Gitbundle ist `8169680`; GitHub unverändert.
+
+## Quellfreigabe .183 · 13.11.26
+
+1.763 Tests und fünf Untertests bestanden, einschließlich echter Qt-Oberfläche
+in vier Sprachen, drei Fenstergrößen und beiden Themen. 474 Python-Laufzeitquellen,
+2.658 gemeinsame Nachrichten-IDs. Kompilierung, Sicherheit/Datenschutz,
+Modulregister und sämtliche restlichen Release-Prüfungen bestanden. Die erste
+Gesamtsuite scheiterte nur an zwölf gesperrten Testsockets; der Wiederholungslauf
+mit freigegebenen lokalen Sockets und deaktivierten Hardwarezugriffen bestand
+vollständig. Danach wurde der alte ZIP-Dateiname in beiden Installationsanleitungen
+berichtigt und der unveränderte restliche Wächterteil erfolgreich fortgesetzt.
+Keine Prüfung wurde ausgelassen oder abgeschwächt. Zehn vollständige
+Hauptfensteraufnahmen samt Hashes stehen unter `docs/images/rendering-evidence/`
+(`hardware-fix-183.json`); Fixstatus ist synthetisch. Vorbauabschnitte darunter
+bleiben historische Schritte. Paketbau und abschließende Artefaktprüfung folgen.
+Die laufende Benutzer-/Systeminstallation bleibt .182; kein neuer Fedora-Live-
+oder physischer Boot-/Deinstallationstest. GitHub bleibt unverändert.
+
+## Entwicklung .183 · 13.11.26 — Hardware Fix lokal und übersichtlich
+
+Hardware Fix bleibt 1.0. Zwei Hauptaktionen installieren den lokalen Fix oder
+entfernen ihn einschließlich Ubuntu-Automatik. Anbieterwahl und bloßes
+Umetikettieren entfallen auf Eigentümerwunsch. Der lokale Benutzerdienst läuft
+unabhängig vom OHC-Fenster; es gibt weiterhin nur einen Wächter und denselben
+Dienstnamen. Erfolgreiche explizite Installation speichert local/local.
+Diagnose, Spieltest und einzelne Reparaturschritte bleiben in Weitere Optionen.
+Technische Zustände stehen standardmäßig eingeklappt und vollständig übersetzt.
+
+`workflow.py` koordiniert nur bestehende feste Schritte: fehlender Boot-Fix,
+nach geladenem Override Desktop und Automatik ausschließlich auf Ubuntu/GNOME.
+Gesunde Bootressourcen und bereits dauerhaft aktives GNOME-VRR werden nicht
+erneut geschrieben. Erstinstallation wartet auf nötigen Neustart und kann über
+Installieren fortgesetzt werden. Fedora behält seinen bisherigen Bootpfad.
+UUID-gebundene Terminalergebnisse beheben übersehene schnelle Abschlüsse;
+veraltete Resultate, Doppelklicks und Startfehler werden abgefangen. Protokolle
+sind begrenzt, redigiert und im Dialog als Klartext behandelt. Exakte Boottoken
+und fehlerhafte Anbieter-JSON sind zusätzlich abgesichert. Der MSI-Hashfix aus
+dem vorangegangenen Live-Nachweis ist enthalten. Keine Änderung an EDID/Timings.
+
+Lokalisierung 1.0 ergänzt `hardware_fix_messages.py`, atomar über
+`content_ui_messages.py` und die vier Sprachdateien: 2.658 gemeinsame IDs.
+Hardware-Prüfung 1.0 passt die Breite nur im Hardware-Fix-Unterbereich an;
+`page.py`/`navigation.py` berücksichtigen die signalgesperrte Seitennavigation.
+Der Hauptfensterkopf zeigt dort den lokalen Standard. Hardware Fix verwendet
+die gemeinsame Theme-Registry und Disclosure-Komponente; sein Hintergrund bleibt
+für die vorhandene Darstellung transparent; Warnungen folgen dem Thema. `tools/render_hardware_fix.py` prüft echte
+Hauptfensteransichten mit isolierten Einstellungen und synthetischem Status.
+
+Neue Regressionen `test_hardware_fix_setup_3429183.py` und
+`test_hardware_fix_vrr_identity.py`. 38 gezielte Prüfungen bestanden. Zehn echte Qt-Hauptfensteransichten mit
+synthetischem Fixstatus prüfen drei Größen und beide Themen, einschließlich
+langer Übersetzungen und aufgeklappter Details. Nach Abwarten der vorhandenen
+Seitenüberblendung ist der helle Hintergrund korrekt; die signalgesperrte
+Navigation und Breiten-/Umbruchkorrektur verhindern seitliches Abschneiden.
+Der vollständige Sandbox-Lauf hatte 1.750 bestandene Tests, fünf Untertests
+und zwölf Berechtigungsfehler bei lokalen Unix-/Loopback-Testsockets. Der
+Wiederholungslauf außerhalb dieser Socket-Sperre folgt mit weiterhin
+deaktivierten Hardwarezugriffen. Paketierung und Sicherungen folgen.
+Kein GitHub-Auftrag.
+
+## VRR-Monitorerkennung korrigiert · 13.11.26
+
+Hardware Fix 1.0: Die gebündelten VRR-Lesehelfer verwendeten noch die Prüfsumme
+der früheren EDID statt der seit der Anonymisierung ausgelieferten Profil-EDID.
+Dadurch erkannte die Ubuntu-Automatik den MSI nicht und meldete im fokussierten
+Mirage fälschlich keinen passenden Vollbild-/Randlosmodus; der Hardwarelesewert
+war unbekannt. `vrr_hardware.py` verwendet jetzt die exakte korrigierte
+Profilprüfsumme; die Terminaldiagnose importiert dieselbe Konstante. Die festen
+Ressourcenprüfsummen sind aktualisiert. Keine Änderung an EDID, Bootparametern,
+Timings, Fedora-Installationspfad oder GNOME-Schreib-/Rücknahmegrenzen.
+
+Ubuntu 26.10, GNOME 51.0, Kernel 7.3.0-10: Mirage war fokussiert, 2560×1440 auf
+dem MSI und vom Compositor als fullscreen markiert (im Spiel laut Eigentümer
+randlos). Vorher 15 DRM-Messungen mit VRR_ENABLED=0. Nach gesicherter Installation
+des korrigierten Benutzerdienstes erkannte die Automatik das Spiel, setzte
+AppIndicators einmal begrenzt zurück und meldete nach dessen Wiederfreigabe
+VRR_ENABLED=1. Weitere Messungen bestätigen 1; dies ist Treiberreadback, keine
+optische Bild-/Frequenzmessung. AppIndicators ist wieder freigegeben, owned=false.
+
+16 gezielte Tests bestanden: echte Profil-EDID bis Monitor-/CRTC-Zuordnung,
+Randlosmodus auf versetztem Zweitmonitor, Fokusverlust, Werte 0/1/unbekannt,
+Ablehnung fremder EDID und erhaltene Ubuntu-/Fedora-Befehls-/Guardverträge.
+Der erste Qt-Testaufruf ohne Offscreen-Plattform brach im eingeschränkten
+Desktopzugriff ab; der vollständige gezielte Wiederholungslauf mit
+QT_QPA_PLATFORM=offscreen bestand. Fedora wurde nur isoliert geprüft;
+keine neue Fedora-Hardwareprüfung und kein neuer Gesamtversions-/Paketbau.
+Zusammen mit Repository-/Sicherheitsprüfungen bestehen 21 Tests; Modulregister
+und Dateibudgets sind konsistent. Drei betroffene Dateien sind zusätzlich in
+der Benutzerinstallation gesichert, übernommen und bytegleich geprüft; deren
+Profilressourcenprüfung besteht. Der laufende OHC-Prozess wurde nicht neu
+gestartet. Die Systeminstallation und vorhandenen .182-Pakete bleiben auf dem
+bisherigen Stand; dieser kleine Hotfix ist noch kein neuer Gesamt-Release.
+
+EDID-Override bleibt aktiv. Die gesicherte Originaldatei enthält weiterhin
+Range-Flag 0 statt 1. Linux v7.3 `drm_edid.c:get_monitor_range` verlangt weiterhin
+DRM_EDID_RANGE_LIMITS_ONLY_FLAG; kein passender MSI-X30MV-Eintrag in dieser
+Quirk-Tabelle gefunden. Das spricht für Beibehaltung; ein Live-Gegenversuch
+ohne Override wurde nicht vorgenommen und benötigt einen getrennten Neustart.
+Quelle: https://github.com/torvalds/linux/blob/v7.3/drivers/gpu/drm/drm_edid.c#L6208
+
 ## Verifizierter lokaler Abschluss .182 · 12.11.26
 
 Quellcommit `61a5f0d`, Anwendung 3.4.29.182 INTERN: vollständiger Release-Lauf

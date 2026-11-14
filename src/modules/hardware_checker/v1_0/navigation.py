@@ -31,6 +31,7 @@ def select(host,item):
         index=next((section for child,_caption,section in CHILDREN if child==key),0)
         with QSignalBlocker(host.hardware_checker_page.section_tabs):
             host.hardware_checker_page.section_tabs.setCurrentIndex(index)
+        host.hardware_checker_page._section_geometry(index)
         host.update_page_header(host.hardware_checker_page_index)
 
 

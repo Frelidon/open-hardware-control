@@ -106,3 +106,7 @@ for _language, _messages in GPU_WORKSPACE_MESSAGES.items():
 from .lcd_workspace_messages import LCD_WORKSPACE_MESSAGES
 for _language, _messages in LCD_WORKSPACE_MESSAGES.items():
     CONTENT_UI_MESSAGES[_language].update(_messages)
+
+from .hardware_fix_messages import HARDWARE_FIX_MESSAGES
+for _language, _messages in HARDWARE_FIX_MESSAGES.items():
+    CONTENT_UI_MESSAGES[_language].update(_messages)

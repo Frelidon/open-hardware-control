@@ -1,5 +1,16 @@
 # Open Hardware Control — Durable Decisions
 
+## 13.11.26 · Hardware Fix lokal als Standard (.183)
+
+Der Eigentümer beauftragt weniger Schaltflächen und eine verständliche lokale
+Standardinstallation. OHC ist Installer und Diagnoseoberfläche; der bekannte
+lokale Dienst bleibt unabhängig vom geöffneten Programm. Die technisch gleiche
+Installation erhält keine zweite Anbieterwahl und keinen zweiten Wächter.
+Installieren koordiniert die vorhandenen geprüften Schritte, Deinstallieren
+entfernt den bekannten Fix einschließlich Ubuntu-Automatik. Einzelaktionen und
+DRM-Nachweis bleiben erreichbar. Fedora erhält niemals Ubuntu-AppIndicators-
+Automatik. Ein nötiger Systemneustart bleibt ausdrücklich manuell.
+
 ## 12.11.26 · LCD ordnen, GPU gemeinsam darstellen, Einstellungen priorisieren (.182)
 
 Der Eigentümer bestätigt die kompaktere Gehäusedarstellung und beauftragt die

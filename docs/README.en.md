@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.182 INTERN
+# Open Hardware Control by Frelidon 3.4.29.183 INTERN
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](../LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -55,43 +55,43 @@ Project repository: <https://github.com/Frelidon/open-hardware-control>
 
 The safe preview-only test mode is active by default; real USB transfer happens only through the separately installed GPL backend **TRCC Linux** (9.10.4 recommended). Levita pump and radiator fans run through separately confirmed motherboard PWM headers (`PUMP_FAN`, `CPU_FAN`) with a safe 70 %/10 s test; CoolerControl blocks concurrent writes.
 
-## New in 3.4.29.182 INTERN
+## New in 3.4.29.183 INTERN
 
-- LCD workspace with clear library, composition and display operation areas; existing designs and settings remain.
-- One GPU page retains the graphics-card artwork and live values alongside tuning and a larger fan curve.
-- Animated background settings come first, followed by common appearance options and then technical details.
-- Existing hardware owners, short trials, profiles and light/dark themes remain authoritative.
+- Hardware Fix with Install and Uninstall as primary actions; local installation is the default.
+- Additional diagnostics and individual repair steps remain available under More options.
+- Correct MSI VRR monitor detection and reliable terminal result handling.
+- Ubuntu/GNOME and Fedora retain separate setup paths; all labels support four languages.
 
 ## Installation
 
-The following local INTERN packages are built and verified. User and system installations are updated; GitHub remains unchanged.
+The local INTERN packages are built and verified; user and system installations are updated. Source is prepared for `codex/hardware-fix-3.4.29.183`. Download packages for this version have not been published as a GitHub release.
 
 ### Fedora and Nobara – RPM
 
-Download `open-hardware-control-3.4.29.182-0.intern2.noarch.rpm` to your Downloads folder and run:
+Download `open-hardware-control-3.4.29.183-0.intern2.noarch.rpm` to your Downloads folder and run:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.182-0.intern2.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.183-0.intern2.noarch.rpm
 ```
 
 ### Debian, Ubuntu and Linux Mint – DEB
 
-Download `open-hardware-control_3.4.29.182~intern2_all.deb` to your Downloads folder and run:
+Download `open-hardware-control_3.4.29.183~intern2_all.deb` to your Downloads folder and run:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.182~intern2_all.deb'
+sudo apt install './open-hardware-control_3.4.29.183~intern2_all.deb'
 ```
 
 ### Universal installer – ZIP
 
-For Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS and openSUSE. Download `open_hardware_control_v3_4_29_182_INTERN.zip` and run:
+For Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS and openSUSE. Download `open_hardware_control_v3_4_29_183_INTERN.zip` and run:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_182_INTERN.zip
-cd open-hardware-control-3.4.29.182-INTERN
+unzip open_hardware_control_v3_4_29_183_INTERN.zip
+cd open-hardware-control-3.4.29.183-INTERN
 chmod +x install.sh
 ./install.sh
 ```
@@ -160,13 +160,12 @@ Reads only local Steam Workshop metadata, selects wallpapers through Plasma's of
 
 ## Version history
 
+**3.4.29.183** – Local Hardware Fix setup, simpler controls and corrected MSI VRR detection.
+
 **3.4.29.182** – LCD workspaces, unified GPU page and prioritized settings.
 
-**3.4.29.181** – Shared UI sections, 15 matching pairs and size controls.
+**3.4.29.181** – Shared UI sections, 15 design pairs and size selection.
 
-**3.4.29.180** – Readable profile cards, styled sections and safe draft presentation.
-
-**3.4.29.179** – Fresh CPU values during profile startup and central error logging.
-
+**3.4.29.180** – Readable profile cards and safe drafts.
 
 All earlier versions back to 2.9.x: [CHANGELOG.md](CHANGELOG.md) and [docs/releases/](releases).
