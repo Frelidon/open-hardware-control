@@ -68,7 +68,8 @@ jobs:
       - name: Check release
         run: ./scripts/check_release.sh
       - name: Build release assets
-        run: ./scripts/build_release.sh "${{ steps.release.outputs.version }}"
+        # The previous step fully validated this unchanged checkout.
+        run: PYTHONDONTWRITEBYTECODE=1 python3 scripts/build_release.py "${{ steps.release.outputs.version }}"
       - name: Create release tag from publication branch
         if: github.ref_type == 'branch' && github.event_name != 'workflow_dispatch'
         env:

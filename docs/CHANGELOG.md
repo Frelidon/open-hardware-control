@@ -2,6 +2,10 @@
 
 ## 3.4.29.183 STABLE · 15.11.26
 
+Zusätzliche CI-Korrektur: Gehäuse-Footer nach endgültigem Layoutumbruch erneut
+sichtbar halten; bestehende Formprüfung mit zwei Schriftfamilien. LCD-UI-Test
+von der tatsächlich angeschlossenen Hardware isoliert. Keine Hardwareänderung.
+
 Öffentliche Freigabe des geprüften .183-Stands mit Hardware-Fix-Einrichtung,
 MSI-VRR-Korrektur und allen seit .176 entstandenen Profil-/LCD-/GPU-Verbesserungen.
 Kanalmetadaten und Downloadnamen folgen STABLE; Hardwareverhalten und persönliche

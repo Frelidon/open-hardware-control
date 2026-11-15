@@ -37,6 +37,9 @@ def _worker():
         import kraken_control as application
         from modules.application_shutdown.v1_1.qt_processes import stop_remaining
         from modules.lcd_workspace.v1_0 import LcdDeviceShell, LegacyTileGroups
+        # Read-only discovery also needs a fixture: a headless CI runner has
+        # no Levita, while the developer machine may have one connected.
+        application.thermalright_display_present = lambda: True
         application.KrakenControl.check_dependencies = lambda _self: ['isolated-lcd-workspace']
         app = QApplication.instance() or QApplication([])
 

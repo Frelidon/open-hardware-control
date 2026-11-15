@@ -1,5 +1,15 @@
 # Open Hardware Control 3.4.29.183 STABLE – GitHub-Veröffentlichung
 
+## CI-Nachprüfung der .183-Freigabe · 15.11.26
+
+Der erste Lauf 43721518664 stoppte vor Tag und Upload an den bekannten
+Gehäuse-/LCD-Umgebungsregressionen; keine alte Paketversion wurde veröffentlicht.
+Die Korrekturen werden erneut vollständig geprüft und neu paketiert. Im Release-
+Workflow bleibt Check release die vollständige Freigabesperre. Der unmittelbar
+folgende Paketbau nutzt build_release.py direkt, damit derselbe unveränderte
+Checkout nicht ein zweites Mal dieselbe Gesamtsuite ausführt. Der allgemeine
+build_release.sh-Einstieg behält seine vollständige Vorprüfung unverändert.
+
 ## Öffentliche Freigabe .183 · 15.11.26
 
 STABLE-Quellfreigabe: 1.763 Tests und fünf Untertests sowie der komplette

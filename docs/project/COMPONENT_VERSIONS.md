@@ -1,5 +1,32 @@
 # Komponenten- und Versionsübersicht – Version 3.4.29.183 STABLE
 
+## CI-Portabilität der Freigabe .183 · 15.11.26
+
+Finale Quellfreigabe nach CI-Korrektur: vollständiger check_release.sh-Lauf
+unter Qt 6.12.0 bestanden, 1.764 Tests und fünf Untertests. Je drei enge
+UI-Prüfungen unter Qt 6.11.2 und Qt 6.12.0 bestanden. Alle bestehenden
+Geometrie-/Sichtbarkeits-/Hardwarebesitz-Assertions bleiben erhalten. Sicherheit,
+Datenschutz, vierfache vollständige Lokalisierung und Modulregister bestanden.
+Der Release-Workflow behält die vollständige Freigabesuite vor dem Paketbau;
+nur deren doppelte Ausführung im selben unveränderten Checkout entfällt.
+
+Der erste öffentliche Release-Lauf 43721518664 stoppte vor Tag und Upload.
+Die CodeQL-Analyse bestand; die CI-Prüfungen unter Python 3.13/3.14 meldeten
+zwei bisher lokal nicht sichtbare UI-Probleme. Mit isoliertem Qt 6.12 wurden
+beide Ursachen lokal nachgestellt: andere Schriftmaße und fehlende reale
+Levita-Erkennung, nicht ein neuer Hardwarefehler.
+
+PC case profiles 1.5: inline_editor.py koalesziert Footer-Neuanpassungen nach
+Resize und LayoutRequest einschließlich des tatsächlich umgebrochenen Formulars;
+unveränderte Mindesthöhe wird nicht erneut gesetzt. Sonst konnte die
+Übernehmen/Abbrechen-Zeile nach schmalem Umbruch außerhalb des Fensters liegen.
+Die bestehenden Geometrie-/Entwurfs-/Vier-Sprachen-Assertions werden zusätzlich
+mit Sans Serif und DejaVu Sans ausgeführt. LCD workspace 1.0: Der bestehende
+UI-Test verwendet jetzt eine feste read-only Levita-Erkennung statt der echten
+USB-Ausstattung des Hosts; alle Sichtbarkeits- und Besitzassertionen bleiben.
+Keine Lokalisierungstexte, Profile, Hardwarebefehle oder Gerätebesitzer ändern sich.
+Neue gezielte und vollständige Freigabeprüfung sowie Neubau folgen.
+
 ## Öffentliche Freigabe .183 · 15.11.26
 
 STABLE-Quellfreigabe: 1.763 Tests und fünf Untertests sowie der komplette

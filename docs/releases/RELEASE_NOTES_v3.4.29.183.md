@@ -40,8 +40,16 @@ Zuordnung zu allen DP-Anschlüssen erfordert, andere DP-Monitore vorher zu trenn
 
 Die INTERN-Freigabe bestand 1.763 Tests und fünf Untertests sowie die Release-
 Wächter; vor dem Quellupload bestanden zusätzlich 43 gezielte Regressionen.
-Der öffentliche STABLE-Stand bestand erneut alle 1.763 Tests und fünf Untertests
-sowie den vollständigen `check_release.sh`-Lauf und wird neu paketiert. Sicherheits-/Datenschutzscan, vollständige vierfache
+Die erste lokale STABLE-Prüfung bestand 1.763 Tests und fünf Untertests.
+Die GitHub-CI deckte danach zwei Umgebungsunterschiede auf: andere Schriftmaße
+im Gehäuse-Editor und eine vom realen USB-Gerät abhängige LCD-Testannahme.
+Der Footer wird jetzt nach abgeschlossenem Layout neu angepasst; die LCD-
+Prüfung verwendet eine feste Erkennungsfixture. Bestehende Prüfungen bleiben
+erhalten und der Gehäuse-Test ergänzt eine zweite Schriftfamilie. Der finale
+`check_release.sh`-Lauf bestand unter Qt 6.12.0 mit 1.764 Tests und fünf Untertests;
+unter Qt 6.11.2 bestanden zusätzlich beide Schrift- und die LCD-Regressionsprüfung.
+Alle Sicherheits-, Datenschutz- und Release-Wächter bestanden. Die Pakete werden
+aus diesem korrigierten Stand neu gebaut. Sicherheits-/Datenschutzscan, vollständige vierfache
 UI-Lokalisierung, Kompilierung, Modulbudgets und getrennte Ubuntu-/Fedora-Verträge
 gehören zur Freigabe. Zehn echte Qt-Hauptfensteraufnahmen mit synthetischem
 Fixstatus dokumentieren drei Größen und beide Themen; sie sind kein Hardwaretest.
@@ -52,8 +60,8 @@ Treiberreadback, keine optische Frequenzmessung. Ein Gegenversuch ohne EDID-
 Override wurde nicht durchgeführt; dessen Entbehrlichkeit ist damit nicht belegt.
 Die .183-INTERN-Benutzer- und Systeminstallation wurde normal gestartet:
 CPU-Kurve und RGB aktiv, gespeichertes Levita-Design nach automatisch behobenem
-eigenem TRCC-Startkonflikt im Dauerbetrieb. Beim STABLE-Release ändert sich nur
-die Kanal-/Veröffentlichungsmetadaten, nicht das Hardwareverhalten.
+eigenem TRCC-Startkonflikt im Dauerbetrieb. Der STABLE-Release ergänzt außerdem die nachgelagerte Footer-Anpassung für
+unterschiedliche Schriftmaße im Gehäuse-Editor; das Hardwareverhalten bleibt gleich.
 
 Fedora hat isolierte Vertragstests; ein neuer realer Fedora-/KDE-Hardwarelauf,
 optischer Frequenztest, Boot-/Deinstallationstest und Windows-Test wurden für

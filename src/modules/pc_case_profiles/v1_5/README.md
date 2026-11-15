@@ -140,3 +140,8 @@ The .172 workspace reuses all stores and animated diagrams in three tabs. `compo
 continuation skips explicitly disconnected ports and completes when none remain.
 Stored connection flags retain curves; only explicit successful calibration
 restores a connected state. Layout/profile ownership remains unchanged.
+
+The inspector coalesces footer fitting after Resize and LayoutRequest so final
+column/tab reflow and different font metrics cannot leave Save/Cancel outside
+the outer viewport. Both Sans Serif and DejaVu Sans retain the same geometry
+and draft-preservation assertions in the existing four-language UI regression.

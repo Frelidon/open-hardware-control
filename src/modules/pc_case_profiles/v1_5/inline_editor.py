@@ -13,6 +13,9 @@ class CaseInspector(QFrame):
         self.active_dialog = None
         self.generation = 0
         self.original_minimum = diagram.minimumWidth()
+        self.fit_timer = QTimer(self)
+        self.fit_timer.setSingleShot(True)
+        self.fit_timer.timeout.connect(self._fit_page)
         self.setObjectName("caseInlineInspector")
         self.setMinimumWidth(430)
         self.setMaximumWidth(860)
@@ -81,7 +84,7 @@ class CaseInspector(QFrame):
         self.body_layout.addWidget(dialog)
         dialog.finished.connect(lambda _result: self._finished(dialog, token))
         dialog.show()
-        QTimer.singleShot(0, self, self._fit_page)
+        self.fit_timer.start(0)
 
     def _finished(self, dialog, token):
         if self.active_dialog is dialog:
@@ -125,7 +128,9 @@ class CaseInspector(QFrame):
             layout = self.active_dialog.layout()
             if layout is not None:
                 natural = layout.minimumSize().height() + self.title.height() + 48
-                self.setMinimumHeight(max(480, natural))
+                wanted = max(480, natural)
+                if self.minimumHeight() != wanted:
+                    self.setMinimumHeight(wanted)
             from PySide6.QtWidgets import QDialogButtonBox
             footer = self.active_dialog.findChild(QDialogButtonBox)
             page.ensureWidgetVisible(footer if footer is not None else self, 0, 12)
@@ -136,8 +141,11 @@ class CaseInspector(QFrame):
         viewport = page.viewport() if isinstance(page, QScrollArea) else None
         if watched in (self.parentWidget(), viewport) and event.type() == QEvent.Type.Resize:
             self._adapt_width()
-        if watched in (self, viewport) and event.type() == QEvent.Type.Resize:
-            QTimer.singleShot(0, self, self._fit_page)
+        if (watched in (self, self.body, self.active_dialog, self.parentWidget(), viewport)
+                and event.type() in {QEvent.Type.Resize, QEvent.Type.LayoutRequest}):
+            # Column/tab reflow can finish after the outer resize event. Refit
+            # against the final footer position, including different font metrics.
+            self.fit_timer.start(0)
         if (event.type() == QEvent.Type.KeyPress and event.key() == Qt.Key.Key_Escape
                 and isinstance(watched, QWidget) and watched.window() is self.host.window()):
             self.dismiss()

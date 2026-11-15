@@ -36,3 +36,7 @@ independent.
 `tests/test_lcd_workspace_3429182.py` covers the adapter contract, draft and
 selection preservation, hidden playback and full-window native Qt ownership
 and narrow geometry with isolated settings and hardware IO disabled.
+
+The UI regression fixtures read-only Levita presence as well as settings and
+hardware writes; it never depends on whether the developer or CI host has a
+physical display attached. Automatic device-choice contracts remain tested.

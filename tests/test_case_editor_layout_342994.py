@@ -4,6 +4,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -28,6 +29,8 @@ def exercise():
         import kraken_control as application
         application.KrakenControl.check_dependencies = lambda self: ['hardware-free-layout']
         app = QApplication([]); app.setQuitOnLastWindowClosed(False)
+        from PySide6.QtGui import QFont
+        app.setFont(QFont(os.environ.get('OHC_TEST_CASE_FONT', 'Sans Serif'), 9))
         window = application.KrakenControl()
         errors = []; window.show_error = errors.append
         window.settings.setValue('setup/completed', True)
@@ -141,9 +144,10 @@ def exercise():
         print('responsive forms/drafts/footer/four-language tabs: passed', flush=True)
 
 
-def test_responsive_real_case_forms():
+@pytest.mark.parametrize('font_family', ['Sans Serif', 'DejaVu Sans'])
+def test_responsive_real_case_forms(font_family):
     result = subprocess.run([sys.executable, str(Path(__file__).resolve()), '--child'], cwd=ROOT,
-                            env={**os.environ, 'PYTHONDONTWRITEBYTECODE': '1'},
+                            env={**os.environ, 'PYTHONDONTWRITEBYTECODE': '1', 'OHC_TEST_CASE_FONT': font_family},
                             capture_output=True, text=True, timeout=25)
     assert result.returncode == 0, result.stdout + result.stderr
     assert 'four-language tabs: passed' in result.stdout

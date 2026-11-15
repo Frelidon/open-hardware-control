@@ -1,0 +1,44 @@
+[
+  {
+    "file": "release183-case-component-tabs-de.png",
+    "qt": "6.12.0",
+    "font": "DejaVu Sans, 9 pt",
+    "status": "isolated synthetic UI; hardware IO disabled",
+    "sha256": "cbd388c054496e1b4700b1030f167f46bc8cf1027deee43951f1505914d510ff"
+  },
+  {
+    "file": "release183-case-component-tabs-fr.png",
+    "qt": "6.12.0",
+    "font": "DejaVu Sans, 9 pt",
+    "status": "isolated synthetic UI; hardware IO disabled",
+    "sha256": "3f88f050a2b38771ddc3f4e092bff59992c06b241d469e9f48733f54e4a3ff54"
+  },
+  {
+    "file": "release183-case-component-wide-de.png",
+    "qt": "6.12.0",
+    "font": "DejaVu Sans, 9 pt",
+    "status": "isolated synthetic UI; hardware IO disabled",
+    "sha256": "ff12f901c72161ac88be308672347d34f797bdf30dc50a5060028ce3f1e7a1b9"
+  },
+  {
+    "file": "release183-case-component-wide-fr.png",
+    "qt": "6.12.0",
+    "font": "DejaVu Sans, 9 pt",
+    "status": "isolated synthetic UI; hardware IO disabled",
+    "sha256": "f2630d3b4708d655e9290b796389fe20c14054941ed1646630e44218e7e28fb2"
+  },
+  {
+    "file": "release183-case-led-path-de.png",
+    "qt": "6.12.0",
+    "font": "DejaVu Sans, 9 pt",
+    "status": "isolated synthetic UI; hardware IO disabled",
+    "sha256": "3ac0e254f185ac8f39f44a5c4c440c3061bbeb58c75275c4199e934ca2fbe22e"
+  },
+  {
+    "file": "release183-case-led-path-fr.png",
+    "qt": "6.12.0",
+    "font": "DejaVu Sans, 9 pt",
+    "status": "isolated synthetic UI; hardware IO disabled",
+    "sha256": "4d5d57935a7f398cc93ab2f9b8e77e7e8dcdc82cd7cba8fb543b48f650f017d0"
+  }
+]
