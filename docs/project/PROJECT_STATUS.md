@@ -22,7 +22,14 @@ bestand; der Stack zeigt die wiederholte vollständige Theme-Anwendung.
 Der reine Testnachtrag auf main erhält alle Geometrie-/Entwurfsassertionen,
 setzt einen weiterhin begrenzten 180-Sekunden-Watchdog und ergänzt Stack-Diagnose
 nach 60 Sekunden. Er ändert keine Anwendung, Pakete oder veröffentlichten Tags.
-Die gezielte Python-3.13-Prüfung und erneute main-CI werden dazu kontrolliert.
+Abschluss: gezielte Python-3.13-Prüfung (zwei Tests) und volle lokale Suite
+unter Python 3.13.18/Qt 6.12 bestanden: 1.764 Tests und fünf Untertests.
+Die main-CI 43725909710 ist vollständig erfolgreich: Python 3.13 und 3.14
+je 1.762 bestandene Tests, zwei übersprungene Tests und fünf Untertests;
+Paketbau und Archiv-/Native-Paketprüfung ebenfalls bestanden. Alle vier
+CodeQL-Jobs im Lauf 43725909015 sind erfolgreich. Die Anwendung ist seit dem
+Release-Tag bytegleich; nur Test-Watchdog und Dokumentation folgen auf main.
+Dieser abschließende Dokumentationsnachweis baut oder verändert keine Pakete.
 
 Die laufenden lokalen INTERN-Installationen wurden nicht ersetzt. Fedora-/Boot-/
 optische Prüfgrenzen bleiben dokumentiert; kein neuer Hardwarelauf behauptet.
