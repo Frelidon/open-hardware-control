@@ -44,7 +44,10 @@ def test_expanded_profile_workspace_retains_readable_content_and_drafts() -> Non
     environment["PYTHONDONTWRITEBYTECODE"] = "1"
     completed = subprocess.run(
         [sys.executable, str(Path(__file__).resolve()), "--worker"],
-        cwd=ROOT, env=environment, capture_output=True, text=True, timeout=90,
+        # This worker rebuilds the full application stylesheet across four
+        # languages and two themes. Keep a bounded watchdog without mistaking
+        # slower hosted Python 3.13 runners for a geometry assertion failure.
+        cwd=ROOT, env=environment, capture_output=True, text=True, timeout=180,
     )
     assert completed.returncode == 0, completed.stdout + completed.stderr
     assert "profile geometry: 3 sizes, 4 languages, 2 themes passed" in completed.stdout
@@ -52,8 +55,11 @@ def test_expanded_profile_workspace_retains_readable_content_and_drafts() -> Non
 
 def _worker(runtime: Path, render_dir: Path | None = None, presentation: bool = False) -> None:
     import copy
+    import faulthandler
     import tempfile
     from unittest.mock import patch
+
+    faulthandler.dump_traceback_later(60, repeat=True)
 
     with tempfile.TemporaryDirectory(prefix="ohc-profile-geometry-") as temporary:
         isolated = Path(temporary)

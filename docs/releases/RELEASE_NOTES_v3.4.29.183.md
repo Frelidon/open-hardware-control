@@ -17,7 +17,7 @@
   dem automatischen Profilstart abgewartet. Originale Matrix-/RGB-/LCD-Designs,
   Größenwahl und gemeinsame UI-Bereiche aus .177 bis .182 sind enthalten.
 
-Vollständige Einzeländerungen: [Changelog](../CHANGELOG.md) und die bisherigen
+Vollständige Einzeländerungen: [Changelog](https://github.com/Frelidon/open-hardware-control/blob/v3.4.29.183/docs/CHANGELOG.md) und die bisherigen
 Release Notes von .177 bis .182. Bestehende Einstellungen, Profile, Designs und
 Hardwarebesitzer bleiben erhalten. Alle neuen UI-Texte unterstützen Deutsch,
 Englisch, Spanisch und Französisch.

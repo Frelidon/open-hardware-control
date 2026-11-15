@@ -1,5 +1,33 @@
 # Open Hardware Control — verbindliches Modulregister
 
+## Öffentlicher Release .183 abgeschlossen · 15.11.26
+
+GitHub main und der öffentliche Latest-Release sind .183 STABLE. Der annotierte
+Tag v3.4.29.183 zeigt unverändert auf 5f598f5; Release-Lauf 43723430535,
+Paketbau, Python-3.14-Prüfung und alle vier CodeQL-Analysen bestanden.
+Alle acht öffentlichen Dateien wurden tatsächlich heruntergeladen. Dateigrößen,
+GitHub-SHA256 und öffentliche/local-Prüfsummenlisten stimmen. Beide ZIP-CRCs und
+vollständigen Manifeste, Quell-TAR-Manifest, DEB-Metadaten/Root-Eigentümer,
+RPM-Header-/Payload-/Dateidigests und komplettes Gitbundle geprüft. 474 Python-
+Laufzeitquellen und 169 Assets sind in ZIP/TAR/DEB/RPM bytegleich; das Bundle
+enthält die Footer-Korrektur und den STABLE-Stand. Dist und STABLE-Sicherung
+enthalten exakt die veröffentlichten Paketbytes. Genau INTERN/STABLE .183
+bleiben als zwei vollständige Sicherungssätze mit je acht geprüften Hashes.
+Der Changelog-Link im öffentlichen Release-Text ist taggebunden korrigiert.
+
+Python 3.13 meldete zweimal allein den 90-Sekunden-Watchdog des großen
+Profil-Layouttests, keine fehlgeschlagene fachliche Assertion. Eine isolierte
+Python-3.13.18-/Qt-6.12-Reproduktion mit DejaVu Sans und fehlender echter Levita
+bestand; der Stack zeigt die wiederholte vollständige Theme-Anwendung.
+Der reine Testnachtrag auf main erhält alle Geometrie-/Entwurfsassertionen,
+setzt einen weiterhin begrenzten 180-Sekunden-Watchdog und ergänzt Stack-Diagnose
+nach 60 Sekunden. Er ändert keine Anwendung, Pakete oder veröffentlichten Tags.
+Die gezielte Python-3.13-Prüfung und erneute main-CI werden dazu kontrolliert.
+
+Die laufenden lokalen INTERN-Installationen wurden nicht ersetzt. Fedora-/Boot-/
+optische Prüfgrenzen bleiben dokumentiert; kein neuer Hardwarelauf behauptet.
+Gebündelte Paketdokumentation ist der Schnappschuss vor diesem Nachweis.
+
 ## CI-Portabilität der Freigabe .183 · 15.11.26
 
 Finale Quellfreigabe nach CI-Korrektur: vollständiger check_release.sh-Lauf

@@ -1,5 +1,35 @@
 # Open Hardware Control 3.4.29.183 STABLE – GitHub-Veröffentlichung
 
+## Öffentlicher Release .183 abgeschlossen · 15.11.26
+
+Release: <https://github.com/Frelidon/open-hardware-control/releases/tag/v3.4.29.183>
+
+GitHub main und der öffentliche Latest-Release sind .183 STABLE. Der annotierte
+Tag v3.4.29.183 zeigt unverändert auf 5f598f5; Release-Lauf 43723430535,
+Paketbau, Python-3.14-Prüfung und alle vier CodeQL-Analysen bestanden.
+Alle acht öffentlichen Dateien wurden tatsächlich heruntergeladen. Dateigrößen,
+GitHub-SHA256 und öffentliche/local-Prüfsummenlisten stimmen. Beide ZIP-CRCs und
+vollständigen Manifeste, Quell-TAR-Manifest, DEB-Metadaten/Root-Eigentümer,
+RPM-Header-/Payload-/Dateidigests und komplettes Gitbundle geprüft. 474 Python-
+Laufzeitquellen und 169 Assets sind in ZIP/TAR/DEB/RPM bytegleich; das Bundle
+enthält die Footer-Korrektur und den STABLE-Stand. Dist und STABLE-Sicherung
+enthalten exakt die veröffentlichten Paketbytes. Genau INTERN/STABLE .183
+bleiben als zwei vollständige Sicherungssätze mit je acht geprüften Hashes.
+Der Changelog-Link im öffentlichen Release-Text ist taggebunden korrigiert.
+
+Python 3.13 meldete zweimal allein den 90-Sekunden-Watchdog des großen
+Profil-Layouttests, keine fehlgeschlagene fachliche Assertion. Eine isolierte
+Python-3.13.18-/Qt-6.12-Reproduktion mit DejaVu Sans und fehlender echter Levita
+bestand; der Stack zeigt die wiederholte vollständige Theme-Anwendung.
+Der reine Testnachtrag auf main erhält alle Geometrie-/Entwurfsassertionen,
+setzt einen weiterhin begrenzten 180-Sekunden-Watchdog und ergänzt Stack-Diagnose
+nach 60 Sekunden. Er ändert keine Anwendung, Pakete oder veröffentlichten Tags.
+Die gezielte Python-3.13-Prüfung und erneute main-CI werden dazu kontrolliert.
+
+Die laufenden lokalen INTERN-Installationen wurden nicht ersetzt. Fedora-/Boot-/
+optische Prüfgrenzen bleiben dokumentiert; kein neuer Hardwarelauf behauptet.
+Gebündelte Paketdokumentation ist der Schnappschuss vor diesem Nachweis.
+
 ## CI-Nachprüfung der .183-Freigabe · 15.11.26
 
 Der erste Lauf 43721518664 stoppte vor Tag und Upload an den bekannten
@@ -164,3 +194,8 @@ Empfohlene Topics:
 `linux`, `thermalright`, `thermalright-levita`, `lcd-display`, `nzxt`, `nzxt-kraken`, `kraken-lcd`, `aio-cooler`, `liquidctl`, `fan-control`, `rgb-control`, `openrgb`, `openlinkhub`, `corsair`, `wallpaper-engine`, `python`, `pyside6`, `fedora`
 
 Die Erlaubnis für den normalen Branch-Push erlaubt niemals automatisch Force-Push, Branch-/Tag-Löschung oder andere destruktive Remote-Aktionen.
+
+Der veröffentlichte RPM-Container verwendet RPM 6 mit Zstd und indexbasiertem
+Payload. Geprüft wurden Header-SHA256/SHA3-256, komprimierte/unverpackte
+Payload-SHA256, Dateihashes, Root-Eigentümer und alle Laufzeitbytes. Grundlage:
+[offizielle RPM-Formatspezifikation](https://github.com/rpm-software-management/rpm/blob/master/docs/manual/format_v6.md).
