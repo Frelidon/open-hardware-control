@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.4.29.183 STABLE · 15.11.26
+
+Öffentliche Freigabe des geprüften .183-Stands mit Hardware-Fix-Einrichtung,
+MSI-VRR-Korrektur und allen seit .176 entstandenen Profil-/LCD-/GPU-Verbesserungen.
+Kanalmetadaten und Downloadnamen folgen STABLE; Hardwareverhalten und persönliche
+Einstellungen bleiben unverändert. Einzelheiten und Prüfgrenzen in den Release Notes.
+
 ## 3.4.29.183 INTERN · 13.11.26
 
 - Hardware Fix zeigt Installieren und Deinstallieren als Hauptaktionen. Lokale

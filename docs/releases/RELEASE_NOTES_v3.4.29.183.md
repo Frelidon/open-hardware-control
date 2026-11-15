@@ -1,63 +1,76 @@
-# Open Hardware Control 3.4.29.183 INTERN
+# Open Hardware Control 3.4.29.183 STABLE
 
-Hardware Fix erhält zwei Hauptaktionen: Installieren und Deinstallieren. Der
-lokale Fix läuft unabhängig vom OHC-Fenster; die verwirrende Anbieterwahl entfällt.
-Weitere Optionen bewahrt Diagnose, DRM-Spieltest und einzelne Reparaturschritte.
-Technische Details sind standardmäßig eingeklappt. Vier Sprachen sind vorhanden.
+Öffentliche Freigabe · 15.11.26
 
-Installieren verwendet die bisherigen festen Installer. Vorhandene gesunde
-Bootressourcen bleiben erhalten; Ubuntu/GNOME richtet nach aktivierter EDID den
-variablen Desktopmodus und den bekannten lokalen Benutzerdienst ein. Fedora
-führt diese Ubuntu-Automatik nie aus. Bei nötigem Neustart endet die erste Stufe;
-danach lässt sich die Einrichtung über Installieren abschließen. Bereits aktives,
-dauerhaft gespeichertes GNOME-VRR wird nicht erneut gesetzt. Keine automatische
-Änderung der EDID-Timings und kein automatischer Systemneustart.
+## Neuerungen seit dem öffentlichen Release .176
 
-Der MSI-Fix verwendet in Fenstererkennung und DRM-Diagnose die ausgelieferte
-anonymisierte EDID. Der vorherige Ubuntu-Livenachweis zeigt Mirage im Randlosmodus
-vor der Korrektur mit VRR_ENABLED=0 und nach einem begrenzten AppIndicators-Reset
-mit VRR_ENABLED=1. Das ist Treiberreadback, keine optische Frequenzmessung.
-Ein Live-Gegenversuch ohne EDID-Override wurde nicht vorgenommen.
+- Hardware Fix zeigt Installieren und Deinstallieren als Hauptaktionen. Die
+  lokale Installation ist Standard; Diagnose, Spieltest und einzelne Reparaturen
+  bleiben unter Weitere Optionen erreichbar. Technische Details sind eingeklappt.
+- Die MSI-VRR-Erkennung verwendet wieder die tatsächlich ausgelieferte anonymisierte
+  EDID. Terminalergebnisse werden über eindeutige Jobs zugeordnet; schnelle
+  Abschlüsse, veraltete Resultate, Doppelklicks und Startfehler sind abgesichert.
+- LCD-Arbeitsbereiche gliedern Bibliothek, Komposition und Displaybetrieb. Die
+  gemeinsame GPU-Seite verbindet Gerätebild, Livewerte, Übertaktung und Lüfterkurve.
+  Häufige Darstellungsoptionen und animierte Hintergründe stehen vorn in den Einstellungen.
+- Profile sind als lesbare Karten organisiert; frische CPU-Messwerte werden vor
+  dem automatischen Profilstart abgewartet. Originale Matrix-/RGB-/LCD-Designs,
+  Größenwahl und gemeinsame UI-Bereiche aus .177 bis .182 sind enthalten.
 
-Terminaljobs verwenden feste Aktionsnamen und validierte UUIDs. Schnelle Resultate
-werden schon beim ersten Poll erkannt, alte Resultate und Doppelklicks verworfen.
-Fehler beim Prozessstart liefern ein abgeschlossenes Fehlerergebnis. Anbieterstatus
-wird erst nach Erfolg lokal gespeichert; Ergebnisstatus folgt danach. Protokolle
-werden begrenzt, redigiert und als Klartext angezeigt. Bootparameter werden exakt
-statt als Teilzeichenfolge erkannt; fehlerhafte Metadaten bleiben sicher lesbar.
+Vollständige Einzeländerungen: [Changelog](../CHANGELOG.md) und die bisherigen
+Release Notes von .177 bis .182. Bestehende Einstellungen, Profile, Designs und
+Hardwarebesitzer bleiben erhalten. Alle neuen UI-Texte unterstützen Deutsch,
+Englisch, Spanisch und Französisch.
 
-Freigabe: 1.763 Tests und fünf Untertests bestanden; 474 Python-Laufzeitquellen
-und 2.658 gemeinsame Nachrichten-IDs. Vollständige vierfache UI-Lokalisierung,
-Sicherheit/Datenschutz, Kompilierung, Modulbudgets und restliche Release-Wächter
-bestanden. Zehn echte Qt-Hauptfensteraufnahmen mit synthetischem Fixstatus prüfen
-drei Größen, beide Themen sowie offene Details und längere Übersetzungen.
-Die anfängliche Sandbox sperrte zwölf lokale Testsockets; der komplette Lauf
-mit erlaubten lokalen Sockets und deaktivierten Hardwarezugriffen bestand.
-Nach Korrektur eines alten ZIP-Dateinamens bestanden auch die unveränderten
-abschließenden Wächter. Keine Prüfung wurde ausgelassen oder abgeschwächt.
+## Hardware Fix
 
-Aus dieser geprüften Quellfreigabe werden Laufzeit-/Entwickler-ZIP, Quell-TAR,
-Local-AI-Gitbundle, DEB und RPM gebaut. Paket- und Sicherungsnachweise werden
-nach dem Bau im lokalen PROJECT_STATUS.md dokumentiert. Fedora nur isolierte
-Vertragstests; kein neuer Fedora-Hardwarelauf. Die normale installierte Anwendung
-wurde durch diesen Paketbau noch nicht aktualisiert. GitHub bleibt unverändert.
+Installieren nutzt die bisherigen festen Installer. Gesunde Bootressourcen
+werden nicht erneut geschrieben. Ubuntu/GNOME richtet nach geladener EDID den
+variablen Desktopmodus und denselben lokalen Benutzerdienst ein. Der Dienst
+läuft unabhängig vom OHC-Fenster. Fedora behält seinen getrennten Bootpfad und
+führt diese Ubuntu-AppIndicators-Automatik nicht aus. Ein nötiger Neustart
+bleibt manuell; anschließend schließt Installieren die Einrichtung ab.
+Bereits aktiviertes und dauerhaft gespeichertes GNOME-VRR wird nicht erneut gesetzt.
 
-Lokaler Nachweis nach Paketbau · 14.11.26: Alle sechs Artefakte, vollständige
-Archive/Manifeste, 474 identische Pythonquellen und 169 Assets sowie genau beide
-.182/.183-Sicherungen mit je acht Prüfsummen verifiziert. RPM-Header-/Payload-
-Digests und DEB-Metadaten/Eigentümer geprüft. Keine Installation oder neuer
-Hardwarelauf. Die Pakete/Sicherungen bleiben unveränderte Schnappschüsse vor
-diesem nachträglichen Nachweis; vollständige lokale Evidenz in PROJECT_STATUS.md.
+Der Fix ändert keine EDID-Timings und flasht keine Monitorfirmware. Er ist für
+exakt erkannte MSI MAG 274QPF X30MV über DisplayPort bestimmt; die vorhandene
+Zuordnung zu allen DP-Anschlüssen erfordert, andere DP-Monitore vorher zu trennen.
 
-Nachfolgende lokale Aktualisierung · 14.11.26: Benutzer- und Systeminstallation
-sind auf .183 aktualisiert und normal gestartet. 716 lokale Laufzeitdateien und
-799 DEB-Paketdateien wurden bytegleich geprüft. Einstellungen vor dem Neustart,
-Profile und Plugins zusätzlich danach unverändert. CPU-Kurve und RGB aktiv;
-gespeichertes Levita-Design nach automatisch behobenem eigenem TRCC-Startkonflikt
-im Dauerbetrieb. VRR-Dienst durchgehend aktiv; kein neuer Spiel-/Boot-/Fedora-Test.
+## Prüfung und Grenzen
 
-GitHub-Quellupload · 14.11.26: Der Eigentümer hat den Upload des INTERN-Standes
-auf `codex/hardware-fix-3.4.29.183` beauftragt. Dieser Entwicklungsbranch enthält
-Quellen, Tests und Dokumentation; Downloadpakete und öffentlicher Release bleiben
-getrennt. Frühere Aussagen über unverändertes GitHub beschreiben den Stand vor
-diesem Folgeauftrag. Die gebauten Pakete bleiben unveränderte Schnappschüsse.
+Die INTERN-Freigabe bestand 1.763 Tests und fünf Untertests sowie die Release-
+Wächter; vor dem Quellupload bestanden zusätzlich 43 gezielte Regressionen.
+Der öffentliche STABLE-Stand bestand erneut alle 1.763 Tests und fünf Untertests
+sowie den vollständigen `check_release.sh`-Lauf und wird neu paketiert. Sicherheits-/Datenschutzscan, vollständige vierfache
+UI-Lokalisierung, Kompilierung, Modulbudgets und getrennte Ubuntu-/Fedora-Verträge
+gehören zur Freigabe. Zehn echte Qt-Hauptfensteraufnahmen mit synthetischem
+Fixstatus dokumentieren drei Größen und beide Themen; sie sind kein Hardwaretest.
+
+Ubuntu-Live: Mirage im Randlosmodus meldete vor der EDID-Erkennungskorrektur
+VRR_ENABLED=0, danach nach einem begrenzten AppIndicators-Reset 1. Dies ist
+Treiberreadback, keine optische Frequenzmessung. Ein Gegenversuch ohne EDID-
+Override wurde nicht durchgeführt; dessen Entbehrlichkeit ist damit nicht belegt.
+Die .183-INTERN-Benutzer- und Systeminstallation wurde normal gestartet:
+CPU-Kurve und RGB aktiv, gespeichertes Levita-Design nach automatisch behobenem
+eigenem TRCC-Startkonflikt im Dauerbetrieb. Beim STABLE-Release ändert sich nur
+die Kanal-/Veröffentlichungsmetadaten, nicht das Hardwareverhalten.
+
+Fedora hat isolierte Vertragstests; ein neuer realer Fedora-/KDE-Hardwarelauf,
+optischer Frequenztest, Boot-/Deinstallationstest und Windows-Test wurden für
+diese Veröffentlichung nicht neu durchgeführt. Die laufende lokale INTERN-
+Installation und ihre persönlichen Daten werden durch den Release nicht ersetzt.
+
+## Downloads und Prüfsummen
+
+- `open_hardware_control_v3_4_29_183.zip` — universelles Laufzeitpaket.
+- `open-hardware-control_3.4.29.183_all.deb` — Debian/Ubuntu/Mint.
+- `open-hardware-control-3.4.29.183-1.noarch.rpm` — Fedora/Nobara.
+- `Entwicklerpaket.3.4.29.183.zip` — vollständiges Entwicklerpaket (öffentlicher GitHub-Dateiname).
+- `open-hardware-control-3.4.29.183-source.tar.gz` — Quellarchiv.
+- `Open_Hardware_Control_3.4.29.183_LOCAL_AI.gitbundle` — vollständige lokale Git-Übergabe.
+
+`SHA256SUMS` gilt für die exakten öffentlichen Dateinamen. `SHA256SUMS.local`
+behält zusätzlich die lokale Liste mit dem ursprünglichen Entwickler-ZIP-Namen.
+Pakete, Archive, Manifeste und externe rollierende Sicherungen werden vor der
+Veröffentlichung geprüft. Private Einstellungen, Pluginsicherungen und persönliche
+Protokolle sind kein Bestandteil der Downloads.

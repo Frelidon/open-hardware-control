@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.183 INTERN
+# Open Hardware Control by Frelidon 3.4.29.183 STABLE
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -55,43 +55,43 @@ Projekt-Repository: <https://github.com/Frelidon/open-hardware-control>
 
 Der sichere Testmodus ist standardmäßig aktiv; echte USB-Übertragung erfolgt nur über das separat installierte GPL-Backend **TRCC Linux** (9.10.4 empfohlen). Pumpe und Radiatorlüfter der Levita laufen über getrennt bestätigte Mainboard-PWM-Header (`PUMP_FAN`, `CPU_FAN`) mit sicherem 70-%-/10-s-Test; CoolerControl blockiert parallele Schreibzugriffe.
 
-## Neu in 3.4.29.183 INTERN
+## Neu in 3.4.29.183 STABLE
 
 - Hardware Fix mit Installieren und Deinstallieren als Hauptaktionen; lokale Installation als Standard.
 - Diagnose und einzelne Reparaturschritte bleiben unter Weitere Optionen erreichbar.
 - Korrigierte MSI-VRR-Erkennung und zuverlässige Rückmeldung der Terminalaktionen.
-- Getrennte Ubuntu-/GNOME- und Fedora-Einrichtung; alle Beschriftungen in vier Sprachen.
+- Seit .176 außerdem: LCD-/GPU-Arbeitsbereiche, übersichtliche Profile, frische CPU-Startwerte und originale Designpaare; vier Sprachen.
 
 ## Installation
 
-Die lokalen INTERN-Pakete sind gebaut und geprüft; Benutzer- und Systemkopie sind aktualisiert. Der Quellstand wird auf `codex/hardware-fix-3.4.29.183` bereitgestellt. Downloadpakete dieser Version sind noch nicht als GitHub-Release veröffentlicht.
+Die STABLE-Pakete stehen unter [Release 3.4.29.183](https://github.com/Frelidon/open-hardware-control/releases/tag/v3.4.29.183) bereit. Prüfe Downloads mit der dortigen `SHA256SUMS`; vollständige Neuerungen und Prüfgrenzen stehen in den Release Notes.
 
 ### Fedora und Nobara – RPM
 
-Lade `open-hardware-control-3.4.29.183-0.intern2.noarch.rpm` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control-3.4.29.183-1.noarch.rpm` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.183-0.intern2.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.183-1.noarch.rpm
 ```
 
 ### Debian, Ubuntu und Linux Mint – DEB
 
-Lade `open-hardware-control_3.4.29.183~intern2_all.deb` in deinen Downloads-Ordner und führe aus:
+Lade `open-hardware-control_3.4.29.183_all.deb` in deinen Downloads-Ordner und führe aus:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.183~intern2_all.deb'
+sudo apt install './open-hardware-control_3.4.29.183_all.deb'
 ```
 
 ### Universelles Installationspaket – ZIP
 
-Für Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_183_INTERN.zip` herunter und führe aus:
+Für Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS und openSUSE. Lade `open_hardware_control_v3_4_29_183.zip` herunter und führe aus:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_183_INTERN.zip
-cd open-hardware-control-3.4.29.183-INTERN
+unzip open_hardware_control_v3_4_29_183.zip
+cd open-hardware-control-3.4.29.183
 chmod +x install.sh
 ./install.sh
 ```
@@ -125,7 +125,7 @@ English version: [docs/README.en.md](docs/README.en.md)
 
 ## Status
 
-Lokale Entwicklungsversion, bereitgestellt ohne Garantie. Kanal **INTERN**, Lizenz **GPL-3.0-or-later**. Mitwirken: [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) · Hilfe: [.github/SUPPORT.md](.github/SUPPORT.md) · Sicherheitsmeldungen: [.github/SECURITY.md](.github/SECURITY.md)
+Öffentliche Version, bereitgestellt ohne Garantie. Kanal **STABLE**, Lizenz **GPL-3.0-or-later**. Mitwirken: [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) · Hilfe: [.github/SUPPORT.md](.github/SUPPORT.md) · Sicherheitsmeldungen: [.github/SECURITY.md](.github/SECURITY.md)
 
 ## Module
 

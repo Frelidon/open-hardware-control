@@ -1,5 +1,14 @@
 # Open Hardware Control — Durable Decisions
 
+## 15.11.26 · .183 vollständig öffentlich veröffentlichen
+
+Der Eigentümer wählt ausdrücklich Hauptseite und STABLE-Downloadpakete.
+Die vorherige Freigabe für den Entwicklungsbranch wird damit um normalen
+main-Push, Versionstag und öffentlichen Latest-Release erweitert. Persönliche
+Einstellungen und laufende lokale INTERN-Installationen werden dabei nicht
+ersetzt. Pakete werden im STABLE-Kanal neu gebaut und vollständig geprüft;
+vorhandene technische Testgrenzen bleiben in den öffentlichen Release Notes.
+
 ## 13.11.26 · Hardware Fix lokal als Standard (.183)
 
 Der Eigentümer beauftragt weniger Schaltflächen und eine verständliche lokale

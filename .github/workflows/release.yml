@@ -86,6 +86,11 @@ jobs:
           TAG: ${{ steps.release.outputs.tag }}
         shell: bash
         run: |
+          # GitHub replaces spaces in asset names with dots. Keep public checksums usable.
+          cp dist/SHA256SUMS dist/SHA256SUMS.local
+          mv "dist/Entwicklerpaket ${VERSION}.zip" "dist/Entwicklerpaket.${VERSION}.zip"
+          sed 's/  Entwicklerpaket /  Entwicklerpaket./' dist/SHA256SUMS.local > dist/SHA256SUMS
+          (cd dist && sha256sum --check SHA256SUMS)
           NOTES="docs/releases/RELEASE_NOTES_v${VERSION}.md"
           if [[ -f "$NOTES" ]]; then
             gh release create "$TAG" dist/* \

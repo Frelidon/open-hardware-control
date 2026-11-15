@@ -1,4 +1,4 @@
-# Open Hardware Control by Frelidon 3.4.29.183 INTERN
+# Open Hardware Control by Frelidon 3.4.29.183 STABLE
 
 <!-- project-badges -->
 [![CI](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Frelidon/open-hardware-control/actions/workflows/ci.yml) [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg)](../LICENSE) [![Release](https://img.shields.io/github/v/release/Frelidon/open-hardware-control?display_name=tag)](https://github.com/Frelidon/open-hardware-control/releases)
@@ -55,43 +55,43 @@ Project repository: <https://github.com/Frelidon/open-hardware-control>
 
 The safe preview-only test mode is active by default; real USB transfer happens only through the separately installed GPL backend **TRCC Linux** (9.10.4 recommended). Levita pump and radiator fans run through separately confirmed motherboard PWM headers (`PUMP_FAN`, `CPU_FAN`) with a safe 70 %/10 s test; CoolerControl blocks concurrent writes.
 
-## New in 3.4.29.183 INTERN
+## New in 3.4.29.183 STABLE
 
 - Hardware Fix with Install and Uninstall as primary actions; local installation is the default.
 - Additional diagnostics and individual repair steps remain available under More options.
 - Correct MSI VRR monitor detection and reliable terminal result handling.
-- Ubuntu/GNOME and Fedora retain separate setup paths; all labels support four languages.
+- Since .176: LCD/GPU workspaces, clearer profiles, fresh CPU startup values and original design pairs; four languages.
 
 ## Installation
 
-The local INTERN packages are built and verified; user and system installations are updated. Source is prepared for `codex/hardware-fix-3.4.29.183`. Download packages for this version have not been published as a GitHub release.
+STABLE packages are available in [release 3.4.29.183](https://github.com/Frelidon/open-hardware-control/releases/tag/v3.4.29.183). Verify downloads using its `SHA256SUMS`; the release notes list all changes and validation limits.
 
 ### Fedora and Nobara – RPM
 
-Download `open-hardware-control-3.4.29.183-0.intern2.noarch.rpm` to your Downloads folder and run:
+Download `open-hardware-control-3.4.29.183-1.noarch.rpm` to your Downloads folder and run:
 
 ```bash
 cd ~/Downloads
-sudo dnf install ./open-hardware-control-3.4.29.183-0.intern2.noarch.rpm
+sudo dnf install ./open-hardware-control-3.4.29.183-1.noarch.rpm
 ```
 
 ### Debian, Ubuntu and Linux Mint – DEB
 
-Download `open-hardware-control_3.4.29.183~intern2_all.deb` to your Downloads folder and run:
+Download `open-hardware-control_3.4.29.183_all.deb` to your Downloads folder and run:
 
 ```bash
 cd ~/Downloads
-sudo apt install './open-hardware-control_3.4.29.183~intern2_all.deb'
+sudo apt install './open-hardware-control_3.4.29.183_all.deb'
 ```
 
 ### Universal installer – ZIP
 
-For Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS and openSUSE. Download `open_hardware_control_v3_4_29_183_INTERN.zip` and run:
+For Fedora/Nobara, Debian/Ubuntu/Mint, Arch/Manjaro/EndeavourOS and openSUSE. Download `open_hardware_control_v3_4_29_183.zip` and run:
 
 ```bash
 cd ~/Downloads
-unzip open_hardware_control_v3_4_29_183_INTERN.zip
-cd open-hardware-control-3.4.29.183-INTERN
+unzip open_hardware_control_v3_4_29_183.zip
+cd open-hardware-control-3.4.29.183
 chmod +x install.sh
 ./install.sh
 ```
@@ -125,7 +125,7 @@ German version: [README.md](../README.md)
 
 ## Status
 
-Local development version, provided without warranty. Channel **INTERN**, license **GPL-3.0-or-later**. Contributing: [.github/CONTRIBUTING.md](../.github/CONTRIBUTING.md) · Help: [.github/SUPPORT.md](../.github/SUPPORT.md) · Security reports: [SECURITY.md](../.github/SECURITY.md)
+Public release, provided without warranty. Channel **STABLE**, license **GPL-3.0-or-later**. Contributing: [.github/CONTRIBUTING.md](../.github/CONTRIBUTING.md) · Help: [.github/SUPPORT.md](../.github/SUPPORT.md) · Security reports: [SECURITY.md](../.github/SECURITY.md)
 
 ## Modules
 

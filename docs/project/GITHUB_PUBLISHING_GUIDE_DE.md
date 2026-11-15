@@ -1,4 +1,34 @@
-# Open Hardware Control – GitHub-Quellupload und Veröffentlichungen
+# Open Hardware Control 3.4.29.183 STABLE – GitHub-Veröffentlichung
+
+## Öffentliche Freigabe .183 · 15.11.26
+
+STABLE-Quellfreigabe: 1.763 Tests und fünf Untertests sowie der komplette
+unveränderte check_release.sh-Lauf bestanden. Zuvor gemeldete reine
+Dokumentationsfehler (Veröffentlichungstitel und Register-Kanalanker) sind
+berichtigt. Keine Prüfung wurde abgeschwächt. Der Release-Workflow benennt das
+Entwickler-ZIP vor Upload exakt wie GitHub, prüft SHA256SUMS mit diesen Namen
+und erhält SHA256SUMS.local; sein originaler Shellschritt bestand eine isolierte
+Sechs-Artefakte-Prüfung. Paketbau und öffentlicher Upload folgen.
+
+Der Eigentümer beauftragt ausdrücklich die vollständige Veröffentlichung auf
+GitHub: Hauptbranch main und STABLE-Downloadpakete samt Versionstag.
+Der vorige Upload a4d54f9 lag nur auf dem Entwicklungsbranch; main und Latest
+waren weiterhin .176. .183 wird jetzt als STABLE neu gebaut und vollständig
+geprüft. Aktionsumfang: normaler Fast-forward von main, Tag v3.4.29.183 und
+öffentlicher Latest-Release mit sechs Paketen und Prüfsummen. Die laufende
+Benutzer-/Systeminstallation bleibt unverändert auf dem geprüften INTERN-Stand.
+
+Nur Kanalmetadaten, genaue Test-Erwartungen und Veröffentlichungsdokumentation
+ändern sich gegenüber .183 INTERN. Die Sicherheits- und UI-Tests erwarten
+weiterhin den exakten aktuellen Kanal, keine aufgeweichte Alternativprüfung.
+Ubuntu-Livenachweise und getrennte Fedora-Vertragstests bleiben maßgeblich;
+kein neuer Fedora-/KDE-Hardwarelauf wird aus dem STABLE-Bau abgeleitet.
+Historische Abschnitte darunter beschreiben die jeweiligen früheren Aufträge.
+
+Der reguläre Release-Workflow wird über `publish/v3.4.29.183` ausgelöst. Er
+prüft und baut erneut, setzt den annotierten Tag erst nach Erfolg und erstellt
+den öffentlichen Release. Bereits lokal geprüfte STABLE-Pakete stehen als
+Rückfall zur Verfügung, falls die entfernte Buildumgebung scheitert.
 
 Aktuelle Entwicklung: 3.4.29.183 INTERN. Der Eigentümer hat am 14.11.26 den
 GitHub-Upload des neuen Standes beauftragt. Ziel ist der Entwicklungsbranch
